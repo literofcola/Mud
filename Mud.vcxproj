@@ -1,0 +1,144 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="CArea.cpp" />
+    <ClCompile Include="CCharacter.cpp" />
+    <ClCompile Include="CClass.cpp" />
+    <ClCompile Include="CClient.cpp" />
+    <ClCompile Include="CCommand.cpp" />
+    <ClCompile Include="CExit.cpp" />
+    <ClCompile Include="CGame.cpp" />
+    <ClCompile Include="CHelp.cpp" />
+    <ClCompile Include="CHighResTimer.cpp" />
+    <ClCompile Include="CItem.cpp" />
+    <ClCompile Include="CListenerManager.cpp" />
+    <ClCompile Include="CLogFile.cpp" />
+    <ClCompile Include="cmd.cpp" />
+    <ClCompile Include="cmd_comm.cpp" />
+    <ClCompile Include="cmd_edit.cpp" />
+    <ClCompile Include="cmd_imm.cpp" />
+    <ClCompile Include="cmd_item.cpp" />
+    <ClCompile Include="cmd_move.cpp" />
+    <ClCompile Include="cmd_skill.cpp" />
+    <ClCompile Include="cmd_track.cpp" />
+    <ClCompile Include="CmySQLQueue.cpp" />
+    <ClCompile Include="CPlayer.cpp" />
+    <ClCompile Include="CQuest.cpp" />
+    <ClCompile Include="CReset.cpp" />
+    <ClCompile Include="CRoom.cpp" />
+    <ClCompile Include="CServer.cpp" />
+    <ClCompile Include="CSkill.cpp" />
+    <ClCompile Include="CSpellAffect.cpp" />
+    <ClCompile Include="CTrigger.cpp" />
+    <ClCompile Include="CUser.cpp" />
+    <ClCompile Include="lua_binds.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="string.cpp" />
+    <ClCompile Include="utils.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="CArea.h" />
+    <ClInclude Include="CCharacter.h" />
+    <ClInclude Include="CClass.h" />
+    <ClInclude Include="CClient.h" />
+    <ClInclude Include="CCommand.h" />
+    <ClInclude Include="CExit.h" />
+    <ClInclude Include="CGame.h" />
+    <ClInclude Include="CHelp.h" />
+    <ClInclude Include="CHighResTimer.h" />
+    <ClInclude Include="CItem.h" />
+    <ClInclude Include="CListener.h" />
+    <ClInclude Include="CListenerManager.h" />
+    <ClInclude Include="CLogFile.h" />
+    <ClInclude Include="CmySQLQueue.h" />
+    <ClInclude Include="CPlayer.h" />
+    <ClInclude Include="CQuest.h" />
+    <ClInclude Include="CReset.h" />
+    <ClInclude Include="CRoom.h" />
+    <ClInclude Include="CServer.h" />
+    <ClInclude Include="CSkill.h" />
+    <ClInclude Include="CSpellAffect.h" />
+    <ClInclude Include="CTrigger.h" />
+    <ClInclude Include="CUser.h" />
+    <ClInclude Include="mud.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="telnet.h" />
+    <ClInclude Include="utils.h" />
+    <ClInclude Include="zconf.h" />
+    <ClInclude Include="zlib.h" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{A636FA8A-171F-43F2-9DFB-09637CAEE22E}</ProjectGuid>
+    <RootNamespace>Mud</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IncludePath>E:\luabind-0.9.1;E:\mysql-5.5.18-win32\include;E:\mysql++-3.1.0\lib;E:\lua-5.1.5\include;E:\boost_1_48_0;E:\asio-1.4.8\include;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IncludePath>E:\luabind-0.9.1;E:\mysql-5.5.18-win32\include;E:\mysql++-3.1.0\lib;E:\lua-5.1.4\include;E:\boost_1_48_0;E:\asio-1.4.8\include;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0501;LUABIND_DYNAMIC_LINK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalOptions>-DBOOST_DATE_TIME_NO_LIB -DBOOST_REGEX_NO_LIB -Zm122 %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalOptions>ws2_32.lib lua5.1.lib libmysqld.lib mysqlpp_d.lib luabindd.lib zdll.lib %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0501;LUABIND_DYNAMIC_LINK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalOptions>-DBOOST_DATE_TIME_NO_LIB -DBOOST_REGEX_NO_LIB -Zm122 %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalOptions>ws2_32.lib lua51.lib libmysql.lib mysqlpp.lib luabind.lib zdll.lib %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
