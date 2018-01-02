@@ -499,7 +499,9 @@ void Server::deliver(Client * c, const unsigned char * msg, int length)
 				  boost::bind(&Server::handle_write, shared_from_this(), c, asio::placeholders::error));
 				  */
 	OVERLAPPEDEXPtr olptr = c->NewOperationData(OP_WRITE);
-	strcpy(olptr->wsabuf.buf, (const char *)msg);
+	//strncpy(olptr->wsabuf.buf, (const char *)msg, length);
+	//strncpy(olptr->buffer, (CHAR*)msg, length);
+	olptr->wsabuf.buf = (CHAR*)msg;     /// <<<-------- THIS IS THE WORKING ONE!>>!>!
 	olptr->wsabuf.len = length;
 	olptr->totalBytes = length;
 	OVERLAPPED * base_overlapped = static_cast<OVERLAPPED*>(olptr.get());
