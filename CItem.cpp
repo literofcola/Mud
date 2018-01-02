@@ -4,7 +4,6 @@
 #include "CmySQLQueue.h"
 #include "CLogFile.h"
 #include "CClient.h"
-typedef boost::shared_ptr<Client> Client_ptr;
 #include "CHighResTimer.h"
 #include "CHelp.h"
 #include "CTrigger.h"
@@ -20,7 +19,6 @@ typedef boost::shared_ptr<Client> Client_ptr;
 #include "CUser.h"
 #include "CGame.h"
 #include "CServer.h"
-typedef boost::shared_ptr<Server> Server_ptr;
 #include "CCharacter.h"
 #include "CSpellAffect.h"
 #include "utils.h"

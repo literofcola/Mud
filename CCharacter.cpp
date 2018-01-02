@@ -4,7 +4,6 @@
 #include "CmySQLQueue.h"
 #include "CLogFile.h"
 #include "CClient.h"
-typedef boost::shared_ptr<Client> Client_ptr;
 #include "CHighResTimer.h"
 #include "CHelp.h"
 #include "CTrigger.h"
@@ -20,7 +19,6 @@ typedef boost::shared_ptr<Client> Client_ptr;
 #include "CUser.h"
 #include "CGame.h"
 #include "CServer.h"
-typedef boost::shared_ptr<Server> Server_ptr;
 #include "CCharacter.h"
 #include "CSpellAffect.h"
 #include "utils.h"
@@ -1004,7 +1002,7 @@ Character * Character::LoadPlayer(std::string name, User * user)
     return loaded;
 }
 
-/*Character * Character::LoadNPC(Server_ptr server, int id) 
+/*Character * Character::LoadNPC(Server * server, int id) 
 {
     StoreQueryResult characterres = server->sqlQueue->Read("select * from npcs where id=" + Utilities::itos(id));
     if(characterres.empty())

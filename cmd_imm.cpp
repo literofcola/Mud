@@ -7,7 +7,6 @@
 #include "CHelp.h"
 #include "CTrigger.h"
 #include "CClient.h"
-typedef boost::shared_ptr<Client> Client_ptr;
 #include "CItem.h"
 #include "CSkill.h"
 #include "CClass.h"
@@ -22,7 +21,6 @@ typedef boost::shared_ptr<Client> Client_ptr;
 #include "CUser.h"
 #include "CGame.h"
 #include "CServer.h"
-typedef boost::shared_ptr<Server> Server_ptr;
 #include "CCommand.h"
 #include "utils.h"
 #include "mud.h"
@@ -93,12 +91,12 @@ void cmd_restore(Character * ch, string argument)
 
 void cmd_sockets(Character * ch, string argument)
 {
-    std::list<User *>::iterator iter;
+    /*std::list<User *>::iterator iter;
     for(iter = Game::GetGame()->users.begin(); iter != Game::GetGame()->users.end(); iter++)
     {
         if((*iter)->character && (*iter)->client && (*iter)->client->Socket().is_open())
             ch->Send((*iter)->character->name + ", " + (*iter)->client->Socket().remote_endpoint().address().to_string() + "\n\r");
-    }
+    }*/
 }
 
 void cmd_disconnect(Character * ch, string argument)

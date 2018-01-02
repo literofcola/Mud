@@ -6,7 +6,6 @@
 #include "CHelp.h"
 #include "CTrigger.h"
 #include "CClient.h"
-typedef boost::shared_ptr<Client> Client_ptr;
 #include "CItem.h"
 #include "CSkill.h"
 #include "CClass.h"
@@ -21,7 +20,6 @@ typedef boost::shared_ptr<Client> Client_ptr;
 #include "CUser.h"
 #include "CGame.h"
 #include "CServer.h"
-typedef boost::shared_ptr<Server> Server_ptr;
 #include "utils.h"
 
 using namespace std;

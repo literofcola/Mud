@@ -4,7 +4,7 @@
 class User
 {
 public:
-    User(Client_ptr client);
+    User(Client * client);
     ~User();
 
     enum State
@@ -20,11 +20,11 @@ public:
     bool IsConnected();
     bool IsPlaying();
 
-    const int MAX_INPUT_LENGTH;
+    //const int MAX_INPUT_LENGTH;
     std::deque<std::string> commandQueue;
     std::deque<std::string> outputQueue;
 	std::deque<std::string> subchannelQueue;
-	Client_ptr client;
+	Client * client;
     State connectedState;
     Character * character;
     bool wasInput;
@@ -45,7 +45,7 @@ public:
     //int loginAttempts; //TODO
 
     //bool hasQuery;
-	//bool (*queryFunction)(Server_ptr, User *, std::string);
+	//bool (*queryFunction)(Server *, User *, std::string);
 	//void * queryData;
     //std::string queryPrompt;
 

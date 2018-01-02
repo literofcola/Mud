@@ -7,7 +7,6 @@
 #include "CHelp.h"
 #include "CTrigger.h"
 #include "CClient.h"
-typedef boost::shared_ptr<Client> Client_ptr;
 #include "CItem.h"
 #include "CSkill.h"
 #include "CClass.h"
@@ -22,7 +21,6 @@ typedef boost::shared_ptr<Client> Client_ptr;
 #include "CUser.h"
 #include "CGame.h"
 #include "CServer.h"
-typedef boost::shared_ptr<Server> Server_ptr;
 #include "CCommand.h"
 #include "utils.h"
 #include "mud.h"
@@ -67,12 +65,13 @@ double Game::currentTime = 0;
 
 Game * Game::GetGame()
 {
-    static Game * theGame = NULL;
+    /*static Game * theGame = NULL;
     if(theGame == NULL)
     {
         theGame = new Game();
     }
-    return theGame;
+    return theGame;*/
+	return thegame;
 }
 
 //TODO hmm
@@ -127,7 +126,7 @@ Game::~Game()
     rooms.clear();
 }
 
-void Game::GameLoop(Server_ptr server)
+void Game::GameLoop(Server * server)
 {
     //timer.Reset();
 
@@ -284,18 +283,19 @@ void Game::GameLoop(Server_ptr server)
 		{
 			User * user = *iter;
 
-            if(!user->client)
+            /*if(!user->client)
             {
                 ++iter;
                 continue;
-            }
+            }*/
 
             //Disconnected but didn't quit. Drop the client, save the user
             // ...unless we're not CONN_PLAYING yet, then drop everything
-            if(user->client && !user->IsConnected())
+            //if(user->client && !user->IsConnected())
+			if(!user->client)
             {
-                server->remove_client(user->client);
-                user->client.reset();
+                //server->remove_client(user->client);
+                //user->client.reset();
                 user->outputQueue.clear();
                 if(user->connectedState > User::CONN_PLAYING)
                 {
@@ -391,8 +391,10 @@ void Game::GameLoop(Server_ptr server)
 	{
 		User * user = (*iter);
         //++iter;
-        server->remove_client(user->client);
-        user->client.reset();
+        //server->remove_client(user->client);
+		delete user->client;
+		user->client = NULL;
+        //user->client.reset();
         //Save user/player
         if(user->character)
         {
@@ -411,7 +413,7 @@ void Game::GameLoop(Server_ptr server)
     LogFile::Log("status", "GameLoop() end");
 }
 
-void Game::WorldUpdate(Server_ptr server)
+void Game::WorldUpdate(Server * server)
 {
     static double twoSecondTick = Game::currentTime;
     static double thirtySecondTick = Game::currentTime;
@@ -779,7 +781,7 @@ void Game::WorldUpdate(Server_ptr server)
     }
 }
 
-void Game::LoginHandler(Server_ptr server, User * user, string argument)
+void Game::LoginHandler(Server * server, User * user, string argument)
 {
     string arg1;
     Utilities::one_argument(argument, arg1);
@@ -1091,7 +1093,7 @@ void Game::LoginHandler(Server_ptr server, User * user, string argument)
                 Server::sqlQueue->Write("delete from players where name='" + user->character->name + "';");
                 Server::sqlQueue->Write("delete from affects where player_name='" + user->character->name + "';");
                 user->client->disconnect = true;
-                server->remove_client(user->client);
+                //server->remove_client(user->client);
             }
             else
             {
@@ -1152,7 +1154,7 @@ void Game::LoginHandler(Server_ptr server, User * user, string argument)
             {
                 user->Send("Farewell...");
                 user->client->disconnect = true;
-                server->remove_client(user->client);
+                //server->remove_client(user->client);
             }
             
             break;
@@ -1160,7 +1162,7 @@ void Game::LoginHandler(Server_ptr server, User * user, string argument)
     }
 }
 
-void Game::LoadGameStats(Server_ptr server)
+void Game::LoadGameStats(Server * server)
 {
     ifstream in;
     in.open("serverstats.txt");
@@ -1181,7 +1183,7 @@ void Game::SaveGameStats()
     out << newplayerRoom << endl;
 }
 
-void Game::LoadRooms(Server_ptr server)
+void Game::LoadRooms(Server * server)
 {
     StoreQueryResult roomres = server->sqlQueue->Read("select * from rooms");
     if(roomres.empty())
@@ -1223,7 +1225,7 @@ void Game::SaveRooms()
     }
 }
 
-void Game::LoadExits(Server_ptr server)
+void Game::LoadExits(Server * server)
 {
     StoreQueryResult exitres = server->sqlQueue->Read("select * from exits order by exits.from");
     if(exitres.empty())
@@ -1240,7 +1242,7 @@ void Game::LoadExits(Server_ptr server)
     }
 }
 
-void Game::LoadTriggers(Server_ptr server)
+void Game::LoadTriggers(Server * server)
 {
     StoreQueryResult triggerres = server->sqlQueue->Read("select * from triggers order by triggers.parent_type, triggers.parent_id, triggers.id");
     if(triggerres.empty())
@@ -1277,7 +1279,7 @@ void Game::LoadTriggers(Server_ptr server)
     }
 }
 
-void Game::LoadResets(Server_ptr server)
+void Game::LoadResets(Server * server)
 {
     StoreQueryResult resetres = server->sqlQueue->Read("select * from resets order by room_id");
     if(resetres.empty())
@@ -1311,7 +1313,7 @@ void Game::LoadResets(Server_ptr server)
     }
 }
 
-void Game::LoadSkills(Server_ptr server)
+void Game::LoadSkills(Server * server)
 {
     StoreQueryResult skillres = server->sqlQueue->Read("select * from skills");
     if(skillres.empty())
@@ -1344,7 +1346,7 @@ void Game::LoadSkills(Server_ptr server)
     }
 }
 
-void Game::LoadQuests(Server_ptr server)
+void Game::LoadQuests(Server * server)
 {
     StoreQueryResult questres = server->sqlQueue->Read("select * from quests");
     if(questres.empty())
@@ -1400,7 +1402,7 @@ void Game::LoadQuests(Server_ptr server)
     }
 }
 
-void Game::LoadItems(Server_ptr server)
+void Game::LoadItems(Server * server)
 {
     StoreQueryResult itemres = server->sqlQueue->Read("select * from items");
     if(itemres.empty())
@@ -1433,7 +1435,7 @@ void Game::LoadItems(Server_ptr server)
     }
 }
 
-void Game::LoadClasses(Server_ptr server)
+void Game::LoadClasses(Server * server)
 {
     StoreQueryResult classres = server->sqlQueue->Read("select * from classes");
     if(classres.empty())
@@ -1476,7 +1478,7 @@ void Game::LoadClasses(Server_ptr server)
     }
 }
 
-void Game::LoadAreas(Server_ptr server)
+void Game::LoadAreas(Server * server)
 {
     StoreQueryResult areares = server->sqlQueue->Read("select * from areas");
     if(areares.empty())
@@ -1492,7 +1494,7 @@ void Game::LoadAreas(Server_ptr server)
     }
 }
 
-void Game::LoadHelp(Server_ptr server)
+void Game::LoadHelp(Server * server)
 {
     StoreQueryResult helpres = server->sqlQueue->Read("select * from help");
     if(helpres.empty())
@@ -1587,7 +1589,7 @@ void Game::SaveHelp()
 	}
 }
 
-void Game::LoadNPCS(Server_ptr server)
+void Game::LoadNPCS(Server * server)
 {
     StoreQueryResult characterres = server->sqlQueue->Read("select * from npcs");
     if(characterres.empty())
@@ -1673,7 +1675,7 @@ void Game::LoadNPCS(Server_ptr server)
     }
 }
 
-void Game::NewUser(Client_ptr client)
+void Game::NewUser(Client * client)
 {
     User * u = new User(client);
 	users.push_back(u);
@@ -1695,6 +1697,21 @@ void Game::RemoveUser(User * user)
         delete (*iter);
         users.remove(*iter);
     }
+}
+
+void Game::RemoveUser(Client * client)
+{
+    std::list<User *>::iterator iter;
+	for(iter = users.begin(); iter != users.end(); ++iter)
+	{
+		User * u = *iter;
+		if(u->client == client)
+		{
+			delete (*iter);
+			users.remove(*iter);
+			break;
+		}
+	}
 }
 
 Character * Game::NewCharacter(std::string name, User * user)

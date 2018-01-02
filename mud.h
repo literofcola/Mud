@@ -1,5 +1,7 @@
 using namespace std;
 
+extern Game * thegame;
+
 //string.cpp
 namespace StringEdit
 {

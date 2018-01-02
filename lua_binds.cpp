@@ -50,13 +50,13 @@ void Lua_DefineClasses(lua_State * ls)
         class_<ListenerManager>("ListenerManager"),
 		
         class_<Server>("Server")
-        .def(constructor<asio::io_service&, const asio::ip::tcp::endpoint&>())
+        .def(constructor<Game *, int>())
         ,
         class_<Client>("Client")
-        .def(constructor<asio::io_service&>())
+        .def(constructor<SOCKET>())
         ,
         class_<User>("User")
-        .def(constructor<boost::shared_ptr<Client>>())
+        .def(constructor<Client *>())
         ,
         class_<Game>("Game")
         .def("GetGame", Game::GetGame)

@@ -1,24 +1,75 @@
 #ifndef CCLIENT_H
 #define CCLIENT_H
 
-class Client : public boost::enable_shared_from_this<Client>
+#define MAX_INPUT_LENGTH 256
+
+struct OVERLAPPEDEX : OVERLAPPED
 {
-public:
-    Client(asio::io_service& io_service);
-    ~Client();
+	WSABUF			wsabuf;
+	char			buffer[MAX_INPUT_LENGTH];
+	int				totalBytes;
+	int				sentBytes;
+	int				opCode;
 
-    asio::ip::tcp::socket & Socket();
+	OVERLAPPEDEX()
+	{
+		wsabuf.buf = buffer;
+		wsabuf.len = MAX_INPUT_LENGTH;
+		totalBytes = sentBytes = opCode = 0;
+		ZeroMemory(buffer, MAX_INPUT_LENGTH);
+	};
+};
 
-    const int MAX_INPUT_LENGTH;
+typedef boost::shared_ptr<OVERLAPPEDEX> OVERLAPPEDEXPtr;
 
-    char * receiveBuffer;       //Buffer for async_receive, which SHOULD work with std::string, but...
-    std::string inputBuffer;    //Dump the receive buffer here to parse for commands
-    std::deque<std::string> commandQueue;
-	bool disconnect;
+class Client
+{
+	public:
+		Client(SOCKET s);
+		~Client();
 
-private:
-    asio::ip::tcp::socket socket_;
-	
+		char * receiveBuffer;       
+		std::string inputBuffer;    //Dump the receive buffer here, then parse into commandQueue
+		std::deque<std::string> commandQueue;
+		bool disconnect;
+
+		//Get/Set calls
+		/*void SetOpCode(int n);
+		int GetOpCode(int op_id);
+		void SetTotalBytes(int n, int op_id);
+		int GetTotalBytes(int op_id);
+		void SetSentBytes(int n, int op_id);
+		void IncrSentBytes(int n, int op_id);
+		int GetSentBytes(int op_id);*/
+		void SetSocket(SOCKET s);
+		SOCKET Socket();
+		/*void SetWSABUFLength(int nLength);
+		int GetWSABUFLength();
+		WSABUF* GetWSABUFPtr();
+		OVERLAPPED* GetOVERLAPPEDPtr();
+		void ResetWSABUF();*/
+		OVERLAPPEDEXPtr NewOperationData(int op_type);
+		void FreeOperationData(OVERLAPPEDEX * ol);
+		/*void SetBuffer(char *szBuffer);
+		void SetBufferLength(int len);
+		void GetBuffer(char *szBuffer);
+		WSABUF * GetWSABUFPtr(OVERLAPPEDEXPtr ol);*/
+		//OVERLAPPED * GetOVERLAPPEDPtr();
+
+	private:
+
+		SOCKET socket_; //accepted socket
+
+		CRITICAL_SECTION critical_section; //not sure if this is necessary
+
+		std::list<OVERLAPPEDEXPtr> overlappedData;
+
+		//OVERLAPPED		*m_pol;
+		//WSABUF            *m_pwbuf;
+
+		//int               m_nTotalBytes;
+		//int               m_nSentBytes;
+		int id_count;
 };
 
 #endif

@@ -27,7 +27,7 @@ typedef boost::shared_ptr<Client> Client_ptr;
 
 using namespace std;
 
-User::User(Client_ptr client_) : MAX_INPUT_LENGTH(2046)
+User::User(Client * client_)
 {
     client = client_;
     commandQueue.clear();
@@ -87,13 +87,16 @@ void User::SendSubchannel(char * str)
 
 bool User::IsConnected()
 {
-    try{
+    /*try{
         return (client && client->Socket().is_open());
     }catch(std::exception & e)
     {
         LogFile::Log("error", e.what());
     }
-    return false;
+    return false;*/
+	if(client)
+		return true;
+	return false;
 }
 
 bool User::IsPlaying()

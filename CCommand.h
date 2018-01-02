@@ -2,7 +2,6 @@
 #define CCOMMAND_H
 
 class Server;
-typedef boost::shared_ptr<Server> Server_ptr;
 
 //Structure for a command in the command lookup table.
 class Command

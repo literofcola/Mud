@@ -5,7 +5,6 @@ class Server;
 class User;
 class SpellAffect;
 class Reset;
-typedef boost::shared_ptr<Server> Server_ptr;
 
 class Character : public Listener, public ListenerManager
 {

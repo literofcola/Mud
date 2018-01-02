@@ -3,7 +3,6 @@
 
 class Character;
 class Server;
-typedef boost::shared_ptr<Server> Server_ptr;
 
 class Room
 {
