@@ -19,15 +19,21 @@ public:
 	void SendSubchannel(char * str);
     bool IsConnected();
     bool IsPlaying();
+	void Disconnect();
+	void GetOneCommandFromNetwork();
+	bool HasCommandReady();
+	void ClearClientCommandQueue();
+	Client * GetClient();
 
-    //const int MAX_INPUT_LENGTH;
+    //const int NETWORK_BUFFER_SIZE;
     std::deque<std::string> commandQueue;
     std::deque<std::string> outputQueue;
 	std::deque<std::string> subchannelQueue;
-	Client * client;
+	
     State connectedState;
     Character * character;
     bool wasInput;
+	bool remove;
     
     std::string * stringEdit;
     bool mxp;		//Mud extension protocol
@@ -50,7 +56,7 @@ public:
     //std::string queryPrompt;
 
 private:
-	
+	Client * client;
 };
 
 #endif

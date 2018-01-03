@@ -40,10 +40,13 @@ User::User(Client * client_)
     mxp = false;
 	mccp = false;
 	gmcp = false;
+	remove = false;
 }
 
 User::~User()
 {
+	if(client)
+		delete client;
 	if(character != NULL)
 		delete character;
 }
@@ -69,6 +72,11 @@ void User::Send(char * str)
 	Send(string(str));
 }
 
+Client * User::GetClient()
+{
+	return client;
+}
+
 void User::SendSubchannel(string str)
 {
     if(str.empty() || !IsConnected())
@@ -87,13 +95,6 @@ void User::SendSubchannel(char * str)
 
 bool User::IsConnected()
 {
-    /*try{
-        return (client && client->Socket().is_open());
-    }catch(std::exception & e)
-    {
-        LogFile::Log("error", e.what());
-    }
-    return false;*/
 	if(client)
 		return true;
 	return false;
@@ -102,4 +103,35 @@ bool User::IsConnected()
 bool User::IsPlaying()
 {
     return connectedState == CONN_PLAYING;
+}
+
+void User::Disconnect()
+{
+	delete client;
+	client = NULL;
+}
+
+void User::GetOneCommandFromNetwork()
+{
+	EnterCriticalSection(&client->command_cs);
+	if(!client->commandQueue.empty())
+	{
+		commandQueue.push_back(client->commandQueue.front());
+		client->commandQueue.pop_front();
+	}
+    LeaveCriticalSection(&client->command_cs);
+}
+
+bool User::HasCommandReady()
+{
+	if(commandQueue.empty())
+		return false;
+	return true;
+}
+
+void User::ClearClientCommandQueue()
+{
+	EnterCriticalSection(&client->command_cs);
+	client->commandQueue.clear();
+    LeaveCriticalSection(&client->command_cs);
 }

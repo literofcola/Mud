@@ -1,12 +1,12 @@
 #ifndef CCLIENT_H
 #define CCLIENT_H
 
-#define MAX_INPUT_LENGTH 256
+#define NETWORK_BUFFER_SIZE 2048
 
 struct OVERLAPPEDEX : OVERLAPPED
 {
 	WSABUF			wsabuf;
-	char			buffer[MAX_INPUT_LENGTH];
+	char			buffer[NETWORK_BUFFER_SIZE];
 	int				totalBytes;
 	int				sentBytes;
 	int				opCode;
@@ -14,9 +14,9 @@ struct OVERLAPPEDEX : OVERLAPPED
 	OVERLAPPEDEX()
 	{
 		wsabuf.buf = buffer;
-		wsabuf.len = MAX_INPUT_LENGTH;
+		wsabuf.len = NETWORK_BUFFER_SIZE;
 		totalBytes = sentBytes = opCode = 0;
-		ZeroMemory(buffer, MAX_INPUT_LENGTH);
+		ZeroMemory(buffer, NETWORK_BUFFER_SIZE);
 	};
 };
 
@@ -55,12 +55,14 @@ class Client
 		void GetBuffer(char *szBuffer);
 		WSABUF * GetWSABUFPtr(OVERLAPPEDEXPtr ol);*/
 		//OVERLAPPED * GetOVERLAPPEDPtr();
+		CRITICAL_SECTION overlapped_cs; //not sure if this is necessary
+		CRITICAL_SECTION command_cs; //for access to the Client::commandQueue
 
 	private:
 
 		SOCKET socket_; //accepted socket
 
-		CRITICAL_SECTION critical_section; //not sure if this is necessary
+		
 
 		std::list<OVERLAPPEDEXPtr> overlappedData;
 
@@ -69,7 +71,7 @@ class Client
 
 		//int               m_nTotalBytes;
 		//int               m_nSentBytes;
-		int id_count;
+		//int id_count;
 };
 
 #endif

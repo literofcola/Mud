@@ -175,25 +175,19 @@ void Game::GameLoop(Server * server)
 			
             user->wasInput = false;
 
-            if(!user->client)
-                continue;
+			if(!user->IsConnected())
+				continue;
 
-            if(user->client->disconnect)
+            if(user->remove)
             {
                 //stop taking commands
-                user->client->commandQueue.clear();
+                user->ClearClientCommandQueue();
                 continue;
             }
 
-            EnterCriticalSection(&server->critical_section);
-			if(!user->client->commandQueue.empty())
-			{
-				user->commandQueue.push_back(user->client->commandQueue.front());
-				user->client->commandQueue.pop_front();
-			}
-            LeaveCriticalSection(&server->critical_section);
+			user->GetOneCommandFromNetwork();
 
-			if(!user->commandQueue.empty())
+			if(user->HasCommandReady())
 			{
                 string command = user->commandQueue.front();
 
@@ -208,8 +202,8 @@ void Game::GameLoop(Server * server)
                         //turn on mxp
                         user->Send("MXP Enabled\n\r");
 						//Send immediately (only really necessary for MCCP)
-						server->deliver(user->client, MXP_START);
-						server->deliver(user->client, MXP_LOCKLOCKED);
+						server->deliver(user->GetClient(), MXP_START);
+						server->deliver(user->GetClient(), MXP_LOCKLOCKED);
                         //user->Send(MXP_START);
                         //user->Send(MXP_LOCKLOCKED);
                         user->mxp = true;
@@ -217,7 +211,7 @@ void Game::GameLoop(Server * server)
 					else if(iac_response == GMCP_DO)
 					{
 						user->Send("GMCP Enabled\n\r");
-						server->deliver(user->client, GMCP_START);
+						server->deliver(user->GetClient(), GMCP_START);
 						user->gmcp = true;
 					}
 					else if(iac_response == MCCP_DO)
@@ -234,7 +228,7 @@ void Game::GameLoop(Server * server)
 							LogFile::Log("error", "Game::GameLoop; Could not init zlib");
 						}
 						//Send immediately
-						server->deliver(user->client, MCCP_START);
+						server->deliver(user->GetClient(), MCCP_START);
 						//user->Send(MCCP_START);
 						user->mccp = true;
 					}
@@ -289,13 +283,10 @@ void Game::GameLoop(Server * server)
                 continue;
             }*/
 
-            //Disconnected but didn't quit. Drop the client, save the user
+            //Disconnected but didn't "quit" (user structure still exists). Save the user
             // ...unless we're not CONN_PLAYING yet, then drop everything
-            //if(user->client && !user->IsConnected())
-			if(!user->client)
+			if(!user->IsConnected())
             {
-                //server->remove_client(user->client);
-                //user->client.reset();
                 user->outputQueue.clear();
                 if(user->connectedState > User::CONN_PLAYING)
                 {
@@ -317,45 +308,53 @@ void Game::GameLoop(Server * server)
                 continue;
             }
 
-            if(user->client && (user->wasInput || !user->outputQueue.empty()) && user->IsPlaying() && user->character)
+            if(user->IsConnected() && (user->wasInput || !user->outputQueue.empty()) && user->IsPlaying() && user->character)
                 user->character->GeneratePrompt(currentTime);
 
-			string out;
-			while(user->client && !user->outputQueue.empty())
+			string out = "";
+			while(!user->outputQueue.empty() || (user->gmcp && !user->subchannelQueue.empty()))
 			{
-				out += user->outputQueue.front();
-				user->outputQueue.pop_front();
-			}
-			while(user->gmcp && user->client && !user->subchannelQueue.empty())
-			{
-				out += user->subchannelQueue.front();
-				user->subchannelQueue.pop_front();
-			}
+				out.clear();
+				while(user->IsConnected() && !user->outputQueue.empty())
+				{
+					if(out.length() + user->outputQueue.front().length() > NETWORK_BUFFER_SIZE)
+						break;
+					out += user->outputQueue.front();
+					user->outputQueue.pop_front();
+				}
+				while(user->gmcp && user->IsConnected() && !user->subchannelQueue.empty())
+				{
+					if(out.length() + user->subchannelQueue.front().length() > NETWORK_BUFFER_SIZE)
+						break;
+					out += user->subchannelQueue.front();
+					user->subchannelQueue.pop_front();
+				}
 
-			if(user->mccp)
-			{
-				memcpy(user->z_in, out.c_str(), out.length());
-				user->z_strm.avail_in = out.length();
-				user->z_strm.next_in = user->z_in;
-				user->z_strm.avail_out = user->Z_BUFSIZE;
-				user->z_strm.next_out = user->z_out;
+				if(user->mccp)
+				{
+					memcpy(user->z_in, out.c_str(), out.length());
+					user->z_strm.avail_in = out.length();
+					user->z_strm.next_in = user->z_in;
+					user->z_strm.avail_out = user->Z_BUFSIZE;
+					user->z_strm.next_out = user->z_out;
 
-				user->z_ret = deflate(&user->z_strm, Z_SYNC_FLUSH);     
+					user->z_ret = deflate(&user->z_strm, Z_SYNC_FLUSH);     
 
-				int z_have = user->Z_BUFSIZE - user->z_strm.avail_out;
-				totalBytesCompressed += z_have;			//server stats
-				totalBytesUncompressed += out.length();
-				server->deliver(user->client, user->z_out, z_have);
-			}
-			else
-			{
-				totalBytesCompressed += out.length(); //server stats
-				totalBytesUncompressed += out.length();
-				server->deliver(user->client, out);
+					int z_have = user->Z_BUFSIZE - user->z_strm.avail_out;
+					totalBytesCompressed += z_have;			//server stats
+					totalBytesUncompressed += out.length();
+					server->deliver(user->GetClient(), user->z_out, z_have);
+				}
+				else
+				{
+					totalBytesCompressed += out.length(); //server stats
+					totalBytesUncompressed += out.length();
+					server->deliver(user->GetClient(), out);
+				}
 			}
 
 			//Check for quit command (also on forced disconnect)
-			if(user->client && user->client->disconnect)
+			if(user->IsConnected() && user->remove)
 			{
                 if(user->character)
                 {
@@ -369,6 +368,7 @@ void Game::GameLoop(Server * server)
 					deflateEnd(&user->z_strm);
 				}
 				//RemoveUser(user);
+				//user->Disconnect();
                 delete (*iter);
                 iter = users.erase(iter);
 			}
@@ -390,10 +390,11 @@ void Game::GameLoop(Server * server)
 	while(iter != users.end())
 	{
 		User * user = (*iter);
+		//user->Disconnect();
         //++iter;
         //server->remove_client(user->client);
-		delete user->client;
-		user->client = NULL;
+		//delete user->client;
+		//user->client = NULL;
         //user->client.reset();
         //Save user/player
         if(user->character)
@@ -813,7 +814,9 @@ void Game::LoginHandler(Server * server, User * user, string argument)
             }
             if(arg1 == "GET") //stop http connections?
             {
-                user->client->disconnect = true; 
+				user->remove = true;
+				user->Disconnect();
+                //user->client->disconnect = true; 
                 return;
             }
 
@@ -833,7 +836,9 @@ void Game::LoginHandler(Server * server, User * user, string argument)
                     && tempUser->connectedState <= User::CONN_CONFIRM_NEW_PASSWORD) 
 			{   //player exists, but hasnt finished creating
 				user->Send("A character is currently being created with that name.\n\r");
-                user->client->disconnect = true;
+				user->remove = true;
+				user->Disconnect();
+                //user->client->disconnect = true;
 			}
             else if(tempUser != NULL && tempUser->connectedState > User::CONN_CONFIRM_NEW_PASSWORD)
 			{   //player exists, but hasnt been saved yet
@@ -845,7 +850,7 @@ void Game::LoginHandler(Server * server, User * user, string argument)
 			}
 			else // user dosn't exist - create and ask for password
 			{
-				user->Send("User " + arg1 + " Does Not Exist - Creating\r\nEnter Password:\r\n");
+				user->Send("User " + arg1 + " Does Not Exist - Creating\r\nEnter Password (Warning! Passwords are plaintext!):\r\n");
                 user->connectedState = User::CONN_GET_NEW_PASSWORD;
                 user->character = Game::GetGame()->NewCharacter(arg1, user);
                 LogFile::Log("status", "Creating character : " + user->character->name);
@@ -882,8 +887,9 @@ void Game::LoginHandler(Server * server, User * user, string argument)
                 if(existingUser->IsConnected())
                 {
                     existingUser->Send("\n\rMultiple login detected. Disconnecting...\n\r");
-                    existingUser->client->disconnect = true;
-                    //server->remove_client(existingUser->client);
+                    //existingUser->client->disconnect = true;
+					existingUser->remove = true;
+                    existingUser->Disconnect();
 
                 }
                 //RemoveUser(existingUser);
@@ -1092,7 +1098,9 @@ void Game::LoginHandler(Server * server, User * user, string argument)
             {
                 Server::sqlQueue->Write("delete from players where name='" + user->character->name + "';");
                 Server::sqlQueue->Write("delete from affects where player_name='" + user->character->name + "';");
-                user->client->disconnect = true;
+				user->Disconnect();
+				user->remove = true;
+                //user->client->disconnect = true;
                 //server->remove_client(user->client);
             }
             else
@@ -1153,7 +1161,9 @@ void Game::LoginHandler(Server * server, User * user, string argument)
             else if(arg1[0] == '4') //quit
             {
                 user->Send("Farewell...");
-                user->client->disconnect = true;
+				user->Disconnect();
+				user->remove = true;
+                //user->client->disconnect = true;
                 //server->remove_client(user->client);
             }
             
@@ -1705,7 +1715,7 @@ void Game::RemoveUser(Client * client)
 	for(iter = users.begin(); iter != users.end(); ++iter)
 	{
 		User * u = *iter;
-		if(u->client == client)
+		if(u->GetClient() == client)
 		{
 			delete (*iter);
 			users.remove(*iter);

@@ -84,12 +84,10 @@ int main(int argc, char * argv[])
 
     theserver->Start();
     thegame->GameLoop(theserver);
-    theserver->Stop();
-
-	theserver->DeInitialize();
-
+    //theserver->Stop();
+	theserver->sqlQueue->Disconnect();
 	lua_close(Server::luaState);
-    theserver->sqlQueue->Disconnect();
+	theserver->DeInitialize();
     LogFile::CloseAll();
 
 	delete thegame;

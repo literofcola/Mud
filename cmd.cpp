@@ -1064,7 +1064,9 @@ bool cmd_quit_Query(Character * ch, string argument)
         {
             ch->SaveSpellAffects();
             ch->SaveCooldowns();
-	        ch->player->user->client->disconnect = true;
+			//ch->player->user->Disconnect();
+			ch->player->user->remove = true;
+	        //ch->player->user->client->disconnect = true;
         }
 	}
 	return true;

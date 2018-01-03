@@ -27,45 +27,29 @@ using namespace std;
 
 Client::Client(SOCKET s) : socket_(s)
 {
-    receiveBuffer = new char[MAX_INPUT_LENGTH];
+    receiveBuffer = new char[NETWORK_BUFFER_SIZE];
     commandQueue.clear();
     inputBuffer.clear();
 	disconnect = false;
-    ZeroMemory(receiveBuffer, MAX_INPUT_LENGTH);
-
-	//m_pol = new OVERLAPPED;
-	//m_pwbuf = new WSABUF;
-
-	//ZeroMemory(m_pol, sizeof(OVERLAPPED));
-
-	//m_pwbuf->buf = NULL;
-	//m_pwbuf->len = 0;
-
-	//m_nOpCode = 0;
-	//m_nTotalBytes = 0;
-	//m_nSentBytes = 0;
-	InitializeCriticalSection(&critical_section);
+    ZeroMemory(receiveBuffer, NETWORK_BUFFER_SIZE);
+	InitializeCriticalSection(&overlapped_cs);
+	InitializeCriticalSection(&command_cs);
 }
 
 Client::~Client()
 {
     delete[] receiveBuffer;
-
 	//Wait for the pending operations to complete
-	/*while (!HasOverlappedIoCompleted(m_pol))
-	{
-		Sleep(0);
-	}*/
-
+	CancelIo((HANDLE)socket_);
+	SleepEx(0, TRUE); // the completion will be called here
 	closesocket(socket_);
-	DeleteCriticalSection(&critical_section);
 
-	//Cleanup
-	//delete m_pol;
-	//delete m_pwbuf;
+	//shutdown(socket_, SD_BOTH);
+
+	DeleteCriticalSection(&overlapped_cs);
+	DeleteCriticalSection(&command_cs);
 	overlappedData.clear();
 }
-
 
 //Get/Set calls
 /*void Client::SetOpCode(int n, int op_id)
@@ -121,7 +105,7 @@ struct OVERLAPPEDEX : OVERLAPPED
 {
 	//base OVERLAPPED: 
 	WSABUF			wsabuf;
-	char			buffer[MAX_INPUT_LENGTH];
+	char			buffer[NETWORK_BUFFER_SIZE];
 	int				totalBytes;
 	int				sentBytes;
 	int				opCode;
@@ -129,9 +113,9 @@ struct OVERLAPPEDEX : OVERLAPPED
 	OVERLAPPEDEX()
 	{
 		wsabuf.buf = buffer;
-		wsabuf.len = MAX_INPUT_LENGTH;
+		wsabuf.len = NETWORK_BUFFER_SIZE;
 		totalBytes = sentBytes = opCode = 0;
-		ZeroMemory(buffer, MAX_INPUT_LENGTH);
+		ZeroMemory(buffer, NETWORK_BUFFER_SIZE);
 	};
 };
 */
@@ -142,9 +126,9 @@ OVERLAPPEDEXPtr Client::NewOperationData(int op_type)
 	ZeroMemory(ol.get(), sizeof(OVERLAPPED));
 	ol->opCode = op_type;
 
-	EnterCriticalSection(&critical_section); 
+	EnterCriticalSection(&overlapped_cs); 
 	overlappedData.push_back(ol);
-	LeaveCriticalSection(&critical_section);
+	LeaveCriticalSection(&overlapped_cs);
 
 	return ol;
 }
@@ -152,7 +136,7 @@ OVERLAPPEDEXPtr Client::NewOperationData(int op_type)
 void Client::FreeOperationData(OVERLAPPEDEX *  ol)
 {
 	//not sure if we need these
-	EnterCriticalSection(&critical_section); 
+	EnterCriticalSection(&overlapped_cs); 
 	std::list<OVERLAPPEDEXPtr>::iterator iter;
 	for(iter = overlappedData.begin(); iter != overlappedData.end(); iter++)
 	{
@@ -162,10 +146,7 @@ void Client::FreeOperationData(OVERLAPPEDEX *  ol)
 			break;
 		}
 	}
-	//overlappedData.remove(ol);
-	//magic vector erase by value
-	//overlappedData.erase(std::remove(overlappedData.begin(), overlappedData.end(), ol), overlappedData.end());
-	LeaveCriticalSection(&critical_section);
+	LeaveCriticalSection(&overlapped_cs);
 }
 
 
@@ -187,10 +168,10 @@ void Client::FreeOperationData(OVERLAPPEDEX *  ol)
 
 /*void Client::SetBuffer(char *theBuffer, int op_id)
 {
-	strcpy_s(overlappedData[op_id]->wsabuf.buf, MAX_INPUT_LENGTH, theBuffer);
+	strcpy_s(overlappedData[op_id]->wsabuf.buf, NETWORK_BUFFER_SIZE, theBuffer);
 }*/
 
 /*void Client::GetBuffer(char *theBuffer, int op_id)
 {
-	strcpy_s(theBuffer, MAX_INPUT_LENGTH, overlappedData[op_id]->wsabuf.buf);
+	strcpy_s(theBuffer, NETWORK_BUFFER_SIZE, overlappedData[op_id]->wsabuf.buf);
 }*/

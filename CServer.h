@@ -27,7 +27,7 @@ public:
 
     //void start_client(Client_ptr c);
 	//void remove_client(Client_ptr client);
-	//void remove_all_clients();
+	void DisconnectAllClients();
     //void handle_read(Client_ptr client, const asio::error_code & error);
     //void handle_write(Client_ptr client, const asio::error_code& error);
 
