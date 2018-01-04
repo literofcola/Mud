@@ -272,7 +272,8 @@ void Server::AcceptConnection(SOCKET ListenSocket)
 		if ((SOCKET_ERROR == err) && (WSA_IO_PENDING != WSAGetLastError()))
 		{
 			LogFile::Log("error", "WSARecv(): " + Utilities::GetLastErrorAsString());
-			mygame->RemoveUser(pClientContext);
+			if(pClientContext)
+				mygame->RemoveUser(pClientContext);
 		}
 	}
 }
@@ -287,7 +288,8 @@ bool Server::AssociateWithIOCP(Client * pClientContext)
 		LogFile::Log("error", "CreateIoCompletionPort(): " + Utilities::GetLastErrorAsString());
 
 		//Let's not work with this client
-		mygame->RemoveUser(pClientContext);
+		if(pClientContext)
+			mygame->RemoveUser(pClientContext);
 		return false;
 	}
 
@@ -333,7 +335,8 @@ DWORD WINAPI Server::WorkerThread(void * lpParam)
 		if(!bReturn)
 		{
 			LogFile::Log("error", "GetQueuedCompletionStatus(): " + Utilities::GetLastErrorAsString());
-			thisserver->mygame->RemoveUser(pClientContext);
+			if(pClientContext)
+				thisserver->mygame->RemoveUser(pClientContext);
 			continue;
 		}
 
@@ -373,7 +376,8 @@ DWORD WINAPI Server::WorkerThread(void * lpParam)
 					{
 						//Let's not work with this client
 						LogFile::Log("error", "WSASend(): " + Utilities::GetLastErrorAsString());
-						thisserver->mygame->RemoveUser(pClientContext);
+						if(pClientContext)
+							thisserver->mygame->RemoveUser(pClientContext);
 					}
 				}
 				else
@@ -443,7 +447,8 @@ DWORD WINAPI Server::WorkerThread(void * lpParam)
 				if ((SOCKET_ERROR == err) && (WSA_IO_PENDING != WSAGetLastError()))
 				{
 					LogFile::Log("error", "WSARecv(): " + Utilities::GetLastErrorAsString());
-					thisserver->mygame->RemoveUser(pClientContext);
+					if(pClientContext)
+						thisserver->mygame->RemoveUser(pClientContext);
 				}
 
 				break;

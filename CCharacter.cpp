@@ -197,6 +197,7 @@ Character::~Character()
 {
     if(player != NULL)
         delete player;
+
     player = NULL;
     room = NULL;
     threatList.clear();
@@ -888,7 +889,8 @@ Character * Character::LoadPlayer(std::string name, User * user)
 
     loaded->room = Game::GetGame()->GetRoom(row["room"]); 
 
-    loaded->player = new Player(user);
+	if(!loaded->player)
+		loaded->player = new Player(user);
     loaded->player->currentClass = Game::GetGame()->GetClass(row["class"]);
     loaded->player->password = row["password"];
     loaded->player->immlevel = row["immlevel"];

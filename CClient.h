@@ -33,29 +33,13 @@ class Client
 		std::deque<std::string> commandQueue;
 		bool disconnect;
 
-		//Get/Set calls
-		/*void SetOpCode(int n);
-		int GetOpCode(int op_id);
-		void SetTotalBytes(int n, int op_id);
-		int GetTotalBytes(int op_id);
-		void SetSentBytes(int n, int op_id);
-		void IncrSentBytes(int n, int op_id);
-		int GetSentBytes(int op_id);*/
 		void SetSocket(SOCKET s);
 		SOCKET Socket();
         std::string GetIPAddress();
-		/*void SetWSABUFLength(int nLength);
-		int GetWSABUFLength();
-		WSABUF* GetWSABUFPtr();
-		OVERLAPPED* GetOVERLAPPEDPtr();
-		void ResetWSABUF();*/
+
 		OVERLAPPEDEXPtr NewOperationData(int op_type);
 		void FreeOperationData(OVERLAPPEDEX * ol);
-		/*void SetBuffer(char *szBuffer);
-		void SetBufferLength(int len);
-		void GetBuffer(char *szBuffer);
-		WSABUF * GetWSABUFPtr(OVERLAPPEDEXPtr ol);*/
-		//OVERLAPPED * GetOVERLAPPEDPtr();
+
 		CRITICAL_SECTION overlapped_cs; //not sure if this is necessary
 		CRITICAL_SECTION command_cs; //for access to the Client::commandQueue
 
@@ -66,13 +50,6 @@ class Client
 		std::string ipaddress_;
 
 		std::list<OVERLAPPEDEXPtr> overlappedData;
-
-		//OVERLAPPED		*m_pol;
-		//WSABUF            *m_pwbuf;
-
-		//int               m_nTotalBytes;
-		//int               m_nSentBytes;
-		//int id_count;
 };
 
 #endif

@@ -124,6 +124,44 @@ Game::~Game()
         delete (*iter3).second;
     }
     rooms.clear();
+
+	std::map<int, Area *>::iterator iter4;
+    for(iter4 = areas.begin(); iter4 != areas.end(); ++iter4)
+    {
+        delete (*iter4).second;
+    }
+    areas.clear();
+
+	std::map<int, Quest *>::iterator iter5;
+    for(iter5 = quests.begin(); iter5 != quests.end(); ++iter5)
+    {
+        delete (*iter5).second;
+    }
+    quests.clear();
+
+	std::map<int, Item *>::iterator iter6;
+    for(iter6 = itemIndex.begin(); iter6 != itemIndex.end(); ++iter6)
+    {
+        delete (*iter6).second;
+    }
+    itemIndex.clear();
+
+	std::map<int, Help *>::iterator iter7;
+    for(iter7 = helpIndex.begin(); iter7 != helpIndex.end(); ++iter7)
+    {
+        delete (*iter7).second;
+    }
+    helpIndex.clear();
+
+	std::map<int, Class *>::iterator iter8;
+    for(iter8 = classes.begin(); iter8 != classes.end(); ++iter8)
+    {
+        delete (*iter8).second;
+    }
+    classes.clear();
+
+	std::map<int, Class *> classes;
+	std::map<int, Help *> helpIndex;
 }
 
 void Game::GameLoop(Server * server)
@@ -1700,13 +1738,14 @@ void Game::NewUser(Client * client)
 
 void Game::RemoveUser(User * user)
 {
-    std::list<User *>::iterator iter;
+    /*std::list<User *>::iterator iter;
     iter = find( users.begin(), users.end(), user); 
     if(iter != users.end())
     {
         delete (*iter);
         users.remove(*iter);
-    }
+    }*/
+	user->remove = true;
 }
 
 void Game::RemoveUser(Client * client)
@@ -1717,8 +1756,9 @@ void Game::RemoveUser(Client * client)
 		User * u = *iter;
 		if(u->GetClient() == client)
 		{
-			delete (*iter);
-			users.remove(*iter);
+			/*delete (*iter);
+			users.erase(iter);*/
+			u->remove = true;
 			break;
 		}
 	}

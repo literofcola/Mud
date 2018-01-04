@@ -95,29 +95,3 @@ void Client::FreeOperationData(OVERLAPPEDEX *  ol)
 	LeaveCriticalSection(&overlapped_cs);
 }
 
-
-/*WSABUF * Client::GetWSABUFPtr(OVERLAPPEDEXPtr ol)
-{
-	return &ol->wsabuf;
-}*/
-
-/*OVERLAPPED * Client::GetOVERLAPPEDPtr(int op_id)
-{
-	return &(OVERLAPPED)overlappedData[op_id]->overlapped;
-}*/
-
-/*void Client::SetBufferLength(int len, OVERLAPPEDEXPtr ol)
-{
-	
-	overlappedData[op_id]->wsabuf.len = len;
-}*/
-
-/*void Client::SetBuffer(char *theBuffer, int op_id)
-{
-	strcpy_s(overlappedData[op_id]->wsabuf.buf, NETWORK_BUFFER_SIZE, theBuffer);
-}*/
-
-/*void Client::GetBuffer(char *theBuffer, int op_id)
-{
-	strcpy_s(theBuffer, NETWORK_BUFFER_SIZE, overlappedData[op_id]->wsabuf.buf);
-}*/
