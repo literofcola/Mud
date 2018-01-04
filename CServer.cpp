@@ -234,7 +234,7 @@ void Server::AcceptConnection(SOCKET ListenSocket)
 
 	if (INVALID_SOCKET == Socket)
 	{
-		LogFile::Log("error", "Error occurred while accepting socket: " + WSAGetLastError());
+		LogFile::Log("error", "accept(): " + Utilities::GetLastErrorAsString());
 	}
 
 	//Set TCP_NODELAY (Disable Nagle)
@@ -245,10 +245,11 @@ void Server::AcceptConnection(SOCKET ListenSocket)
 	char ipstr[INET6_ADDRSTRLEN];
 	//LogFile::Log("error", "Client connected from: " + inet_ntop(AF_INET, &ClientAddress.sin_addr, ipstr, sizeof(ipstr)));
 	std::string addr = inet_ntoa(ClientAddress.sin_addr);
+
 	LogFile::Log("error", "Client connected from: " + addr);
 
 	//Create a new ClientContext for this newly accepted client
-	Client * pClientContext = new Client(Socket);
+	Client * pClientContext = new Client(Socket, addr);
 
 	//Store this object
 	mygame->NewUser(pClientContext);
@@ -270,7 +271,7 @@ void Server::AcceptConnection(SOCKET ListenSocket)
 
 		if ((SOCKET_ERROR == err) && (WSA_IO_PENDING != WSAGetLastError()))
 		{
-			LogFile::Log("error", "Error in Initial Post.");
+			LogFile::Log("error", "WSARecv(): " + Utilities::GetLastErrorAsString());
 			mygame->RemoveUser(pClientContext);
 		}
 	}
@@ -283,7 +284,7 @@ bool Server::AssociateWithIOCP(Client * pClientContext)
 
 	if (NULL == hTemp)
 	{
-		LogFile::Log("error", "Error occurred while executing CreateIoCompletionPort(). " + Utilities::itos(GetLastError()));
+		LogFile::Log("error", "CreateIoCompletionPort(): " + Utilities::GetLastErrorAsString());
 
 		//Let's not work with this client
 		mygame->RemoveUser(pClientContext);
@@ -331,7 +332,7 @@ DWORD WINAPI Server::WorkerThread(void * lpParam)
 
 		if(!bReturn)
 		{
-			LogFile::Log("error", "GetQueuedCompletionStatus() failed: " + Utilities::itos(GetLastError()));
+			LogFile::Log("error", "GetQueuedCompletionStatus(): " + Utilities::GetLastErrorAsString());
 			thisserver->mygame->RemoveUser(pClientContext);
 			continue;
 		}
@@ -371,7 +372,7 @@ DWORD WINAPI Server::WorkerThread(void * lpParam)
 					if ((SOCKET_ERROR == nBytesSent) && (WSA_IO_PENDING != WSAGetLastError()))
 					{
 						//Let's not work with this client
-						LogFile::Log("error", "WSASend() failed: " + Utilities::itos(GetLastError()));
+						LogFile::Log("error", "WSASend(): " + Utilities::GetLastErrorAsString());
 						thisserver->mygame->RemoveUser(pClientContext);
 					}
 				}
@@ -441,7 +442,7 @@ DWORD WINAPI Server::WorkerThread(void * lpParam)
 
 				if ((SOCKET_ERROR == err) && (WSA_IO_PENDING != WSAGetLastError()))
 				{
-					LogFile::Log("error", "Error in WSARecv");
+					LogFile::Log("error", "WSARecv(): " + Utilities::GetLastErrorAsString());
 					thisserver->mygame->RemoveUser(pClientContext);
 				}
 
@@ -469,7 +470,7 @@ void Server::deliver(Client * c, const std::string msg)
 	if(wsaerr == 0)
 	{
 		//immediate success
-		LogFile::Log("status", "Immediate sent bytes: " + Utilities::itos(base_overlapped->InternalHigh));
+		//LogFile::Log("status", "Immediate sent bytes: " + Utilities::itos(base_overlapped->InternalHigh));
 	}
 	else if(wsaerr == SOCKET_ERROR && WSAGetLastError() == WSA_IO_PENDING)
 	{
@@ -478,10 +479,9 @@ void Server::deliver(Client * c, const std::string msg)
 	else if(wsaerr == SOCKET_ERROR && WSAGetLastError() != WSA_IO_PENDING)
 	{
 		//error
-		LogFile::Log("error", "WSASend error: " + Utilities::itos(WSAGetLastError()));
+		LogFile::Log("error", "WSASend(): " + Utilities::GetLastErrorAsString());
 		mygame->RemoveUser(c);
 	}
-	
 }
 
 void Server::deliver(Client * c, const unsigned char * msg, int length)
@@ -497,7 +497,7 @@ void Server::deliver(Client * c, const unsigned char * msg, int length)
 	if(wsaerr == 0)
 	{
 		//immediate success
-		LogFile::Log("status", "Immediate sent bytes: " + Utilities::itos(base_overlapped->InternalHigh));
+		//LogFile::Log("status", "Immediate sent bytes: " + Utilities::itos(base_overlapped->InternalHigh));
 	}
 	else if(wsaerr == SOCKET_ERROR && WSAGetLastError() == WSA_IO_PENDING)
 	{
@@ -506,7 +506,7 @@ void Server::deliver(Client * c, const unsigned char * msg, int length)
 	else if(wsaerr == SOCKET_ERROR && WSAGetLastError() != WSA_IO_PENDING)
 	{
 		//error
-		LogFile::Log("error", "WSASend error: " + Utilities::itos(WSAGetLastError()));
+		LogFile::Log("error", "WSASend(): " + Utilities::GetLastErrorAsString());
 		mygame->RemoveUser(c);
 	}
 }

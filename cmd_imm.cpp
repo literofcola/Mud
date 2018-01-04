@@ -91,12 +91,23 @@ void cmd_restore(Character * ch, string argument)
 
 void cmd_sockets(Character * ch, string argument)
 {
-    /*std::list<User *>::iterator iter;
+    std::list<User *>::iterator iter;
     for(iter = Game::GetGame()->users.begin(); iter != Game::GetGame()->users.end(); iter++)
     {
-        if((*iter)->character && (*iter)->client && (*iter)->client->Socket().is_open())
-            ch->Send((*iter)->character->name + ", " + (*iter)->client->Socket().remote_endpoint().address().to_string() + "\n\r");
-    }*/
+        if((*iter)->IsConnected())
+        {
+            if((*iter)->character)
+            {
+                ch->Send((*iter)->character->name + " ");
+            }
+            else
+            {
+                ch->Send("<no character> ");
+            }
+
+            ch->Send((*iter)->GetClient()->GetIPAddress() + "\n\r");
+        }
+    }
 }
 
 void cmd_disconnect(Character * ch, string argument)

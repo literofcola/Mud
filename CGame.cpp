@@ -889,7 +889,7 @@ void Game::LoginHandler(Server * server, User * user, string argument)
                     existingUser->Send("\n\rMultiple login detected. Disconnecting...\n\r");
                     //existingUser->client->disconnect = true;
 					existingUser->remove = true;
-                    existingUser->Disconnect();
+                    //existingUser->Disconnect();
 
                 }
                 //RemoveUser(existingUser);

@@ -1,7 +1,7 @@
 #ifndef CCLIENT_H
 #define CCLIENT_H
 
-#define NETWORK_BUFFER_SIZE 2048
+#define NETWORK_BUFFER_SIZE 16384
 
 struct OVERLAPPEDEX : OVERLAPPED
 {
@@ -25,7 +25,7 @@ typedef boost::shared_ptr<OVERLAPPEDEX> OVERLAPPEDEXPtr;
 class Client
 {
 	public:
-		Client(SOCKET s);
+		Client(SOCKET s, std::string ipaddress);
 		~Client();
 
 		char * receiveBuffer;       
@@ -43,6 +43,7 @@ class Client
 		int GetSentBytes(int op_id);*/
 		void SetSocket(SOCKET s);
 		SOCKET Socket();
+        std::string GetIPAddress();
 		/*void SetWSABUFLength(int nLength);
 		int GetWSABUFLength();
 		WSABUF* GetWSABUFPtr();
@@ -62,7 +63,7 @@ class Client
 
 		SOCKET socket_; //accepted socket
 
-		
+		std::string ipaddress_;
 
 		std::list<OVERLAPPEDEXPtr> overlappedData;
 

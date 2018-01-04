@@ -25,7 +25,7 @@
 
 using namespace std;
 
-Client::Client(SOCKET s) : socket_(s)
+Client::Client(SOCKET s, std::string ipaddress) : socket_(s), ipaddress_(ipaddress)
 {
     receiveBuffer = new char[NETWORK_BUFFER_SIZE];
     commandQueue.clear();
@@ -39,7 +39,7 @@ Client::Client(SOCKET s) : socket_(s)
 Client::~Client()
 {
     delete[] receiveBuffer;
-	//Wait for the pending operations to complete
+	//cancel pending operations
 	CancelIo((HANDLE)socket_);
 	SleepEx(0, TRUE); // the completion will be called here
 	closesocket(socket_);
@@ -51,41 +51,10 @@ Client::~Client()
 	overlappedData.clear();
 }
 
-//Get/Set calls
-/*void Client::SetOpCode(int n, int op_id)
+std::string Client::GetIPAddress()
 {
-	overlappedData[op_id]->opCode = n;
+    return ipaddress_;
 }
-
-int Client::GetOpCode(int op_id)
-{
-	return overlappedData[op_id]->opCode;
-}
-
-void Client::SetTotalBytes(int n, int op_id)
-{
-	overlappedData[op_id]->totalBytes = n;
-}
-
-int Client::GetTotalBytes(int op_id)
-{
-	return overlappedData[op_id]->totalBytes;
-}
-
-void Client::SetSentBytes(int n, int op_id)
-{
-	overlappedData[op_id]->sentBytes = n;
-}
-
-void Client::IncrSentBytes(int n, int op_id)
-{
-	overlappedData[op_id]->sentBytes += n;
-}
-
-int Client::GetSentBytes(int op_id)
-{
-	return overlappedData[op_id]->sentBytes;
-}*/
 
 void Client::SetSocket(SOCKET s)
 {
@@ -96,29 +65,6 @@ SOCKET Client::Socket()
 {
 	return socket_;
 }
-/*
-typedef boost::shared_ptr<OVERLAPPEDEX> OVERLAPPEDEXPtr;
-std::vector<OVERLAPPEDEXPtr> overlappedData;
-*/
-/*
-struct OVERLAPPEDEX : OVERLAPPED 
-{
-	//base OVERLAPPED: 
-	WSABUF			wsabuf;
-	char			buffer[NETWORK_BUFFER_SIZE];
-	int				totalBytes;
-	int				sentBytes;
-	int				opCode;
-
-	OVERLAPPEDEX()
-	{
-		wsabuf.buf = buffer;
-		wsabuf.len = NETWORK_BUFFER_SIZE;
-		totalBytes = sentBytes = opCode = 0;
-		ZeroMemory(buffer, NETWORK_BUFFER_SIZE);
-	};
-};
-*/
 
 OVERLAPPEDEXPtr Client::NewOperationData(int op_type)
 {

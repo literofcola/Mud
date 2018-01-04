@@ -53,7 +53,7 @@ void Lua_DefineClasses(lua_State * ls)
         .def(constructor<Game *, int>())
         ,
         class_<Client>("Client")
-        .def(constructor<SOCKET>())
+        .def(constructor<SOCKET, std::string>())
         ,
         class_<User>("User")
         .def(constructor<Client *>())

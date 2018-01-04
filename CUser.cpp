@@ -46,9 +46,15 @@ User::User(Client * client_)
 User::~User()
 {
 	if(client)
+	{
 		delete client;
+		client = NULL;
+	}
 	if(character != NULL)
+	{
 		delete character;
+		character = NULL;
+	}
 }
 
 void User::Send(string str)
@@ -63,6 +69,11 @@ void User::Send(string str)
             string colorcode = Utilities::ColorString(str[i+1]);
             str.replace(i, 2, colorcode);
         }
+    }
+    if(str.length() >= NETWORK_BUFFER_SIZE)
+    {
+        str = str.substr(0, NETWORK_BUFFER_SIZE-1);
+        LogFile::Log("error", "User::Send(), tried to send single string > NETWORK_BUFFER_SIZE. Truncated");
     }
 	outputQueue.push_back(str);
 }
@@ -107,8 +118,11 @@ bool User::IsPlaying()
 
 void User::Disconnect()
 {
-	delete client;
-	client = NULL;
+    if(client)
+    {
+	    delete client;
+	    client = NULL;
+    }
 }
 
 void User::GetOneCommandFromNetwork()
