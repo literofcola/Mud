@@ -37,7 +37,7 @@ class Client
 		SOCKET Socket();
         std::string GetIPAddress();
 
-		OVERLAPPEDEXPtr NewOperationData(int op_type);
+		OVERLAPPEDEX * NewOperationData(int op_type);
 		void FreeOperationData(OVERLAPPEDEX * ol);
 
 		CRITICAL_SECTION overlapped_cs; //not sure if this is necessary
@@ -49,7 +49,7 @@ class Client
 
 		std::string ipaddress_;
 
-		std::list<OVERLAPPEDEXPtr> overlappedData;
+		std::list<OVERLAPPEDEX *> overlappedData;
 };
 
 #endif

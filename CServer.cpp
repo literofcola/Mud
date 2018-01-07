@@ -257,8 +257,9 @@ void Server::AcceptConnection(SOCKET ListenSocket)
 	if (true == AssociateWithIOCP(pClientContext))
 	{
 		//pClientContext->SetOpCode(OP_WRITE);
-		boost::shared_ptr<OVERLAPPEDEX> operationData = pClientContext->NewOperationData(OP_READ);
-		OVERLAPPED * base_overlapped = static_cast<OVERLAPPED*>(operationData.get());
+		//boost::shared_ptr<OVERLAPPEDEX> operationData = pClientContext->NewOperationData(OP_READ);
+		OVERLAPPEDEX * operationData = pClientContext->NewOperationData(OP_READ);
+		OVERLAPPED * base_overlapped = static_cast<OVERLAPPED*>(operationData);
 
 		//Get data.
 		DWORD dwFlags = 0;
@@ -267,7 +268,7 @@ void Server::AcceptConnection(SOCKET ListenSocket)
 		//Post initial Recv
 		//This is a right place to post a initial Recv
 		//Posting a initial Recv in WorkerThread will create scalability issues.
-		int err = WSARecv(pClientContext->Socket(), &operationData->wsabuf, 1, &dwBytes, &dwFlags, base_overlapped, NULL);
+		int err = WSARecv(pClientContext->Socket(), &operationData->wsabuf, 1, NULL, &dwFlags, base_overlapped, NULL);
 
 		if ((SOCKET_ERROR == err) && (WSA_IO_PENDING != WSAGetLastError()))
 		{
@@ -442,7 +443,7 @@ DWORD WINAPI Server::WorkerThread(void * lpParam)
 				ZeroMemory(pOverlapped, sizeof(OVERLAPPED));
 				pOverlappedEx->totalBytes = pOverlappedEx->sentBytes = 0;
 
-				int err = WSARecv(pClientContext->Socket(), &pOverlappedEx->wsabuf, 1, &dwBytes, &dwFlags, pOverlapped, NULL);
+				int err = WSARecv(pClientContext->Socket(), &pOverlappedEx->wsabuf, 1, NULL, &dwFlags, pOverlapped, NULL);
 
 				if ((SOCKET_ERROR == err) && (WSA_IO_PENDING != WSAGetLastError()))
 				{
@@ -464,11 +465,12 @@ DWORD WINAPI Server::WorkerThread(void * lpParam)
 
 void Server::deliver(Client * c, const std::string msg)
 {
-	OVERLAPPEDEXPtr olptr = c->NewOperationData(OP_WRITE);
+	//OVERLAPPEDEXPtr olptr = c->NewOperationData(OP_WRITE);
+	OVERLAPPEDEX * olptr = c->NewOperationData(OP_WRITE);
 	memcpy(olptr->buffer, msg.c_str(), msg.length());
 	olptr->wsabuf.len = (DWORD)msg.length();
 	olptr->totalBytes = (DWORD)msg.length();
-	OVERLAPPED * base_overlapped = static_cast<OVERLAPPED*>(olptr.get());
+	OVERLAPPED * base_overlapped = static_cast<OVERLAPPED*>(olptr);
 
 	int wsaerr = WSASend(c->Socket(), &olptr->wsabuf, 1, NULL, 0, base_overlapped, NULL);
 
@@ -491,11 +493,11 @@ void Server::deliver(Client * c, const std::string msg)
 
 void Server::deliver(Client * c, const unsigned char * msg, int length)
 {
-	OVERLAPPEDEXPtr olptr = c->NewOperationData(OP_WRITE);
+	OVERLAPPEDEX * olptr = c->NewOperationData(OP_WRITE);
 	memcpy(olptr->buffer, msg, length);
 	olptr->wsabuf.len = length;
 	olptr->totalBytes = length;
-	OVERLAPPED * base_overlapped = static_cast<OVERLAPPED*>(olptr.get());
+	OVERLAPPED * base_overlapped = static_cast<OVERLAPPED*>(olptr);
 
 	int wsaerr = WSASend(c->Socket(), &olptr->wsabuf, 1, NULL, 0, base_overlapped, NULL);
 

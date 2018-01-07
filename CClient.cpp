@@ -66,10 +66,12 @@ SOCKET Client::Socket()
 	return socket_;
 }
 
-OVERLAPPEDEXPtr Client::NewOperationData(int op_type)
+OVERLAPPEDEX * Client::NewOperationData(int op_type)
 {
-	OVERLAPPEDEXPtr ol(new OVERLAPPEDEX);
-	ZeroMemory(ol.get(), sizeof(OVERLAPPED));
+	OVERLAPPEDEX * ol = new OVERLAPPEDEX();
+	//OVERLAPPEDEXPtr ol(new OVERLAPPEDEX);
+	//ZeroMemory(ol.get(), sizeof(OVERLAPPED));
+	ZeroMemory(ol, sizeof(OVERLAPPED));
 	ol->opCode = op_type;
 
 	EnterCriticalSection(&overlapped_cs); 
@@ -83,11 +85,20 @@ void Client::FreeOperationData(OVERLAPPEDEX *  ol)
 {
 	//not sure if we need these
 	EnterCriticalSection(&overlapped_cs); 
-	std::list<OVERLAPPEDEXPtr>::iterator iter;
-	for(iter = overlappedData.begin(); iter != overlappedData.end(); iter++)
+	std::list<OVERLAPPEDEX *>::iterator iter;
+	/*for(iter = overlappedData.begin(); iter != overlappedData.end(); iter++)
 	{
 		if(iter->get() == ol)
 		{
+			overlappedData.erase(iter);
+			break;
+		}
+	}*/
+	for(iter = overlappedData.begin(); iter != overlappedData.end(); iter++)
+	{
+		if((*iter) == ol)
+		{
+			delete (*iter);
 			overlappedData.erase(iter);
 			break;
 		}
