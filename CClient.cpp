@@ -48,6 +48,14 @@ Client::~Client()
 
 	DeleteCriticalSection(&overlapped_cs);
 	DeleteCriticalSection(&command_cs);
+
+	std::list<OVERLAPPEDEX *>::iterator iter = overlappedData.begin();
+	while(iter != overlappedData.end())
+	{
+		if(*iter)
+			delete (*iter); //THIS OVERLAPPED DATA IS BEING WRITTEN TO AFTER DELETION!!!
+		iter = overlappedData.erase(iter);
+	}
 	overlappedData.clear();
 }
 
@@ -99,6 +107,7 @@ void Client::FreeOperationData(OVERLAPPEDEX *  ol)
 		if((*iter) == ol)
 		{
 			delete (*iter);
+			(*iter) = NULL;
 			overlappedData.erase(iter);
 			break;
 		}

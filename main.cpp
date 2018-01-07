@@ -1,5 +1,5 @@
 #include "stdafx.h"
-//#include "vld.h"
+#include "vld.h"
 #include "CListener.h"
 #include "CListenerManager.h"
 #include "CmySQLQueue.h"
