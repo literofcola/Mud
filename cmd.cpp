@@ -1060,6 +1060,7 @@ bool cmd_quit_Query(Character * ch, string argument)
 
         ch->ChangeRooms(NULL);
 	    ch->Send("Bye\n\r");
+        
         if(ch->player && ch->player->user)
         {
             ch->SaveSpellAffects();
@@ -1069,6 +1070,7 @@ bool cmd_quit_Query(Character * ch, string argument)
 	        //ch->player->user->client->disconnect = true;
         }
 	}
+    LogFile::Log("status", ch->name + " is quitting");
 	return true;
 }
 

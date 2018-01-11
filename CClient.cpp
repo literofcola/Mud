@@ -40,9 +40,9 @@ Client::~Client()
 {
     delete[] receiveBuffer;
 	//cancel pending operations
-	CancelIo((HANDLE)socket_);
+    closesocket(socket_);
+	CancelIoEx((HANDLE)socket_, NULL);
 	SleepEx(0, TRUE); // the completion will be called here
-	closesocket(socket_);
 
 	//shutdown(socket_, SD_BOTH);
 
@@ -53,10 +53,17 @@ Client::~Client()
 	while(iter != overlappedData.end())
 	{
 		if(*iter)
-			delete (*iter); //THIS OVERLAPPED DATA IS BEING WRITTEN TO AFTER DELETION!!!
+			delete (*iter);
 		iter = overlappedData.erase(iter);
 	}
 	overlappedData.clear();
+}
+
+void Client::CloseSocketAndSleep()
+{
+    closesocket(socket_);
+	//CancelIo((HANDLE)socket_);
+	SleepEx(0, TRUE); // the completion will be called here
 }
 
 std::string Client::GetIPAddress()

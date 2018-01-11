@@ -59,6 +59,7 @@ private:
 
 	int nPort;
 	Game * mygame;
+    std::list<Client *> clients; //server owns the clients, user->client points into this list
 };
 
 #endif //CSERVER_H

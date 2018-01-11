@@ -90,10 +90,12 @@ Game::Game()
     total_players_since_boot = 0;
 	totalBytesCompressed = totalBytesUncompressed = 0;
     shutdown = false;
+    InitializeCriticalSection(&userListCS);
 }
 
 Game::~Game()
 {
+    DeleteCriticalSection(&userListCS);
     std::map<int, Skill *>::iterator iter;
     for(iter = skills.begin(); iter != skills.end(); ++iter)
     {
@@ -202,6 +204,7 @@ void Game::GameLoop(Server * server)
     while(!shutdown)
 	{
 		//input
+        EnterCriticalSection(&userListCS); //Locks out the AcceptThread from adding a new user to the userlist
 		iter = users.begin();
 		while(iter != users.end())
 		{
@@ -307,7 +310,10 @@ void Game::GameLoop(Server * server)
             }
 		}
 
+        //todo: we can probably accept new users while in the WorldUpdate
+        //LeaveCriticalSection(&userListCS); //Locks out the AcceptThread from adding a new user to the userlist
 		WorldUpdate(server);
+        //EnterCriticalSection(&userListCS); //Locks out the AcceptThread from adding a new user to the userlist
 
 		//output
         iter = users.begin();
@@ -394,9 +400,11 @@ void Game::GameLoop(Server * server)
 			//Check for quit command (also on forced disconnect)
 			if(user->IsConnected() && user->remove)
 			{
+                LogFile::Log("status", "removing user via remove flag");
                 if(user->character)
                 {
-                    user->character->Save();
+                    if(user->connectedState == User::CONN_PLAYING) //don't save fresh characters
+                        user->character->Save();
                     user->character->NotifyListeners();
                     characters.remove(user->character);
                     //RemoveCharacter(user->character);
@@ -415,6 +423,7 @@ void Game::GameLoop(Server * server)
                 ++iter;
             }
 		}
+        LeaveCriticalSection(&userListCS); //Locks out the AcceptThread from adding a new user to the userlist
 		Sleep(1);
 
         _ftime(&time);
@@ -423,31 +432,8 @@ void Game::GameLoop(Server * server)
         currentTime = ((int)time_secs + ((double)time_millis / 1000.0));
 	}
 
-    //Server is going down!
-    iter = users.begin();
-	while(iter != users.end())
-	{
-		User * user = (*iter);
-		//user->Disconnect();
-        //++iter;
-        //server->remove_client(user->client);
-		//delete user->client;
-		//user->client = NULL;
-        //user->client.reset();
-        //Save user/player
-        if(user->character)
-        {
-            user->character->Save();
-            //user->character->NotifyListeners();
-            characters.remove(user->character);
-            //RemoveCharacter(user->character);
-        }
-        delete user;
-        //users.remove(user);
-        iter = users.erase(iter);
-    }
-
-    SaveGameStats();
+    //Server is going down! Cleanup in main() with the server
+    
     //duration = timer.ElapsedMicro();
     LogFile::Log("status", "GameLoop() end");
 }
@@ -1726,6 +1712,7 @@ void Game::LoadNPCS(Server * server)
 void Game::NewUser(Client * client)
 {
     User * u = new User(client);
+    EnterCriticalSection(&userListCS); //this function is called from the socket AcceptThread
 	users.push_back(u);
     total_players_since_boot++;
     if((int)users.size() > max_players_since_boot)
@@ -1734,6 +1721,7 @@ void Game::NewUser(Client * client)
 	u->Send(GMCP_WILL);
 	u->Send(MCCP_WILL);
     u->Send("Enter User Name: ");
+    LeaveCriticalSection(&userListCS);
 }
 
 void Game::RemoveUser(User * user)
@@ -1758,6 +1746,8 @@ void Game::RemoveUser(Client * client)
 		{
 			/*delete (*iter);
 			users.erase(iter);*/
+            //u->Disconnect();
+            u->Disconnect(); //just sets client to NULL
 			u->remove = true;
 			break;
 		}

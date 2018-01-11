@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "vld.h"
+//#include "vld.h"
 #include "CListener.h"
 #include "CListenerManager.h"
 #include "CmySQLQueue.h"
@@ -85,10 +85,19 @@ int main(int argc, char * argv[])
 
     theserver->Start();
     thegame->GameLoop(theserver);
+
     //theserver->Stop();
-	theserver->sqlQueue->Disconnect();
-	lua_close(Server::luaState);
+	
 	theserver->DeInitialize();
+    thegame->SaveGameStats();
+    theserver->sqlQueue->Disconnect();
+    if(theserver->sqlQueue != NULL)
+    {
+        theserver->sqlQueue->Close();
+        delete theserver->sqlQueue;
+    }
+    
+    lua_close(Server::luaState);
     LogFile::CloseAll();
 
 	delete thegame;

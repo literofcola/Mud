@@ -25,7 +25,7 @@ void LogFile::Log(const char * logName, const char * logString)
         string path = "logs\\";
         path += logName;
         path += ".txt";
-        files[logName]->open(path.c_str(), ios_base::ate|ios_base::app);
+        files[logName]->open(path.c_str(), fstream::out|ios_base::ate|ios_base::app);
     }
     *files[logName] << Utilities::TimeStamp() << " :: " << logString << endl;
     cout << Utilities::TimeStamp() << " :: " << logString << endl;

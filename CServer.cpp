@@ -162,6 +162,29 @@ void Server::DeInitialize()
 	//Let Accept thread go down
 	WaitForSingleObject(hAcceptThread, INFINITE);
 
+    std::list<User *>::iterator iter;
+    iter = mygame->users.begin();
+	while(iter != mygame->users.end())
+	{
+		User * user = (*iter);
+        if(user->GetClient())
+            closesocket(user->GetClient()->Socket());
+		user->Disconnect(); //just sets client to NULL
+
+        //Save user/player
+        if(user->character)
+        {
+            if(user->connectedState == User::CONN_PLAYING) //don't save fresh characters
+                user->character->Save();
+            //user->character->NotifyListeners();
+            mygame->characters.remove(user->character);
+            //RemoveCharacter(user->character);
+        }
+        delete user;
+        //users.remove(user);
+        iter = mygame->users.erase(iter);
+    }
+
 	for(int i = 0; i < nThreads; i++)
 	{
 		//Help threads get out of blocking - GetQueuedCompletionStatus()
@@ -191,11 +214,8 @@ void Server::DeInitialize()
 	//Cleanup Winsock
 	WSACleanup();
 
-	if(sqlQueue != NULL)
-    {
-        sqlQueue->Close();
-        delete sqlQueue;
-    }
+    if(!clients.empty())
+        LogFile::Log("error", "server client list is NOT empty at shutdown");
 }
 
 //This thread will look for accept event
@@ -222,8 +242,6 @@ DWORD WINAPI Server::AcceptThread(void * lParam)
 	return 0;
 }
 
-
-//This function will process the accept event
 void Server::AcceptConnection(SOCKET ListenSocket)
 {
 	sockaddr_in ClientAddress;
@@ -251,30 +269,30 @@ void Server::AcceptConnection(SOCKET ListenSocket)
 	//Create a new ClientContext for this newly accepted client
 	Client * pClientContext = new Client(Socket, addr);
 
-	//Store this object
+    clients.push_back(pClientContext);
 	mygame->NewUser(pClientContext);
 
 	if (true == AssociateWithIOCP(pClientContext))
 	{
-		//pClientContext->SetOpCode(OP_WRITE);
-		//boost::shared_ptr<OVERLAPPEDEX> operationData = pClientContext->NewOperationData(OP_READ);
 		OVERLAPPEDEX * operationData = pClientContext->NewOperationData(OP_READ);
 		OVERLAPPED * base_overlapped = static_cast<OVERLAPPED*>(operationData);
 
-		//Get data.
 		DWORD dwFlags = 0;
 		DWORD dwBytes = 0;
 
 		//Post initial Recv
-		//This is a right place to post a initial Recv
-		//Posting a initial Recv in WorkerThread will create scalability issues.
 		int err = WSARecv(pClientContext->Socket(), &operationData->wsabuf, 1, NULL, &dwFlags, base_overlapped, NULL);
 
 		if ((SOCKET_ERROR == err) && (WSA_IO_PENDING != WSAGetLastError()))
 		{
-			LogFile::Log("error", "WSARecv(): " + Utilities::GetLastErrorAsString());
+			//LogFile::Log("error", "WSARecv(): " + Utilities::GetLastErrorAsString());
 			if(pClientContext)
+            {
+                LogFile::Log("status", "Disconnect from " + pClientContext->GetIPAddress());
+                pClientContext->FreeOperationData(operationData);
+                closesocket(pClientContext->Socket());
 				mygame->RemoveUser(pClientContext);
+            }
 		}
 	}
 }
@@ -290,7 +308,11 @@ bool Server::AssociateWithIOCP(Client * pClientContext)
 
 		//Let's not work with this client
 		if(pClientContext)
+        {
+            LogFile::Log("status", "Disconnect from " + pClientContext->GetIPAddress());
+            closesocket(pClientContext->Socket());
 			mygame->RemoveUser(pClientContext);
+        }
 		return false;
 	}
 
@@ -301,7 +323,6 @@ bool Server::AssociateWithIOCP(Client * pClientContext)
 DWORD WINAPI Server::WorkerThread(void * lpParam)
 {
 	Server * thisserver = (Server*)lpParam;
-	//int nThreadNo = (int)lpParam;
 
 	void *lpContext = NULL;
 	OVERLAPPED       *pOverlapped = NULL;
@@ -321,6 +342,8 @@ DWORD WINAPI Server::WorkerThread(void * lpParam)
 			&pOverlapped,
 			INFINITE);
 
+        LogFile::Log("status", "GQCP worker awake # " + Utilities::itos(GetCurrentThreadId()));
+
 
 		if (NULL == lpContext)
 		{
@@ -333,39 +356,42 @@ DWORD WINAPI Server::WorkerThread(void * lpParam)
 		//Get the extended overlapped structure
 		OVERLAPPEDEX * pOverlappedEx = static_cast<OVERLAPPEDEX*>(pOverlapped);
 
+        if(bReturn && WSAGetLastError() == ERROR_SUCCESS && pClientContext != NULL && dwBytesTransfered == 0)
+        {
+            LogFile::Log("error", "GetQueuedCompletionStatus(): " + Utilities::GetLastErrorAsString());
+            thisserver->clients.remove(pClientContext);
+            continue;
+        }
+
 		if(!bReturn)
 		{
-			LogFile::Log("error", "GetQueuedCompletionStatus(): " + Utilities::GetLastErrorAsString());
+			//LogFile::Log("error", "GetQueuedCompletionStatus(): " + Utilities::GetLastErrorAsString());
 			if(pClientContext)
-				thisserver->mygame->RemoveUser(pClientContext);
+            {
+                if(pOverlapped == NULL)
+                    LogFile::Log("status", "(!bReturn) && pOverlapped == NULL");
+                //LogFile::Log("status", "(!bReturn) Disconnect from " + pClientContext->GetIPAddress());
+                //closesocket(pClientContext->Socket());
+                //pClientContext->CloseSocketAndSleep();
+				//thisserver->mygame->RemoveUser(pClientContext);
+                thisserver->clients.remove(pClientContext);
+            }
 			continue;
 		}
-
-		/*if ((bReturn == FALSE) )// || ((bReturn != FALSE) && (0 == dwBytesTransfered)))
-		{
-			//Client connection gone, remove it.
-			thisserver->mygame->RemoveUser(pClientContext);
-			continue;
-		}*/
 
 		switch (pOverlappedEx->opCode)
 		{
 			case OP_WRITE:
 				pOverlappedEx->sentBytes += dwBytesTransfered;
-				//pClientContext->IncrSentBytes(dwBytesTransfered);
 
 				//Write operation was finished, see if all the data was sent.
 				//Else post another write.
 				if(pOverlappedEx->sentBytes < pOverlappedEx->totalBytes)
-				//if (pClientContext->GetSentBytes() < pClientContext->GetTotalBytes())
 				{
 					pOverlappedEx->opCode = (OP_WRITE);
-					//pClientContext->SetOpCode(OP_WRITE);
 
 					pOverlappedEx->wsabuf.buf += pOverlappedEx->sentBytes;
 					pOverlappedEx->wsabuf.len = pOverlappedEx->totalBytes - pOverlappedEx->sentBytes;
-					//p_wbuf->buf += pClientContext->GetSentBytes();
-					//p_wbuf->len = pClientContext->GetTotalBytes() - pClientContext->GetSentBytes();
 
 					dwFlags = 0;
 
@@ -375,24 +401,24 @@ DWORD WINAPI Server::WorkerThread(void * lpParam)
 
 					if ((SOCKET_ERROR == nBytesSent) && (WSA_IO_PENDING != WSAGetLastError()))
 					{
-						//Let's not work with this client
-						LogFile::Log("error", "WSASend(): " + Utilities::GetLastErrorAsString());
+						//LogFile::Log("error", "WSASend(): " + Utilities::GetLastErrorAsString());
 						if(pClientContext)
-							thisserver->mygame->RemoveUser(pClientContext);
+                        {
+                            LogFile::Log("status", "(WSASend: OP_WRITE) Disconnect from " + pClientContext->GetIPAddress());
+                            closesocket(pClientContext->Socket());
+						    thisserver->mygame->RemoveUser(pClientContext);
+                        }
 					}
 				}
 				else
 				{
 					pClientContext->FreeOperationData(pOverlappedEx);
 				}
-
 				break;
 
 			case OP_READ:
 
 				char localBuffer[NETWORK_BUFFER_SIZE];
-
-				//pClientContext->GetBuffer(localBuffer);
 				strcpy_s(localBuffer, NETWORK_BUFFER_SIZE, pOverlappedEx->buffer);
 
 				//LogFile::Log("network", "Thread ?: The following message was received: " + std::string(localBuffer));
@@ -430,13 +456,6 @@ DWORD WINAPI Server::WorkerThread(void * lpParam)
 					nl_pos = pClientContext->inputBuffer.find('\n');
 				}
 				ZeroMemory(pClientContext->receiveBuffer, NETWORK_BUFFER_SIZE);
-				/*pClientContext->Socket().async_receive(asio::buffer(client->receiveBuffer, client->NETWORK_BUFFER_SIZE), 
-								  boost::bind(&Server::handle_read, shared_from_this(), client, asio::placeholders::error));*/
-
-				/*pClientContext->SetOpCode(OP_READ);
-				WSABUF *p_wbuf = pClientContext->GetWSABUFPtr();
-				OVERLAPPED *p_ol = pClientContext->GetOVERLAPPEDPtr();
-				pClientContext->ResetWSABUF();*/
 
 				pOverlappedEx->opCode = (OP_READ);
 				ZeroMemory(pOverlappedEx->buffer, NETWORK_BUFFER_SIZE);
@@ -447,9 +466,13 @@ DWORD WINAPI Server::WorkerThread(void * lpParam)
 
 				if ((SOCKET_ERROR == err) && (WSA_IO_PENDING != WSAGetLastError()))
 				{
-					LogFile::Log("error", "WSARecv(): " + Utilities::GetLastErrorAsString());
+					//LogFile::Log("error", "WSARecv(): " + Utilities::GetLastErrorAsString());
 					if(pClientContext)
+                    {
+                        LogFile::Log("status", "(WSARecv: OP_READ) Disconnect from " + pClientContext->GetIPAddress());
+                        closesocket(pClientContext->Socket());
 						thisserver->mygame->RemoveUser(pClientContext);
+                    }
 				}
 
 				break;
@@ -465,7 +488,6 @@ DWORD WINAPI Server::WorkerThread(void * lpParam)
 
 void Server::deliver(Client * c, const std::string msg)
 {
-	//OVERLAPPEDEXPtr olptr = c->NewOperationData(OP_WRITE);
 	OVERLAPPEDEX * olptr = c->NewOperationData(OP_WRITE);
 	memcpy(olptr->buffer, msg.c_str(), msg.length());
 	olptr->wsabuf.len = (DWORD)msg.length();
@@ -477,7 +499,8 @@ void Server::deliver(Client * c, const std::string msg)
 	if(wsaerr == 0)
 	{
 		//immediate success
-		//LogFile::Log("status", "Immediate sent bytes: " + Utilities::itos(base_overlapped->InternalHigh));
+		LogFile::Log("status", "Immediate sent bytes: " + Utilities::itos(base_overlapped->InternalHigh));
+        c->FreeOperationData(olptr);
 	}
 	else if(wsaerr == SOCKET_ERROR && WSAGetLastError() == WSA_IO_PENDING)
 	{
@@ -486,7 +509,10 @@ void Server::deliver(Client * c, const std::string msg)
 	else if(wsaerr == SOCKET_ERROR && WSAGetLastError() != WSA_IO_PENDING)
 	{
 		//error
-		LogFile::Log("error", "WSASend(): " + Utilities::GetLastErrorAsString());
+        LogFile::Log("status", "(WSASend: deliver immediate) Disconnect from " + c->GetIPAddress());
+		//LogFile::Log("error", "WSASend(): " + Utilities::GetLastErrorAsString());
+        closesocket(c->Socket());
+        c->FreeOperationData(olptr);
 		mygame->RemoveUser(c);
 	}
 }
@@ -505,6 +531,7 @@ void Server::deliver(Client * c, const unsigned char * msg, int length)
 	{
 		//immediate success
 		//LogFile::Log("status", "Immediate sent bytes: " + Utilities::itos(base_overlapped->InternalHigh));
+        c->FreeOperationData(olptr);
 	}
 	else if(wsaerr == SOCKET_ERROR && WSAGetLastError() == WSA_IO_PENDING)
 	{
@@ -513,110 +540,13 @@ void Server::deliver(Client * c, const unsigned char * msg, int length)
 	else if(wsaerr == SOCKET_ERROR && WSAGetLastError() != WSA_IO_PENDING)
 	{
 		//error
-		LogFile::Log("error", "WSASend(): " + Utilities::GetLastErrorAsString());
-		mygame->RemoveUser(c);
+        LogFile::Log("status", "(WSASend: deliver immediate) Disconnect from " + c->GetIPAddress());
+		//LogFile::Log("error", "WSASend(): " + Utilities::GetLastErrorAsString());
+        closesocket(c->Socket());
+		c->FreeOperationData(olptr);
+        mygame->RemoveUser(c);
 	}
 }
-
-/*
-void Server::handle_read(Client_ptr client, const asio::error_code & error)
-{
-    if(!client)
-		return;
-
-    if (!error)
-    {
-        if(client->disconnect)
-		{
-			remove_client(client);
-            return;
-		}
-
-        //int bytesRead = (int)strlen(client->receiveBuffer);
-
-        //append the new input
-        client->inputBuffer += client->receiveBuffer;
-        //search for \n \r
-        size_t cr_pos = client->inputBuffer.find('\r');
-        size_t nl_pos = client->inputBuffer.find('\n');
-        while(cr_pos != string::npos && nl_pos != string::npos)
-        {
-		    //Copy a single command
-		    if(cr_pos < nl_pos) //telnet sends carriage return first... 
-		    {
-			    //EnterCriticalSection(&Server::critical_section);
-                EnterCriticalSection(&critical_section);
-			    client->commandQueue.push_back(client->inputBuffer.substr(0, cr_pos));
-			    //LeaveCriticalSection(&Server::critical_section);
-                LeaveCriticalSection(&critical_section);
-			    if(nl_pos != std::string::npos)
-				    client->inputBuffer.erase(0, nl_pos+1);
-			    else
-				    client->inputBuffer.erase(0, cr_pos+1);
-		    }
-		    else if(nl_pos < cr_pos) //...is it ever done any other way?
-		    {
-			    //EnterCriticalSection(&Server::critical_section);
-                EnterCriticalSection(&critical_section);
-			    client->commandQueue.push_back(client->inputBuffer.substr(0, nl_pos));
-			    //LeaveCriticalSection(&Server::critical_section);
-                LeaveCriticalSection(&critical_section);
-			    if(cr_pos != std::string::npos)
-				    client->inputBuffer.erase(0, cr_pos+1);
-			    else
-				    client->inputBuffer.erase(0, nl_pos+1);
-		    }
-            cr_pos = client->inputBuffer.find('\r');
-            nl_pos = client->inputBuffer.find('\n');
-        }
-        ZeroMemory(client->receiveBuffer, client->NETWORK_BUFFER_SIZE);
-        client->Socket().async_receive(asio::buffer(client->receiveBuffer, client->NETWORK_BUFFER_SIZE), 
-                              boost::bind(&Server::handle_read, shared_from_this(), client, asio::placeholders::error));
-    }
-    else
-    {
-        remove_client(client);
-    }
-}
-*/
-
-/*
-void Server::remove_client(Client_ptr client)
-{
-	if(!client)
-		return;
-
-	if(client->Socket().is_open())
-    {
-        try{
-            LogFile::Log("network", "Server::remove_client; Closing connection to " + client->Socket().remote_endpoint().address().to_string());
-            client->Socket().shutdown(asio::ip::tcp::socket::shutdown_both);
-	        client->Socket().close();
-        }catch(std::exception & e)
-        {
-            LogFile::Log("error", e.what());
-
-        }
-    }
-
-    std::list<Client_ptr>::iterator iter = clients.begin();
-    while(clients.size() > 0 && iter != clients.end())
-    {
-        if((*iter) && (*iter) == client)
-        {
-            (*iter).reset();
-            //iter = clients.erase(iter);
-            break;
-        }
-        else
-        {
-            ++iter;
-        }
-    }
-
-    //cout << clients.size() << endl;
-}
-*/
 
 void Server::DisconnectAllClients()
 {
@@ -635,33 +565,7 @@ void Server::DisconnectAllClients()
 	}
 }
 
-
-
-/*
-void Server::handle_write(Client_ptr client, const asio::error_code & error)
-{
-    if(!error)
-    {
-        //asio::async_write(client->Socket(),
-        //                  asio::buffer(msg.c_str(), msg.length()),
-        //                  boost::bind(&Client::handle_write, shared_from_this(), asio::placeholders::error));
-
-		//See if client is flagged to be disconnected (quit command)
-		if(client->disconnect)
-		{
-			remove_client(client);
-		}
-    }
-    else
-    {
-        remove_client(client);
-    }
-}
-*/
-
 void Server::Stop()
 {
-    //io_service.poll();
     DisconnectAllClients();
-    //io_service.stop();
 }

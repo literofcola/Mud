@@ -128,6 +128,7 @@ public:
 private:
 	
     //std::map<Player *> players;
+    CRITICAL_SECTION userListCS; 
     HighResTimer timer;
 };
 

@@ -35,6 +35,7 @@ class Client
 
 		void SetSocket(SOCKET s);
 		SOCKET Socket();
+        void CloseSocketAndSleep();
         std::string GetIPAddress();
 
 		OVERLAPPEDEX * NewOperationData(int op_type);

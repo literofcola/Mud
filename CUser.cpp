@@ -4,7 +4,6 @@
 #include "CmySQLQueue.h"
 #include "CLogFile.h"
 #include "CClient.h"
-typedef boost::shared_ptr<Client> Client_ptr;
 #include "CHighResTimer.h"
 #include "CHelp.h"
 #include "CTrigger.h"
@@ -47,6 +46,7 @@ User::~User()
 {
 	if(client)
 	{
+        //client->CloseSocketAndSleep();
 		delete client;
 		client = NULL;
 	}
@@ -118,11 +118,13 @@ bool User::IsPlaying()
 
 void User::Disconnect()
 {
-    if(client)
+    client = NULL;
+    /*if(client)
     {
+        //client->CloseSocketAndSleep();
 	    delete client;
 	    client = NULL;
-    }
+    }*/
 }
 
 void User::GetOneCommandFromNetwork()
