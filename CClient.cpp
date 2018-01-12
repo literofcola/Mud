@@ -31,6 +31,7 @@ Client::Client(SOCKET s, std::string ipaddress) : socket_(s), ipaddress_(ipaddre
     commandQueue.clear();
     inputBuffer.clear();
 	disconnect = false;
+	user_ = NULL;
     ZeroMemory(receiveBuffer, NETWORK_BUFFER_SIZE);
 	InitializeCriticalSection(&overlapped_cs);
 	InitializeCriticalSection(&command_cs);
@@ -38,6 +39,7 @@ Client::Client(SOCKET s, std::string ipaddress) : socket_(s), ipaddress_(ipaddre
 
 Client::~Client()
 {
+	user_ = NULL;
     delete[] receiveBuffer;
 	//cancel pending operations
     closesocket(socket_);
@@ -80,6 +82,16 @@ SOCKET Client::Socket()
 {
 	return socket_;
 }
+
+User * Client::GetUser()
+{
+	return user_;
+};
+
+void Client::SetUser(User * u)
+{
+	user_ = u;
+};
 
 OVERLAPPEDEX * Client::NewOperationData(int op_type)
 {

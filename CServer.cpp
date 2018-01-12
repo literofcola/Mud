@@ -260,7 +260,7 @@ void Server::AcceptConnection(SOCKET ListenSocket)
 	setsockopt(Socket, IPPROTO_TCP, TCP_NODELAY, (const char *)&value, sizeof(value)); 
 
 	//Display Client's IP
-	char ipstr[INET6_ADDRSTRLEN];
+	//char ipstr[INET6_ADDRSTRLEN];
 	//LogFile::Log("error", "Client connected from: " + inet_ntop(AF_INET, &ClientAddress.sin_addr, ipstr, sizeof(ipstr)));
 	std::string addr = inet_ntoa(ClientAddress.sin_addr);
 
@@ -269,8 +269,8 @@ void Server::AcceptConnection(SOCKET ListenSocket)
 	//Create a new ClientContext for this newly accepted client
 	Client * pClientContext = new Client(Socket, addr);
 
-    clients.push_back(pClientContext);
-	mygame->NewUser(pClientContext);
+    clients.push_back(pClientContext); //TODO, need to critical section the clients list? may be trying to remove while accepting
+	mygame->NewUser(pClientContext); //should be thread safe
 
 	if (true == AssociateWithIOCP(pClientContext))
 	{
@@ -358,14 +358,18 @@ DWORD WINAPI Server::WorkerThread(void * lpParam)
 
         if(bReturn && WSAGetLastError() == ERROR_SUCCESS && pClientContext != NULL && dwBytesTransfered == 0)
         {
-            LogFile::Log("error", "GetQueuedCompletionStatus(): " + Utilities::GetLastErrorAsString());
+            LogFile::Log("error", "GetQueuedCompletionStatus(): " + Utilities::itos(WSAGetLastError()));// + Utilities::GetLastErrorAsString());
+			if(pClientContext->GetUser())
+				pClientContext->GetUser()->Disconnect();
+			pClientContext->FreeOperationData(pOverlappedEx);
             thisserver->clients.remove(pClientContext);
+			delete pClientContext;
             continue;
         }
 
 		if(!bReturn)
 		{
-			//LogFile::Log("error", "GetQueuedCompletionStatus(): " + Utilities::GetLastErrorAsString());
+			LogFile::Log("error", "GetQueuedCompletionStatus(): " + Utilities::itos(WSAGetLastError()));// + Utilities::GetLastErrorAsString());
 			if(pClientContext)
             {
                 if(pOverlapped == NULL)
@@ -374,7 +378,11 @@ DWORD WINAPI Server::WorkerThread(void * lpParam)
                 //closesocket(pClientContext->Socket());
                 //pClientContext->CloseSocketAndSleep();
 				//thisserver->mygame->RemoveUser(pClientContext);
+				/*if(pClientContext->GetUser())
+					pClientContext->GetUser()->Disconnect();*/
+				pClientContext->FreeOperationData(pOverlappedEx);
                 thisserver->clients.remove(pClientContext);
+				delete pClientContext;
             }
 			continue;
 		}
@@ -499,8 +507,8 @@ void Server::deliver(Client * c, const std::string msg)
 	if(wsaerr == 0)
 	{
 		//immediate success
-		LogFile::Log("status", "Immediate sent bytes: " + Utilities::itos(base_overlapped->InternalHigh));
-        c->FreeOperationData(olptr);
+		//LogFile::Log("status", "Immediate sent bytes: " + Utilities::itos(base_overlapped->InternalHigh));
+        //c->FreeOperationData(olptr);
 	}
 	else if(wsaerr == SOCKET_ERROR && WSAGetLastError() == WSA_IO_PENDING)
 	{
@@ -512,7 +520,7 @@ void Server::deliver(Client * c, const std::string msg)
         LogFile::Log("status", "(WSASend: deliver immediate) Disconnect from " + c->GetIPAddress());
 		//LogFile::Log("error", "WSASend(): " + Utilities::GetLastErrorAsString());
         closesocket(c->Socket());
-        c->FreeOperationData(olptr);
+        //c->FreeOperationData(olptr);
 		mygame->RemoveUser(c);
 	}
 }
@@ -531,7 +539,7 @@ void Server::deliver(Client * c, const unsigned char * msg, int length)
 	{
 		//immediate success
 		//LogFile::Log("status", "Immediate sent bytes: " + Utilities::itos(base_overlapped->InternalHigh));
-        c->FreeOperationData(olptr);
+        //c->FreeOperationData(olptr);
 	}
 	else if(wsaerr == SOCKET_ERROR && WSAGetLastError() == WSA_IO_PENDING)
 	{
@@ -543,7 +551,7 @@ void Server::deliver(Client * c, const unsigned char * msg, int length)
         LogFile::Log("status", "(WSASend: deliver immediate) Disconnect from " + c->GetIPAddress());
 		//LogFile::Log("error", "WSASend(): " + Utilities::GetLastErrorAsString());
         closesocket(c->Socket());
-		c->FreeOperationData(olptr);
+		//c->FreeOperationData(olptr);
         mygame->RemoveUser(c);
 	}
 }

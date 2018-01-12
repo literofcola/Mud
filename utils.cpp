@@ -6,15 +6,28 @@ using namespace std;
 
 namespace Utilities
 {
-    
+
+/*
+template<typename T> // 1. Using stringstream
+string itos(T const &value) 
+{
+    thread_local stringstream ss;
+    ss.str("");
+    ss.clear();
+    ss << value;
+    return ss.str();
+}
+*/
+
 string itos(const int & i)
 {
-    stringstream s;
-	s << i;
-	string value;
-	s >> value;
-	return value;
+    stringstream ss;
+    //ss.str("");
+    //ss.clear();
+    ss << i;
+    return ss.str();
 }
+
 
 string dtos(const double & i, int precision)
 {
@@ -421,7 +434,7 @@ bool FlagUnSet(std::vector<int> & flags, const int flag)
 std::string GetLastErrorAsString()
 {
     //Get the error message, if any.
-    DWORD errorMessageID = ::GetLastError();
+    DWORD errorMessageID = ::WSAGetLastError();
     if(errorMessageID == 0)
         return std::string(); //No error message has been recorded
 

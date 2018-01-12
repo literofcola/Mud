@@ -44,12 +44,13 @@ User::User(Client * client_)
 
 User::~User()
 {
-	if(client)
+	/*if(client)
 	{
         //client->CloseSocketAndSleep();
 		delete client;
 		client = NULL;
-	}
+	}*/
+	client = NULL;
 	if(character != NULL)
 	{
 		delete character;
@@ -118,6 +119,8 @@ bool User::IsPlaying()
 
 void User::Disconnect()
 {
+	if(client)
+		closesocket(client->Socket());
     client = NULL;
     /*if(client)
     {

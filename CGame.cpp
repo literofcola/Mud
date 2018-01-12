@@ -161,9 +161,6 @@ Game::~Game()
         delete (*iter8).second;
     }
     classes.clear();
-
-	std::map<int, Class *> classes;
-	std::map<int, Help *> helpIndex;
 }
 
 void Game::GameLoop(Server * server)
@@ -341,6 +338,7 @@ void Game::GameLoop(Server * server)
                         //RemoveCharacter(user->character);
                     }
                     //RemoveUser(user);
+					user->Disconnect();
                     delete (*iter);
                     iter = users.erase(iter);
                     user = NULL;
@@ -414,7 +412,7 @@ void Game::GameLoop(Server * server)
 					deflateEnd(&user->z_strm);
 				}
 				//RemoveUser(user);
-				//user->Disconnect();
+				user->Disconnect();
                 delete (*iter);
                 iter = users.erase(iter);
 			}
@@ -839,8 +837,6 @@ void Game::LoginHandler(Server * server, User * user, string argument)
             if(arg1 == "GET") //stop http connections?
             {
 				user->remove = true;
-				user->Disconnect();
-                //user->client->disconnect = true; 
                 return;
             }
 
@@ -1712,6 +1708,7 @@ void Game::LoadNPCS(Server * server)
 void Game::NewUser(Client * client)
 {
     User * u = new User(client);
+	client->SetUser(u);
     EnterCriticalSection(&userListCS); //this function is called from the socket AcceptThread
 	users.push_back(u);
     total_players_since_boot++;

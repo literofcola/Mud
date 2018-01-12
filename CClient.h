@@ -1,6 +1,8 @@
 #ifndef CCLIENT_H
 #define CCLIENT_H
 
+class User;
+
 #define NETWORK_BUFFER_SIZE 16384
 
 struct OVERLAPPEDEX : OVERLAPPED
@@ -37,6 +39,8 @@ class Client
 		SOCKET Socket();
         void CloseSocketAndSleep();
         std::string GetIPAddress();
+		User * GetUser();
+		void SetUser(User * u);
 
 		OVERLAPPEDEX * NewOperationData(int op_type);
 		void FreeOperationData(OVERLAPPEDEX * ol);
@@ -49,7 +53,7 @@ class Client
 		SOCKET socket_; //accepted socket
 
 		std::string ipaddress_;
-
+		User * user_;
 		std::list<OVERLAPPEDEX *> overlappedData;
 };
 
