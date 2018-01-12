@@ -3,7 +3,6 @@
 
 class Server;
 class User;
-typedef boost::shared_ptr<Server> Server_ptr;
 
 class Player
 {
@@ -53,7 +52,7 @@ public:
 
     inline bool IMMORTAL() { return (immlevel > 0); }
     static std::string SelectPassword(std::string name);
-    static Player * Load(Server_ptr server, std::string name, User * user);
+    static Player * Load(Server * server, std::string name, User * user);
     void SetExperience(int newexp);
     bool QuestEligible(Quest * quest);
     bool QuestActive(Quest * quest);

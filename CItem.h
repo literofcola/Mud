@@ -2,7 +2,6 @@
 #define CITEM_H
 
 class Server;
-typedef boost::shared_ptr<Server> Server_ptr;
 
 class Item
 {

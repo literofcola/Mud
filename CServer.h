@@ -8,44 +8,58 @@ extern "C"
 #include "lauxlib.h"
 }
 
-class Server : public boost::enable_shared_from_this<Server>
+class Server
 {
 public:
-    Server(asio::io_service& io_service_, const asio::ip::tcp::endpoint& endpoint_);
-    ~Server();
+	Server(Game * g, int port);
+	~Server();
 
-    int Start();
+	bool Initialize();
+	void Start();
+	void DeInitialize();
     void Stop();
-    static unsigned int __stdcall Run(void * lpParam);
 
-    void handle_accept(Client_ptr client, const asio::error_code& error);
-    void deliver(Client_ptr client, const std::string msg);
-	void deliver(Client_ptr c, const unsigned char * msg, int length);
+    //static unsigned int __stdcall Run(void * lpParam);
 
-    void start_client(Client_ptr c);
-	void remove_client(Client_ptr client);
-	void remove_all_clients();
-    void handle_read(Client_ptr client, const asio::error_code & error);
-    void handle_write(Client_ptr client, const asio::error_code& error);
+    //void handle_accept(Client_ptr client, const asio::error_code& error);
+    void deliver(Client * client, const std::string msg);
+	void deliver(Client * c, const unsigned char * msg, int length);
 
-    void GameLoop(Server_ptr server);
-    void ShutdownGame();
+    //void start_client(Client_ptr c);
+	//void remove_client(Client_ptr client);
+	void DisconnectAllClients();
+    //void handle_read(Client_ptr client, const asio::error_code & error);
+    //void handle_write(Client_ptr client, const asio::error_code& error);
 
-	std::list<Client_ptr> clients;
+    //void GameLoop(Server * server);
+    //void ShutdownGame();
 
-	//static CRITICAL_SECTION critical_section;
+	//std::list<Client_ptr> clients;
+
+	SOCKET ListenSocket;
+	struct sockaddr_in ServerAddress;
+	HANDLE hShutdownEvent;
+	int nThreads;
+	HANDLE *phWorkerThreads;
+	HANDLE hAcceptThread;
+	WSAEVENT hAcceptEvent;
+	HANDLE hIOCompletionPort;
+	//std::vector<Client *> g_Clients;
     CRITICAL_SECTION critical_section;
+
+	static DWORD WINAPI AcceptThread(void * lParam);
+	void AcceptConnection(SOCKET ListenSocket);
+	bool AssociateWithIOCP(Client * pClientContext);
+	static DWORD WINAPI WorkerThread(void * arg);
 
     static mySQLQueue * sqlQueue;
     static lua_State * luaState;
 
-    //Game * game;
-
 private:
-    asio::io_service &io_service;
-    asio::ip::tcp::acceptor acceptor;
 
-    
+	int nPort;
+	Game * mygame;
+    std::list<Client *> clients; //server owns the clients, user->client points into this list
 };
 
 #endif //CSERVER_H

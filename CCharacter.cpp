@@ -4,7 +4,6 @@
 #include "CmySQLQueue.h"
 #include "CLogFile.h"
 #include "CClient.h"
-typedef boost::shared_ptr<Client> Client_ptr;
 #include "CHighResTimer.h"
 #include "CHelp.h"
 #include "CTrigger.h"
@@ -20,7 +19,6 @@ typedef boost::shared_ptr<Client> Client_ptr;
 #include "CUser.h"
 #include "CGame.h"
 #include "CServer.h"
-typedef boost::shared_ptr<Server> Server_ptr;
 #include "CCharacter.h"
 #include "CSpellAffect.h"
 #include "utils.h"
@@ -199,6 +197,7 @@ Character::~Character()
 {
     if(player != NULL)
         delete player;
+
     player = NULL;
     room = NULL;
     threatList.clear();
@@ -890,7 +889,8 @@ Character * Character::LoadPlayer(std::string name, User * user)
 
     loaded->room = Game::GetGame()->GetRoom(row["room"]); 
 
-    loaded->player = new Player(user);
+	if(!loaded->player)
+		loaded->player = new Player(user);
     loaded->player->currentClass = Game::GetGame()->GetClass(row["class"]);
     loaded->player->password = row["password"];
     loaded->player->immlevel = row["immlevel"];
@@ -1004,7 +1004,7 @@ Character * Character::LoadPlayer(std::string name, User * user)
     return loaded;
 }
 
-/*Character * Character::LoadNPC(Server_ptr server, int id) 
+/*Character * Character::LoadNPC(Server * server, int id) 
 {
     StoreQueryResult characterres = server->sqlQueue->Read("select * from npcs where id=" + Utilities::itos(id));
     if(characterres.empty())

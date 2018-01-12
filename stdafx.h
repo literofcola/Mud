@@ -1,4 +1,5 @@
-#include "asio.hpp"
+#include <winsock2.h>
+#include <WS2tcpip.h>
 #include "zlib.h"
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
@@ -24,6 +25,13 @@
 #include <sys/timeb.h>
 #include <time.h>
 #include <conio.h>
+
+
+
+#include <stdio.h>
+#include <tchar.h>
+#include <stdlib.h>
+#include <string.h>
 
 extern "C" 
 {

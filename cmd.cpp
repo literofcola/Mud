@@ -7,7 +7,6 @@
 #include "CHelp.h"
 #include "CTrigger.h"
 #include "CClient.h"
-typedef boost::shared_ptr<Client> Client_ptr;
 #include "CItem.h"
 #include "CSkill.h"
 #include "CClass.h"
@@ -22,7 +21,6 @@ typedef boost::shared_ptr<Client> Client_ptr;
 #include "CUser.h"
 #include "CGame.h"
 #include "CServer.h"
-typedef boost::shared_ptr<Server> Server_ptr;
 #include "CCommand.h"
 #include "utils.h"
 #include "mud.h"
@@ -1062,13 +1060,17 @@ bool cmd_quit_Query(Character * ch, string argument)
 
         ch->ChangeRooms(NULL);
 	    ch->Send("Bye\n\r");
+        
         if(ch->player && ch->player->user)
         {
             ch->SaveSpellAffects();
             ch->SaveCooldowns();
-	        ch->player->user->client->disconnect = true;
+			//ch->player->user->Disconnect();
+			ch->player->user->remove = true;
+	        //ch->player->user->client->disconnect = true;
         }
 	}
+    LogFile::Log("status", ch->name + " is quitting");
 	return true;
 }
 

@@ -4,7 +4,6 @@
 #include "CmySQLQueue.h"
 #include "CLogFile.h"
 #include "CClient.h"
-typedef boost::shared_ptr<Client> Client_ptr;
 #include "CHighResTimer.h"
 #include "CHelp.h"
 #include "CTrigger.h"
@@ -22,28 +21,116 @@ typedef boost::shared_ptr<Client> Client_ptr;
 #include "CUser.h"
 #include "CGame.h"
 #include "CServer.h"
-typedef boost::shared_ptr<Server> Server_ptr;
 #include "utils.h"
 
 using namespace std;
-using asio::ip::tcp;
 
-Client::Client(asio::io_service& io_service) : socket_(io_service), MAX_INPUT_LENGTH(2046)
+Client::Client(SOCKET s, std::string ipaddress) : socket_(s), ipaddress_(ipaddress)
 {
-    receiveBuffer = new char[MAX_INPUT_LENGTH];
+    receiveBuffer = new char[NETWORK_BUFFER_SIZE];
     commandQueue.clear();
     inputBuffer.clear();
 	disconnect = false;
-    ZeroMemory(receiveBuffer, MAX_INPUT_LENGTH);
+	user_ = NULL;
+    ZeroMemory(receiveBuffer, NETWORK_BUFFER_SIZE);
+	InitializeCriticalSection(&overlapped_cs);
+	InitializeCriticalSection(&command_cs);
 }
 
 Client::~Client()
 {
+	user_ = NULL;
     delete[] receiveBuffer;
+	//cancel pending operations
+    closesocket(socket_);
+	CancelIoEx((HANDLE)socket_, NULL);
+	SleepEx(0, TRUE); // the completion will be called here
+
+	//shutdown(socket_, SD_BOTH);
+
+	DeleteCriticalSection(&overlapped_cs);
+	DeleteCriticalSection(&command_cs);
+
+	std::list<OVERLAPPEDEX *>::iterator iter = overlappedData.begin();
+	while(iter != overlappedData.end())
+	{
+		if(*iter)
+			delete (*iter);
+		iter = overlappedData.erase(iter);
+	}
+	overlappedData.clear();
 }
 
-
-asio::ip::tcp::socket & Client::Socket()
+void Client::CloseSocketAndSleep()
 {
-    return socket_;
+    closesocket(socket_);
+	//CancelIo((HANDLE)socket_);
+	SleepEx(0, TRUE); // the completion will be called here
 }
+
+std::string Client::GetIPAddress()
+{
+    return ipaddress_;
+}
+
+void Client::SetSocket(SOCKET s)
+{
+	socket_ = s;
+}
+
+SOCKET Client::Socket()
+{
+	return socket_;
+}
+
+User * Client::GetUser()
+{
+	return user_;
+};
+
+void Client::SetUser(User * u)
+{
+	user_ = u;
+};
+
+OVERLAPPEDEX * Client::NewOperationData(int op_type)
+{
+	OVERLAPPEDEX * ol = new OVERLAPPEDEX();
+	//OVERLAPPEDEXPtr ol(new OVERLAPPEDEX);
+	//ZeroMemory(ol.get(), sizeof(OVERLAPPED));
+	ZeroMemory(ol, sizeof(OVERLAPPED));
+	ol->opCode = op_type;
+
+	EnterCriticalSection(&overlapped_cs); 
+	overlappedData.push_back(ol);
+	LeaveCriticalSection(&overlapped_cs);
+
+	return ol;
+}
+
+void Client::FreeOperationData(OVERLAPPEDEX *  ol)
+{
+	//not sure if we need these
+	EnterCriticalSection(&overlapped_cs); 
+	std::list<OVERLAPPEDEX *>::iterator iter;
+	/*for(iter = overlappedData.begin(); iter != overlappedData.end(); iter++)
+	{
+		if(iter->get() == ol)
+		{
+			overlappedData.erase(iter);
+			break;
+		}
+	}*/
+	for(iter = overlappedData.begin(); iter != overlappedData.end(); iter++)
+	{
+		if((*iter) == ol)
+		{
+			delete (*iter);
+			(*iter) = NULL;
+			overlappedData.erase(iter);
+			break;
+		}
+	}
+	LeaveCriticalSection(&overlapped_cs);
+}
+

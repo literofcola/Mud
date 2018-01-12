@@ -4,7 +4,6 @@
 #include "CmySQLQueue.h"
 #include "CLogFile.h"
 #include "CClient.h"
-typedef boost::shared_ptr<Client> Client_ptr;
 #include "CHighResTimer.h"
 #include "CHelp.h"
 #include "CTrigger.h"
@@ -27,7 +26,7 @@ typedef boost::shared_ptr<Client> Client_ptr;
 
 using namespace std;
 
-User::User(Client_ptr client_) : MAX_INPUT_LENGTH(2046)
+User::User(Client * client_)
 {
     client = client_;
     commandQueue.clear();
@@ -40,12 +39,23 @@ User::User(Client_ptr client_) : MAX_INPUT_LENGTH(2046)
     mxp = false;
 	mccp = false;
 	gmcp = false;
+	remove = false;
 }
 
 User::~User()
 {
+	/*if(client)
+	{
+        //client->CloseSocketAndSleep();
+		delete client;
+		client = NULL;
+	}*/
+	client = NULL;
 	if(character != NULL)
+	{
 		delete character;
+		character = NULL;
+	}
 }
 
 void User::Send(string str)
@@ -61,12 +71,22 @@ void User::Send(string str)
             str.replace(i, 2, colorcode);
         }
     }
+    if(str.length() >= NETWORK_BUFFER_SIZE)
+    {
+        str = str.substr(0, NETWORK_BUFFER_SIZE-1);
+        LogFile::Log("error", "User::Send(), tried to send single string > NETWORK_BUFFER_SIZE. Truncated");
+    }
 	outputQueue.push_back(str);
 }
 
 void User::Send(char * str)
 {
 	Send(string(str));
+}
+
+Client * User::GetClient()
+{
+	return client;
 }
 
 void User::SendSubchannel(string str)
@@ -87,16 +107,50 @@ void User::SendSubchannel(char * str)
 
 bool User::IsConnected()
 {
-    try{
-        return (client && client->Socket().is_open());
-    }catch(std::exception & e)
-    {
-        LogFile::Log("error", e.what());
-    }
-    return false;
+	if(client)
+		return true;
+	return false;
 }
 
 bool User::IsPlaying()
 {
     return connectedState == CONN_PLAYING;
+}
+
+void User::Disconnect()
+{
+	if(client)
+		closesocket(client->Socket());
+    client = NULL;
+    /*if(client)
+    {
+        //client->CloseSocketAndSleep();
+	    delete client;
+	    client = NULL;
+    }*/
+}
+
+void User::GetOneCommandFromNetwork()
+{
+	EnterCriticalSection(&client->command_cs);
+	if(!client->commandQueue.empty())
+	{
+		commandQueue.push_back(client->commandQueue.front());
+		client->commandQueue.pop_front();
+	}
+    LeaveCriticalSection(&client->command_cs);
+}
+
+bool User::HasCommandReady()
+{
+	if(commandQueue.empty())
+		return false;
+	return true;
+}
+
+void User::ClearClientCommandQueue()
+{
+	EnterCriticalSection(&client->command_cs);
+	client->commandQueue.clear();
+    LeaveCriticalSection(&client->command_cs);
 }

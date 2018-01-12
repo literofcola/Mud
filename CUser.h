@@ -4,7 +4,7 @@
 class User
 {
 public:
-    User(Client_ptr client);
+    User(Client * client);
     ~User();
 
     enum State
@@ -19,15 +19,21 @@ public:
 	void SendSubchannel(char * str);
     bool IsConnected();
     bool IsPlaying();
+	void Disconnect();
+	void GetOneCommandFromNetwork();
+	bool HasCommandReady();
+	void ClearClientCommandQueue();
+	Client * GetClient();
 
-    const int MAX_INPUT_LENGTH;
+    //const int NETWORK_BUFFER_SIZE;
     std::deque<std::string> commandQueue;
     std::deque<std::string> outputQueue;
 	std::deque<std::string> subchannelQueue;
-	Client_ptr client;
+	
     State connectedState;
     Character * character;
     bool wasInput;
+	bool remove;
     
     std::string * stringEdit;
     bool mxp;		//Mud extension protocol
@@ -45,12 +51,12 @@ public:
     //int loginAttempts; //TODO
 
     //bool hasQuery;
-	//bool (*queryFunction)(Server_ptr, User *, std::string);
+	//bool (*queryFunction)(Server *, User *, std::string);
 	//void * queryData;
     //std::string queryPrompt;
 
 private:
-	
+	Client * client;
 };
 
 #endif

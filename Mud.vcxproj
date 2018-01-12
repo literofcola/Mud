@@ -105,7 +105,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>E:\luabind-0.9.1;E:\mysql-5.5.18-win32\include;E:\mysql++-3.1.0\lib;E:\lua-5.1.5\include;E:\boost_1_48_0;E:\asio-1.4.8\include;$(IncludePath)</IncludePath>
+    <IncludePath>E:\luabind-0.9.1;E:\mysql-5.5.18-win32\include;E:\mysql++-3.1.0\lib;E:\lua-5.1.5\include;E:\boost_1_51_0;C:\Program Files (x86)\Visual Leak Detector\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Program Files (x86)\Visual Leak Detector\lib\Win32;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>E:\luabind-0.9.1;E:\mysql-5.5.18-win32\include;E:\mysql++-3.1.0\lib;E:\lua-5.1.4\include;E:\boost_1_48_0;E:\asio-1.4.8\include;$(IncludePath)</IncludePath>

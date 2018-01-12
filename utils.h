@@ -24,6 +24,7 @@ namespace Utilities
 	std::string one_argument(const std::string & argument, std::string & one_arg);
 	bool str_prefix(const std::string & astr, const std::string & bstr);
     bool str_str(const std::string & astr, const std::string & bstr);
+    std::string GetLastErrorAsString();
 
     /*
 	int UMIN(int a, int b);

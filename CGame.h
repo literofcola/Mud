@@ -2,7 +2,6 @@
 #define CGAME_H
 
 class Server;
-typedef boost::shared_ptr<Server> Server_ptr;
 
 using boost::multi_index_container;
 using namespace boost::multi_index;
@@ -10,29 +9,34 @@ using namespace boost::multi_index;
 class Game
 {
 public:
+
+	Game();
+    ~Game();
+
     static Game * GetGame();
     static void DeleteGame();
-    void GameLoop(Server_ptr server);
-    void WorldUpdate(Server_ptr server);
-    void LoginHandler(Server_ptr server, User * user, std::string argument);
-	void NewUser(Client_ptr client);
+    void GameLoop(Server * server);
+    void WorldUpdate(Server * server);
+    void LoginHandler(Server * server, User * user, std::string argument);
+	void NewUser(Client * client);
 	void RemoveUser(User * user);
+	void RemoveUser(Client * client);
     Character * NewCharacter();
     Character * NewCharacter(std::string name, User * user);
     Character * NewCharacter(Character * copy);
     void RemoveCharacter(Character * ch);
-    void LoadGameStats(Server_ptr server);
-    void LoadRooms(Server_ptr server);
-    void LoadExits(Server_ptr server);
-    void LoadResets(Server_ptr server);
-    void LoadSkills(Server_ptr server);
-    void LoadNPCS(Server_ptr server);
-    void LoadQuests(Server_ptr server);
-    void LoadItems(Server_ptr server);
-    void LoadClasses(Server_ptr server);
-    void LoadTriggers(Server_ptr server);
-    void LoadAreas(Server_ptr server);
-	void LoadHelp(Server_ptr server);
+    void LoadGameStats(Server * server);
+    void LoadRooms(Server * server);
+    void LoadExits(Server * server);
+    void LoadResets(Server * server);
+    void LoadSkills(Server * server);
+    void LoadNPCS(Server * server);
+    void LoadQuests(Server * server);
+    void LoadItems(Server * server);
+    void LoadClasses(Server * server);
+    void LoadTriggers(Server * server);
+    void LoadAreas(Server * server);
+	void LoadHelp(Server * server);
 
     User * DuplicatePlayerCheck(std::string name);
     User * GetUserByPCName(std::string name);
@@ -122,10 +126,9 @@ public:
 	static const char TELOPT_GMCP = '\xC9'; //201
 
 private:
-    Game();
-    ~Game();
 	
     //std::map<Player *> players;
+    CRITICAL_SECTION userListCS; 
     HighResTimer timer;
 };
 

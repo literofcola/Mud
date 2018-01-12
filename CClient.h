@@ -1,24 +1,60 @@
 #ifndef CCLIENT_H
 #define CCLIENT_H
 
-class Client : public boost::enable_shared_from_this<Client>
+class User;
+
+#define NETWORK_BUFFER_SIZE 16384
+
+struct OVERLAPPEDEX : OVERLAPPED
 {
-public:
-    Client(asio::io_service& io_service);
-    ~Client();
+	WSABUF			wsabuf;
+	char			buffer[NETWORK_BUFFER_SIZE];
+	int				totalBytes;
+	int				sentBytes;
+	int				opCode;
 
-    asio::ip::tcp::socket & Socket();
+	OVERLAPPEDEX()
+	{
+		wsabuf.buf = buffer;
+		wsabuf.len = NETWORK_BUFFER_SIZE;
+		totalBytes = sentBytes = opCode = 0;
+		ZeroMemory(buffer, NETWORK_BUFFER_SIZE);
+	};
+};
 
-    const int MAX_INPUT_LENGTH;
+typedef boost::shared_ptr<OVERLAPPEDEX> OVERLAPPEDEXPtr;
 
-    char * receiveBuffer;       //Buffer for async_receive, which SHOULD work with std::string, but...
-    std::string inputBuffer;    //Dump the receive buffer here to parse for commands
-    std::deque<std::string> commandQueue;
-	bool disconnect;
+class Client
+{
+	public:
+		Client(SOCKET s, std::string ipaddress);
+		~Client();
 
-private:
-    asio::ip::tcp::socket socket_;
-	
+		char * receiveBuffer;       
+		std::string inputBuffer;    //Dump the receive buffer here, then parse into commandQueue
+		std::deque<std::string> commandQueue;
+		bool disconnect;
+
+		void SetSocket(SOCKET s);
+		SOCKET Socket();
+        void CloseSocketAndSleep();
+        std::string GetIPAddress();
+		User * GetUser();
+		void SetUser(User * u);
+
+		OVERLAPPEDEX * NewOperationData(int op_type);
+		void FreeOperationData(OVERLAPPEDEX * ol);
+
+		CRITICAL_SECTION overlapped_cs; //not sure if this is necessary
+		CRITICAL_SECTION command_cs; //for access to the Client::commandQueue
+
+	private:
+
+		SOCKET socket_; //accepted socket
+
+		std::string ipaddress_;
+		User * user_;
+		std::list<OVERLAPPEDEX *> overlappedData;
 };
 
 #endif
