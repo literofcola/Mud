@@ -7,7 +7,7 @@ using namespace std;
 namespace Utilities
 {
 
-/*
+
 template<typename T> // 1. Using stringstream
 string itos(T const &value) 
 {
@@ -17,7 +17,7 @@ string itos(T const &value)
     ss << value;
     return ss.str();
 }
-*/
+
 
 string itos(const int & i)
 {
