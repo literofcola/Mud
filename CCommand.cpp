@@ -536,7 +536,7 @@ bool Command::Interpret(Character * ch, string argument)
     }
     command = Utilities::ToLower(command);
 
-    void (*whichFunction)(Character * ch, string argument);
+    void (*whichFunction)(Character * ch, string argument) = NULL;
     class Command * whichTable;
 
 	whichTable = GetCurrentCmdTable(ch);

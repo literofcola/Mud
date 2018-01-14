@@ -3,9 +3,6 @@
 
 class Server;
 
-using boost::multi_index_container;
-using namespace boost::multi_index;
-
 class Game
 {
 public:
@@ -86,8 +83,8 @@ public:
     //static void SearchRooms(Game * g, Character * ch, std::string argument);
     //static void SearchItems(Game * g, Character * ch, std::string argument);
     //static void SearchCharacters(Game * g, Character * ch, std::string argument);
-    bool Game::SearchComparisonInt(int field_value, int search_value, int conditional_type);
-    bool Game::SearchComparisonString(std::string field_value, std::string search_value, int conditional_type);
+    bool SearchComparisonInt(int field_value, int search_value, int conditional_type);
+    bool SearchComparisonString(std::string field_value, std::string search_value, int conditional_type);
     int Search(std::string table_name, std::string field_name, int conditional_type, std::string argument, int data_type, std::string & result);
     /*template <typename T1>
     int DoSearch(T1 table_name, std::string field_name, std::string argument, int data_type, std::string & result);*/

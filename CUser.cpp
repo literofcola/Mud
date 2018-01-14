@@ -21,7 +21,6 @@
 #include "CUser.h"
 #include "CGame.h"
 #include "CServer.h"
-//typedef boost::shared_ptr<Server> Server_ptr;
 #include "utils.h"
 
 using namespace std;

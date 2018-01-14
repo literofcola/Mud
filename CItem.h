@@ -73,10 +73,10 @@ public:
 
     void Save();
 
-    static char * equip_strings[];
-    static char * quality_strings[];
-    static char * type_strings[];
-    static char * bind_strings[];
+    static const char * equip_strings[];
+    static const char * quality_strings[];
+    static const char * type_strings[];
+    static const char * bind_strings[];
 
 private:
 

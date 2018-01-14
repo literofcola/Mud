@@ -1351,6 +1351,13 @@ void skillEditCmd_reload(Character * ch, string argument)
 
 	ch->Send("Reloading LUA scripts.\n\r");
 
+	Server::lua.script(pSkill->costFunction.c_str());
+	Server::lua.script(pSkill->castScript.c_str());
+	Server::lua.script(pSkill->applyScript.c_str());
+	Server::lua.script(pSkill->tickScript.c_str());
+	Server::lua.script(pSkill->removeScript.c_str());
+
+	/*
     if(luaL_dostring(Server::luaState, pSkill->costFunction.c_str()))
     {
         LogFile::Log("error", string("Cost script: ") + lua_tostring(Server::luaState, -1));
@@ -1371,7 +1378,7 @@ void skillEditCmd_reload(Character * ch, string argument)
     {
         LogFile::Log("error", string("Remove script: ") + lua_tostring(Server::luaState, -1));
     }
-
+	*/
 }
 
 void skillEditCmd_affect_desc(Character * ch, string argument)
@@ -1730,7 +1737,7 @@ void npcEditCmd_drop(Character * ch, string argument)
             return;
         }
 
-        Character::DropData * dd;
+        Character::DropData * dd = NULL;
         int ctr = 1;
         for(std::list<Character::DropData>::iterator iter = pChar->drops.begin(); iter != pChar->drops.end(); ++iter)
         {

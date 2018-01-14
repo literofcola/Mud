@@ -7,7 +7,6 @@
 #include "CHelp.h"
 #include "CTrigger.h"
 #include "CClient.h"
-typedef boost::shared_ptr<Client> Client_ptr;
 #include "CItem.h"
 #include "CSkill.h"
 #include "CClass.h"
@@ -22,7 +21,6 @@ typedef boost::shared_ptr<Client> Client_ptr;
 #include "CUser.h"
 #include "CGame.h"
 #include "CServer.h"
-typedef boost::shared_ptr<Server> Server_ptr;
 #include "CCommand.h"
 #include "utils.h"
 #include "mud.h"
@@ -250,7 +248,7 @@ void SpellAffect::Load(Character * ch)
             sa->id = (int)ch->buffs.size() + 1;
             ch->buffs.push_front(sa);
         }
-        string affect_data = row["affect_data"];
+        string affect_data = (row["affect_data"]).c_str();
         int first = 0, second = 0;
         while(first < (int)affect_data.length())
         {
@@ -280,7 +278,7 @@ void SpellAffect::Load(Character * ch)
             first = second + 1;
         }
 
-        string aurastring = row["auras"];
+        string aurastring = row["auras"].c_str();
         first = second = 0;
         while(first < (int)aurastring.length())
         {

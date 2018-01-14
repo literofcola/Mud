@@ -31,7 +31,7 @@ extern "C"
 #include "lauxlib.h"
 }
 
-#include "luabind/luabind.hpp"
+//#include "luabind/luabind.hpp"
 
 using namespace std;
 
@@ -1314,14 +1314,15 @@ SpellAffect * Character::AddSpellAffect(int isDebuff, Character * caster, string
         string func = sk->function_name + "_apply";
         try
         {
-            luabind::call_function<void>(Server::luaState, func.c_str(), caster, this, sa);
+			Server::lua[func.c_str()](caster, this, sa);
+            //luabind::call_function<void>(Server::luaState, func.c_str(), caster, this, sa);
         }
 		catch(const std::runtime_error & e)
 		{
 			LogFile::Log("error", e.what());
-			const char * logstring = lua_tolstring(Server::luaState, -1, NULL);
+			/*const char * logstring = lua_tolstring(Server::luaState, -1, NULL);
 			if(logstring != NULL)
-				LogFile::Log("error", logstring);
+				LogFile::Log("error", logstring);*/
 		}
     }
     return sa;
@@ -2367,15 +2368,17 @@ bool Character::ChangeRooms(Room * toroom)
                 //LogFile::Log("status", "Loading lua trigger script " + Utilities::itos(trig->id) + " for room " + Utilities::itos(toroom->id));
                 //string nil = trig->GetFunction() + " = nil;";
                 //luaL_dostring(Server::luaState, nil.c_str());
-                luaL_dostring(Server::luaState, trig->GetScript().c_str());
-                luabind::call_function<void>(Server::luaState, func.c_str(), this, toroom);
+				Server::lua.script(trig->GetScript().c_str());
+				Server::lua[func.c_str()](this, toroom);
+                //luaL_dostring(Server::luaState, trig->GetScript().c_str());
+                //luabind::call_function<void>(Server::luaState, func.c_str(), this, toroom);
             }
             catch(const std::exception & e)
 			{
 				LogFile::Log("error", e.what());
-				const char * logstring = lua_tolstring(Server::luaState, -1, NULL);
+				/*const char * logstring = lua_tolstring(Server::luaState, -1, NULL);
 				if(logstring != NULL)
-					LogFile::Log("error", logstring);
+					LogFile::Log("error", logstring);*/
 			}
             catch(...)
 	        {
@@ -2395,15 +2398,17 @@ bool Character::ChangeRooms(Room * toroom)
                 //LogFile::Log("status", "Loading lua trigger script " + Utilities::itos(trig->id) + " for room " + Utilities::itos(toroom->id));
                 //string nil = trig->GetFunction() + " = nil;";
                 //luaL_dostring(Server::luaState, nil.c_str());
-                luaL_dostring(Server::luaState, trig->GetScript().c_str());
-                luabind::call_function<void>(Server::luaState, func.c_str(), this, toroom);
+				Server::lua.script(trig->GetScript().c_str());
+				Server::lua[func.c_str()](this, toroom);
+                //luaL_dostring(Server::luaState, trig->GetScript().c_str());
+                //luabind::call_function<void>(Server::luaState, func.c_str(), this, toroom);
             }
             catch(const std::exception & e)
 			{
 				LogFile::Log("error", e.what());
-				const char * logstring = lua_tolstring(Server::luaState, -1, NULL);
+				/*const char * logstring = lua_tolstring(Server::luaState, -1, NULL);
 				if(logstring != NULL)
-					LogFile::Log("error", logstring);
+					LogFile::Log("error", logstring);*/
 			}
             catch(...)
 	        {

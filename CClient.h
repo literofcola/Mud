@@ -22,8 +22,6 @@ struct OVERLAPPEDEX : OVERLAPPED
 	};
 };
 
-typedef boost::shared_ptr<OVERLAPPEDEX> OVERLAPPEDEXPtr;
-
 class Client
 {
 	public:

@@ -31,7 +31,7 @@ extern "C"
 #include "lauxlib.h"
 }
 
-#include "luabind/luabind.hpp"
+//#include "luabind/luabind.hpp"
 
 using namespace std;
 
@@ -88,7 +88,9 @@ void cmd_castCallback(Character::DelayData delayData)
     string cost_func = delayData.sk->function_name + "_cost";
     try
     {
-        lua_ret = luabind::call_function<int>(Server::luaState, cost_func.c_str(), delayData.caster, delayData.charTarget, delayData.sk);
+		sol::function lua_cost_func = Server::lua[cost_func.c_str()];
+		lua_ret = lua_cost_func(delayData.caster, delayData.charTarget, delayData.sk);
+        //lua_ret = luabind::call_function<int>(Server::luaState, cost_func.c_str(), delayData.caster, delayData.charTarget, delayData.sk);
     }
 	/*catch(const std::runtime_error & e)
 	{
@@ -97,13 +99,17 @@ void cmd_castCallback(Character::DelayData delayData)
 		if(logstring != NULL)
 			LogFile::Log("error", logstring);
 	}*/
-	catch(const std::exception & e)
+	catch (const sol::error& e) 
+	{
+		LogFile::Log("error", e.what());
+	}
+	/*catch(const std::exception & e)
 	{
 		LogFile::Log("error", e.what());
 		const char * logstring = lua_tolstring(Server::luaState, -1, NULL);
 		if(logstring != NULL)
 			LogFile::Log("error", logstring);
-	}
+	}*/
 	catch(...)
 	{
 		LogFile::Log("error", "call_function unhandled exception cmd_castcallback _cost");
@@ -124,7 +130,9 @@ void cmd_castCallback(Character::DelayData delayData)
     string func = delayData.sk->function_name + "_cast";
     try
     {
-        luabind::call_function<void>(Server::luaState, func.c_str(), delayData.caster, delayData.charTarget, delayData.sk);
+		sol::function lua_cast_func = Server::lua[func.c_str()];
+		lua_cast_func(delayData.caster, delayData.charTarget, delayData.sk);
+        //luabind::call_function<void>(Server::luaState, func.c_str(), delayData.caster, delayData.charTarget, delayData.sk);
     }
 	/*catch(const std::runtime_error & e)
 	{
@@ -133,6 +141,11 @@ void cmd_castCallback(Character::DelayData delayData)
 		if(logstring != NULL)
 			LogFile::Log("error", logstring);
 	}*/
+	catch (const sol::error& e)
+	{
+		LogFile::Log("error", e.what());
+	}
+	/*
 	catch(const std::exception & e)
 	{
 		LogFile::Log("error", e.what());
@@ -140,6 +153,7 @@ void cmd_castCallback(Character::DelayData delayData)
 		if(logstring != NULL)
 			LogFile::Log("error", logstring);
 	}
+	*/
 	catch(...)
 	{
 		LogFile::Log("error", "call_function unhandled exception cmd_castcallback _cast");
@@ -230,7 +244,9 @@ void cmd_cast(Character * ch, string argument)
     string cost_func = spell->function_name + "_cost";
     try
     {
-        lua_ret = luabind::call_function<int>(Server::luaState, cost_func.c_str(), ch, arg_target, spell);
+		sol::function lua_cost_func = Server::lua[cost_func.c_str()];
+		lua_ret = lua_cost_func(ch, arg_target, spell);
+        //lua_ret = luabind::call_function<int>(Server::luaState, cost_func.c_str(), ch, arg_target, spell);
     }
 	/*catch(const std::runtime_error & e)
 	{
@@ -239,6 +255,11 @@ void cmd_cast(Character * ch, string argument)
 		if(logstring != NULL)
 			LogFile::Log("error", logstring);
 	}*/
+	catch (const sol::error& e)
+	{
+		LogFile::Log("error", e.what());
+	}
+	/*
 	catch(const std::exception & e)
 	{
 		LogFile::Log("error", e.what());
@@ -246,6 +267,7 @@ void cmd_cast(Character * ch, string argument)
 		if(logstring != NULL)
 			LogFile::Log("error", logstring);
 	}
+	*/
 	catch(...)
 	{
 		LogFile::Log("error", "call_function unhandled exception cmd_cast _cost");

@@ -69,7 +69,7 @@ double Trigger::GetTimeStamp()
     static time_t time_secs;
     static unsigned short time_millis;
 
-    _ftime(&time);
+    _ftime64_s(&time);
 	time_secs = (time_t) time.time;
     time_millis = time.millitm;
 

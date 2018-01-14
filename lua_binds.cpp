@@ -4,7 +4,6 @@
 #include "CmySQLQueue.h"
 #include "CLogFile.h"
 #include "CClient.h"
-typedef boost::shared_ptr<Client> Client_ptr;
 #include "CHighResTimer.h"
 #include "CHelp.h"
 #include "CTrigger.h"
@@ -22,97 +21,97 @@ typedef boost::shared_ptr<Client> Client_ptr;
 #include "CUser.h"
 #include "CGame.h"
 #include "CServer.h"
-typedef boost::shared_ptr<Server> Server_ptr;
 #include "utils.h"
 #include "mud.h"
 
-using namespace luabind;
-
-//luabind::call_function<void>(server->luaState, "setlevel", user->character, user->character->level+1);
-
-void Lua_DefineFunctions(lua_State * ls)
+void Lua_DefineFunctions(sol::state * lua)
 {
-    module(ls) 
-    [
-        def("ExperienceForLevel", Game::ExperienceForLevel), //static int ExperienceForLevel(int level);
-        def("LevelDifficulty", Game::LevelDifficulty), //static int LevelDifficulty(int level1, int level2);
-        def("LoadNPCRoom", Game::LoadNPCRoom), //LoadNPCRoom(int id, Room * toroom);
-        def("cmd_cast", cmd_cast), //cmd_cast(Character * ch, string argument);
-		def("cmd_look", cmd_look) //cmd_look(Character * ch, string argument);
-    ];
+	(*lua)["ExperienceForLevel"] = Game::ExperienceForLevel; //static int ExperienceForLevel(int level);
+	lua->set("LevelDifficulty", Game::LevelDifficulty); //static int LevelDifficulty(int level1, int level2);
+	lua->set_function("LoadNPCRoom", Game::LoadNPCRoom); //LoadNPCRoom(int id, Room * toroom);
+	lua->set_function("cmd_cast", cmd_cast); //cmd_cast(Character * ch, string argument);
+	lua->set_function("cmd_look", cmd_look); //cmd_look(Character * ch, string argument);
 }
 
-void Lua_DefineClasses(lua_State * ls)
+void Lua_DefineClasses(sol::state * lua)
 {
-    module(ls) 
-    [
-        class_<Listener>("Listener"),
-        class_<ListenerManager>("ListenerManager"),
-		
-        class_<Server>("Server")
-        .def(constructor<Game *, int>())
-        ,
-        class_<Client>("Client")
-        .def(constructor<SOCKET, std::string>())
-        ,
-        class_<User>("User")
-        .def(constructor<Client *>())
-        ,
-        class_<Game>("Game")
-        .def("GetGame", Game::GetGame)
-        ,
-        class_<Character, bases<Listener, ListenerManager> >("Character")
-        .def(constructor<>())
-		//.def(constructor<std::string, int>())
-        .def(constructor<std::string, User*>())
-		//.def(constructor<const Character&>())
-        .def("GetLevel", (int(Character::*)(void)) &Character::GetLevel)
-        .def("SetLevel", (void(Character::*)(int)) &Character::SetLevel)
-        .def("Send", (void(Character::*)(std::string)) &Character::Send)
-        .def("Message", (void(Character::*)(const std::string &, Character::MessageType, Character*)) &Character::Message)
-        .def("AddSpellAffect", (SpellAffect*(Character::*)(int, Character*, std::string, bool, bool, int, double, int, Skill*)) &Character::AddSpellAffect)
-        .def("CleanseSpellAffect", (int(Character::*)(Character*, int, int)) &Character::CleanseSpellAffect)
-        .def("GetHealth", (int(Character::*)(void)) &Character::GetHealth)
-        .def("GetMana", (int(Character::*)(void)) &Character::GetMana)
-        .def("GetStamina", (int(Character::*)(void)) &Character::GetStamina)
-        .def("HasResource", (bool(Character::*)(int, int)) &Character::HasResource)
-        .def("AdjustHealth", (void(Character::*)(Character*, int)) &Character::AdjustHealth)
-        .def("AdjustMana", (void(Character::*)(Character*, int)) &Character::AdjustMana)
-        .def("ConsumeMana", (void(Character::*)(int)) &Character::ConsumeMana) 
-        .def("AdjustStamina", (void(Character::*)(Character*, int)) &Character::AdjustStamina)
-        .def("GetName", (std::string(Character::*)(void)) &Character::GetName)
-        .def("HisHer", (std::string(Character::*)(void)) &Character::HisHer)
-        .def("EnterCombat", (void(Character::*)(Character*)) &Character::EnterCombat)
-        .def("IsFighting", (bool(Character::*)(Character*)) &Character::IsFighting)
-        .def("InCombat", (bool(Character::*)(void)) &Character::InCombat)
-        .def("SetCooldown", (void(Character::*)(Skill*, std::string, bool, double)) &Character::SetCooldown)
-		.def("ChangeRoomsID", (bool(Character::*)(int)) &Character::ChangeRoomsID)
-		.def("GetPlayer", (Player*(Character::*)(void)) &Character::GetPlayer)
-        .def("GetAuraModifier", (int(Character::*)(int, int)) &Character::GetAuraModifier)
-        .def("GetTarget", (Character*(Character::*)(void)) &Character::GetTarget)
-        .def_readwrite("level", &Character::level)
-        ,
-        class_<Room>("Room")
-        .def_readonly("id", &Room::id)
-        .def_readonly("name", &Room::name)
-        .def_readonly("description", &Room::description)
-        ,
-		class_<Player>("Player")
-        .def("GetClassLevel", (int(Player::*)(int)) &Player::GetClassLevel)
-		.def_readonly("recall", &Player::recall)
-		,
-        class_<Skill>("Skill")
-        .def(constructor<int, std::string>())
-        ,
-        class_<SpellAffect, Listener>("SpellAffect")
-        .def(constructor<>())
-        .def("ApplyAura", (void(SpellAffect::*)(int, int)) &SpellAffect::ApplyAura)
-        .def("GetCasterName", (std::string(SpellAffect::*)(void)) &SpellAffect::GetCasterName)
-        .def("SaveDataInt", (void(SpellAffect::*)(std::string, int)) &SpellAffect::SaveDataInt)
-        .def("SaveDataDouble", (void(SpellAffect::*)(std::string, double)) &SpellAffect::SaveDataDouble)
-        .def("SaveDataString", (void(SpellAffect::*)(std::string, std::string)) &SpellAffect::SaveDataString)
-        .def("GetDataInt", (int(SpellAffect::*)(std::string)) &SpellAffect::GetDataInt)
-        .def("GetDataDouble", (double(SpellAffect::*)(std::string)) &SpellAffect::GetDataDouble)
-        .def("GetDataString", (std::string(SpellAffect::*)(std::string)) &SpellAffect::GetDataString)
-    ];
+		(*lua).new_usertype<Listener>("Listener");
+
+		(*lua).new_usertype<ListenerManager>("ListenerManager");
+
+		/*
+		(*lua).new_usertype<Server>("Server", 
+			sol::constructors<Server(Game *, int)>()
+			);
+
+		(*lua).new_usertype<Client>("Client",
+			sol::constructors<Client(SOCKET, std::string)>()
+			);
+		*/
+
+		(*lua).new_usertype<Game>("Game",
+			"GetGame", &Game::GetGame
+			);
+
+		(*lua).new_usertype<User>("User",
+			sol::constructors<User(Client *)>()
+			);
+
+		(*lua).new_usertype<Character>("Character",
+			//sol::base_classes, sol::bases<Listener, ListenerManager>(),
+			sol::constructors<Character(), Character(std::string, User*)>(),
+			"GetLevel",  &Character::GetLevel,
+			"SetLevel",  &Character::SetLevel,
+			"Send", (void(Character::*)(std::string)) &Character::Send,
+			"Message", &Character::Message,
+			"AddSpellAffect", &Character::AddSpellAffect,
+			"CleanseSpellAffect", &Character::CleanseSpellAffect,
+			"GetHealth", &Character::GetHealth,
+			"GetMana", &Character::GetMana,
+			"GetStamina", &Character::GetStamina,
+			"HasResource", &Character::HasResource,
+			"AdjustHealth", &Character::AdjustHealth,
+			"AdjustMana", &Character::AdjustMana,
+			"ConsumeMana", &Character::ConsumeMana,
+			"AdjustStamina", &Character::AdjustStamina,
+			"GetName", &Character::GetName,
+			"HisHer", &Character::HisHer,
+			"EnterCombat", &Character::EnterCombat,
+			"IsFighting", &Character::IsFighting,
+			"InCombat", &Character::InCombat,
+			"SetCooldown", &Character::SetCooldown,
+			"ChangeRoomsID", &Character::ChangeRoomsID,
+			"GetPlayer", &Character::GetPlayer,
+			"GetAuraModifier", &Character::GetAuraModifier,
+			"GetTarget", &Character::GetTarget,
+			"level", &Character::level
+			);
+
+		(*lua).new_usertype<Room>("Room",
+			"id", &Room::id,
+			"name", &Room::name,
+			"description", &Room::description
+			);
+
+		(*lua).new_usertype<Player>("Player",
+			"GetClassLevel", &Player::GetClassLevel,
+			"recall", &Player::recall
+			);
+
+		(*lua).new_usertype<Skill>("Skill",
+			sol::constructors<Skill(int, std::string)>()
+			);
+
+		(*lua).new_usertype<SpellAffect>("SpellAffect",
+			//sol::base_classes, sol::bases<Listener>(),
+			sol::constructors<SpellAffect()>(),
+			"ApplyAura", (void(SpellAffect::*)(int, int)) &SpellAffect::ApplyAura,
+			"GetCasterName", &SpellAffect::GetCasterName,
+			"SaveDataInt", &SpellAffect::SaveDataInt,
+			"SaveDataDouble", &SpellAffect::SaveDataDouble,
+			"SaveDataString", &SpellAffect::SaveDataString,
+			"GetDataInt", &SpellAffect::GetDataInt,
+			"GetDataDouble", &SpellAffect::GetDataDouble,
+			"GetDataString", &SpellAffect::GetDataString
+			);
 }

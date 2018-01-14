@@ -32,7 +32,7 @@ extern "C"
 #include "lauxlib.h"
 }
 
-#include "luabind/luabind.hpp"
+//#include "luabind/luabind.hpp"
 
 using namespace std;
 

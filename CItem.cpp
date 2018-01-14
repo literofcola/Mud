@@ -25,7 +25,7 @@
 #include "mud.h"
 
 //These tables must match the order of enums in class Item
-char * Item::equip_strings[] = 
+const char * Item::equip_strings[] = 
 {
     "", "Head", "Neck", "Shoulder", "Back", "Chest", "Wrist", "Hands", "Waist", "Legs", "Feet", 
     "Finger", "Trinket", "Off Hand", "Main Hand", "One Hand", "Two Hand", ""
@@ -36,19 +36,19 @@ EQUIP_WAIST, EQUIP_LEGS, EQUIP_FEET, EQUIP_FINGER, EQUIP_TRINKET,
 EQUIP_OFFHAND, EQUIP_MAINHAND, EQUIP_ONEHAND, EQUIP_TWOHAND, EQUIP_LAST
 */
 
-char * Item::quality_strings[] = 
+const char * Item::quality_strings[] =
 {
     "|D", "|W", "|G", "|B", "|M", "|Y", "|C", ""
 };
 //QUALITY_POOR, QUALITY_COMMON, QUALITY_UNCOMMON, QUALITY_RARE, QUALITY_EPIC, QUALITY_LEGENDARY, QUALITY_ARTIFACT, QUALITY_LAST
     
-char * Item::bind_strings[] = 
+const char * Item::bind_strings[] =
 {
     "", "Binds when picked up", "Binds when equipped", ""
 };
 //BIND_NONE, BIND_PICKUP, BIND_EQUIP, BIND_LAST
 
-char * Item::type_strings[] =
+const char * Item::type_strings[] =
 {
     "Cloth", "Leather", "Mail", "Plate", "Sword", "Dagger", "Mace", "Axe", "Polearm", "Staff", "Container", "Food", "Consumable", "", ""
 };

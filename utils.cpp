@@ -7,45 +7,32 @@ using namespace std;
 namespace Utilities
 {
 
-
-template<typename T> // 1. Using stringstream
-string itos(T const &value) 
+string itos(const int & i)
 {
     thread_local stringstream ss;
     ss.str("");
     ss.clear();
-    ss << value;
-    return ss.str();
-}
-
-
-string itos(const int & i)
-{
-    stringstream ss;
-    //ss.str("");
-    //ss.clear();
     ss << i;
     return ss.str();
 }
 
-
 string dtos(const double & i, int precision)
 {
-	stringstream s;
-    s << setprecision(precision) << setiosflags(ios::fixed);
-	s << i;
-	string value;
-	s >> value;
-	return value;
+	thread_local stringstream ss;
+	ss.str("");
+	ss.clear();
+	ss << setprecision(precision) << setiosflags(ios::fixed);
+	ss << i;
+	return ss.str();
 }
 
 string i64tos(const __int64 & i)
 {
-	stringstream s;
-	s << i;
-	string value;
-	s >> value;
-	return value;
+	thread_local stringstream ss;
+	ss.str("");
+	ss.clear();
+	ss << i;
+	return ss.str();
 }
 
 int GetNoOfProcessors()

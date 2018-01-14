@@ -1,8 +1,6 @@
 #ifndef CSPELLAFFECT_H
 #define CSPELLAFFECT_H
 
-using boost::any_cast;
-
 class SpellAffect : public Listener
 {
 public:

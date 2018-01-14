@@ -24,8 +24,8 @@
 #include "CServer.h"
 #include "utils.h"
 
-extern void Lua_DefineClasses(lua_State * ls);
-extern void Lua_DefineFunctions(lua_State * ls);
+extern void Lua_DefineClasses(sol::state * lua);
+extern void Lua_DefineFunctions(sol::state * lua);
 
 Game	* thegame;
 Server	* theserver;
@@ -42,21 +42,12 @@ int main(int argc, char * argv[])
         return 0;
     }
 
-    //Init Lua
-    Server::luaState = lua_open();
-    luaL_openlibs(Server::luaState);
-	if(Server::luaState == NULL)
-	{
-        LogFile::Log("error", "main; Could not init Lua state");
-        LogFile::CloseAll();
-		return 0;
-	}
-    // Connect LuaBind to this lua state
-    luabind::open(Server::luaState);
-
-    Lua_DefineClasses(Server::luaState);
-    Lua_DefineFunctions(Server::luaState);
-    luaL_dofile(Server::luaState, "some_lua.lua"); //Test scripts
+	//Init Lua
+	// open some common libraries
+	Server::lua.open_libraries(sol::lib::base, sol::lib::package);
+	Server::lua.script_file("some_lua.lua");
+	Lua_DefineClasses(&Server::lua);
+	Lua_DefineFunctions(&Server::lua);
 
 	thegame = new Game();
 	theserver = new Server(thegame, 4000);
@@ -64,7 +55,7 @@ int main(int argc, char * argv[])
 	if(!theserver->Initialize())
 	{
 		LogFile::CloseAll();
-        lua_close(theserver->luaState);
+        //lua_close(theserver->luaState);
 		delete thegame;
 		delete theserver;
 		return 0;
@@ -75,7 +66,7 @@ int main(int argc, char * argv[])
     {
         LogFile::Log("error", "main; Could not connect to mySQL server 'mud'");
         LogFile::CloseAll();
-        lua_close(theserver->luaState);
+        //lua_close(theserver->luaState);
 		delete thegame;
 		delete theserver;
         return 0;
@@ -90,14 +81,14 @@ int main(int argc, char * argv[])
 	
 	theserver->DeInitialize();
     thegame->SaveGameStats();
-    theserver->sqlQueue->Disconnect();
     if(theserver->sqlQueue != NULL)
     {
         theserver->sqlQueue->Close();
+		theserver->sqlQueue->Disconnect();
         delete theserver->sqlQueue;
     }
-    
-    lua_close(Server::luaState);
+	
+    //lua_close(Server::luaState);
     LogFile::CloseAll();
 
 	delete thegame;

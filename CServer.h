@@ -53,7 +53,8 @@ public:
 	static DWORD WINAPI WorkerThread(void * arg);
 
     static mySQLQueue * sqlQueue;
-    static lua_State * luaState;
+    //static lua_State * luaState;
+	static sol::state lua;
 
 private:
 

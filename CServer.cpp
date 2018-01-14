@@ -31,8 +31,9 @@
 #define WAIT_TIMEOUT_INTERVAL 100
 
 //CRITICAL_SECTION Server::critical_section;
-lua_State * Server::luaState;
+//lua_State * Server::luaState;
 mySQLQueue * Server::sqlQueue;
+sol::state Server::lua;
 
 Server::Server(Game * g, int port) : nPort(port), mygame(g)
 {
@@ -260,9 +261,10 @@ void Server::AcceptConnection(SOCKET ListenSocket)
 	setsockopt(Socket, IPPROTO_TCP, TCP_NODELAY, (const char *)&value, sizeof(value)); 
 
 	//Display Client's IP
-	//char ipstr[INET6_ADDRSTRLEN];
+	char ipstr[INET6_ADDRSTRLEN];
 	//LogFile::Log("error", "Client connected from: " + inet_ntop(AF_INET, &ClientAddress.sin_addr, ipstr, sizeof(ipstr)));
-	std::string addr = inet_ntoa(ClientAddress.sin_addr);
+	std::string addr = inet_ntop(AF_INET, &ClientAddress.sin_addr, ipstr, sizeof(ipstr));
+	//std::string addr = inet_ntoa(ClientAddress.sin_addr);
 
 	LogFile::Log("error", "Client connected from: " + addr);
 

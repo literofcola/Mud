@@ -26,8 +26,6 @@
 #include "mud.h"
 
 using namespace std;
-using boost::multi_index_container;
-using namespace boost::multi_index;
 
 extern "C" 
 {
@@ -36,7 +34,7 @@ extern "C"
 #include "lauxlib.h"
 }
 
-#include "luabind/luabind.hpp"
+//#include "luabind/luabind.hpp"
 
 //Defines from telnet protocol we need for MXP, MCCP, etc
 const char IAC  = '\xFF';
@@ -424,7 +422,7 @@ void Game::GameLoop(Server * server)
         LeaveCriticalSection(&userListCS); //Locks out the AcceptThread from adding a new user to the userlist
 		Sleep(1);
 
-        _ftime(&time);
+        _ftime64_s(&time);
 		time_secs = (time_t) time.time;
         time_millis = time.millitm;
         currentTime = ((int)time_secs + ((double)time_millis / 1000.0));
@@ -517,15 +515,17 @@ void Game::WorldUpdate(Server * server)
                     //LogFile::Log("status", "Loading lua trigger script " + Utilities::itos(trig->id) + " for NPC " + Utilities::itos(curr->id));
                     //string nil = trig->GetFunction() + " = nil;";
                     //luaL_dostring(Server::luaState, nil.c_str());
-                    luaL_dostring(Server::luaState, trig->GetScript().c_str());
-                    luabind::call_function<void>(Server::luaState, func.c_str(), curr);
+					Server::lua.script(trig->GetScript().c_str());
+					Server::lua[func.c_str()](curr);
+                    //luaL_dostring(Server::luaState, trig->GetScript().c_str());
+                    //luabind::call_function<void>(Server::luaState, func.c_str(), curr);
                 }
                 catch(const std::exception & e)
 			    {
 				    LogFile::Log("error", e.what());
-				    const char * logstring = lua_tolstring(Server::luaState, -1, NULL);
-				    if(logstring != NULL)
-					    LogFile::Log("error", logstring);
+				    //const char * logstring = lua_tolstring(Server::luaState, -1, NULL);
+				    /*if(logstring != NULL)
+					    LogFile::Log("error", logstring);*/
 			    }
                 catch(...)
 	            {
@@ -602,14 +602,15 @@ void Game::WorldUpdate(Server * server)
                     sa->ticksRemaining--;
                     try
                     {
-                        luabind::call_function<void>(Server::luaState, func.c_str(), sa->caster, curr, sa);
+						Server::lua[func.c_str()](sa->caster, curr, sa);
+                        //luabind::call_function<void>(Server::luaState, func.c_str(), sa->caster, curr, sa);
                     }
                     catch(const std::exception & e)
 			        {
 				        LogFile::Log("error", e.what());
-				        const char * logstring = lua_tolstring(Server::luaState, -1, NULL);
+				        /*const char * logstring = lua_tolstring(Server::luaState, -1, NULL);
 				        if(logstring != NULL)
-					        LogFile::Log("error", logstring);
+					        LogFile::Log("error", logstring);*/
 			        }
                     catch(...)
 	                {
@@ -630,14 +631,15 @@ void Game::WorldUpdate(Server * server)
                     }
                     try
                     {
-                        luabind::call_function<void>(Server::luaState, func.c_str(), sa->caster, curr, sa);
+						Server::lua[func.c_str()](sa->caster, curr, sa);
+                        //luabind::call_function<void>(Server::luaState, func.c_str(), sa->caster, curr, sa);
                     }
                     catch(const std::exception & e)
 			        {
 				        LogFile::Log("error", e.what());
-				        const char * logstring = lua_tolstring(Server::luaState, -1, NULL);
+				        /*const char * logstring = lua_tolstring(Server::luaState, -1, NULL);
 				        if(logstring != NULL)
-					        LogFile::Log("error", logstring);
+					        LogFile::Log("error", logstring);*/
 			        }
                     catch(...)
 	                {
@@ -684,14 +686,15 @@ void Game::WorldUpdate(Server * server)
                     }
                     try
                     {
-                        luabind::call_function<void>(Server::luaState, func.c_str(), sa->caster, curr, sa);
+						Server::lua[func.c_str()](sa->caster, curr, sa);
+                        //luabind::call_function<void>(Server::luaState, func.c_str(), sa->caster, curr, sa);
                     }
                     catch(const std::exception & e)
 			        {
 				        LogFile::Log("error", e.what());
-				        const char * logstring = lua_tolstring(Server::luaState, -1, NULL);
+				        /*const char * logstring = lua_tolstring(Server::luaState, -1, NULL);
 				        if(logstring != NULL)
-					        LogFile::Log("error", logstring);
+					        LogFile::Log("error", logstring);*/
 			        }
                     catch(...)
 	                {
@@ -712,14 +715,15 @@ void Game::WorldUpdate(Server * server)
                     }
                     try
                     {
-                        luabind::call_function<void>(Server::luaState, func.c_str(), sa->caster, curr, sa);
+						Server::lua[func.c_str()](sa->caster, curr, sa);
+                        //luabind::call_function<void>(Server::luaState, func.c_str(), sa->caster, curr, sa);
                     }
                     catch(const std::exception & e)
 			        {
 				        LogFile::Log("error", e.what());
-				        const char * logstring = lua_tolstring(Server::luaState, -1, NULL);
+				        /*const char * logstring = lua_tolstring(Server::luaState, -1, NULL);
 				        if(logstring != NULL)
-					        LogFile::Log("error", logstring);
+					        LogFile::Log("error", logstring);*/
 			        }
                     catch(...)
 	                {
@@ -1368,11 +1372,18 @@ void Game::LoadSkills(Server * server)
         s->costFunction = row["cost_func"];
         
         skills.insert(std::pair<int, Skill *>(s->id, s));
+		Server::lua.script(s->castScript.c_str());
+		Server::lua.script(s->applyScript.c_str());
+		Server::lua.script(s->tickScript.c_str());
+		Server::lua.script(s->removeScript.c_str());
+		Server::lua.script(s->costFunction.c_str());
+		/*
         luaL_dostring(Server::luaState, s->castScript.c_str());
         luaL_dostring(Server::luaState, s->applyScript.c_str());
         luaL_dostring(Server::luaState, s->tickScript.c_str());
         luaL_dostring(Server::luaState, s->removeScript.c_str());
         luaL_dostring(Server::luaState, s->costFunction.c_str());
+		*/
     }
 }
 
