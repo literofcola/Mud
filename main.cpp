@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "vld.h"
+//#include "vld.h"
 #include "CListener.h"
 #include "CListenerManager.h"
 #include "CmySQLQueue.h"
@@ -72,7 +72,10 @@ int main(int argc, char * argv[])
         return 0;
     }
 
+	//todo: turn logfile into a multithreaded queue?
 	LogFile::Log("status", "Server listening on port 4000");
+	
+	//todo: consider reordering here to load game from db prior to server accept
 
     theserver->Start();
     thegame->GameLoop(theserver);

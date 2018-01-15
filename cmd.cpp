@@ -1066,11 +1066,11 @@ bool cmd_quit_Query(Character * ch, string argument)
             ch->SaveSpellAffects();
             ch->SaveCooldowns();
 			//ch->player->user->Disconnect();
-			ch->player->user->remove = true;
-	        //ch->player->user->client->disconnect = true;
+			//ch->player->user->remove = true;
+			ch->player->user->SetDisconnect();
         }
 	}
-    LogFile::Log("status", ch->name + " is quitting");
+    //LogFile::Log("status", ch->name + " \"quit\"");
 	return true;
 }
 

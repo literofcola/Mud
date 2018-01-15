@@ -59,7 +59,7 @@ bool Server::Initialize()
 	//Allocate memory to store thread handles
 	phWorkerThreads = new HANDLE[nThreads];
 
-	InitializeCriticalSection(&critical_section);
+	InitializeCriticalSection(&clientListCS);
 
 	//Create shutdown event
 	hShutdownEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
@@ -170,12 +170,12 @@ void Server::DeInitialize()
 		User * user = (*iter);
         if(user->GetClient())
             closesocket(user->GetClient()->Socket());
-		user->Disconnect(); //just sets client to NULL
+		user->ImmediateDisconnect(); 
 
         //Save user/player
         if(user->character)
         {
-            if(user->connectedState == User::CONN_PLAYING) //don't save fresh characters
+            if(user->connectedState == User::CONN_PLAYING && user->character->level > 1) //don't save fresh characters
                 user->character->Save();
             //user->character->NotifyListeners();
             mygame->characters.remove(user->character);
@@ -201,7 +201,7 @@ void Server::DeInitialize()
 	//Cleanup dynamic memory allocations, if there are any.
 	//CleanClientList();
 
-	DeleteCriticalSection(&critical_section);
+	DeleteCriticalSection(&clientListCS);
 
 	//Cleanup IOCP.
 	CloseHandle(hIOCompletionPort);
@@ -269,13 +269,14 @@ void Server::AcceptConnection(SOCKET ListenSocket)
 	LogFile::Log("error", "Client connected from: " + addr);
 
 	//Create a new ClientContext for this newly accepted client
-	Client * pClientContext = new Client(Socket, addr);
-
-    clients.push_back(pClientContext); //TODO, need to critical section the clients list? may be trying to remove while accepting
-	mygame->NewUser(pClientContext); //should be thread safe
-
-	if (true == AssociateWithIOCP(pClientContext))
+	//Client * pClientContext = new Client(Socket, addr);
+	auto pClientContext = std::make_shared<Client>(Socket, addr);
+	
+	if (true == AssociateWithIOCP(pClientContext.get()))
 	{
+		AddClient(pClientContext);			//both have internal critical sections 
+		mygame->NewUser(pClientContext);	// for client and user list access
+
 		OVERLAPPEDEX * operationData = pClientContext->NewOperationData(OP_READ);
 		OVERLAPPED * base_overlapped = static_cast<OVERLAPPED*>(operationData);
 
@@ -283,17 +284,20 @@ void Server::AcceptConnection(SOCKET ListenSocket)
 		DWORD dwBytes = 0;
 
 		//Post initial Recv
+		pClientContext->RefCountAdjust(1);
 		int err = WSARecv(pClientContext->Socket(), &operationData->wsabuf, 1, NULL, &dwFlags, base_overlapped, NULL);
 
 		if ((SOCKET_ERROR == err) && (WSA_IO_PENDING != WSAGetLastError()))
 		{
-			//LogFile::Log("error", "WSARecv(): " + Utilities::GetLastErrorAsString());
+			LogFile::Log("error", "WSARecv(): " + Utilities::GetLastErrorAsString());
 			if(pClientContext)
             {
-                LogFile::Log("status", "Disconnect from " + pClientContext->GetIPAddress());
+                LogFile::Log("status", "Disconnect from " + pClientContext->GetIPAddress() + " in AcceptConnection()");
+				pClientContext->RefCountAdjust(-1);
                 pClientContext->FreeOperationData(operationData);
+				pClientContext->DisconnectServer();
                 closesocket(pClientContext->Socket());
-				mygame->RemoveUser(pClientContext);
+				RemoveClient(pClientContext); 
             }
 		}
 	}
@@ -307,13 +311,11 @@ bool Server::AssociateWithIOCP(Client * pClientContext)
 	if (NULL == hTemp)
 	{
 		LogFile::Log("error", "CreateIoCompletionPort(): " + Utilities::GetLastErrorAsString());
-
-		//Let's not work with this client
 		if(pClientContext)
         {
-            LogFile::Log("status", "Disconnect from " + pClientContext->GetIPAddress());
+            LogFile::Log("status", "Disconnect from " + pClientContext->GetIPAddress() + " in AssociateWithIOCP()");
             closesocket(pClientContext->Socket());
-			mygame->RemoveUser(pClientContext);
+			pClientContext->DisconnectServer();
         }
 		return false;
 	}
@@ -344,7 +346,7 @@ DWORD WINAPI Server::WorkerThread(void * lpParam)
 			&pOverlapped,
 			INFINITE);
 
-        LogFile::Log("status", "GQCP worker awake # " + Utilities::itos(GetCurrentThreadId()));
+        //LogFile::Log("status", "GQCP worker awake # " );
 
 
 		if (NULL == lpContext)
@@ -355,36 +357,38 @@ DWORD WINAPI Server::WorkerThread(void * lpParam)
 
 		//Get the client context
 		pClientContext = (Client *)lpContext;
+		pClientContext->RefCountAdjust(-1); //GQCS completed
 		//Get the extended overlapped structure
 		OVERLAPPEDEX * pOverlappedEx = static_cast<OVERLAPPEDEX*>(pOverlapped);
 
         if(bReturn && WSAGetLastError() == ERROR_SUCCESS && pClientContext != NULL && dwBytesTransfered == 0)
         {
-            LogFile::Log("error", "GetQueuedCompletionStatus(): " + Utilities::itos(WSAGetLastError()));// + Utilities::GetLastErrorAsString());
-			if(pClientContext->GetUser())
-				pClientContext->GetUser()->Disconnect();
+			//WE HIT HERE ON MUSHCLIENT DISCONNECT
+            //LogFile::Log("error", "(1)GetQueuedCompletionStatus(): ThreadID:" + Utilities::itos(GetCurrentThreadId()) + " " + Utilities::itos(WSAGetLastError()));// + Utilities::GetLastErrorAsString());
+		
+			pClientContext->DisconnectServer();
 			pClientContext->FreeOperationData(pOverlappedEx);
-            thisserver->clients.remove(pClientContext);
-			delete pClientContext;
+			closesocket(pClientContext->Socket());
+			if(pClientContext->GetRefCount() == 0)
+				thisserver->RemoveClient(pClientContext);
             continue;
         }
 
 		if(!bReturn)
 		{
-			LogFile::Log("error", "GetQueuedCompletionStatus(): " + Utilities::itos(WSAGetLastError()));// + Utilities::GetLastErrorAsString());
+			//WE HIT HERE ON "QUIT" (Err #1236) and stress tester disconnect (err 64)
+			//LogFile::Log("error", "(2)GetQueuedCompletionStatus(): ThreadID:" + Utilities::itos(GetCurrentThreadId()) + " " + Utilities::itos(WSAGetLastError()));// + Utilities::GetLastErrorAsString());
 			if(pClientContext)
             {
-                if(pOverlapped == NULL)
-                    LogFile::Log("status", "(!bReturn) && pOverlapped == NULL");
+                //if(pOverlapped == NULL)
+                //    LogFile::Log("status", "(!bReturn) && pOverlapped == NULL");
                 //LogFile::Log("status", "(!bReturn) Disconnect from " + pClientContext->GetIPAddress());
-                //closesocket(pClientContext->Socket());
-                //pClientContext->CloseSocketAndSleep();
-				//thisserver->mygame->RemoveUser(pClientContext);
-				/*if(pClientContext->GetUser())
-					pClientContext->GetUser()->Disconnect();*/
+
+				pClientContext->DisconnectServer();
 				pClientContext->FreeOperationData(pOverlappedEx);
-                thisserver->clients.remove(pClientContext);
-				delete pClientContext;
+				//closesocket(pClientContext->Socket());
+				if (pClientContext->GetRefCount() == 0)
+					thisserver->RemoveClient(pClientContext);
             }
 			continue;
 		}
@@ -406,6 +410,7 @@ DWORD WINAPI Server::WorkerThread(void * lpParam)
 					dwFlags = 0;
 
 					//Overlapped send
+					pClientContext->RefCountAdjust(1);
 					//nBytesSent = WSASend(pClientContext->Socket(), &pOverlappedEx->wsabuf, 1, &dwBytes, dwFlags, pOverlapped, NULL);
 					nBytesSent = WSASend(pClientContext->Socket(), &pOverlappedEx->wsabuf, 1, NULL, 0, pOverlapped, NULL);
 
@@ -414,9 +419,13 @@ DWORD WINAPI Server::WorkerThread(void * lpParam)
 						//LogFile::Log("error", "WSASend(): " + Utilities::GetLastErrorAsString());
 						if(pClientContext)
                         {
-                            LogFile::Log("status", "(WSASend: OP_WRITE) Disconnect from " + pClientContext->GetIPAddress());
-                            closesocket(pClientContext->Socket());
-						    thisserver->mygame->RemoveUser(pClientContext);
+                            //LogFile::Log("status", "(WSASend: OP_WRITE) Disconnect from " + pClientContext->GetIPAddress());
+							pClientContext->RefCountAdjust(-1);
+							pClientContext->DisconnectServer();
+							pClientContext->FreeOperationData(pOverlappedEx);
+							closesocket(pClientContext->Socket());
+							if (pClientContext->GetRefCount() == 0)
+								thisserver->RemoveClient(pClientContext);
                         }
 					}
 				}
@@ -472,6 +481,7 @@ DWORD WINAPI Server::WorkerThread(void * lpParam)
 				ZeroMemory(pOverlapped, sizeof(OVERLAPPED));
 				pOverlappedEx->totalBytes = pOverlappedEx->sentBytes = 0;
 
+				pClientContext->RefCountAdjust(1);
 				int err = WSARecv(pClientContext->Socket(), &pOverlappedEx->wsabuf, 1, NULL, &dwFlags, pOverlapped, NULL);
 
 				if ((SOCKET_ERROR == err) && (WSA_IO_PENDING != WSAGetLastError()))
@@ -479,31 +489,34 @@ DWORD WINAPI Server::WorkerThread(void * lpParam)
 					//LogFile::Log("error", "WSARecv(): " + Utilities::GetLastErrorAsString());
 					if(pClientContext)
                     {
-                        LogFile::Log("status", "(WSARecv: OP_READ) Disconnect from " + pClientContext->GetIPAddress());
-                        closesocket(pClientContext->Socket());
-						thisserver->mygame->RemoveUser(pClientContext);
+                        //LogFile::Log("status", "(WSARecv: OP_READ) Disconnect from " + pClientContext->GetIPAddress());
+
+						pClientContext->RefCountAdjust(-1);
+						pClientContext->DisconnectServer();
+						pClientContext->FreeOperationData(pOverlappedEx);
+						closesocket(pClientContext->Socket());
+						if (pClientContext->GetRefCount() == 0)
+							thisserver->RemoveClient(pClientContext);
                     }
 				}
 
 				break;
-			
-			//default:
-				//We should never be reaching here, under normal circumstances.
-			//	break;
-		} // switch
-	} // while
+		} 
+	}
 
 	return 0;
 }
 
 void Server::deliver(Client * c, const std::string msg)
 {
+	//deliver is called FROM THE GAME THREAD
 	OVERLAPPEDEX * olptr = c->NewOperationData(OP_WRITE);
 	memcpy(olptr->buffer, msg.c_str(), msg.length());
 	olptr->wsabuf.len = (DWORD)msg.length();
 	olptr->totalBytes = (DWORD)msg.length();
 	OVERLAPPED * base_overlapped = static_cast<OVERLAPPED*>(olptr);
 
+	c->RefCountAdjust(1);
 	int wsaerr = WSASend(c->Socket(), &olptr->wsabuf, 1, NULL, 0, base_overlapped, NULL);
 
 	if(wsaerr == 0)
@@ -519,11 +532,15 @@ void Server::deliver(Client * c, const std::string msg)
 	else if(wsaerr == SOCKET_ERROR && WSAGetLastError() != WSA_IO_PENDING)
 	{
 		//error
-        LogFile::Log("status", "(WSASend: deliver immediate) Disconnect from " + c->GetIPAddress());
+        //LogFile::Log("status", "(WSASend: deliver() immediate) Disconnect from " + c->GetIPAddress());
 		//LogFile::Log("error", "WSASend(): " + Utilities::GetLastErrorAsString());
-        closesocket(c->Socket());
-        //c->FreeOperationData(olptr);
-		mygame->RemoveUser(c);
+
+		c->RefCountAdjust(-1);
+		c->DisconnectServer();
+		c->FreeOperationData(olptr);
+		closesocket(c->Socket());
+		if(c->GetRefCount() == 0)
+			RemoveClient(c);
 	}
 }
 
@@ -535,6 +552,7 @@ void Server::deliver(Client * c, const unsigned char * msg, int length)
 	olptr->totalBytes = length;
 	OVERLAPPED * base_overlapped = static_cast<OVERLAPPED*>(olptr);
 
+	c->RefCountAdjust(1);
 	int wsaerr = WSASend(c->Socket(), &olptr->wsabuf, 1, NULL, 0, base_overlapped, NULL);
 
 	if(wsaerr == 0)
@@ -550,14 +568,20 @@ void Server::deliver(Client * c, const unsigned char * msg, int length)
 	else if(wsaerr == SOCKET_ERROR && WSAGetLastError() != WSA_IO_PENDING)
 	{
 		//error
-        LogFile::Log("status", "(WSASend: deliver immediate) Disconnect from " + c->GetIPAddress());
+        //LogFile::Log("status", "(WSASend: deliver() immediate) Disconnect from " + c->GetIPAddress());
 		//LogFile::Log("error", "WSASend(): " + Utilities::GetLastErrorAsString());
-        closesocket(c->Socket());
-		//c->FreeOperationData(olptr);
-        mygame->RemoveUser(c);
+
+		c->RefCountAdjust(-1);
+		c->DisconnectServer();
+		c->FreeOperationData(olptr);
+		closesocket(c->Socket());
+		if (c->GetRefCount() == 0)
+			RemoveClient(c);
 	}
 }
 
+/*
+currently not in use and needs work. this should disconnect all clients from server side only not user list
 void Server::DisconnectAllClients()
 {
 	LogFile::Log("network", "Server::remove_all_clients");
@@ -574,8 +598,34 @@ void Server::DisconnectAllClients()
 		}
 	}
 }
+*/
 
-void Server::Stop()
+void Server::AddClient(std::shared_ptr<Client> client)
 {
-    DisconnectAllClients();
+	EnterCriticalSection(&clientListCS);
+	clients.push_back(client);
+	LeaveCriticalSection(&clientListCS);
 }
+
+void Server::RemoveClient(Client * client)
+{
+	EnterCriticalSection(&clientListCS);
+	std::list<std::shared_ptr<Client>>::iterator iter;
+	for (iter = clients.begin(); iter != clients.end(); iter++)
+	{
+		if ((*iter).get() == client)
+		{
+			clients.erase(iter);
+			break;
+		}
+	}
+	LeaveCriticalSection(&clientListCS);
+}
+
+void Server::RemoveClient(std::shared_ptr<Client> client)
+{
+	EnterCriticalSection(&clientListCS);
+	clients.remove(client);
+	LeaveCriticalSection(&clientListCS);
+}
+

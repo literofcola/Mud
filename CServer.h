@@ -17,24 +17,15 @@ public:
 	bool Initialize();
 	void Start();
 	void DeInitialize();
-    void Stop();
 
-    //static unsigned int __stdcall Run(void * lpParam);
-
-    //void handle_accept(Client_ptr client, const asio::error_code& error);
     void deliver(Client * client, const std::string msg);
 	void deliver(Client * c, const unsigned char * msg, int length);
 
-    //void start_client(Client_ptr c);
-	//void remove_client(Client_ptr client);
-	void DisconnectAllClients();
-    //void handle_read(Client_ptr client, const asio::error_code & error);
-    //void handle_write(Client_ptr client, const asio::error_code& error);
+	//void DisconnectAllClients();
 
-    //void GameLoop(Server * server);
-    //void ShutdownGame();
-
-	//std::list<Client_ptr> clients;
+	void AddClient(std::shared_ptr<Client> client);
+	void RemoveClient(std::shared_ptr<Client> client);
+	void RemoveClient(Client * client);
 
 	SOCKET ListenSocket;
 	struct sockaddr_in ServerAddress;
@@ -45,7 +36,7 @@ public:
 	WSAEVENT hAcceptEvent;
 	HANDLE hIOCompletionPort;
 	//std::vector<Client *> g_Clients;
-    CRITICAL_SECTION critical_section;
+    CRITICAL_SECTION clientListCS;
 
 	static DWORD WINAPI AcceptThread(void * lParam);
 	void AcceptConnection(SOCKET ListenSocket);
@@ -53,14 +44,15 @@ public:
 	static DWORD WINAPI WorkerThread(void * arg);
 
     static mySQLQueue * sqlQueue;
-    //static lua_State * luaState;
 	static sol::state lua;
 
 private:
 
 	int nPort;
 	Game * mygame;
-    std::list<Client *> clients; //server owns the clients, user->client points into this list
+    //std::list<Client *> clients; //server owns the clients, user->client points into this list
+	std::list<std::shared_ptr<Client>> clients;
+	;
 };
 
 #endif //CSERVER_H

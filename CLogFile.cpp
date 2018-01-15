@@ -5,18 +5,18 @@
 using namespace std;
 
 map<const char *, ofstream*> LogFile::files;
-CRITICAL_SECTION LogFile::critical_section;
+CRITICAL_SECTION LogFile::logFileCS;
 bool LogFile::init = false;
 
 void LogFile::Log(const char * logName, const char * logString)
 {
     if(!init)
     {
-        InitializeCriticalSection(&critical_section);
+        InitializeCriticalSection(&logFileCS);
         init = true;
     }
 
-    EnterCriticalSection(&critical_section);
+    EnterCriticalSection(&logFileCS);
     if(files.find(logName) == files.end()) //Check for logName in the open files
     {
         //Not found, open it
@@ -29,24 +29,24 @@ void LogFile::Log(const char * logName, const char * logString)
     }
     *files[logName] << Utilities::TimeStamp() << " :: " << logString << endl;
     cout << Utilities::TimeStamp() << " :: " << logString << endl;
-    LeaveCriticalSection(&critical_section);
+    LeaveCriticalSection(&logFileCS);
 }
 
 void LogFile::Close(const char * logName)
 {
-    EnterCriticalSection(&critical_section);
+    EnterCriticalSection(&logFileCS);
     if(files.find(logName) != files.end())
     {
         files[logName]->close();
         delete files[logName];
         files.erase(logName);
     }
-    LeaveCriticalSection(&critical_section);
+    LeaveCriticalSection(&logFileCS);
 }
 
 void LogFile::CloseAll()
 {
-    EnterCriticalSection(&critical_section);
+    EnterCriticalSection(&logFileCS);
     map<const char *, ofstream*>::const_iterator iter;
     for (iter=files.begin(); iter != files.end(); ++iter) 
     {
@@ -54,10 +54,10 @@ void LogFile::CloseAll()
         delete iter->second;
     }
     files.clear();
-    LeaveCriticalSection(&critical_section);
+    LeaveCriticalSection(&logFileCS);
     if(init)
     {
-        DeleteCriticalSection(&critical_section);
+        DeleteCriticalSection(&logFileCS);
         init = false;
     }
 }

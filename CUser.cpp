@@ -25,7 +25,7 @@
 
 using namespace std;
 
-User::User(Client * client_)
+User::User(std::shared_ptr<Client> client_)
 {
     client = client_;
     commandQueue.clear();
@@ -49,7 +49,7 @@ User::~User()
 		delete client;
 		client = NULL;
 	}*/
-	client = NULL;
+	client = nullptr; //if we're deleting the user, we should have called ->Disconnect to close the socket and delete client already
 	if(character != NULL)
 	{
 		delete character;
@@ -85,7 +85,9 @@ void User::Send(char * str)
 
 Client * User::GetClient()
 {
-	return client;
+	if(client != nullptr)
+		return client.get();
+	return NULL;
 }
 
 void User::SendSubchannel(string str)
@@ -106,9 +108,13 @@ void User::SendSubchannel(char * str)
 
 bool User::IsConnected()
 {
-	if(client)
-		return true;
-	return false;
+	if (client == nullptr)
+		return false;
+	if (!client->IsConnected())
+	{
+		return false;
+	}
+	return true;
 }
 
 bool User::IsPlaying()
@@ -116,21 +122,31 @@ bool User::IsPlaying()
     return connectedState == CONN_PLAYING;
 }
 
-void User::Disconnect()
+void User::ImmediateDisconnect()
 {
-	if(client)
+	if (client)
+	{
 		closesocket(client->Socket());
-    client = NULL;
-    /*if(client)
-    {
-        //client->CloseSocketAndSleep();
-	    delete client;
-	    client = NULL;
-    }*/
+		client->DisconnectGame();
+	}
+    client = nullptr;
+	remove = true;
+}
+
+void User::SetDisconnect()
+{
+	if (client)
+	{
+		client->DisconnectGame();
+	}
+	remove = true;
 }
 
 void User::GetOneCommandFromNetwork()
 {
+	if(!client)
+		return;
+
 	EnterCriticalSection(&client->command_cs);
 	if(!client->commandQueue.empty())
 	{
@@ -142,13 +158,17 @@ void User::GetOneCommandFromNetwork()
 
 bool User::HasCommandReady()
 {
-	if(commandQueue.empty())
+	if (commandQueue.empty())
+	{
 		return false;
+	}
 	return true;
 }
 
 void User::ClearClientCommandQueue()
 {
+	if (!client)
+		return;
 	EnterCriticalSection(&client->command_cs);
 	client->commandQueue.clear();
     LeaveCriticalSection(&client->command_cs);

@@ -54,7 +54,7 @@ void Lua_DefineClasses(sol::state * lua)
 			);
 
 		(*lua).new_usertype<User>("User",
-			sol::constructors<User(Client *)>()
+			sol::constructors<User(std::shared_ptr<Client>)>()
 			);
 
 		(*lua).new_usertype<Character>("Character",

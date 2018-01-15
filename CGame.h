@@ -15,7 +15,7 @@ public:
     void GameLoop(Server * server);
     void WorldUpdate(Server * server);
     void LoginHandler(Server * server, User * user, std::string argument);
-	void NewUser(Client * client);
+	void NewUser(std::shared_ptr<Client> client);
 	void RemoveUser(User * user);
 	void RemoveUser(Client * client);
     Character * NewCharacter();

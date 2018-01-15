@@ -4,7 +4,7 @@
 class User
 {
 public:
-    User(Client * client);
+    User(std::shared_ptr<Client> client);
     ~User();
 
     enum State
@@ -19,7 +19,8 @@ public:
 	void SendSubchannel(char * str);
     bool IsConnected();
     bool IsPlaying();
-	void Disconnect();
+	void ImmediateDisconnect();
+	void SetDisconnect();
 	void GetOneCommandFromNetwork();
 	bool HasCommandReady();
 	void ClearClientCommandQueue();
@@ -56,7 +57,8 @@ public:
     //std::string queryPrompt;
 
 private:
-	Client * client;
+	//Client * client;
+	std::shared_ptr<Client> client;
 };
 
 #endif

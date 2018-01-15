@@ -13,7 +13,7 @@ private:
     LogFile();
     LogFile(const LogFile & l);
     ~LogFile();
-    static CRITICAL_SECTION critical_section;
+    static CRITICAL_SECTION logFileCS;
     static bool init;
 
 

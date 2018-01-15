@@ -30,26 +30,33 @@ Client::Client(SOCKET s, std::string ipaddress) : socket_(s), ipaddress_(ipaddre
     receiveBuffer = new char[NETWORK_BUFFER_SIZE];
     commandQueue.clear();
     inputBuffer.clear();
-	disconnect = false;
-	user_ = NULL;
+	//disconnect = false;
+	//user_ = NULL;
     ZeroMemory(receiveBuffer, NETWORK_BUFFER_SIZE);
 	InitializeCriticalSection(&overlapped_cs);
 	InitializeCriticalSection(&command_cs);
+	InitializeCriticalSection(&disconnect_cs);
+	InitializeCriticalSection(&refcount_cs);
+	disconnectFromServer = false;
+	disconnectFromGame = false;
+	IOCPReferenceCount = 0;
 }
 
 Client::~Client()
 {
-	user_ = NULL;
+	//user_ = NULL;
     delete[] receiveBuffer;
 	//cancel pending operations
-    closesocket(socket_);
-	CancelIoEx((HANDLE)socket_, NULL);
-	SleepEx(0, TRUE); // the completion will be called here
+    //closesocket(socket_);	//this is no good, we need to make sure the socket is well and truly closed and all pending IOCP operations are done well before we get here
+	//CancelIoEx((HANDLE)socket_, NULL);
+	//SleepEx(0, TRUE); // the completion will be called here
 
 	//shutdown(socket_, SD_BOTH);
 
 	DeleteCriticalSection(&overlapped_cs);
 	DeleteCriticalSection(&command_cs);
+	DeleteCriticalSection(&disconnect_cs);
+	DeleteCriticalSection(&refcount_cs);
 
 	std::list<OVERLAPPEDEX *>::iterator iter = overlappedData.begin();
 	while(iter != overlappedData.end())
@@ -59,13 +66,6 @@ Client::~Client()
 		iter = overlappedData.erase(iter);
 	}
 	overlappedData.clear();
-}
-
-void Client::CloseSocketAndSleep()
-{
-    closesocket(socket_);
-	//CancelIo((HANDLE)socket_);
-	SleepEx(0, TRUE); // the completion will be called here
 }
 
 std::string Client::GetIPAddress()
@@ -83,15 +83,15 @@ SOCKET Client::Socket()
 	return socket_;
 }
 
-User * Client::GetUser()
+/*User * Client::GetUser()
 {
 	return user_;
-};
+};*/
 
-void Client::SetUser(User * u)
+/*void Client::SetUser(User * u)
 {
 	user_ = u;
-};
+};*/
 
 OVERLAPPEDEX * Client::NewOperationData(int op_type)
 {
@@ -134,3 +134,40 @@ void Client::FreeOperationData(OVERLAPPEDEX *  ol)
 	LeaveCriticalSection(&overlapped_cs);
 }
 
+void Client::DisconnectGame()
+{
+	EnterCriticalSection(&disconnect_cs);
+	disconnectFromGame = true;
+	LeaveCriticalSection(&disconnect_cs);
+}
+
+void Client::DisconnectServer()
+{
+	EnterCriticalSection(&disconnect_cs);
+	disconnectFromServer = true;
+	LeaveCriticalSection(&disconnect_cs);
+}
+
+bool Client::IsConnected()
+{
+	EnterCriticalSection(&disconnect_cs);
+	bool ret = (!disconnectFromGame && !disconnectFromServer);
+	LeaveCriticalSection(&disconnect_cs);
+	return ret;
+}
+
+void Client::RefCountAdjust(const int & i)
+{
+	EnterCriticalSection(&refcount_cs);
+	IOCPReferenceCount += i;
+	LeaveCriticalSection(&refcount_cs);
+}
+
+int Client::GetRefCount()
+{
+	int ret = 0;
+	EnterCriticalSection(&refcount_cs);
+	ret = IOCPReferenceCount;
+	LeaveCriticalSection(&refcount_cs);
+	return ret;
+}
