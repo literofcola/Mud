@@ -1053,18 +1053,21 @@ bool cmd_quit_Query(Character * ch, string argument)
             ch->Send("You can't do that while casting.\n\r");
             return true;
         }
-        ch->Message(ch->name + " has left the game.", Character::MSG_ROOM_NOTCHAR);
+
+		ch->Send("Bye\n\r");
+
+		//do this stuff on remove in the gameloop (to support user idle timeout quits)
+        //ch->Message(ch->name + " has left the game.", Character::MSG_ROOM_NOTCHAR);
 
         //If we have a target, that target has US in their listener list. Remove that by clearing our target first.
-        ch->ClearTarget();
+        //ch->ClearTarget(); 
 
-        ch->ChangeRooms(NULL);
-	    ch->Send("Bye\n\r");
-        
+        //ch->ChangeRooms(NULL);
+	   
         if(ch->player && ch->player->user)
         {
-            ch->SaveSpellAffects();
-            ch->SaveCooldowns();
+            /*ch->SaveSpellAffects();
+            ch->SaveCooldowns();*/
 			//ch->player->user->Disconnect();
 			//ch->player->user->remove = true;
 			ch->player->user->SetDisconnect();

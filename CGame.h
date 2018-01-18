@@ -1,6 +1,8 @@
 #ifndef CGAME_H
 #define CGAME_H
 
+#define IDLE_TIMEOUT 900
+
 class Server;
 
 class Game

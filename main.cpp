@@ -32,7 +32,7 @@ Server	* theserver;
 
 int main(int argc, char * argv[])
 {
-	srand((unsigned)time(NULL));
+	Server::rand.seed((unsigned)time(NULL));
 
     //Init timer
     if(!HighResTimer::Init())

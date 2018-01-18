@@ -1779,7 +1779,7 @@ void Character::AutoAttack(Character * victim)
 
         int damage = npcDamageLow;
         if(npcDamageHigh != npcDamageLow)
-            damage = (rand() % (npcDamageHigh - npcDamageLow)) + npcDamageLow;
+            damage = (Server::rand() % (npcDamageHigh - npcDamageLow)) + npcDamageLow;
         OneHit(victim, damage); //TODO fancy damage calculations, block miss hit crit 
         //victim may be invalid here if it was killed!
     }
@@ -1793,7 +1793,7 @@ void Character::AutoAttack(Character * victim)
                 int high = player->equipped[Player::EQUIP_MAINHAND]->damageHigh;
                 int low = player->equipped[Player::EQUIP_MAINHAND]->damageLow;
                 if(high != low)
-                    damage_main = (rand() % (high - low)) + low;
+                    damage_main = (Server::rand() % (high - low)) + low;
                 else
                     damage_main = low;
             }
@@ -1810,7 +1810,7 @@ void Character::AutoAttack(Character * victim)
                 int high = player->equipped[Player::EQUIP_OFFHAND]->damageHigh;
                 int low = player->equipped[Player::EQUIP_OFFHAND]->damageLow;
                 if(high != low)
-                    damage_off = (rand() % (high - low)) + low;
+                    damage_off = (Server::rand() % (high - low)) + low;
                 else
                     damage_off = low;
                 attack_oh = true; //offhand attack only if we're holding a weapon (no attack if empty)
@@ -1956,9 +1956,9 @@ void Character::AdjustHealth(Character * source, int amount)
             std::list<DropData>::iterator dropiter;
             for(dropiter = drops.begin(); dropiter != drops.end(); ++dropiter)
             {
-                if(rand() % 100 <= (*dropiter).percent && (*dropiter).id.size() > 0)
+                if(Server::rand() % 100 <= (*dropiter).percent && (*dropiter).id.size() > 0)
                 {
-                    int which = rand() % ((int)(*dropiter).id.size());
+                    int which = Server::rand() % ((int)(*dropiter).id.size());
                     Item * drop = Game::GetGame()->GetItemIndex((*dropiter).id[which]);
                     source->Send("You receive loot: " + (string)Item::quality_strings[drop->quality] + drop->name + "|X.\n\r");
                     source->Message(source->name + " receives loot: " + Item::quality_strings[drop->quality] + drop->name + "|X.\n\r",

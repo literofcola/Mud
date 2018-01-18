@@ -26,7 +26,6 @@ public:
 	void ClearClientCommandQueue();
 	Client * GetClient();
 
-    //const int NETWORK_BUFFER_SIZE;
     std::deque<std::string> commandQueue;
     std::deque<std::string> outputQueue;
 	std::deque<std::string> subchannelQueue;
@@ -35,11 +34,12 @@ public:
     Character * character;
     bool wasInput;
 	bool remove;
+	double lastInput; //timestamp for idle disconnect
     
     std::string * stringEdit;
     bool mxp;		//Mud extension protocol
 	bool mccp;      //Mud client compression protocol
-	bool gmcp;
+	bool gmcp;		//Generic MUD Communication Protocol
 
 	//ZLIB
 	static const int Z_BUFSIZE = 32768;
@@ -48,16 +48,10 @@ public:
     unsigned char z_in[Z_BUFSIZE];
     unsigned char z_out[Z_BUFSIZE];
 	
-
-    //int loginAttempts; //TODO
-
-    //bool hasQuery;
-	//bool (*queryFunction)(Server *, User *, std::string);
-	//void * queryData;
-    //std::string queryPrompt;
+    //int loginAttempts; //TODO, password fails
 
 private:
-	//Client * client;
+
 	std::shared_ptr<Client> client;
 };
 

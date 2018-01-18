@@ -39,16 +39,14 @@ User::User(std::shared_ptr<Client> client_)
 	mccp = false;
 	gmcp = false;
 	remove = false;
+
+	_timeb time;
+	_ftime64_s(&time);
+	lastInput = ((int)((time_t)time.time) + ((double)time.millitm / 1000.0));
 }
 
 User::~User()
 {
-	/*if(client)
-	{
-        //client->CloseSocketAndSleep();
-		delete client;
-		client = NULL;
-	}*/
 	client = nullptr; //if we're deleting the user, we should have called ->Disconnect to close the socket and delete client already
 	if(character != NULL)
 	{

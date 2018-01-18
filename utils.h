@@ -8,6 +8,7 @@ namespace Utilities
     int GetNoOfProcessors();
     char * TimeStamp();
     void TimeStamp(char * time_buffer);
+	double GetTime();
     bool IsAlpha(std::string arg);
     bool IsNumber(std::string arg);
     bool IsName(std::string str, std::string namelist);

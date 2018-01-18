@@ -27,12 +27,12 @@ using namespace std;
 
 Client::Client(SOCKET s, std::string ipaddress) : socket_(s), ipaddress_(ipaddress)
 {
-    receiveBuffer = new char[NETWORK_BUFFER_SIZE];
+    //receiveBuffer = new char[NETWORK_BUFFER_SIZE];
     commandQueue.clear();
     inputBuffer.clear();
 	//disconnect = false;
 	//user_ = NULL;
-    ZeroMemory(receiveBuffer, NETWORK_BUFFER_SIZE);
+    //ZeroMemory(receiveBuffer, NETWORK_BUFFER_SIZE);
 	InitializeCriticalSection(&overlapped_cs);
 	InitializeCriticalSection(&command_cs);
 	InitializeCriticalSection(&disconnect_cs);
@@ -44,15 +44,6 @@ Client::Client(SOCKET s, std::string ipaddress) : socket_(s), ipaddress_(ipaddre
 
 Client::~Client()
 {
-	//user_ = NULL;
-    delete[] receiveBuffer;
-	//cancel pending operations
-    //closesocket(socket_);	//this is no good, we need to make sure the socket is well and truly closed and all pending IOCP operations are done well before we get here
-	//CancelIoEx((HANDLE)socket_, NULL);
-	//SleepEx(0, TRUE); // the completion will be called here
-
-	//shutdown(socket_, SD_BOTH);
-
 	DeleteCriticalSection(&overlapped_cs);
 	DeleteCriticalSection(&command_cs);
 	DeleteCriticalSection(&disconnect_cs);
@@ -83,21 +74,9 @@ SOCKET Client::Socket()
 	return socket_;
 }
 
-/*User * Client::GetUser()
-{
-	return user_;
-};*/
-
-/*void Client::SetUser(User * u)
-{
-	user_ = u;
-};*/
-
 OVERLAPPEDEX * Client::NewOperationData(int op_type)
 {
 	OVERLAPPEDEX * ol = new OVERLAPPEDEX();
-	//OVERLAPPEDEXPtr ol(new OVERLAPPEDEX);
-	//ZeroMemory(ol.get(), sizeof(OVERLAPPED));
 	ZeroMemory(ol, sizeof(OVERLAPPED));
 	ol->opCode = op_type;
 
@@ -110,17 +89,8 @@ OVERLAPPEDEX * Client::NewOperationData(int op_type)
 
 void Client::FreeOperationData(OVERLAPPEDEX *  ol)
 {
-	//not sure if we need these
-	EnterCriticalSection(&overlapped_cs); 
+	EnterCriticalSection(&overlapped_cs);  //not sure if we need these
 	std::list<OVERLAPPEDEX *>::iterator iter;
-	/*for(iter = overlappedData.begin(); iter != overlappedData.end(); iter++)
-	{
-		if(iter->get() == ol)
-		{
-			overlappedData.erase(iter);
-			break;
-		}
-	}*/
 	for(iter = overlappedData.begin(); iter != overlappedData.end(); iter++)
 	{
 		if((*iter) == ol)

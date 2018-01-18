@@ -53,7 +53,7 @@ int GetNoOfProcessors()
 
 char * TimeStamp()
 {
-	static char time_buffer[40];
+	thread_local char time_buffer[40];
 	TimeStamp(time_buffer);
 	return time_buffer;
 }
@@ -71,6 +71,15 @@ void TimeStamp(char * time_buffer)
     }
 
     len = strftime ( time_buffer, 40, "%x %X", &tm );
+}
+
+double GetTime()
+{
+	thread_local _timeb time;
+
+	_ftime64_s(&time);
+
+	return (time_t)time.time;
 }
 
 /*

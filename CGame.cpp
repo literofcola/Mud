@@ -208,8 +208,11 @@ void Game::GameLoop(Server * server)
 
 			if(user == NULL)
 				continue;
-			
-            user->wasInput = false;
+
+			if (user->lastInput + IDLE_TIMEOUT <= Game::currentTime)
+			{
+				user->SetDisconnect();
+			}
 
 			if(!user->IsConnected() || user->remove)
 			{
@@ -217,6 +220,8 @@ void Game::GameLoop(Server * server)
 				user->ClearClientCommandQueue();
 				continue;
 			}
+
+			user->wasInput = false;
 
 			user->GetOneCommandFromNetwork();
 
@@ -279,8 +284,11 @@ void Game::GameLoop(Server * server)
                 }
                 else if(user->connectedState == User::CONN_PLAYING && user->character) //Normal command interpreting
 				{
-				    if(Command::Interpret(user->character, command))
-                        user->wasInput = true; //Allow the call to GeneratePrompt
+					if (Command::Interpret(user->character, command))
+					{
+						user->wasInput = true; //Allow the call to GeneratePrompt
+						user->lastInput = Game::currentTime; //idle timeout
+					}
                 }
                 else    //Logging in
                 {
@@ -397,13 +405,19 @@ void Game::GameLoop(Server * server)
                 //LogFile::Log("status", "removing user via remove flag in gameloop");
                 if(user->character)
                 {
-                    if(user->connectedState == User::CONN_PLAYING && user->character->level > 1) //don't save fresh characters
-                        user->character->Save();
+					user->character->Message(user->character->name + " has left the game.", Character::MSG_ROOM_NOTCHAR);
+					user->character->ExitCombat();
 					user->character->ClearTarget();
 					user->character->ChangeRooms(NULL);
+
+					if (user->connectedState == User::CONN_PLAYING && user->character->level > 1) //don't save fresh characters
+					{
+						user->character->SaveSpellAffects();
+						user->character->SaveCooldowns();
+						user->character->Save();
+					}
                     user->character->NotifyListeners();
                     characters.remove(user->character);
-                    //RemoveCharacter(user->character);
                 }
 				if(user->mccp)
 				{
@@ -422,11 +436,13 @@ void Game::GameLoop(Server * server)
         LeaveCriticalSection(&userListCS); //Locks out the AcceptThread from adding a new user to the userlist
 		Sleep(1);
 
-        _ftime64_s(&time);
-		time_secs = (time_t) time.time;
-        time_millis = time.millitm;
-        currentTime = ((int)time_secs + ((double)time_millis / 1000.0));
+		_ftime64_s(&time);
+		time_secs = (time_t)time.time;
+		time_millis = time.millitm;
+		currentTime = ((int)time_secs + ((double)time_millis / 1000.0));	//Don't set currentTime before the first WorldUpdate so all the updates fire immediately
 	}
+
+	
 
     //Server is going down! Cleanup in main() with the server
     

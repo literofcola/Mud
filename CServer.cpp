@@ -27,19 +27,16 @@
 #define OP_READ     0
 #define OP_WRITE    1
 
-//Time out interval for wait calls
 #define WAIT_TIMEOUT_INTERVAL 100
 
-//CRITICAL_SECTION Server::critical_section;
-//lua_State * Server::luaState;
 mySQLQueue * Server::sqlQueue;
 sol::state Server::lua;
+std::mt19937_64 Server::rand;
 
 Server::Server(Game * g, int port) : nPort(port), mygame(g)
 {
 	hShutdownEvent = NULL;
 	nThreads = 1;
-	//*phWorkerThreads = NULL;
 	hAcceptThread = NULL;
 	hIOCompletionPort = NULL;
 }
@@ -66,14 +63,13 @@ bool Server::Initialize()
 
 	// Initialize Winsock
 	WSADATA wsaData;
-
 	int nResult;
 	nResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
 
 	if (NO_ERROR != nResult)
 	{
-		//printf("\nError occurred while executing WSAStartup().");
-		return false; //error
+		LogFile::Log("error", "Error occurred while executing WSAStartup()");
+		return false;
 	}
 
 	//Create I/O completion port
@@ -81,7 +77,7 @@ bool Server::Initialize()
 
 	if(NULL == hIOCompletionPort)
 	{
-		//printf("\nError occurred while creating IOCP: %d.", WSAGetLastError());
+		LogFile::Log("error", "Error occurred while creating IOCP : " + Utilities::itos(WSAGetLastError()));
 		return false;
 	}
 
@@ -92,52 +88,45 @@ bool Server::Initialize()
 		phWorkerThreads[ii] = CreateThread(0, 0, WorkerThread, this, 0, &nThreadID);
 	}
 
-	//Overlapped I/O follows the model established in Windows and can be performed only on 
-	//sockets created through the WSASocket function 
 	ListenSocket = WSASocketW(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
 
 	if (INVALID_SOCKET == ListenSocket)
 	{
-		//printf("\nError occurred while opening socket: %d.", WSAGetLastError());
+		LogFile::Log("error", "Error occurred while opening socket: " + Utilities::itos(WSAGetLastError()));
 		closesocket(ListenSocket);
 		return false;
 	}
 
-	//Cleanup and Init with 0 the ServerAddress
 	ZeroMemory((char *)&ServerAddress, sizeof(ServerAddress));
-
-	//Fill up the address structure
 	ServerAddress.sin_family = AF_INET;
-	ServerAddress.sin_addr.s_addr = INADDR_ANY; //WinSock will supply address
+	ServerAddress.sin_addr.s_addr = INADDR_ANY;
 	ServerAddress.sin_port = htons(nPort);   
 
-	//Assign local address and port number
 	if(SOCKET_ERROR == bind(ListenSocket, (struct sockaddr *) &ServerAddress, sizeof(ServerAddress)))
 	{
+		LogFile::Log("error", "Error occurred in bind()");
 		closesocket(ListenSocket);
-		//printf("\nError occurred while binding.");
 		return false;
 	}
 
 	//Make the socket a listening socket
 	if(SOCKET_ERROR == listen(ListenSocket, SOMAXCONN))
 	{
+		LogFile::Log("error", "Error occurred in listen()");
 		closesocket(ListenSocket);
-		//printf("\nError occurred while listening.");
 		return false;
 	}
 
 	hAcceptEvent = WSACreateEvent();
-
 	if(WSA_INVALID_EVENT == hAcceptEvent)
 	{
-		//printf("\nError occurred while WSACreateEvent().");
+		LogFile::Log("error", "Error occurred in WSACreateEvent()");
 		return false;
 	}
 
 	if (SOCKET_ERROR == WSAEventSelect(ListenSocket, hAcceptEvent, FD_ACCEPT))
 	{
-		//printf("\nError occurred while WSAEventSelect().");
+		LogFile::Log("error", "Error occurred in WSAEventSelect()");
 		WSACloseEvent(hAcceptEvent);
 		return false;
 	}
@@ -177,12 +166,9 @@ void Server::DeInitialize()
         {
             if(user->connectedState == User::CONN_PLAYING && user->character->level > 1) //don't save fresh characters
                 user->character->Save();
-            //user->character->NotifyListeners();
             mygame->characters.remove(user->character);
-            //RemoveCharacter(user->character);
         }
         delete user;
-        //users.remove(user);
         iter = mygame->users.erase(iter);
     }
 
@@ -197,9 +183,6 @@ void Server::DeInitialize()
 
 	//We are done with this event
 	WSACloseEvent(hAcceptEvent);
-
-	//Cleanup dynamic memory allocations, if there are any.
-	//CleanClientList();
 
 	DeleteCriticalSection(&clientListCS);
 
@@ -253,23 +236,32 @@ void Server::AcceptConnection(SOCKET ListenSocket)
 
 	if (INVALID_SOCKET == Socket)
 	{
-		LogFile::Log("error", "accept(): " + Utilities::GetLastErrorAsString());
+		LogFile::Log("network", "accept(): " + Utilities::GetLastErrorAsString());
+	}
+
+	//Get client's IP
+	char ipstr[INET6_ADDRSTRLEN];
+	std::string addr = inet_ntop(AF_INET, &ClientAddress.sin_addr, ipstr, sizeof(ipstr));
+
+	if (addr != "127.0.0.1") //Check for connection spam IP bans (Let's not ban localhost)
+	{
+		UpdateIPList(addr);
+		if (!CheckTempBanList(addr))
+		{
+			//Banned due to connection spam!
+			closesocket(Socket); //Haven't yet associated this socket with IOCP, this may be all we need to do?
+			//LogFile::Log("network", "Banned client attempted connect from: " + addr);
+			return;
+		}
 	}
 
 	//Set TCP_NODELAY (Disable Nagle)
 	int value = 1;
-	setsockopt(Socket, IPPROTO_TCP, TCP_NODELAY, (const char *)&value, sizeof(value)); 
+	setsockopt(Socket, IPPROTO_TCP, TCP_NODELAY, (const char *)&value, sizeof(value));
 
-	//Display Client's IP
-	char ipstr[INET6_ADDRSTRLEN];
-	//LogFile::Log("error", "Client connected from: " + inet_ntop(AF_INET, &ClientAddress.sin_addr, ipstr, sizeof(ipstr)));
-	std::string addr = inet_ntop(AF_INET, &ClientAddress.sin_addr, ipstr, sizeof(ipstr));
-	//std::string addr = inet_ntoa(ClientAddress.sin_addr);
-
-	LogFile::Log("error", "Client connected from: " + addr);
+	LogFile::Log("network", "Client connected from: " + addr);
 
 	//Create a new ClientContext for this newly accepted client
-	//Client * pClientContext = new Client(Socket, addr);
 	auto pClientContext = std::make_shared<Client>(Socket, addr);
 	
 	if (true == AssociateWithIOCP(pClientContext.get()))
@@ -289,10 +281,10 @@ void Server::AcceptConnection(SOCKET ListenSocket)
 
 		if ((SOCKET_ERROR == err) && (WSA_IO_PENDING != WSAGetLastError()))
 		{
-			LogFile::Log("error", "WSARecv(): " + Utilities::GetLastErrorAsString());
+			LogFile::Log("network", "WSARecv(): " + Utilities::GetLastErrorAsString());
 			if(pClientContext)
             {
-                LogFile::Log("status", "Disconnect from " + pClientContext->GetIPAddress() + " in AcceptConnection()");
+                LogFile::Log("network", "Disconnect from " + pClientContext->GetIPAddress() + " in AcceptConnection()");
 				pClientContext->RefCountAdjust(-1);
                 pClientContext->FreeOperationData(operationData);
 				pClientContext->DisconnectServer();
@@ -310,10 +302,10 @@ bool Server::AssociateWithIOCP(Client * pClientContext)
 
 	if (NULL == hTemp)
 	{
-		LogFile::Log("error", "CreateIoCompletionPort(): " + Utilities::GetLastErrorAsString());
+		LogFile::Log("network", "CreateIoCompletionPort(): " + Utilities::GetLastErrorAsString());
 		if(pClientContext)
         {
-            LogFile::Log("status", "Disconnect from " + pClientContext->GetIPAddress() + " in AssociateWithIOCP()");
+            LogFile::Log("network", "Disconnect from " + pClientContext->GetIPAddress() + " in AssociateWithIOCP()");
             closesocket(pClientContext->Socket());
 			pClientContext->DisconnectServer();
         }
@@ -347,7 +339,6 @@ DWORD WINAPI Server::WorkerThread(void * lpParam)
 			INFINITE);
 
         //LogFile::Log("status", "GQCP worker awake # " );
-
 
 		if (NULL == lpContext)
 		{
@@ -437,14 +428,25 @@ DWORD WINAPI Server::WorkerThread(void * lpParam)
 
 			case OP_READ:
 
-				char localBuffer[NETWORK_BUFFER_SIZE];
-				strcpy_s(localBuffer, NETWORK_BUFFER_SIZE, pOverlappedEx->buffer);
-
 				//LogFile::Log("network", "Thread ?: The following message was received: " + std::string(localBuffer));
 
 				//append the new input
-				std::string append = localBuffer;
-				pClientContext->inputBuffer += append;
+				pClientContext->inputBuffer += pOverlappedEx->buffer; // += append;
+
+				if (pClientContext->inputBuffer.length() > MAX_INPUT_BUFFER) //disconnect em
+				{
+					pClientContext->DisconnectServer();
+					pClientContext->FreeOperationData(pOverlappedEx);
+					closesocket(pClientContext->Socket());
+					if (pClientContext->GetRefCount() == 0)
+						thisserver->RemoveClient(pClientContext);
+				}
+				else if (pClientContext->inputBuffer.length() > MAX_COMMAND_LENGTH) //truncate the input
+				{
+					pClientContext->inputBuffer = pClientContext->inputBuffer.substr(0, MAX_COMMAND_LENGTH);
+					pClientContext->inputBuffer += "\n\r";
+				}
+
 				//search for \n \r
 				size_t cr_pos = pClientContext->inputBuffer.find('\r');
 				size_t nl_pos = pClientContext->inputBuffer.find('\n');
@@ -474,7 +476,6 @@ DWORD WINAPI Server::WorkerThread(void * lpParam)
 					cr_pos = pClientContext->inputBuffer.find('\r');
 					nl_pos = pClientContext->inputBuffer.find('\n');
 				}
-				ZeroMemory(pClientContext->receiveBuffer, NETWORK_BUFFER_SIZE);
 
 				pOverlappedEx->opCode = (OP_READ);
 				ZeroMemory(pOverlappedEx->buffer, NETWORK_BUFFER_SIZE);
@@ -521,13 +522,12 @@ void Server::deliver(Client * c, const std::string msg)
 
 	if(wsaerr == 0)
 	{
-		//immediate success
+		//immediate success (A completion packet is still sent to unblock GetQueuedCompletionStatus!!, don't delete the OVERLAPPED)
 		//LogFile::Log("status", "Immediate sent bytes: " + Utilities::itos(base_overlapped->InternalHigh));
-        //c->FreeOperationData(olptr);
 	}
 	else if(wsaerr == SOCKET_ERROR && WSAGetLastError() == WSA_IO_PENDING)
 	{
-		//queued
+		//queued for GetQueuedCompletionStatus
 	}
 	else if(wsaerr == SOCKET_ERROR && WSAGetLastError() != WSA_IO_PENDING)
 	{
@@ -557,13 +557,12 @@ void Server::deliver(Client * c, const unsigned char * msg, int length)
 
 	if(wsaerr == 0)
 	{
-		//immediate success
+		//immediate success (A completion packet is still sent to unblock GetQueuedCompletionStatus!!, don't delete the OVERLAPPED)
 		//LogFile::Log("status", "Immediate sent bytes: " + Utilities::itos(base_overlapped->InternalHigh));
-        //c->FreeOperationData(olptr);
 	}
 	else if(wsaerr == SOCKET_ERROR && WSAGetLastError() == WSA_IO_PENDING)
 	{
-		//queued
+		//queued for GetQueuedCompletionStatus
 	}
 	else if(wsaerr == SOCKET_ERROR && WSAGetLastError() != WSA_IO_PENDING)
 	{
@@ -579,26 +578,6 @@ void Server::deliver(Client * c, const unsigned char * msg, int length)
 			RemoveClient(c);
 	}
 }
-
-/*
-currently not in use and needs work. this should disconnect all clients from server side only not user list
-void Server::DisconnectAllClients()
-{
-	LogFile::Log("network", "Server::remove_all_clients");
-	if(mygame->users.empty())
-		return;
-
-	std::list<User *>::iterator iter;
-	for(iter = mygame->users.begin(); iter != mygame->users.end(); iter++)
-	{
-		User * u = (*iter);
-		if(u->IsConnected())
-		{
-			u->Disconnect();
-		}
-	}
-}
-*/
 
 void Server::AddClient(std::shared_ptr<Client> client)
 {
@@ -629,3 +608,79 @@ void Server::RemoveClient(std::shared_ptr<Client> client)
 	LeaveCriticalSection(&clientListCS);
 }
 
+//Connection spam ban list handling
+void Server::UpdateIPList(std::string address)
+{
+	struct IPAddressInfo * ipinfo;
+	double thetime = Utilities::GetTime();
+	std::vector<struct IPAddressInfo>::iterator iter;
+
+	iter = IPList.begin();
+	while(iter != IPList.end())	//Use this opportunity to clear the list of IPs that haven't registered a new connection over the defined interval
+	{
+		ipinfo = &(*iter);
+		std::vector<double>::iterator timeiter = ipinfo->connectTimes.begin();
+		while (timeiter != ipinfo->connectTimes.end()) //go through the connection times for this address and remove any older than the interval
+		{
+			if ((*timeiter) + SPAM_INTERVAL < thetime)
+				timeiter = ipinfo->connectTimes.erase(timeiter);
+			else
+				timeiter++;
+		}
+		if (ipinfo->connectTimes.empty())
+			iter = IPList.erase(iter);
+		else
+			iter++;
+	}
+
+	iter = IPList.begin();
+	while (iter != IPList.end())
+	{
+		ipinfo = &(*iter);
+		if (ipinfo->address == address)	//Found an entry for this address
+		{
+			if (ipinfo->connectTimes.size() >= SPAM_MAX_CONNECTIONS_PER_INTERVAL)
+			{
+				//Ban!
+				LogFile::Log("network", "Banning client due to connection spam: " + ipinfo->address);
+				tempBanList.push_back({ ipinfo->address, thetime });
+				IPList.erase(iter);
+				return;
+			}
+			else
+			{
+				ipinfo->connectTimes.push_back(thetime);
+				return;
+			}
+		}
+		iter++;
+	}
+
+	//else add a new entry
+	struct IPAddressInfo newip;
+	newip.address = address;
+	newip.connectTimes.push_back(thetime);
+	IPList.push_back(newip);
+
+	return;
+}
+
+//Return false if we should not accept a connection from this address
+bool Server::CheckTempBanList(std::string address)
+{
+	std::vector<struct IPBanInfo>::iterator iter = tempBanList.begin();
+	while (iter != tempBanList.end())
+	{
+		if ((*iter).address == address)
+		{
+			if ((*iter).banTime + SPAM_BANTIME < Utilities::GetTime())
+			{
+				tempBanList.erase(iter);
+				return true;
+			}
+			return false;
+		}
+		iter++;
+	}
+	return true;
+}
