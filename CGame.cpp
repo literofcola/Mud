@@ -188,7 +188,9 @@ void Game::GameLoop(Server * server)
 
 			if (user->lastInput + IDLE_TIMEOUT <= Game::currentTime)
 			{
-				user->SetDisconnect();
+				if (!user->character 
+					|| (user->character && user->character->player && !user->character->player->IMMORTAL()))
+					user->SetDisconnect();
 			}
 
 			if(!user->IsConnected() || user->remove)

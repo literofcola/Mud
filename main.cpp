@@ -44,7 +44,7 @@ int main(int argc, char * argv[])
 
 	//Init Lua
 	// open some common libraries
-	Server::lua.open_libraries(sol::lib::base, sol::lib::package);
+	Server::lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::math, sol::lib::string);
 	Server::lua.script_file("some_lua.lua");
 	Lua_DefineClasses(&Server::lua);
 	Lua_DefineFunctions(&Server::lua);
