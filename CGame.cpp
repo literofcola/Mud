@@ -36,29 +36,6 @@ extern "C"
 
 //#include "luabind/luabind.hpp"
 
-//Defines from telnet protocol we need for MXP, MCCP, etc
-const char IAC  = '\xFF';
-const char WILL = '\xFB';
-const char SB   = '\xFA';
-const char SE   = '\xF0';
-const char DO   = '\xFD';
-const char DONT = '\xFE';
-
-const char MXP_WILL   [] = { IAC, WILL, Game::TELOPT_MXP};
-const char MXP_START  [] = { IAC, SB, Game::TELOPT_MXP, IAC, SE};
-const char MXP_DO     [] = { IAC, DO, Game::TELOPT_MXP};
-const char MXP_DONT   [] = { IAC, DONT, Game::TELOPT_MXP};
-
-const char MCCP_WILL  [] = { IAC, WILL, Game::TELOPT_MCCP};
-const char MCCP_START [] = { IAC, SB, Game::TELOPT_MCCP, IAC, SE};
-const char MCCP_DO    [] = { IAC, DO, Game::TELOPT_MCCP};
-const char MCCP_DONT  [] = { IAC, DONT, Game::TELOPT_MCCP};
-
-const char GMCP_WILL  [] = { IAC, WILL, Game::TELOPT_GMCP};
-const char GMCP_START [] = { IAC, SB, Game::TELOPT_GMCP, IAC, SE};
-const char GMCP_DO    [] = { IAC, DO, Game::TELOPT_GMCP};
-const char GMCP_DONT  [] = { IAC, DONT, Game::TELOPT_GMCP};
-
 double Game::currentTime = 0;
 
 Game * Game::GetGame()
@@ -230,29 +207,29 @@ void Game::GameLoop(Server * server)
                 string command = user->commandQueue.front();
 
                 //Check for telnet IAC response for MXP and MCCP
-                if(command.length() > 0 && command[0] == IAC)
+                if(command.length() > 0 && command[0] == Server::IAC[0])
                 {
                     string iac_response = command.substr(0, 3);
                     command = command.substr(3, command.length()-3);
 
-                    if(iac_response == MXP_DO)
+                    if(iac_response == Server::MXP_DO)
                     {
                         //turn on mxp
                         user->Send("MXP Enabled\n\r");
 						//Send immediately (only really necessary for MCCP)
-						server->deliver(user->GetClient(), MXP_START);
+						server->deliver(user->GetClient(), Server::MXP_START);
 						server->deliver(user->GetClient(), MXP_LOCKLOCKED);
                         //user->Send(MXP_START);
                         //user->Send(MXP_LOCKLOCKED);
                         user->mxp = true;
                     }
-					else if(iac_response == GMCP_DO)
+					else if(iac_response == Server::GMCP_DO)
 					{
 						user->Send("GMCP Enabled\n\r");
-						server->deliver(user->GetClient(), GMCP_START);
+						server->deliver(user->GetClient(), Server::GMCP_START);
 						user->gmcp = true;
 					}
-					else if(iac_response == MCCP_DO)
+					else if(iac_response == Server::MCCP_DO)
 					{
 						//turn on mccp
 						user->Send("MCCP2 Enabled\n\r");
@@ -266,7 +243,7 @@ void Game::GameLoop(Server * server)
 							LogFile::Log("error", "Game::GameLoop; Could not init zlib");
 						}
 						//Send immediately
-						server->deliver(user->GetClient(), MCCP_START);
+						server->deliver(user->GetClient(), Server::MCCP_START);
 						//user->Send(MCCP_START);
 						user->mccp = true;
 					}
@@ -357,7 +334,7 @@ void Game::GameLoop(Server * server)
                 user->character->GeneratePrompt(currentTime);
 
 			string out = "";
-			while(user->IsConnected() && (!user->outputQueue.empty() || (user->gmcp && !user->subchannelQueue.empty())))
+			while(user->IsConnected() && (!user->outputQueue.empty() || (user->gmcp && !user->GMCPQueue.empty())))
 			{
 				//dont try a send greater than NETWORK_BUFFER_SIZE, but loop until everything is sent
 				out.clear();
@@ -368,12 +345,12 @@ void Game::GameLoop(Server * server)
 					out += user->outputQueue.front();
 					user->outputQueue.pop_front();
 				}
-				while(user->gmcp && user->IsConnected() && !user->subchannelQueue.empty())
+				while(user->gmcp && user->IsConnected() && !user->GMCPQueue.empty())
 				{
-					if(out.length() + user->subchannelQueue.front().length() > NETWORK_BUFFER_SIZE)
+					if(out.length() + user->GMCPQueue.front().length() > NETWORK_BUFFER_SIZE)
 						break;
-					out += user->subchannelQueue.front();
-					user->subchannelQueue.pop_front();
+					out += user->GMCPQueue.front();
+					user->GMCPQueue.pop_front();
 				}
 
 				if(user->mccp)
@@ -1743,9 +1720,9 @@ void Game::NewUser(std::shared_ptr<Client> client)
     total_players_since_boot++;
     if((int)users.size() > max_players_since_boot)
         max_players_since_boot = (int)users.size();
-    u->Send(MXP_WILL);
-	u->Send(GMCP_WILL);
-	u->Send(MCCP_WILL);
+    u->Send(Server::MXP_WILL);
+	u->Send(Server::GMCP_WILL);
+	u->Send(Server::MCCP_WILL);
     u->Send("Enter User Name: ");
 }
 

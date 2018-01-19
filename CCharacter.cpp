@@ -229,20 +229,20 @@ void Character::Send(char * str)
     player->user->Send(str);
 }
 
-void Character::SendSubchannel(std::string str)
+void Character::SendGMCP(std::string str)
 {
     if(player == NULL || player->user == NULL || !player->user->gmcp)
         return;
 
-    player->user->SendSubchannel(str);
+    player->user->SendGMCP(str);
 }
 
-void Character::SendSubchannel(char * str)
+void Character::SendGMCP(char * str)
 {
     if(player == NULL || player->user == NULL)
         return;
 
-    player->user->SendSubchannel(str);
+    player->user->SendGMCP(str);
 }
 
 void Character::Message(const string & txt, MessageType msg_type, Character * vict)
@@ -416,7 +416,7 @@ void Character::GeneratePrompt(double currentTime)
         else
             statColor = "|R";
 
-        prompt += statColor + Utilities::itos(mana) + "/|X" + Utilities::itos(maxMana) + "|Bsp ";
+        prompt += statColor + Utilities::itos(mana) + "/|X" + Utilities::itos(maxMana) + "|Bmp ";
 
         //Stamina
         if(stamina > 0 && maxStamina > 0)
@@ -457,7 +457,7 @@ void Character::GeneratePrompt(double currentTime)
 	if(GetTarget() != NULL)
 	{
         string targetLevel;
-        if(player == NULL && Game::LevelDifficulty(level, GetTarget()->level) == 5) //NPC >= 10 levels
+        if(GetTarget()->IsNPC() && Game::LevelDifficulty(level, GetTarget()->level) == 5) //NPC >= 10 levels
         {
             targetLevel = "|R??";
         }
@@ -478,7 +478,7 @@ void Character::GeneratePrompt(double currentTime)
 
         //TODO: Target name coloring based on pvp/attack status
 		string targetPrompt = "|B<" + targetLevel + " ";
-        if(GetTarget() == this || Utilities::FlagIsSet(GetTarget()->flags, FLAG_FRIENDLY))
+        if(GetTarget() == this ||  Utilities::FlagIsSet(GetTarget()->flags, FLAG_FRIENDLY))
             targetPrompt += "|G";
         else if(Utilities::FlagIsSet(GetTarget()->flags, FLAG_NEUTRAL))
             targetPrompt += "|Y";
@@ -518,7 +518,7 @@ void Character::GeneratePrompt(double currentTime)
         else
             statColor = "|R";
 
-        targetPrompt += statColor + Utilities::itos(percent) + "|B%sp ";
+        targetPrompt += statColor + Utilities::itos(percent) + "|B%mp ";
 
         //Stamina
         if(GetTarget()->stamina > 0 && GetTarget()->maxStamina > 0)
@@ -607,7 +607,7 @@ void Character::GeneratePrompt(double currentTime)
         else
             statColor = "|R";
 
-        targetPrompt += statColor + Utilities::itos(percent) + "|B%sp ";
+        targetPrompt += statColor + Utilities::itos(percent) + "|B%mp ";
 
         //Stamina
         if(targettarget->stamina > 0 && targettarget->maxStamina > 0)
@@ -658,6 +658,10 @@ void Character::GeneratePrompt(double currentTime)
     
     prompt += "\n\r";
 	Send(prompt);
+
+	//Really we should send updates when individual stats CHANGE, not every prompt
+	json vitals = { { "hp", health }, { "hpmax", maxHealth }, { "mp", mana }, { "mpmax", maxMana }, { "st", stamina }, { "stmax", maxStamina } };
+	SendGMCP("char.vitals " + vitals.dump());
 }
 
 Character * Character::GetCharacterRoom(string name)
@@ -1904,6 +1908,7 @@ void Character::AdjustHealth(Character * source, int amount)
     if(source == NULL)
     {
         //a possibility
+		source = this; //self damage!?!? Will this work?
     }
     //TODO: update threat values for damage and healing (if in combat only?)
     if(amount < 0)
@@ -1917,8 +1922,6 @@ void Character::AdjustHealth(Character * source, int amount)
         (health + amount >= maxHealth) ? health = maxHealth : health += amount;
     }
 
-	SendSubchannel("tt=\"health\";health=" + Utilities::itos(health));
-
     if(health == 0) //todo: functionize me. ROM = "ExtractChar"
     {
         Message("|R" + name + " has been slain!|X", Character::MSG_ROOM_NOTCHAR, source);
@@ -1926,6 +1929,7 @@ void Character::AdjustHealth(Character * source, int amount)
         if(source->target == this)
         {
             source->meleeActive = false;
+			source->ClearTarget();
         }
         if(delay_active)
         {
@@ -2340,6 +2344,24 @@ bool Character::ChangeRooms(Room * toroom)
         room->characters.remove(this);
     if(toroom != NULL)
     {
+		if (player != NULL && player->user != NULL)
+		{
+			//Send GMCP room.info
+			json roominfo;
+			roominfo["name"] = toroom->name;
+			roominfo["num"] = toroom->id;
+			if(toroom->area != 0)
+				roominfo["zone"] = Game::GetGame()->areas[toroom->area]->name;
+			else
+				roominfo["zone"] = "None";
+			for (int i = 0; i < Exit::DIR_LAST; i++)
+			{
+				if (toroom->exits[i] && toroom->exits[i]->to)
+					roominfo["exits"][Exit::exitNamesShort[i]] = toroom->exits[i]->to->id;
+			}
+			SendGMCP("room.info " + roominfo.dump());
+		}
+		
         room = toroom;
         toroom->characters.push_front(this);
         //Check if this room is a quest objective
@@ -2367,17 +2389,13 @@ bool Character::ChangeRooms(Room * toroom)
                 //TODO: dont load the script every time?
                 //LogFile::Log("status", "Loading lua trigger script " + Utilities::itos(trig->id) + " for room " + Utilities::itos(toroom->id));
                 //string nil = trig->GetFunction() + " = nil;";
-                //luaL_dostring(Server::luaState, nil.c_str());
 				Server::lua.script(trig->GetScript().c_str());
 				Server::lua[func.c_str()](this, toroom);
-                //luaL_dostring(Server::luaState, trig->GetScript().c_str());
-                //luabind::call_function<void>(Server::luaState, func.c_str(), this, toroom);
             }
             catch(const std::exception & e)
 			{
 				LogFile::Log("error", e.what());
-				/*const char * logstring = lua_tolstring(Server::luaState, -1, NULL);
-				if(logstring != NULL)
+				/*if(logstring != NULL)
 					LogFile::Log("error", logstring);*/
 			}
             catch(...)
@@ -2397,17 +2415,13 @@ bool Character::ChangeRooms(Room * toroom)
                 //TODO: dont load the script every time?
                 //LogFile::Log("status", "Loading lua trigger script " + Utilities::itos(trig->id) + " for room " + Utilities::itos(toroom->id));
                 //string nil = trig->GetFunction() + " = nil;";
-                //luaL_dostring(Server::luaState, nil.c_str());
 				Server::lua.script(trig->GetScript().c_str());
 				Server::lua[func.c_str()](this, toroom);
-                //luaL_dostring(Server::luaState, trig->GetScript().c_str());
-                //luabind::call_function<void>(Server::luaState, func.c_str(), this, toroom);
             }
             catch(const std::exception & e)
 			{
 				LogFile::Log("error", e.what());
-				/*const char * logstring = lua_tolstring(Server::luaState, -1, NULL);
-				if(logstring != NULL)
+				/*if(logstring != NULL)
 					LogFile::Log("error", logstring);*/
 			}
             catch(...)

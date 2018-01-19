@@ -162,8 +162,8 @@ public:
     void QueryClear();
     void Send(std::string str);
 	void Send(char * str);
-	void SendSubchannel(std::string str);
-	void SendSubchannel(char * str);
+	void SendGMCP(std::string str);
+	void SendGMCP(char * str);
     void Message(const std::string & txt, MessageType msg_type, Character * vict = NULL);
     Character * GetCharacterRoom(std::string name);
     Character * GetCharacterAdjacentRoom(std::string name);

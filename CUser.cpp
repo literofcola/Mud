@@ -30,7 +30,7 @@ User::User(std::shared_ptr<Client> client_)
     client = client_;
     commandQueue.clear();
     outputQueue.clear();
-	subchannelQueue.clear();
+	GMCPQueue.clear();
 	character = NULL;
     connectedState = CONN_GET_NAME;
     wasInput = false;
@@ -88,20 +88,21 @@ Client * User::GetClient()
 	return NULL;
 }
 
-void User::SendSubchannel(string str)
+void User::SendGMCP(string str)
 {
     if(str.empty() || !IsConnected())
         return;
 
 	//string send = "\xFF\xFA" + Game::TELOPT_GMCP + str + "\xFF\xF0";
 	//IAC SB TELOPT_GMCP str IAC SE
-	string send = "\xFF\xFA\x69" + str + "\xFF\xF0";
-	subchannelQueue.push_back(send);
+	string send = Server::IAC + Server::SB + Server::TELOPT_GMCP + str + Server::IAC + Server::SE;
+	//string send = "\xFF\xFA\xC9" + str + "\xFF\xF0";
+	GMCPQueue.push_back(send);
 }
 
-void User::SendSubchannel(char * str)
+void User::SendGMCP(char * str)
 {
-	SendSubchannel(string(str));
+	SendGMCP(string(str));
 }
 
 bool User::IsConnected()

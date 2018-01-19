@@ -15,8 +15,8 @@ public:
 
     void Send(std::string str);
 	void Send(char * str);
-	void SendSubchannel(std::string str);
-	void SendSubchannel(char * str);
+	void SendGMCP(std::string str);
+	void SendGMCP(char * str);
     bool IsConnected();
     bool IsPlaying();
 	void ImmediateDisconnect();
@@ -28,7 +28,7 @@ public:
 
     std::deque<std::string> commandQueue;
     std::deque<std::string> outputQueue;
-	std::deque<std::string> subchannelQueue;
+	std::deque<std::string> GMCPQueue;
 	
     State connectedState;
     Character * character;

@@ -111,12 +111,4 @@ namespace Utilities
     #define C_B_CYAN	"\033[1;36m"
     #define C_B_WHITE	"\033[1;37m"
 
-    #define MXP_OPEN        "\033[0z" //Open 	Only open commands (eg. <B>) will be interpreted.
-    #define MXP_SECURE      "\033[1z" //Secure 	All MXP tags are interpreted.
-    #define MXP_LOCKED      "\033[2z" //Locked 	No MXP tags or entities will be interpreted.
-    #define MXP_RESET       "\033[3z" //close all open tags.  Set mode to Open.  Set text color and properties to default.
-    #define MXP_TEMPSECURE  "\033[4z" //set secure mode for the next tag only.  Must be immediately followed by a < character to start a tag.  Remember to set secure mode when closing the tag also.
-    #define MXP_LOCKOPEN    "\033[5z" //set open mode.  Mode remains in effect until changed.  OPEN mode becomes the new default mode.
-    #define MXP_LOCKSECURE  "\033[6z" //set secure mode.  Mode remains in effect until changed.  Secure mode becomes the new default mode.
-    #define MXP_LOCKLOCKED  "\033[7z" //set locked mode.  Mode remains in effect until changed.  Locked mode becomes the new default mode.
 }

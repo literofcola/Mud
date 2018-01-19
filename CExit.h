@@ -18,6 +18,7 @@ public:
     };
     
     static std::string exitNames[Exit::DIR_LAST];
+	static std::string exitNamesShort[Exit::DIR_LAST];
     static std::string reverseExitNames[Exit::DIR_LAST];
     static int exitOpposite[Exit::DIR_LAST];
 

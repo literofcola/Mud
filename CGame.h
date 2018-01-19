@@ -120,10 +120,6 @@ public:
     int newplayerRoom;
     const static int MAX_LEVEL = 240;
 
-	static const char TELOPT_MXP = '\x5B';  // (91)
-	static const char TELOPT_MCCP = '\x56'; //MCCP 2 (86)
-	static const char TELOPT_GMCP = '\xC9'; //201
-
 private:
 	
     //std::map<Player *> players;

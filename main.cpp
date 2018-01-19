@@ -80,8 +80,6 @@ int main(int argc, char * argv[])
     theserver->Start();
     thegame->GameLoop(theserver);
 
-    //theserver->Stop();
-	
 	theserver->DeInitialize();
     thegame->SaveGameStats();
     if(theserver->sqlQueue != NULL)
@@ -91,7 +89,6 @@ int main(int argc, char * argv[])
         delete theserver->sqlQueue;
     }
 	
-    //lua_close(Server::luaState);
     LogFile::CloseAll();
 
 	delete thegame;

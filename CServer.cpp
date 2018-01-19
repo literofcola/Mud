@@ -23,6 +23,33 @@
 #include "CServer.h"
 #include "utils.h"
 
+//Defines from telnet protocol we need for MXP, MCCP, etc
+const std::string Server::IAC = "\xFF";
+const std::string Server::WILL = "\xFB";
+const std::string Server::SB = "\xFA";
+const std::string Server::SE = "\xF0";
+const std::string Server::DO = "\xFD";
+const std::string Server::DONT = "\xFE";
+
+const std::string Server::TELOPT_MXP = "\x5B";     // (91)
+const std::string Server::TELOPT_MCCP = "\x56"; //MCCP 2 (86)
+const std::string Server::TELOPT_GMCP = "\xC9"; //201
+
+const std::string Server::MXP_WILL = IAC + WILL + TELOPT_MXP;
+const std::string Server::MXP_START = IAC + SB + TELOPT_MXP + IAC + SE;
+const std::string Server::MXP_DO = IAC + DO + TELOPT_MXP;
+const std::string Server::MXP_DONT = IAC + DONT + TELOPT_MXP;
+
+const std::string Server::MCCP_WILL = IAC + WILL + TELOPT_MCCP;
+const std::string Server::MCCP_START = IAC + SB + TELOPT_MCCP + IAC + SE;
+const std::string Server::MCCP_DO = IAC + DO + TELOPT_MCCP;
+const std::string Server::MCCP_DONT = IAC + DONT + TELOPT_MCCP;
+
+const std::string Server::GMCP_WILL = IAC + WILL + TELOPT_GMCP;
+const std::string Server::GMCP_START = IAC + SB + TELOPT_GMCP + IAC + SE;
+const std::string Server::GMCP_DO = IAC + DO + TELOPT_GMCP;
+const std::string Server::GMCP_DONT = IAC + DONT + TELOPT_GMCP;
+
 //Op codes for IOCP
 #define OP_READ     0
 #define OP_WRITE    1
