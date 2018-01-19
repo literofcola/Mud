@@ -1,14 +1,12 @@
-1) Instances of items for inventory: need this for bind on equip/bind on pickup
-     new db table 'inventory', save items in same style as items db
-     store reference to item db... with instance data as needed
+Instances of items for inventory: need this for bind on equip/bind on pickup
+     new db table 'inventory', playername:itemid:isbound
 
 "learn" if skill known to multiple classes,
 make sure trainer is valid
 
 use "base" stats before equipment for regen
 
-
-combat rounds with weapon attack speed for # attacks
+combat into separate mushclient window
 
 move checks for enter/exit room scripts out of changerooms function
 
