@@ -37,7 +37,7 @@ public:
     {
         ObjectiveType type;
         int count;
-        void * objective; //visit a room, visit npc, kill npc, retrieve item
+        void * objective; //pointer to room, item, npc todo: why not just store the id?
         std::string description; //TODO
     };
     std::vector<QuestObjective> objectives;
