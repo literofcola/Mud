@@ -55,6 +55,19 @@ User::~User()
 	}
 }
 
+void User::SendBW(string str)
+{
+	if (str.empty() || !IsConnected())
+		return;
+
+	if (str.length() >= NETWORK_BUFFER_SIZE)
+	{
+		str = str.substr(0, NETWORK_BUFFER_SIZE - 1);
+		LogFile::Log("error", "User::Send(), tried to send single string > NETWORK_BUFFER_SIZE. Truncated");
+	}
+	outputQueue.push_back(str);
+}
+
 void User::Send(string str)
 {
     if(str.empty() || !IsConnected())

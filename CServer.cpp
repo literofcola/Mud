@@ -272,7 +272,6 @@ void Server::AcceptConnection(SOCKET ListenSocket)
 
 	if (addr != "127.0.0.1") //Check for connection spam IP bans (Let's not ban localhost)
 	{
-		UpdateIPList(addr);
 		if (!CheckTempBanList(addr))
 		{
 			//Banned due to connection spam!
@@ -280,6 +279,7 @@ void Server::AcceptConnection(SOCKET ListenSocket)
 			//LogFile::Log("network", "Banned client attempted connect from: " + addr);
 			return;
 		}
+		UpdateIPList(addr);
 	}
 
 	//Set TCP_NODELAY (Disable Nagle)

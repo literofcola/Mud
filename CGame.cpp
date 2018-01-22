@@ -34,6 +34,28 @@ extern "C"
 #include "lauxlib.h"
 }
 
+const std::string login_art = R"(
+                                               _   __,----'~~~~~~~~~`-----.__
+                                        .  .    `//====-              ____,-'~`
+                        -.            \_|// .   /||\\  `~~~~`---.___./
+                  ______-==.       _-~o  `\/    |||  \\           _,'`
+            __,--'   ,=='||\=_    ;_,_,/ _-'|-   |`\   \\        ,'
+         _-'      ,='    | \\`.    '',/~7  /-   /  ||   `\.     /
+       .'       ,'       |  \\  \_  "  /  /-   /   ||      \   /
+      / _____  /         |     \\.`-_/  /|- _/   ,||       \ /
+     ,-'     `-|--'~~`--_ \     `==-/  `| \'--===-'       _/`
+               '         `-|      /|    )-'\~'      _,--"'
+                           '-~^\_/ |    |   `\_   ,^             /\
+                                /  \     \__   \/~               `\__
+                            _,-' _/'\ ,-'~____-'`-/                 ``===\
+                           ((->/'    \|||' `.     `\.  ,                _||
+             ./                       \_     `\      `~---|__i__i__\--~'_/
+            <_n_                     __-^-_    `)  \-.______________,-~'
+             `0'\)                  ///,-'~`__--^-  |-------~~~~^'
+             /^>                           ///,--~`-\
+            `  `
+)";
+
 //#include "luabind/luabind.hpp"
 
 double Game::currentTime = 0;
@@ -814,23 +836,23 @@ void Game::LoginHandler(Server * server, User * user, string argument)
 		{
             if(arg1.empty())
             {
-                user->Send("Enter User Name: ");
+                user->Send("Player Name: ");
                 return;
             }
 			if(arg1.length() < 3)
 			{
-				user->Send("Too Short! Try again...\r\nEnter User Name: ");
+				user->Send("Too Short! Try again...\r\nPlayer Name: ");
 				return;
 			}
             if(arg1.length() > 12)
 			{
-				user->Send("Too Long! Try again...\r\nEnter User Name: ");
+				user->Send("Too Long! Try again...\r\nPlayer Name: ");
 				return;
 			}
             //TODO: better invalid name checking
             if(!Utilities::IsAlpha(arg1) || !Utilities::str_cmp(arg1, "self") || !Utilities::str_cmp(arg1, "me"))
             {
-                user->Send("Illegal name, try another...\r\nEnter User Name: ");
+                user->Send("Illegal name, try another...\r\nPlayer Name: ");
                 return;
             }
             if(arg1 == "GET") //stop http connections?
@@ -1722,10 +1744,11 @@ void Game::NewUser(std::shared_ptr<Client> client)
     total_players_since_boot++;
     if((int)users.size() > max_players_since_boot)
         max_players_since_boot = (int)users.size();
-    u->Send(Server::MXP_WILL);
+	u->SendBW(login_art);
+	u->Send(Server::MXP_WILL);
 	u->Send(Server::GMCP_WILL);
 	u->Send(Server::MCCP_WILL);
-    u->Send("Enter User Name: ");
+    u->Send("Player Name: ");
 }
 
 void Game::RemoveUser(User * user)

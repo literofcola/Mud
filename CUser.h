@@ -15,6 +15,7 @@ public:
 
     void Send(std::string str);
 	void Send(char * str);
+	void SendBW(std::string str);
 	void SendGMCP(std::string str);
 	void SendGMCP(char * str);
     bool IsConnected();

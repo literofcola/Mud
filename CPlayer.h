@@ -43,7 +43,7 @@ public:
     std::list<ClassData> classList;
 
     //Quest
-    std::map<int, Quest *> completedQuests; //TODO Save quest stuff
+    std::map<int, Quest *> completedQuests; //TODO Save quest stuff, really only need a std::set of id's
     std::vector<Quest *> questLog;
     static const int QUESTLOG_MAX_SIZE = 20;
     std::vector< std::vector<int> > questObjectives; //Maps to questLog[i]->objectives[j]
