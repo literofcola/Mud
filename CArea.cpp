@@ -31,11 +31,11 @@ Area::Area(int id_)
     changed = true;
 }
 
-Area::Area(int id_, std::string name_, int pvp_, int level_range_low_, int level_range_high_)
+Area::Area(int id_, std::string name_, /*int pvp_,*/ int level_range_low_, int level_range_high_)
 {
     id = id_;
     name = name_;
-    pvp = pvp_;
+    //pvp = pvp_;
     level_range_low = level_range_low_;
     level_range_high = level_range_high_;
     changed = true;
@@ -56,11 +56,11 @@ void Area::Save()
     if(!changed)
         return;
 
-    string sql = "INSERT INTO areas (id, name, pvp, level_range_low, level_range_high) values (";
-    sql += Utilities::itos(id) + ",'" + Utilities::SQLFixQuotes(name) + "'," + Utilities::itos(pvp);
-    sql += "," + Utilities::itos(level_range_low) + "," + Utilities::itos(level_range_high) + ")";
+    string sql = "INSERT INTO areas (id, name, level_range_low, level_range_high) values (";
+    sql += Utilities::itos(id) + ",'" + Utilities::SQLFixQuotes(name) + "',";
+    sql += Utilities::itos(level_range_low) + "," + Utilities::itos(level_range_high) + ")";
     
-    sql += " ON DUPLICATE KEY UPDATE areas.id=VALUES(areas.id), areas.name=VALUES(areas.name), areas.pvp=VALUES(areas.pvp), ";
+    sql += " ON DUPLICATE KEY UPDATE areas.id=VALUES(areas.id), areas.name=VALUES(areas.name), ";
     sql += "areas.level_range_low=VALUES(areas.level_range_low), areas.level_range_high=VALUES(areas.level_range_high)";
 
     Server::sqlQueue->Write(sql);

@@ -73,7 +73,7 @@ void Skill::Save()
     string fixfname = Utilities::SQLFixQuotes(function_name);
 
     string skillsql = "INSERT INTO skills (id, name, cast_script, cast_time, function_name, apply_script, ";
-    skillsql += "tick_script, remove_script, target_type, affect_desc, long_name, cooldown, cost_func) values ";
+    skillsql += "tick_script, remove_script, target_type, affect_desc, long_name, cooldown, cost_script) values ";
     skillsql += "(" + Utilities::itos(id) + ", '" + fixname + "', '" + Utilities::SQLFixQuotes(castScript) + "', ";
     skillsql += Utilities::dtos(castTime, 2) + ",'" + fixfname + "', '";
     skillsql += Utilities::SQLFixQuotes(applyScript) + "', '" + Utilities::SQLFixQuotes(tickScript) + "', '";
@@ -84,7 +84,7 @@ void Skill::Save()
     skillsql += " ON DUPLICATE KEY UPDATE id=VALUES(id), name=VALUES(name), cast_script=VALUES(cast_script), cast_time=VALUES(cast_time), ";
     skillsql += "function_name=VALUES(function_name), apply_script=VALUES(apply_script), tick_script=VALUES(tick_script), ";
     skillsql += "remove_script=VALUES(remove_script), target_type=VALUES(target_type), affect_desc=VALUES(affect_desc), long_name=VALUES(long_name), ";
-    skillsql += "cooldown=VALUES(cooldown), cost_func=VALUES(cost_func)";
+    skillsql += "cooldown=VALUES(cooldown), cost_script=VALUES(cost_script)";
 
     Server::sqlQueue->Write(skillsql);
 

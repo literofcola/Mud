@@ -38,6 +38,8 @@ Room::Room(int id_)
     id = id_;
     name = "";
     description = "";
+	area = 0;
+	pvp = 0;
     changed = false;
     for(int i = 0; i < Exit::DIR_LAST; i++)
     {
@@ -55,6 +57,8 @@ Room::Room(int id_, string name_, string description_)
     id = id_;
     name = name_;
     description = description_;
+	area = 0;
+	pvp = 0;
     changed = false;
     for(int i = 0; i < Exit::DIR_LAST; i++)
     {

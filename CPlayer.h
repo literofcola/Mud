@@ -43,7 +43,8 @@ public:
     std::list<ClassData> classList;
 
     //Quest
-    std::map<int, Quest *> completedQuests; //TODO Save quest stuff, really only need a std::set of id's
+    //std::map<int, Quest *> completedQuests; //TODO Save quest stuff, really only need a std::set of id's
+	std::set<int> completedQuests;
     std::vector<Quest *> questLog;
     static const int QUESTLOG_MAX_SIZE = 20;
     std::vector< std::vector<int> > questObjectives; //Maps to questLog[i]->objectives[j]
@@ -51,8 +52,7 @@ public:
     int saved;
 
     inline bool IMMORTAL() { return (immlevel > 0); }
-    static std::string SelectPassword(std::string name);
-    static Player * Load(Server * server, std::string name, User * user);
+    //static Player * Load(Server * server, std::string name, User * user);
     void SetExperience(int newexp);
     bool QuestEligible(Quest * quest);
     bool QuestActive(Quest * quest);

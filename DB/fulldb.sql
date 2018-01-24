@@ -130,7 +130,7 @@ CREATE TABLE `help` (
   `id` int(11) NOT NULL,
   `title` varchar(45) DEFAULT NULL,
   `search_string` tinytext,
-  `text` longtext,
+  `text` mediumtext,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -191,9 +191,8 @@ DROP TABLE IF EXISTS `npc_drops`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `npc_drops` (
   `npc` int(11) NOT NULL,
-  `item` int(11) NOT NULL,
-  `percent` int(11) NOT NULL,
-  PRIMARY KEY (`item`,`npc`)
+  `items` varchar(45) NOT NULL,
+  `percent` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -204,29 +203,6 @@ CREATE TABLE `npc_drops` (
 LOCK TABLES `npc_drops` WRITE;
 /*!40000 ALTER TABLE `npc_drops` DISABLE KEYS */;
 /*!40000 ALTER TABLE `npc_drops` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `npc_flags`
---
-
-DROP TABLE IF EXISTS `npc_flags`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `npc_flags` (
-  `npc` int(11) NOT NULL,
-  `flag` int(11) NOT NULL,
-  PRIMARY KEY (`npc`,`flag`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `npc_flags`
---
-
-LOCK TABLES `npc_flags` WRITE;
-/*!40000 ALTER TABLE `npc_flags` DISABLE KEYS */;
-/*!40000 ALTER TABLE `npc_flags` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -277,6 +253,7 @@ CREATE TABLE `npcs` (
   `attack_speed` double NOT NULL,
   `damage_low` int(11) NOT NULL,
   `damage_high` int(11) NOT NULL,
+  `flags` tinytext,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -335,6 +312,7 @@ CREATE TABLE `player_class_data` (
 
 LOCK TABLES `player_class_data` WRITE;
 /*!40000 ALTER TABLE `player_class_data` DISABLE KEYS */;
+INSERT INTO `player_class_data` VALUES ('Boris',1,1);
 /*!40000 ALTER TABLE `player_class_data` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -479,6 +457,7 @@ CREATE TABLE `players` (
 
 LOCK TABLES `players` WRITE;
 /*!40000 ALTER TABLE `players` DISABLE KEYS */;
+INSERT INTO `players` VALUES ('Boris','\r\Z',10,'',0,1,1,1,10,10,10,10,10,50,100,100,1,0,0);
 /*!40000 ALTER TABLE `players` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -595,6 +574,7 @@ CREATE TABLE `rooms` (
 
 LOCK TABLES `rooms` WRITE;
 /*!40000 ALTER TABLE `rooms` DISABLE KEYS */;
+INSERT INTO `rooms` VALUES (1,'The One Room','One room to rule them all.',0,'');
 /*!40000 ALTER TABLE `rooms` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -670,4 +650,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-01-22 17:47:46
+-- Dump completed on 2018-01-23 23:06:56

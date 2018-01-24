@@ -1494,21 +1494,22 @@ void skillEditCmd_cooldown(Character * ch, string argument)
 
 void npcEditCmd_show(Character * ch, string argument)
 {
-    Character * pChar = (Character *)ch->editData;
+	Character * pChar = (Character *)ch->editData;
 
-	if(!pChar)
+	if (!pChar)
 	{
-        LogFile::Log("error", "npcEditCmd_show : user->editData == NULL");
+		LogFile::Log("error", "npcEditCmd_show : user->editData == NULL");
 		return;
 	}
 
 	ch->Send("Name:      [" + pChar->name + "]\n\r");
+	ch->Send("Keywords:	 [" + pChar->keywords + "]\n\r");
     ch->Send("ID:        [" + Utilities::itos(pChar->id) + "]\n\r");
     ch->Send("Level:     [" + Utilities::itos(pChar->level) + "]\n\r");
     ch->Send("Title:     [" + pChar->title + "]\n\r");
     ch->Send("Sex:       [" + Utilities::itos(pChar->sex) + "]\n\r");
     ch->Send("Agility:   [" + Utilities::itos(pChar->agility) + "]\n\r");
-    ch->Send("Int:       [" + Utilities::itos(pChar->intelligence) + "]\n\r");
+    ch->Send("Intellect: [" + Utilities::itos(pChar->intellect) + "]\n\r");
     ch->Send("Strength:  [" + Utilities::itos(pChar->strength) + "]\n\r");
     ch->Send("Vitality:  [" + Utilities::itos(pChar->vitality) + "]\n\r");
     ch->Send("Wisdom:    [" + Utilities::itos(pChar->wisdom) + "]\n\r");
@@ -1839,7 +1840,7 @@ void npcEditCmd_agility(Character * ch, string argument)
     pChar->agility = agility;
 }
 
-void npcEditCmd_intelligence(Character * ch, string argument)
+void npcEditCmd_intellect(Character * ch, string argument)
 {
     Character * pChar = (Character *)ch->editData;
 
@@ -1848,17 +1849,17 @@ void npcEditCmd_intelligence(Character * ch, string argument)
 
     if(arg1.empty() || !Utilities::IsNumber(arg1))
     {
-        ch->Send("intelligence <#>\n\r");
+        ch->Send("intellect <#>\n\r");
         return;
     }
-    int intelligence = Utilities::atoi(arg1);
-    if(intelligence < 0)
+    int intellect = Utilities::atoi(arg1);
+    if(intellect < 0)
     {
-        ch->Send("Intelligence must be >= 0.\n\r");
+        ch->Send("Intellect must be >= 0.\n\r");
         return;
     }
     pChar->changed = true;
-    pChar->intelligence = intelligence;
+    pChar->intellect = intellect;
 }
 
 void npcEditCmd_strength(Character * ch, string argument)
@@ -2229,6 +2230,7 @@ void itemEditCmd_show(Character * ch, string argument)
 	}
 
 	ch->Send("Name:           [" + pItem->name + "]\n\r");
+	ch->Send("Keywords:       [" + pItem->keywords + "]\n\r");
     ch->Send("ID:             [" + Utilities::itos(pItem->id) + "]\n\r");
     ch->Send("char_level:     [" + Utilities::itos(pItem->charLevel) + "]\n\r");
     ch->Send("item_level:     [" + Utilities::itos(pItem->itemLevel) + "]\n\r");
@@ -3061,11 +3063,11 @@ void classEditCmd_show(Character * ch, string argument)
     ch->Send("Name:      [" + pClass->name + "]\n\r");
     ch->Send("ID:        [" + Utilities::itos(pClass->id) + "]\n\r");
     ch->Send("Color string: [|" + pClass->color + "]\n\r");
-    ch->Send("agility_increase: [" + Utilities::itos(pClass->agilityIncrease) + "]\n\r");
-    ch->Send("int_increase:     [" + Utilities::itos(pClass->intelligenceIncrease) + "]\n\r");
-    ch->Send("strength_increase:[" + Utilities::itos(pClass->strengthIncrease) + "]\n\r");
-    ch->Send("vitality_increase:[" + Utilities::itos(pClass->vitalityIncrease) + "]\n\r");
-    ch->Send("wisdom_increase:  [" + Utilities::itos(pClass->wisdomIncrease) + "]\n\r");
+    ch->Send("agility_per_level:  [" + Utilities::itos(pClass->agilityPerLevel) + "]\n\r");
+    ch->Send("intellect_per_level:[" + Utilities::itos(pClass->intellectPerLevel) + "]\n\r");
+    ch->Send("strength_per_level: [" + Utilities::itos(pClass->strengthPerLevel) + "]\n\r");
+    ch->Send("vitality_per_level: [" + Utilities::itos(pClass->vitalityPerLevel) + "]\n\r");
+    ch->Send("wisdom_per_level:   [" + Utilities::itos(pClass->wisdomPerLevel) + "]\n\r");
 
     ch->Send("Skills (ID, Level, Cost): ");
     std::list<Class::SkillData>::iterator iter;
@@ -3085,18 +3087,18 @@ void classEditCmd_agility(Character * ch, string argument)
 
     if(!Utilities::IsNumber(arg1))
     {
-        ch->Send("agility_increase <#>\n\r");
+        ch->Send("agility_per_level <#>\n\r");
         return;
     }
     int agil = Utilities::atoi(arg1);
     if(agil < 0)
     {
-        ch->Send("agility_increase must be >= 0\n\r");
+        ch->Send("agility_per_level must be >= 0\n\r");
         return;
     }
-    pClass->agilityIncrease = agil;
+    pClass->agilityPerLevel = agil;
     pClass->changed = true;
-    ch->Send("agility_increase set.\n\r");
+    ch->Send("agility_per_level set.\n\r");
 }
 
 void helpEditCmd_show(Character * ch, string argument)
@@ -3105,13 +3107,14 @@ void helpEditCmd_show(Character * ch, string argument)
 	if(pHelp == NULL)
 		return;
 
-	ch->Send("ID:   [" + Utilities::itos(pHelp->id) + "]\n\r");
-    ch->Send("Name: [" + pHelp->name + "]\n\r");
+	ch->Send("ID:			[" + Utilities::itos(pHelp->id) + "]\n\r");
+    ch->Send("Title:		[" + pHelp->title + "]\n\r");
+	ch->Send("Search String:[" + pHelp->search_string + "]\n\r");
     ch->Send("Text:\n\r");
     ch->Send(pHelp->text + "\n\r");
 }
 
-void helpEditCmd_name(Character * ch, string argument)
+void helpEditCmd_title(Character * ch, string argument)
 {
 	Help * pHelp = (Help *)ch->editData;
 	if(pHelp == NULL)
@@ -3119,16 +3122,16 @@ void helpEditCmd_name(Character * ch, string argument)
 
 	if(argument.empty())
 	{
-		ch->Send("Syntax: name <newname>\n\r");
+		ch->Send("Syntax: title <newtitle>\n\r");
 		return;
 	}
 	if(!Utilities::IsAlpha(argument))
 	{
-		ch->Send("Invalid name.\n\r");
+		ch->Send("Invalid title.\n\r");
 		return;
 	}
-	pHelp->name = argument;
-	ch->Send("Name changed.\n\r");
+	pHelp->title = argument;
+	ch->Send("Title changed.\n\r");
 }
 
 void helpEditCmd_text(Character * ch, string argument)

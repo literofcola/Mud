@@ -46,6 +46,7 @@ public:
 
     int id;
     std::string name;
+	std::string keywords;
     int itemLevel;
     int charLevel;
 	int binds;

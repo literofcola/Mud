@@ -31,7 +31,9 @@ extern "C"
 #include "lauxlib.h"
 }
 
-//#include "luabind/luabind.hpp"
+#define DB_INVENTORY_EQUIPPED 0
+#define DB_INVENTORY_INVENTORY 1
+#define DB_INVENTORY_BANK 2
 
 using namespace std;
 
@@ -39,11 +41,19 @@ using namespace std;
 const double Character::NORMAL_MOVE_SPEED = 2.5;
 const double Character::COMBAT_MOVE_SPEED = 0.75;
 
-//TODO
+//TODO: racial skills?
 Character::RaceType Character::race_table[] = 
 {
-    { 1, "human" },
-    { 2, "elf"   }
+    { Character::Races::RACE_HUMAN, "human"	},
+    { Character::Races::RACE_ELF, "elf"		},
+	{ Character::Races::RACE_DWARF, "dwarf"	},
+	{ Character::Races::RACE_ORC, "orc"		},
+	{ Character::Races::RACE_GNOME, "gnome"	},
+	{ Character::Races::RACE_GOBLIN, "goblin"	},
+	{ Character::Races::RACE_UNDEAD, "undead"	},
+	{ Character::Races::RACE_MINOTAUR, "minotaur" },
+	{ Character::Races::RACE_TROLL, "troll"	},
+	{-1, ""			}
 };
 
 Character::flag_type Character::flag_table[] = 
@@ -54,7 +64,7 @@ Character::flag_type Character::flag_table[] =
     { Character::FLAG_GUILD, "guild" },
     { Character::FLAG_VENDOR, "vendor" },
     { Character::FLAG_REPAIR, "repair" },
-    { Character::FLAG_MAGETRAIN, "magetrain" },
+    { Character::FLAG_MAGETRAIN, "magetrain" },		//todo: combine these into one trainer?
     { Character::FLAG_WARRIORTRAIN, "warriortrain" },
     { Character::FLAG_ROGUETRAIN, "roguetrain" },
     { Character::FLAG_CLERICTRAIN, "clerictrain" },
@@ -89,13 +99,14 @@ Character::Character(const Character & copy)
 {
     SetDefaults();
     name = copy.name;
+	keywords = copy.keywords;
     id = copy.id;
     title = copy.title;
     player = NULL;
     level = copy.level;
     sex = copy.sex;
     agility = copy.agility;
-    intelligence = copy.intelligence;
+    intellect = copy.intellect;
     strength = copy.strength;
     vitality = copy.vitality;
     wisdom = copy.wisdom;
@@ -154,9 +165,9 @@ void Character::SetDefaults()
     target = NULL;
     level = 1;
     sex = 1;
-    agility = intelligence = strength = vitality = wisdom = 10;
+    agility = intellect = strength = vitality = wisdom = 10;
     health = maxHealth = vitality * Character::HEALTH_FROM_VITALITY;
-    mana = maxMana = intelligence * Character::MANA_FROM_INTELLIGENCE;
+    mana = maxMana = intellect * Character::MANA_FROM_INTELLECT;
     stamina = maxStamina = strength * Character::STAMINA_FROM_STRENGTH;
     npcAttackSpeed = 2.0;
     npcDamageLow = npcDamageHigh = 1;
@@ -177,11 +188,12 @@ void Character::SetDefaults()
     movementQueue.clear();
 
     stringTable["name"] = &name;
+	stringTable["keywords"] = &keywords;
     intTable["id"] = &id;
     intTable["level"] = &level;
     intTable["sex"] = &sex;
     intTable["agility"] = &agility;
-    intTable["intelligence"] = &intelligence;
+    intTable["intellect"] = &intellect;
     intTable["strength"] = &strength;
     intTable["vitality"] = &vitality;
     intTable["wisdom"] = &wisdom;
@@ -879,16 +891,15 @@ Character * Character::LoadPlayer(std::string name, User * user)
     loaded->title = row["title"];
     loaded->level = row["level"];
     loaded->agility = row["agility"];
-    loaded->intelligence = row["intelligence"];
+    loaded->intellect = row["intellect"];
     loaded->strength = row["strength"];
     loaded->vitality = row["vitality"];
     loaded->wisdom = row["wisdom"];
-    //TODO: include equipment/buff bonuses
     loaded->health = row["health"];
     loaded->mana = row["mana"];
     loaded->stamina = row["stamina"];
     loaded->maxHealth = loaded->vitality * Character::HEALTH_FROM_VITALITY;
-    loaded->maxMana = loaded->intelligence * Character::MANA_FROM_INTELLIGENCE;
+    loaded->maxMana = loaded->intellect * Character::MANA_FROM_INTELLECT;
     loaded->maxStamina = loaded->strength * Character::STAMINA_FROM_STRENGTH;
 
     loaded->room = Game::GetGame()->GetRoom(row["room"]); 
@@ -900,81 +911,115 @@ Character * Character::LoadPlayer(std::string name, User * user)
     loaded->player->immlevel = row["immlevel"];
     loaded->player->experience = row["experience"];
 	loaded->player->recall = row["recall"];
-    loaded->player->isGhost = row["is_ghost"];
+    loaded->player->isGhost = row["ghost"];
 
-    string skilltext = (string)row["skills"];
-    int first=0, last=0;
-    while(first < (int)skilltext.length())
-    {
-        last = (int)skilltext.find(";", first);
-        int id = Utilities::atoi(skilltext.substr(first, last - first));
-        loaded->AddSkill(Game::GetGame()->GetSkill(id));
-        first = last + 1;
-    }
+	StoreQueryResult playerclassres = Server::sqlQueue->Read("SELECT * FROM player_class_data where player='" + loaded->name + "'");
+	StoreQueryResult::iterator iter;
+	for (iter = playerclassres.begin(); iter != playerclassres.end(); ++iter)
+	{
+		Row classrow = *iter;
+		int id = classrow["class"];
+		int level = classrow["level"];
+		loaded->player->AddClass(id, level);
+	}
 
-    string classtext = (string)row["class_data"];
-    first = last = 0;
-    while(first < (int)classtext.length())
-    {
-        last = (int)classtext.find(";", first);
-        int comma = (int)classtext.find(",", first);
-        int id = Utilities::atoi(classtext.substr(first, comma - first));
-        int level = Utilities::atoi(classtext.substr(comma+1, last - comma+1));
-        loaded->player->AddClass(id, level);
-        first = last + 1;
-    }
+	//Skills saved with a player no longer a thing, determine skills from classes. Still load them for the session with AddSkill
+	loaded->AddClassSkills();
+	/*string skilltext = (string)row["skills"];
+	int first=0, last=0;
+	while(first < (int)skilltext.length())
+	{
+	last = (int)skilltext.find(";", first);
+	int id = Utilities::atoi(skilltext.substr(first, last - first));
+	loaded->AddSkill(Game::GetGame()->GetSkill(id));
+	first = last + 1;
+	}*/
 
-    string equippedtext = (string)row["equipped"];
-    first = last = 0;
-    while(first < (int)equippedtext.length())
-    {
-        last = (int)equippedtext.find(";", first);
-        int id = Utilities::atoi(equippedtext.substr(first, last - first));
+	StoreQueryResult playerinventoryres = Server::sqlQueue->Read("SELECT * FROM player_inventory where player='" + loaded->name + "'");
+	for (iter = playerinventoryres.begin(); iter != playerinventoryres.end(); ++iter)
+	{
+		Row invrow = *iter;
+		int id = invrow["item"];
+		int location = invrow["location"]; //Location means equipped, in inventory, in bank...
+		switch (location)
+		{
+			case DB_INVENTORY_EQUIPPED:
+			{
+				Item * equip = Game::GetGame()->GetItemIndex(id);
+				//todo Equipping an item should be in an easy to use function OR we should really just assume the state the character was saved in is valid
+				int equiploc = loaded->player->GetEquipLocation(equip);
+				Item * removed = loaded->player->RemoveItemEquipped(equiploc); //remove any item already in the slot
+				if (removed != NULL)
+					loaded->player->AddItemInventory(removed);
+				if (equiploc == Player::EQUIP_MAINHAND && equip->equipLocation == Item::EQUIP_TWOHAND)
+				{   //pretty unlikely this will happen when loading a character, but just in case
+					Item * offhand = loaded->player->RemoveItemEquipped(Player::EQUIP_OFFHAND); //remove any offhand when equipping a two hand
+					if (offhand != NULL)
+						loaded->player->AddItemInventory(offhand);
+				}
+				else if (equiploc == Player::EQUIP_OFFHAND) //remove a twohand when equipping an offhand
+				{
+					if (loaded->player->equipped[Player::EQUIP_MAINHAND] != NULL && loaded->player->equipped[Player::EQUIP_MAINHAND]->type == Item::EQUIP_TWOHAND)
+					{
+						loaded->player->AddItemInventory(loaded->player->RemoveItemEquipped(Player::EQUIP_MAINHAND));
+					}
+				}
+				loaded->player->EquipItemFromInventory(loaded->player->NewItemInventory(equip), equiploc);
 
-        Item * equip = Game::GetGame()->GetItemIndex(id);
-        int equiploc = loaded->player->GetEquipLocation(equip);
-        Item * removed = loaded->player->RemoveItemEquipped(equiploc); //remove any item already in the slot
-        if(removed != NULL)
-            loaded->player->AddItemInventory(removed);
-        if(equiploc == Player::EQUIP_MAINHAND && equip->equipLocation == Item::EQUIP_TWOHAND)
-        {   //pretty unlikely this will happen when loading a character, but just in case
-            Item * offhand = loaded->player->RemoveItemEquipped(Player::EQUIP_OFFHAND); //remove any offhand when equipping a two hand
-            if(offhand != NULL)
-                loaded->player->AddItemInventory(offhand);
-        }
-        else if(equiploc == Player::EQUIP_OFFHAND) //remove a twohand when equipping an offhand
-        {
-            if(loaded->player->equipped[Player::EQUIP_MAINHAND] != NULL && loaded->player->equipped[Player::EQUIP_MAINHAND]->type == Item::EQUIP_TWOHAND)
-            {
-                loaded->player->AddItemInventory(loaded->player->RemoveItemEquipped(Player::EQUIP_MAINHAND));
-            }
-        }
-        loaded->player->EquipItemFromInventory(loaded->player->NewItemInventory(equip), equiploc);
-        first = last + 1;
-    }
+				break;
+			}
 
-    string invtext = (string)row["inventory"];
-    first = last = 0;
-    while(first < (int)invtext.length())
-    {
-        last = (int)invtext.find(";", first);
-        int id = Utilities::atoi(invtext.substr(first, last - first));
-        loaded->player->NewItemInventory(Game::GetGame()->GetItemIndex(id));
-        first = last + 1;
-    }
+			case DB_INVENTORY_INVENTORY:
+			{
+				loaded->player->NewItemInventory(Game::GetGame()->GetItemIndex(id));
+				break;
+			}
 
-    string completedquests = (string)row["completed_quests"];
-    first=0; last=0;
-    while(first < (int)completedquests.length())
-    {
-        last = (int)completedquests.find(";", first);
-        int id = Utilities::atoi(completedquests.substr(first, last - first));
-        Quest * q;
-        if((q = Game::GetGame()->GetQuest(id)) != NULL)
-            loaded->player->completedQuests[id] = q;
-        first = last + 1;
-    }
+			case DB_INVENTORY_BANK:
+			{
+				//todo
+				break;
+			}
+		}
+	}
 
+	StoreQueryResult playerqcres = Server::sqlQueue->Read("SELECT * FROM player_completed_quests where player='" + loaded->name + "'");
+	for (iter = playerqcres.begin(); iter != playerqcres.end(); ++iter)
+	{
+		Row qcrow = *iter;
+		int id = qcrow["quest"];
+		loaded->player->completedQuests.insert(id);
+	}
+
+	StoreQueryResult playerqares = Server::sqlQueue->Read("SELECT * FROM player_active_quests where player='" + loaded->name + "'");
+	for (iter = playerqares.begin(); iter != playerqares.end(); ++iter)
+	{
+		Row qarow = *iter;
+		int id = qarow["quest"];
+		string objectives = (string)qarow["objectives"];
+		Quest * q;
+		if ((q = Game::GetGame()->GetQuest(id)) != NULL)
+		{
+			loaded->player->questLog.push_back(q);
+			std::vector<int> playerObjectives;
+			loaded->player->questObjectives.push_back(playerObjectives); //I dont think this does anything...
+
+			int count;
+			int first = 0;
+			int i = 0;
+			for (int last = (int)objectives.find(","); last != std::string::npos; last = (int)objectives.find(",", first))
+			{
+				count = Utilities::atoi(objectives.substr(first, last - first));
+				loaded->player->questObjectives[i].push_back(count);
+				first = last + 1;
+				i++;
+			}
+			//search for a ';' to grab the last objective
+			count = Utilities::atoi(objectives.substr(first, objectives.length() - first));
+			loaded->player->questObjectives[i].push_back(count);
+		}
+	}
+	/*
     string activequests = (string)row["active_quests"];
     first=0; last=0;
     int i = 0;
@@ -1004,7 +1049,7 @@ Character * Character::LoadPlayer(std::string name, User * user)
         i++;
         first = last + 1;
     }
-
+	*/
     return loaded;
 }
 
@@ -1023,7 +1068,7 @@ Character * Character::LoadPlayer(std::string name, User * user)
     loaded->sex = row["sex"];
     loaded->level = row["level"];
     loaded->agility = row["agility"];
-    loaded->intelligence = row["intelligence"];
+    loaded->intellect = row["intellect"];
     loaded->strength = row["strength"];
     loaded->vitality = row["vitality"];
     loaded->wisdom = row["wisdom"];
@@ -1032,7 +1077,7 @@ Character * Character::LoadPlayer(std::string name, User * user)
     loaded->mana = row["mana"];
     loaded->stamina = row["stamina"];
     loaded->maxHealth = loaded->vitality * Character::HEALTH_FROM_VITALITY;
-    loaded->maxMana = loaded->intelligence * Character::MANA_FROM_INTELLIGENCE;
+    loaded->maxMana = loaded->intellect * Character::MANA_FROM_INTELLECT;
     loaded->maxStamina = loaded->strength * Character::STAMINA_FROM_STRENGTH;
 
     string skilltext = (string)row["skills"];
@@ -1053,64 +1098,20 @@ Character * Character::LoadPlayer(std::string name, User * user)
 void Character::Save()
 {
     string sql;
-    if(player)
+    if(player) //save players
     {
         string password = Utilities::SQLFixQuotes(player->password);
         string fixtitle = Utilities::SQLFixQuotes(title);
 
-        sql = "INSERT INTO players (name, password, immlevel, title, experience, room, level, sex, agility, intelligence, strength, vitality, ";
-        sql += "wisdom, health, mana, stamina, skills, completed_quests, active_quests, equipped, inventory, class, class_data, recall, is_ghost) values ('";
+        sql = "INSERT INTO players (name, password, immlevel, title, experience, room, level, sex, agility, intellect, strength, vitality, ";
+        sql += "wisdom, health, mana, stamina, class, recall, ghost) values ('";
         sql += name + "','" + password + "'," + Utilities::itos(player->immlevel);
         sql += ",'" + fixtitle + "'," + Utilities::itos(player->experience) + "," + Utilities::itos(room->id);
         sql += "," + Utilities::itos(level) + "," + Utilities::itos(sex) + ",";
-        sql += Utilities::itos(agility) + "," + Utilities::itos(intelligence) + "," + Utilities::itos(strength) + ",";
+        sql += Utilities::itos(agility) + "," + Utilities::itos(intellect) + "," + Utilities::itos(strength) + ",";
         sql += Utilities::itos(vitality) + "," + Utilities::itos(wisdom) + ",";
-        sql += Utilities::itos(health) + "," + Utilities::itos(mana) + "," + Utilities::itos(stamina) + ",'";
-        
-        std::map<std::string, Skill *>::iterator iter;
-        for(iter = knownSkills.begin(); iter != knownSkills.end(); ++iter)
-        {
-            sql += Utilities::itos((*iter).second->id) + ";";
-        }
-        sql += "','";
-        std::map<int, Quest *>::iterator questiter;
-        for(questiter = player->completedQuests.begin(); questiter != player->completedQuests.end(); ++questiter)
-        {
-            sql += Utilities::itos((*questiter).second->id) + ";";
-        }
-        sql += "','";
-        for(int i = 0; i < (int)player->questLog.size(); i++)
-        {
-            sql += Utilities::itos(player->questLog[i]->id);
-            for(int j = 0; j < (int)player->questObjectives[i].size(); j++)
-            {
-                sql += "," + Utilities::itos(player->questObjectives[i][j]);
-            }
-            sql += ";";
-        }
-        sql += "','";
-        for(int i = 0; i < (int)player->equipped.size(); i++)
-        {
-            if(player->equipped[i] != NULL)
-            {
-                sql += Utilities::itos(player->equipped[i]->id) + ";";
-            }
-        }
-        sql += "','";
-        std::list<Item *>::iterator inviter;
-        for(inviter = player->inventory.begin(); inviter != player->inventory.end(); ++inviter)
-        {
-            sql += Utilities::itos((*inviter)->id) + ";";
-        }
-        sql += "'," + Utilities::itos(player->currentClass->id) + ",'";
-        std::list<Player::ClassData>::iterator classiter;
-        for(classiter = player->classList.begin(); classiter != player->classList.end(); ++classiter)
-        {
-            sql += Utilities::itos((*classiter).id) + "," + Utilities::itos((*classiter).level) + ";";
-        }
-        sql += "',";
-		sql += Utilities::itos(player->recall) + ", ";
-        
+        sql += Utilities::itos(health) + "," + Utilities::itos(mana) + "," + Utilities::itos(stamina);
+		sql += "," + Utilities::itos(player->currentClass->id) + "," + Utilities::itos(player->recall) + ", ";
         if(IsGhost() || IsCorpse())
             sql += "1)";
         else
@@ -1118,61 +1119,122 @@ void Character::Save()
 
         sql += " ON DUPLICATE KEY UPDATE name=VALUES(name), password=VALUES(password), immlevel=VALUES(immlevel), title=VALUES(title), ";
         sql += "experience=VALUES(experience), room=VALUES(room), level=VALUES(level), sex=VALUES(sex), agility=VALUES(agility), ";
-        sql += "intelligence=VALUES(intelligence), strength=VALUES(strength), vitality=VALUES(vitality), wisdom=VALUES(wisdom), ";
-        sql += "health=VALUES(health), mana=VALUES(mana), stamina=VALUES(stamina), skills=VALUES(skills), completed_quests=VALUES(completed_quests), ";
-        sql += "active_quests=VALUES(active_quests), equipped=VALUES(equipped), inventory=VALUES(inventory), class=VALUES(class), ";
-        sql += "class_data=VALUES(class_data), recall=VALUES(recall), is_ghost=VALUES(is_ghost)";
+        sql += "intellect=VALUES(intellect), strength=VALUES(strength), vitality=VALUES(vitality), wisdom=VALUES(wisdom), ";
+        sql += "health=VALUES(health), mana=VALUES(mana), stamina=VALUES(stamina), ";
+        sql += "class=VALUES(class), ";
+        sql += "recall=VALUES(recall), ghost=VALUES(ghost)";
+
+		//player_completed_quests
+		std::set<int>::iterator questiter;
+		for (questiter = player->completedQuests.begin(); questiter != player->completedQuests.end(); ++questiter)
+		{
+			string qcsql = "INSERT INTO player_completed_quests (player, quest) values ";
+			qcsql += "('" + name + "', " + Utilities::itos(*questiter) + ")";
+			Server::sqlQueue->Write(qcsql);
+		}
+		
+		//player_active_quests
+		Server::sqlQueue->Write("DELETE FROM player_active_quests where player='" + name + "'");
+		for (int i = 0; i < (int)player->questLog.size(); i++)
+		{
+			string qasql = "INSERT INTO player_active_quests (player, quest, objectives) values ('" + name + "',";
+			qasql += Utilities::itos(player->questLog[i]->id) + ",'";
+			for (int j = 0; j < (int)player->questObjectives[i].size(); j++)
+			{
+				qasql += "," + Utilities::itos(player->questObjectives[i][j]);
+			}
+			qasql += "')";
+			Server::sqlQueue->Write(qasql);
+		}
+
+		//player_inventory
+		Server::sqlQueue->Write("DELETE FROM player_inventory where player='" + name + "'");
+		for (int i = 0; i < (int)player->equipped.size(); i++)
+		{
+			if (player->equipped[i] != NULL)
+			{
+				string equippedsql = "INSERT INTO player_inventory (player, item, location) values ('" + name + "',";
+				equippedsql += Utilities::itos(player->equipped[i]->id) + "," + Utilities::itos(DB_INVENTORY_EQUIPPED) + ")";
+				Server::sqlQueue->Write(equippedsql);
+			}
+		}
+
+		std::list<Item *>::iterator inviter;
+		for (inviter = player->inventory.begin(); inviter != player->inventory.end(); ++inviter)
+		{
+			string equippedsql = "INSERT INTO player_inventory (player, item, location) values ('" + name + "',";
+			equippedsql += Utilities::itos((*inviter)->id) + "," + Utilities::itos(DB_INVENTORY_INVENTORY) + ")";
+			Server::sqlQueue->Write(equippedsql);
+		}
+		
+		//player_class_data
+		Server::sqlQueue->Write("DELETE FROM player_class_data where player='" + name + "'");
+		std::list<Player::ClassData>::iterator classiter;
+		for (classiter = player->classList.begin(); classiter != player->classList.end(); ++classiter)
+		{
+			string classsql = "INSERT INTO player_class_data (player, class, level) values ('" + name + "',";
+			classsql += Utilities::itos((*classiter).id) + "," + Utilities::itos((*classiter).level) + ")";
+			Server::sqlQueue->Write(classsql);
+		}
 
         player->saved = (int)Game::GetGame()->currentTime;
     }
-    else
+    else //save npcs
     {
         string fixtitle = Utilities::SQLFixQuotes(title);
 
-        sql = "INSERT INTO npcs (id, name, level, sex, agility, intelligence, strength, vitality, ";
-        sql += "wisdom, health, mana, stamina, skills, flags, drops, title, attack_speed, damage_low, damage_high) values (";
+        sql = "INSERT INTO npcs (id, name, keywords, level, sex, agility, intellect, strength, vitality, ";
+        sql += "wisdom, health, mana, stamina, title, attack_speed, damage_low, damage_high, flags) values (";
         sql += Utilities::itos(id) + ", '";
-        sql += name + "'," + Utilities::itos(level) + "," + Utilities::itos(sex) + ",";
-        sql += Utilities::itos(agility) + "," + Utilities::itos(intelligence) + "," + Utilities::itos(strength) + ",";
+        sql += name + "', '" + keywords + "', " + Utilities::itos(level) + "," + Utilities::itos(sex) + ",";
+        sql += Utilities::itos(agility) + "," + Utilities::itos(intellect) + "," + Utilities::itos(strength) + ",";
         sql += Utilities::itos(vitality) + "," + Utilities::itos(wisdom) + ",";
-        sql += Utilities::itos(health) + "," + Utilities::itos(mana) + "," + Utilities::itos(stamina) + ",'";
-        
-        std::map<std::string, Skill *>::iterator skilliter;
-        for(skilliter = knownSkills.begin(); skilliter != knownSkills.end(); ++skilliter)
-        {
-            sql += Utilities::itos((*skilliter).second->id) + ";";
-        }
-        sql += "','";
+        sql += Utilities::itos(health) + "," + Utilities::itos(mana) + "," + Utilities::itos(stamina);
+        sql += ", '" + fixtitle + "', " + Utilities::dtos(npcAttackSpeed, 2) + ", " + Utilities::itos(npcDamageLow) + ", ";
+        sql += Utilities::itos(npcDamageHigh) + ",'";
 
-        std::vector<int>::iterator flagiter;
-        for(flagiter = flags.begin(); flagiter != flags.end(); ++flagiter)
-        {
-            sql += Utilities::itos((*flagiter)) + ";";
-        }
-        sql += "','";
-        
-        std::list<DropData>::iterator dropsiter;
-        for(dropsiter = drops.begin(); dropsiter != drops.end(); ++dropsiter)
-        {
-            sql += Utilities::itos((*dropsiter).percent);
-            for(int i = 0; i < (int)(*dropsiter).id.size(); i++)
-            {
-                sql += "," + Utilities::itos((*dropsiter).id[i]);
-            }
-            sql += ";";
-        }
+		std::vector<int>::iterator flagiter;
+		for (flagiter = flags.begin(); flagiter != flags.end(); ++flagiter)
+		{
+			sql += Utilities::itos((*flagiter)) + ";";
+		}
+		sql += "')";
 
-        sql += "','" + fixtitle + "', " + Utilities::dtos(npcAttackSpeed, 2) + ", " + Utilities::itos(npcDamageLow) + ", ";
-        sql += Utilities::itos(npcDamageHigh) + ")";
-
-        /*id, name, level, sex, agility, intelligence, strength, vitality, ";
-        sql += "wisdom, health, mana, stamina, skills, flags, drops, title, attack_speed, damage_low, damage_high
-        */
         sql += " ON DUPLICATE KEY UPDATE id=VALUES(id), name=VALUES(name), level=VALUES(level), sex=VALUES(sex), agility=VALUES(agility), ";
-        sql += "intelligence=VALUES(intelligence), strength=VALUES(strength), vitality=VALUES(vitality), wisdom=VALUES(wisdom), ";
-        sql += "health=VALUES(health), mana=VALUES(mana), stamina=VALUES(stamina), skills=VALUES(skills), flags=VALUES(flags), ";
-        sql += "drops=VALUES(drops), title=VALUES(title), attack_speed=VALUES(attack_speed), damage_low=VALUES(damage_low), ";
-        sql += "damage_high=VALUES(damage_high)";
+        sql += "intellect=VALUES(intellect), strength=VALUES(strength), vitality=VALUES(vitality), wisdom=VALUES(wisdom), ";
+        sql += "health=VALUES(health), mana=VALUES(mana), stamina=VALUES(stamina), ";
+        sql += "title=VALUES(title), attack_speed=VALUES(attack_speed), damage_low=VALUES(damage_low), ";
+        sql += "damage_high=VALUES(damage_high), flags=VALUES(flags)";
+
+		//save skills
+		Server::sqlQueue->Write("DELETE FROM npc_skills where npc=" + Utilities::itos(id));
+		std::map<std::string, Skill *>::iterator skilliter;
+		for (skilliter = knownSkills.begin(); skilliter != knownSkills.end(); ++skilliter)
+		{
+			string skillsql = "INSERT INTO npc_skills (npc, id) values ";
+			skillsql += "(" + Utilities::itos(id) + ", " + Utilities::itos((*skilliter).second->id) + ")";
+			skillsql += " ON DUPLICATE KEY UPDATE npc=VALUES(npc), id=VALUES(id)";
+			Server::sqlQueue->Write(skillsql);
+		}
+
+		//save drops
+		Server::sqlQueue->Write("DELETE FROM npc_drops where npc=" + Utilities::itos(id));
+		std::list<DropData>::iterator dropsiter;
+		for(dropsiter = drops.begin(); dropsiter != drops.end(); ++dropsiter)
+		{
+			string dropsql = "INSERT INTO npc_drops (npc, items, percent) values ";
+			dropsql += "(" + Utilities::itos(id) + ", '";
+			for(int i = 0; i < (int)(*dropsiter).id.size(); i++)
+			{
+				dropsql += Utilities::itos((*dropsiter).id[i]) + ";";
+			}
+			
+			
+			dropsql += "', " + Utilities::itos((*dropsiter).percent) + ")";
+			dropsql += " ON DUPLICATE KEY UPDATE npc=VALUES(npc), items=VALUES(items), percent=VALUES(percent)";
+			Server::sqlQueue->Write(dropsql);
+
+		}
 
         //save Triggers
         std::map<int, Trigger>::iterator trigiter = triggers.begin();
@@ -1214,35 +1276,35 @@ void Character::SetLevel(int newlevel)
     {
         player->SetClassLevel(player->currentClass->id, 
                               Utilities::UMAX(0, player->GetClassLevel(player->currentClass->id) + (newlevel - level)));
-        if(player->currentClass->agilityIncrease > 0)
+        if(player->currentClass->agilityPerLevel > 0)
         {
-            agility += player->currentClass->agilityIncrease * (newlevel - level);
-            Send("|WYour agility increases by " + Utilities::itos(player->currentClass->agilityIncrease*(newlevel - level)) + ".|X\n\r");
+            agility += player->currentClass->agilityPerLevel * (newlevel - level);
+            Send("|WYour agility increases by " + Utilities::itos(player->currentClass->agilityPerLevel*(newlevel - level)) + ".|X\n\r");
         }
-        if(player->currentClass->intelligenceIncrease > 0)
+        if(player->currentClass->intellectPerLevel > 0)
         {
-            intelligence += player->currentClass->intelligenceIncrease*(newlevel - level);
-            Send("|WYour intelligence increases by " + Utilities::itos(player->currentClass->intelligenceIncrease*(newlevel - level)) + ".|X\n\r");
+            intellect += player->currentClass->intellectPerLevel*(newlevel - level);
+            Send("|WYour intellect increases by " + Utilities::itos(player->currentClass->intellectPerLevel*(newlevel - level)) + ".|X\n\r");
         }
-        if(player->currentClass->strengthIncrease > 0)
+        if(player->currentClass->strengthPerLevel > 0)
         {
-            strength += player->currentClass->strengthIncrease*(newlevel - level);
-            Send("|WYour strength increases by " + Utilities::itos(player->currentClass->strengthIncrease*(newlevel - level)) + ".|X\n\r");
+            strength += player->currentClass->strengthPerLevel*(newlevel - level);
+            Send("|WYour strength increases by " + Utilities::itos(player->currentClass->strengthPerLevel*(newlevel - level)) + ".|X\n\r");
         }
-        if(player->currentClass->vitalityIncrease > 0)
+        if(player->currentClass->vitalityPerLevel > 0)
         {
-            vitality += player->currentClass->vitalityIncrease*(newlevel - level);
-            Send("|WYour vitality increases by " + Utilities::itos(player->currentClass->vitalityIncrease*(newlevel - level)) + ".|X\n\r");
+            vitality += player->currentClass->vitalityPerLevel*(newlevel - level);
+            Send("|WYour vitality increases by " + Utilities::itos(player->currentClass->vitalityPerLevel*(newlevel - level)) + ".|X\n\r");
         }
-        if(player->currentClass->wisdomIncrease > 0)
+        if(player->currentClass->wisdomPerLevel > 0)
         {
-            wisdom += player->currentClass->wisdomIncrease*(newlevel - level);
-            Send("|WYour wisdom increases by " + Utilities::itos(player->currentClass->wisdomIncrease*(newlevel - level)) + ".|X\n\r");
+            wisdom += player->currentClass->wisdomPerLevel*(newlevel - level);
+            Send("|WYour wisdom increases by " + Utilities::itos(player->currentClass->wisdomPerLevel*(newlevel - level)) + ".|X\n\r");
         }
     }
     level = newlevel;
     health = maxHealth = vitality * Character::HEALTH_FROM_VITALITY;
-    mana = maxMana = intelligence * Character::MANA_FROM_INTELLIGENCE;
+    mana = maxMana = intellect * Character::MANA_FROM_INTELLECT;
     stamina = maxStamina = strength * Character::STAMINA_FROM_STRENGTH;
     Send("|WYou are now level " + Utilities::itos(newlevel) + ".|X\n\r");
 }
@@ -1463,7 +1525,7 @@ void Character::RemoveAllSpellAffects()
 
 void Character::SaveCooldowns()
 {
-    string sql = "DELETE FROM cooldowns WHERE player_name='" + name + "';";
+    string sql = "DELETE FROM player_cooldowns WHERE player='" + name + "';";
     Server::sqlQueue->Write(sql);
 
     std::map<string, Skill *>::iterator iter;
@@ -1476,7 +1538,7 @@ void Character::SaveCooldowns()
         if((*iter2).second <= Game::currentTime) //not on cooldown
             continue;
         
-        sql = "INSERT INTO cooldowns (cooldowns.player_name, cooldowns.skill_id, cooldowns.timestamp) VALUES ('";
+        sql = "INSERT INTO player_cooldowns (player_cooldowns.player, player_cooldowns.skill, player_cooldowns.timestamp) VALUES ('";
         sql += name + "', " + Utilities::itos((*iter).second->id) + ", " + Utilities::dtos((*iter2).second, 2) + ");";
         Server::sqlQueue->Write(sql);
     }
@@ -1484,7 +1546,7 @@ void Character::SaveCooldowns()
 
 void Character::LoadCooldowns()
 {
-    StoreQueryResult cooldownres = Server::sqlQueue->Read("SELECT * FROM cooldowns WHERE player_name='" + name + "';");
+    StoreQueryResult cooldownres = Server::sqlQueue->Read("SELECT * FROM player_cooldowns WHERE player='" + name + "';");
     if(cooldownres.empty())
         return;
 
@@ -1493,14 +1555,14 @@ void Character::LoadCooldowns()
     for(i = cooldownres.begin(); i != cooldownres.end(); i++)
     {
         row = *i;
-        Skill * sk = Game::GetGame()->GetSkill(row["skill_id"]);
+        Skill * sk = Game::GetGame()->GetSkill(row["skill"]);
         if(sk != NULL)
         {
             cooldowns[sk->name] = row["timestamp"];
         }
     }
 
-    string sql = "DELETE FROM cooldowns WHERE player_name='" + name + "';";
+    string sql = "DELETE FROM cooldowns WHERE player='" + name + "';";
     Server::sqlQueue->Write(sql);
 }
 
@@ -1509,7 +1571,7 @@ void Character::SaveSpellAffects()
     if(!player)
         return;
 
-    string deletesql = "DELETE FROM affects WHERE player_name = '" + name + "';";
+    string deletesql = "DELETE FROM player_spell_affects WHERE player = '" + name + "';";
     Server::sqlQueue->Write(deletesql);
 
     std::list<SpellAffect*>::iterator iter;
@@ -2194,17 +2256,12 @@ bool Character::CanMove()
     if(player && player->IMMORTAL())
         return true;
 
-    int low = GetAuraModifier(SpellAffect::AURA_MOVE_SPEED, 5); //whatModifier: 1 total, 2 largest, 3 smallest, 4 largest positive, 5 smallest negative
-    int high = GetAuraModifier(SpellAffect::AURA_MOVE_SPEED, 4);
+	double movespeed = GetMoveSpeed();
 
-    double newspeed = 100 + high + low;
-
-    if(newspeed <= 0) 
+    if(movespeed <= 0)
         return false;
 
-    newspeed /= 100.0;
-
-    return (Game::currentTime > lastMoveTime + (1.0/(movementSpeed * newspeed)));
+    return (Game::currentTime > lastMoveTime + (1.0/(movementSpeed * movespeed)));
 }
 
 double Character::GetMoveSpeed()
@@ -2588,4 +2645,16 @@ Trigger * Character::GetTrigger(int id, int type)
         return NULL;
     }
     return NULL;
+}
+
+void Character::AddClassSkills()
+{
+	if (!player)
+		return;
+
+	std::list<Player::ClassData>::iterator iter;
+	for (iter = player->classList.begin(); iter != player->classList.end(); ++iter)
+	{
+		AddSkill(Game::GetGame()->GetSkill((*iter).id));
+	}
 }

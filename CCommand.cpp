@@ -378,7 +378,7 @@ const class Command npcEditCmd_table[] =
     { "level",      npcEditCmd_level, 0, 0, 1, 1 },
     { "sex",        npcEditCmd_sex, 0, 0, 1, 1 },
     { "agility",    npcEditCmd_agility, 0, 0, 1, 1 },
-    { "intelligence", npcEditCmd_intelligence, 0, 0, 1, 1 },
+    { "intellect",  npcEditCmd_intellect, 0, 0, 1, 1 },
     { "strength",   npcEditCmd_strength, 0, 0, 1, 1 },
     { "vitality",   npcEditCmd_vitality, 0, 0, 1, 1 },
     { "wisdom",     npcEditCmd_wisdom, 0, 0, 1, 1 },
@@ -417,7 +417,7 @@ const class Command questEditCmd_table[] =
 const class Command classEditCmd_table[] =
 {
     { "show",       classEditCmd_show, 0, 0, 1, 1  },
-    { "agility_increase", classEditCmd_agility, 0, 0, 1, 1  },
+    { "agility_per_level", classEditCmd_agility, 0, 0, 1, 1  },
     { "",			0,  0, 0, 1, 1                 }
 };
 

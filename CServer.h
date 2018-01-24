@@ -17,18 +17,6 @@ extern "C"
 #define MXP_LOCKSECURE  "\033[6z" //set secure mode.  Mode remains in effect until changed.  Secure mode becomes the new default mode.
 #define MXP_LOCKLOCKED  "\033[7z" //set locked mode.  Mode remains in effect until changed.  Locked mode becomes the new default mode.
 
-//Defines from telnet protocol we need for MXP, MCCP, etc
-/*#define IAC "\xFF"
-#define WILL "\xFB"
-#define SB "\xFA"
-#define SE "\xF0"
-#define DO "\xFD"
-#define DONT "\xFE"
-
-#define TELOPT_MXP "\x5B"     // (91)
-#define TELOPT_MCCP "\x56" //MCCP 2 (86)
-#define TELOPT_GMCP "\xC9" //201
-*/
 #define SPAM_INTERVAL 60
 #define SPAM_BANTIME 900						//15 minutes
 #define SPAM_MAX_CONNECTIONS_PER_INTERVAL 15	//15 connections over the last 60 seconds = 15 min ban
@@ -37,13 +25,13 @@ extern "C"
 struct IPAddressInfo
 {
 	std::string address;
-	std::vector<double> connectTimes;
+	std::vector<double> connectTimestamps;
 };
 
 struct IPBanInfo
 {
 	std::string address;
-	double banTime;
+	double banTimestamp;
 };
 
 class Server
@@ -67,6 +55,9 @@ public:
 	void RemoveClient(Client * client);
 	void UpdateIPList(std::string address);
 	bool CheckTempBanList(std::string address);
+	std::string EncryptDecrypt(std::string toEncrypt);
+	//todo: why is this a Player:: function, should be server if anything
+	std::string SQLSelectPassword(std::string name);
 
 	SOCKET ListenSocket;
 	struct sockaddr_in ServerAddress;
@@ -113,9 +104,11 @@ private:
 
 	int nPort;
 	Game * mygame;
-	std::list<std::shared_ptr<Client>> clients;	//server owns the clients, user->client points into this list
+	std::list<std::shared_ptr<Client>> clients;	//server owns the clients, shared_ptr because user->client points into this list
 	std::vector<struct IPAddressInfo> IPList;	//List of IP addresses and their connection counts for anti connection spam
-	std::vector<struct IPBanInfo> tempBanList;
+	std::vector<struct IPBanInfo> tempBanList;  //Ban list for connection spam
+
+	std::string encryptionKey;
 };
 
 #endif //CSERVER_H

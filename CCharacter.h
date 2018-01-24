@@ -26,7 +26,7 @@ public:
     int level;
     int sex;
     int agility;
-    int intelligence;
+    int intellect;
     int strength;
     int vitality;
     int wisdom;
@@ -37,13 +37,18 @@ public:
     int stamina;
     int maxStamina;
     static const int HEALTH_FROM_VITALITY = 5;
-    static const int MANA_FROM_INTELLIGENCE = 10;
+    static const int MANA_FROM_INTELLECT = 10;
     static const int STAMINA_FROM_STRENGTH = 10;
     std::string name;
     std::string title;
     Room * room;
     Player * player;
+
     int race; //index into Character::race_table
+	enum Races
+	{
+		RACE_HUMAN, RACE_ELF, RACE_DWARF, RACE_ORC, RACE_GNOME, RACE_GOBLIN, RACE_UNDEAD, RACE_MINOTAUR, RACE_TROLL
+	};
     //TODO, make this a class? std::list<Skill*> racials? starting stat bonuses
     struct RaceType
     {
@@ -62,6 +67,7 @@ public:
     Reset * reset; //reset that spawned this npc, if any
     std::vector<Quest *> questStart;
     std::vector<Quest *> questEnd;
+	std::string keywords;
     bool changed;
     std::vector<int> flags; //a vector of constants to indicate flag is set
 
@@ -232,6 +238,7 @@ public:
     bool IsNPC();
     bool IsCorpse();
     bool IsGhost();
+	void AddClassSkills();
     
 
 private:

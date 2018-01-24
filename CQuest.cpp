@@ -201,39 +201,43 @@ void Quest::Save()
     if(!changed)
         return;
 
-    string sql = "INSERT INTO quests (id, name, short_desc, long_desc, progress_msg, completion_msg, level, quest_requirement, ";
-    sql += "start, end, exp_reward, money_reward, shareable, objectives, level_requirement, quest_restriction) values (";
+    string sql = "INSERT INTO quests (id, name, short_description, long_description, progress_message, completion_message, level, quest_requirement, ";
+    sql += "start, end, exp_reward, money_reward, shareable, level_requirement, quest_restriction) values (";
     sql += Utilities::itos(id) + ",'" + Utilities::SQLFixQuotes(name) + "','" + Utilities::SQLFixQuotes(shortDescription);
     sql += "','" + Utilities::SQLFixQuotes(longDescription) + "','" + Utilities::SQLFixQuotes(progressMessage);
     sql += "','" + Utilities::SQLFixQuotes(completionMessage) + "','" + Utilities::itos(level) + "',";
     sql += Utilities::itos(questRequirement) + "," + (start ? Utilities::itos(start->id) : "0") + ",";
     sql += (end ? Utilities::itos(end->id) : "0") + ",";
-    sql += Utilities::itos(experienceReward) + "," + Utilities::itos(moneyReward) + "," + Utilities::itos(shareable) + ",'";
-
-    std::vector<QuestObjective>::iterator iter;
-    for(iter = objectives.begin(); iter != objectives.end(); ++iter)
-    {
-        int saveid = 0;
-        switch((*iter).type)
-        {
-            case Quest::OBJECTIVE_ITEM: saveid = ((Item*)((*iter).objective))->id; break;
-            case Quest::OBJECTIVE_KILLNPC:
-            case Quest::OBJECTIVE_VISITNPC: saveid = ((Character*)((*iter).objective))->id; break;
-            case Quest::OBJECTIVE_ROOM: saveid = ((Room*)((*iter).objective))->id; break;
-        }
-
-        sql += Utilities::itos((*iter).type) + "," + Utilities::itos((*iter).count) + "," + Utilities::itos(saveid) + ",";
-        sql += Utilities::SQLFixQuotes((*iter).description) + ";";
-    }
-    sql += "'," + Utilities::itos(levelRequirement) + "," + Utilities::itos(questRestriction) + ")";
+    sql += Utilities::itos(experienceReward) + "," + Utilities::itos(moneyReward) + "," + Utilities::itos(shareable) + ", ";
+    sql += Utilities::itos(levelRequirement) + "," + Utilities::itos(questRestriction) + ")";
 
     sql += " ON DUPLICATE KEY UPDATE id=VALUES(id), name=VALUES(name), short_desc=VALUES(short_desc), long_desc=VALUES(long_desc), ";
     sql += "progress_msg=VALUES(progress_msg), completion_msg=VALUES(completion_msg), level=VALUES(level), ";
     sql += "quest_requirement=VALUES(quest_requirement), start=VALUES(start), end=VALUES(end), exp_reward=VALUES(exp_reward), ";
-    sql += "money_reward=VALUES(money_reward), shareable=VALUES(shareable), objectives=VALUES(objectives), level_requirement=VALUES(level_requirement), ";
+    sql += "money_reward=VALUES(money_reward), shareable=VALUES(shareable), level_requirement=VALUES(level_requirement), ";
     sql += "quest_restriction=VALUES(quest_restriction)";
 
     Server::sqlQueue->Write(sql);
+
+	std::vector<QuestObjective>::iterator iter;
+	for(iter = objectives.begin(); iter != objectives.end(); ++iter)
+	{
+		int saveid = 0;
+		switch((*iter).type)
+		{
+			case Quest::OBJECTIVE_ITEM: saveid = ((Item*)((*iter).objective))->id; break;
+			case Quest::OBJECTIVE_KILLNPC:
+			case Quest::OBJECTIVE_VISITNPC: saveid = ((Character*)((*iter).objective))->id; break;
+			case Quest::OBJECTIVE_ROOM: saveid = ((Room*)((*iter).objective))->id; break;
+		}
+		string objectivesql = "INSERT INTO quest_objectives (quest, type, id, count, description) values (";
+		objectivesql += Utilities::itos(id) + ", " + Utilities::itos((*iter).type) + ", " + Utilities::itos(saveid);
+		objectivesql += ", " + Utilities::itos((*iter).count) + ",'" + Utilities::SQLFixQuotes((*iter).description) + "')";
+
+		objectivesql += " ON DUPLICATE KEY UPDATE quest=VALUES(quest), type=VALUES(type), id=VALUES(id), count=VALUES(count), description=VALUES(description)";
+
+		Server::sqlQueue->Write(objectivesql);
+	}
 
     changed = false;
 }

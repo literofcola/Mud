@@ -93,7 +93,7 @@ CREATE TABLE `help` (
   `id` int(11) NOT NULL,
   `title` varchar(45) DEFAULT NULL,
   `search_string` tinytext,
-  `text` longtext,
+  `text` mediumtext,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -136,23 +136,8 @@ DROP TABLE IF EXISTS `npc_drops`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `npc_drops` (
   `npc` int(11) NOT NULL,
-  `item` int(11) NOT NULL,
-  `percent` int(11) NOT NULL,
-  PRIMARY KEY (`item`,`npc`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `npc_flags`
---
-
-DROP TABLE IF EXISTS `npc_flags`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `npc_flags` (
-  `npc` int(11) NOT NULL,
-  `flag` int(11) NOT NULL,
-  PRIMARY KEY (`npc`,`flag`)
+  `items` varchar(45) NOT NULL,
+  `percent` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -195,6 +180,7 @@ CREATE TABLE `npcs` (
   `attack_speed` double NOT NULL,
   `damage_low` int(11) NOT NULL,
   `damage_high` int(11) NOT NULL,
+  `flags` tinytext,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -462,4 +448,4 @@ CREATE TABLE `triggers` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-01-22 17:47:51
+-- Dump completed on 2018-01-23 23:06:52

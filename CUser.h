@@ -49,7 +49,9 @@ public:
     unsigned char z_in[Z_BUFSIZE];
     unsigned char z_out[Z_BUFSIZE];
 	
-    //int loginAttempts; //TODO, password fails
+    int passwordAttempts; //disconnect after password fails
+
+	static const int MAX_PASSWORD_TRIES = 3;
 
 private:
 

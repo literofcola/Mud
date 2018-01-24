@@ -162,8 +162,8 @@ void SpellAffect::Save(std::string charname)
 {
     double timeleft = (appliedTime + duration) - Game::currentTime;
 
-    string affectsql = "INSERT INTO affects (player_name, hidden, stackable, ticks, duration, skill_id, is_debuff, timeleft, ";
-    affectsql += "caster_name, auras, affect_data, category) ";
+    string affectsql = "INSERT INTO affects (player, hidden, stackable, ticks, duration, skill, debuff, timeleft, ";
+    affectsql += "caster, auras, data, category) ";
     affectsql += "values ('" + charname + "', " + Utilities::itos(hidden) + ", " + Utilities::itos(stackable) + ", " + Utilities::itos(ticks);
     affectsql += ", " + Utilities::dtos(duration, 1) + ", ";
     if(skill)
@@ -204,7 +204,7 @@ void SpellAffect::Save(std::string charname)
 
 void SpellAffect::Load(Character * ch)
 {
-    StoreQueryResult affectres = Server::sqlQueue->Read("select * from affects where player_name='" + ch->name + "'");
+    StoreQueryResult affectres = Server::sqlQueue->Read("select * from player_spell_affects where player='" + ch->name + "'");
     if(affectres.empty())
         return;
 
@@ -214,7 +214,7 @@ void SpellAffect::Load(Character * ch)
     {
         row = *i;
 
-        Skill * sk = Game::GetGame()->GetSkill(row["skill_id"]);
+        Skill * sk = Game::GetGame()->GetSkill(row["skill"]);
         if(sk == NULL)
         {
             LogFile::Log("error", "SpellAffect::Load, bad skill id");
@@ -229,11 +229,11 @@ void SpellAffect::Load(Character * ch)
         sa->stackable = row["stackable"];
         sa->ticks = row["ticks"];
         sa->duration = row["duration"];
-        sa->appliedTime = Game::GetGame()->currentTime - ((double)row["duration"] - row["timeleft"]);
+        sa->appliedTime = Utilities::GetTime() - ((double)row["duration"] - row["timeleft"]); //Game::currentTime isn't initialized until after one update...
         sa->skill = sk;
-        sa->debuff = row["is_debuff"];
+        sa->debuff = row["debuff"];
         sa->caster = NULL;
-        sa->casterName = row["caster_name"];
+        sa->casterName = row["caster"];
         sa->affectCategory = row["category"];
         double tick_interval = (double)row["duration"] / row["ticks"];
         sa->ticksRemaining = (int)(row["timeleft"] / tick_interval);
@@ -248,7 +248,7 @@ void SpellAffect::Load(Character * ch)
             sa->id = (int)ch->buffs.size() + 1;
             ch->buffs.push_front(sa);
         }
-        string affect_data = (row["affect_data"]).c_str();
+        string affect_data = (row["data"]).c_str();
         int first = 0, second = 0;
         while(first < (int)affect_data.length())
         {
@@ -293,6 +293,6 @@ void SpellAffect::Load(Character * ch)
             sa->ApplyAura(affectid, modifier);
         }
     }
-    string affectsql = "DELETE FROM affects WHERE player_name = '" + ch->name + "'";
+    string affectsql = "DELETE FROM player_spell_affects WHERE player = '" + ch->name + "'";
     Server::sqlQueue->Write(affectsql);
 }

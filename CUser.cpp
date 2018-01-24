@@ -39,6 +39,7 @@ User::User(std::shared_ptr<Client> client_)
 	mccp = false;
 	gmcp = false;
 	remove = false;
+	passwordAttempts = 0;
 
 	_timeb time;
 	_ftime64_s(&time);
@@ -138,6 +139,7 @@ void User::ImmediateDisconnect()
 {
 	if (client)
 	{
+		CancelIoEx((HANDLE)client->Socket(), NULL);
 		closesocket(client->Socket());
 		client->DisconnectGame();
 	}

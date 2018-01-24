@@ -27,12 +27,8 @@ using namespace std;
 
 Client::Client(SOCKET s, std::string ipaddress) : socket_(s), ipaddress_(ipaddress)
 {
-    //receiveBuffer = new char[NETWORK_BUFFER_SIZE];
     commandQueue.clear();
     inputBuffer.clear();
-	//disconnect = false;
-	//user_ = NULL;
-    //ZeroMemory(receiveBuffer, NETWORK_BUFFER_SIZE);
 	InitializeCriticalSection(&overlapped_cs);
 	InitializeCriticalSection(&command_cs);
 	InitializeCriticalSection(&disconnect_cs);
@@ -121,7 +117,8 @@ void Client::DisconnectServer()
 bool Client::IsConnected()
 {
 	EnterCriticalSection(&disconnect_cs);
-	bool ret = (!disconnectFromGame && !disconnectFromServer);
+	//bool ret = (!disconnectFromGame && !disconnectFromServer);
+	bool ret = !disconnectFromServer;
 	LeaveCriticalSection(&disconnect_cs);
 	return ret;
 }

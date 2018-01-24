@@ -60,15 +60,6 @@ Player::~Player()
     inventory.clear();
 }
 
-string Player::SelectPassword(string name)
-{
-    StoreQueryResult passwordres = Server::sqlQueue->Read("select password from players where name='" + name + "'");
-    if(passwordres.empty())
-        return "";
-    Row row = *passwordres.begin();
-    return (string)row["password"];
-}
-
 void Player::SetExperience(int newexp)
 {
     if(newexp < 0)
@@ -144,7 +135,7 @@ bool Player::QuestActive(Quest * quest)
 
 bool Player::QuestCompleted(Quest * quest)
 {
-    std::map<int, Quest *>::iterator qmapiter;
+    std::set<int>::iterator qmapiter;
     qmapiter = completedQuests.find(quest->id);
     if(qmapiter != completedQuests.end())
         return true;

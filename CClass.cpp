@@ -31,11 +31,11 @@ Class::Class()
     name = "";
     color = "";
     items = "";
-    agilityIncrease = 0;
-    intelligenceIncrease = 0;
-    strengthIncrease = 0;
-    vitalityIncrease = 0;
-    wisdomIncrease = 0;
+	agilityPerLevel = 0;
+	intellectPerLevel = 0;
+	strengthPerLevel = 0;
+	vitalityPerLevel = 0;
+	wisdomPerLevel = 0;
 
     changed = false;
 }
@@ -50,23 +50,27 @@ void Class::Save()
     if(!changed)
         return;
 
-    string sql = "INSERT INTO classes (id, name, color, agility_increase, int_increase, strength_increase, vitality_increase,";
-    sql += " wisdom_increase,skills) values (";
+    string sql = "INSERT INTO classes (id, name, color, agility_per_level, intellect_per_level, strength_per_level, vitality_per_level,";
+    sql += " wisdom_per_level) values (";
     sql += Utilities::itos(id) + ",'" + Utilities::SQLFixQuotes(name) + "','" + Utilities::SQLFixQuotes(color);
-    sql += "'," + Utilities::itos(agilityIncrease) + "," + Utilities::itos(intelligenceIncrease);
-    sql += "," + Utilities::itos(strengthIncrease) + "," + Utilities::itos(vitalityIncrease) + ",";
-    sql += Utilities::itos(wisdomIncrease) + ",'";
+    sql += "'," + Utilities::itos(agilityPerLevel) + "," + Utilities::itos(intellectPerLevel);
+    sql += "," + Utilities::itos(strengthPerLevel) + "," + Utilities::itos(vitalityPerLevel) + ",";
+    sql += Utilities::itos(wisdomPerLevel);
 
-    std::list<SkillData>::iterator iter;
-    for(iter = classSkills.begin(); iter != classSkills.end(); ++iter)
-    {
-        sql += Utilities::itos((*iter).skill->id) + "," + Utilities::itos((*iter).level) + ",";
-        sql += Utilities::itos((*iter).learnCost) + ";";
-    }
-    sql += "') ON DUPLICATE KEY UPDATE id=VALUES(id), name=VALUES(name), color=VALUES(color), agility_increase=VALUES(agility_increase), ";
-    sql += "int_increase=VALUES(int_increase), strength_increase=VALUES(strength_increase), vitality_increase=VALUES(vitality_increase)";
+    sql += ") ON DUPLICATE KEY UPDATE id=VALUES(id), name=VALUES(name), color=VALUES(color), agility_per_level=VALUES(agility_per_level), ";
+    sql += "intellect_per_level=VALUES(intellect_per_level), strength_per_level=VALUES(strength_per_level), vitality_per_level=VALUES(vitality_per_level), wisdom_per_level=VALUES(wisdom_per_level)";
 
     Server::sqlQueue->Write(sql);
+
+	Server::sqlQueue->Write("DELETE FROM class_skills where class=" + Utilities::itos(id));
+	std::list<SkillData>::iterator iter;
+	for (iter = classSkills.begin(); iter != classSkills.end(); ++iter)
+	{
+		string skillssql = "INSERT INTO class_skills (class, skill, level) values (";
+		skillssql += id + ", " + Utilities::itos((*iter).skill->id) + ", " + Utilities::itos((*iter).level) + ")";
+		skillssql += " ON DUPLICATE KEY UPDATE class=VALUES(class), skill=VALUES(skill), level=VALUES(level)";
+		Server::sqlQueue->Write(skillssql);
+	}
 
     changed = false;
 }

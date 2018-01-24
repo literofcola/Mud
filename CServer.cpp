@@ -50,7 +50,7 @@ const std::string Server::GMCP_START = IAC + SB + TELOPT_GMCP + IAC + SE;
 const std::string Server::GMCP_DO = IAC + DO + TELOPT_GMCP;
 const std::string Server::GMCP_DONT = IAC + DONT + TELOPT_GMCP;
 
-//Op codes for IOCP
+//op codes for IOCP
 #define OP_READ     0
 #define OP_WRITE    1
 
@@ -66,6 +66,7 @@ Server::Server(Game * g, int port) : nPort(port), mygame(g)
 	nThreads = 1;
 	hAcceptThread = NULL;
 	hIOCompletionPort = NULL;
+	encryptionKey.clear();
 }
 
 Server::~Server()
@@ -75,6 +76,24 @@ Server::~Server()
 
 bool Server::Initialize()
 {
+	//todo: we can do some of initialize and deinitialize in the constructor / destructor
+	
+	//Load the password encryption key
+	std::ifstream cryptfile;
+	cryptfile.open("encryptionkey.txt");
+	if (!cryptfile.is_open())
+	{
+		LogFile::Log("error", "Encryption key not found. Create encryption key in encryptionkey.txt in application directory.");
+		assert(false);
+	}
+
+	std::getline(cryptfile, encryptionKey);
+	if (encryptionKey.empty())
+	{
+		LogFile::Log("error", "Encryption key not found. Create encryption key in encryptionkey.txt in application directory.");
+		assert(false);
+	}
+	
 	//Find out number of processors and threads
 	SYSTEM_INFO si;
 	GetSystemInfo(&si);
@@ -191,8 +210,12 @@ void Server::DeInitialize()
         //Save user/player
         if(user->character)
         {
-            if(user->connectedState == User::CONN_PLAYING && user->character->level > 1) //don't save fresh characters
-                user->character->Save();
+            //if(user->connectedState == User::CONN_PLAYING && user->character->level > 1) //don't save fresh characters
+			{
+				user->character->SaveSpellAffects();
+				user->character->SaveCooldowns();
+				user->character->Save();
+			}
             mygame->characters.remove(user->character);
         }
         delete user;
@@ -646,15 +669,15 @@ void Server::UpdateIPList(std::string address)
 	while(iter != IPList.end())	//Use this opportunity to clear the list of IPs that haven't registered a new connection over the defined interval
 	{
 		ipinfo = &(*iter);
-		std::vector<double>::iterator timeiter = ipinfo->connectTimes.begin();
-		while (timeiter != ipinfo->connectTimes.end()) //go through the connection times for this address and remove any older than the interval
+		std::vector<double>::iterator timeiter = ipinfo->connectTimestamps.begin();
+		while (timeiter != ipinfo->connectTimestamps.end()) //go through the connection times for this address and remove any older than the interval
 		{
 			if ((*timeiter) + SPAM_INTERVAL < thetime)
-				timeiter = ipinfo->connectTimes.erase(timeiter);
+				timeiter = ipinfo->connectTimestamps.erase(timeiter);
 			else
 				timeiter++;
 		}
-		if (ipinfo->connectTimes.empty())
+		if (ipinfo->connectTimestamps.empty())
 			iter = IPList.erase(iter);
 		else
 			iter++;
@@ -666,7 +689,7 @@ void Server::UpdateIPList(std::string address)
 		ipinfo = &(*iter);
 		if (ipinfo->address == address)	//Found an entry for this address
 		{
-			if (ipinfo->connectTimes.size() >= SPAM_MAX_CONNECTIONS_PER_INTERVAL)
+			if (ipinfo->connectTimestamps.size() >= SPAM_MAX_CONNECTIONS_PER_INTERVAL)
 			{
 				//Ban!
 				LogFile::Log("network", "Banning client due to connection spam: " + ipinfo->address);
@@ -676,7 +699,7 @@ void Server::UpdateIPList(std::string address)
 			}
 			else
 			{
-				ipinfo->connectTimes.push_back(thetime);
+				ipinfo->connectTimestamps.push_back(thetime);
 				return;
 			}
 		}
@@ -686,7 +709,7 @@ void Server::UpdateIPList(std::string address)
 	//else add a new entry
 	struct IPAddressInfo newip;
 	newip.address = address;
-	newip.connectTimes.push_back(thetime);
+	newip.connectTimestamps.push_back(thetime);
 	IPList.push_back(newip);
 
 	return;
@@ -700,7 +723,7 @@ bool Server::CheckTempBanList(std::string address)
 	{
 		if ((*iter).address == address)
 		{
-			if ((*iter).banTime + SPAM_BANTIME < Utilities::GetTime())
+			if ((*iter).banTimestamp + SPAM_BANTIME < Utilities::GetTime())
 			{
 				tempBanList.erase(iter);
 				return true;
@@ -710,4 +733,27 @@ bool Server::CheckTempBanList(std::string address)
 		iter++;
 	}
 	return true;
+}
+
+std::string Server::EncryptDecrypt(std::string toEncrypt)
+{
+	std::string output = toEncrypt;
+
+	for (int i = 0; i < toEncrypt.size(); i++)
+		output[i] = toEncrypt[i] ^ encryptionKey[i % encryptionKey.length()];
+
+	return output;
+}
+
+std::string Server::SQLSelectPassword(std::string name)
+{
+	StoreQueryResult passwordres = Server::sqlQueue->Read("select password from players where name='" + name + "'");
+	if (passwordres.empty())
+	{
+		LogFile::Log("error", "Returning empty password from DB for character " + name);
+		return "";
+	}
+	Row row = *passwordres.begin();
+
+	return (std::string)row["password"];
 }

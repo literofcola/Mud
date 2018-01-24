@@ -130,7 +130,7 @@ void npcEditCmd_drop(Character * ch, string argument);
 void npcEditCmd_level(Character * ch, string argument);
 void npcEditCmd_sex(Character * ch, string argument);
 void npcEditCmd_agility(Character * ch, string argument);
-void npcEditCmd_intelligence(Character * ch, string argument);
+void npcEditCmd_intellect(Character * ch, string argument);
 void npcEditCmd_strength(Character * ch, string argument);
 void npcEditCmd_vitality(Character * ch, string argument);
 void npcEditCmd_wisdom(Character * ch, string argument);

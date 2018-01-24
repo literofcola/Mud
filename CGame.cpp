@@ -56,8 +56,6 @@ const std::string login_art = R"(
             `  `
 )";
 
-//#include "luabind/luabind.hpp"
-
 double Game::currentTime = 0;
 
 Game * Game::GetGame()
@@ -81,7 +79,7 @@ void Game::DeleteGame()
 
 Game::Game()
 {
-    newplayerRoom = 0;
+    newplayerRoom = 1;
     total_past_connections = 0;
     max_players_since_boot = 0;
     total_players_since_boot = 0;
@@ -228,6 +226,7 @@ void Game::GameLoop(Server * server)
 
 			if(user->HasCommandReady())
 			{
+				user->lastInput = Game::currentTime; //idle timeout
                 string command = user->commandQueue.front();
 
                 //Check for telnet IAC response for MXP and MCCP
@@ -288,7 +287,6 @@ void Game::GameLoop(Server * server)
 					if (Command::Interpret(user->character, command))
 					{
 						user->wasInput = true; //Allow the call to GeneratePrompt
-						user->lastInput = Game::currentTime; //idle timeout
 					}
                 }
                 else    //Logging in
@@ -329,11 +327,10 @@ void Game::GameLoop(Server * server)
             }*/
 
             //Disconnected but didn't "quit". Save the user
-            // ...unless we're not CONN_PLAYING yet, then drop everything
 			if(!user->IsConnected() && !user->remove)
             {
                 user->outputQueue.clear();
-                if(user->connectedState > User::CONN_PLAYING)
+                if(user->connectedState > User::CONN_PLAYING) // ...unless we're not CONN_PLAYING yet, then drop everything
                 {
                     if(user->character)
                     {
@@ -401,22 +398,23 @@ void Game::GameLoop(Server * server)
 			}
 
 			//Check for quit command 
-			if(!user->IsConnected() && user->remove)
+			if(!user->IsConnected() || user->remove)
 			{
                 //LogFile::Log("status", "removing user via remove flag in gameloop");
                 if(user->character)
                 {
-					user->character->Message(user->character->name + " has left the game.", Character::MSG_ROOM_NOTCHAR);
-					user->character->ExitCombat();
-					user->character->ClearTarget();
-					user->character->ChangeRooms(NULL);
-
-					if (user->connectedState == User::CONN_PLAYING && user->character->level > 1) //don't save fresh characters
+					//if (user->connectedState == User::CONN_PLAYING && user->character->level > 1) //don't save fresh characters
 					{
 						user->character->SaveSpellAffects();
 						user->character->SaveCooldowns();
 						user->character->Save();
 					}
+
+					user->character->Message(user->character->name + " has left the game.", Character::MSG_ROOM_NOTCHAR);
+					user->character->ExitCombat();
+					user->character->ClearTarget();
+					user->character->ChangeRooms(NULL);
+
                     user->character->NotifyListeners();
                     characters.remove(user->character);
                 }
@@ -424,7 +422,6 @@ void Game::GameLoop(Server * server)
 				{
 					deflateEnd(&user->z_strm);
 				}
-				//RemoveUser(user);
 				user->ImmediateDisconnect();
                 delete (*iter);
                 iter = users.erase(iter);
@@ -841,12 +838,12 @@ void Game::LoginHandler(Server * server, User * user, string argument)
             }
 			if(arg1.length() < 3)
 			{
-				user->Send("Too Short! Try again...\r\nPlayer Name: ");
+				user->Send("Too Short (3-12 characters)! Try again...\r\nPlayer Name: ");
 				return;
 			}
             if(arg1.length() > 12)
 			{
-				user->Send("Too Long! Try again...\r\nPlayer Name: ");
+				user->Send("Too Long (3-12 characters)! Try again...\r\nPlayer Name: ");
 				return;
 			}
             //TODO: better invalid name checking
@@ -858,7 +855,6 @@ void Game::LoginHandler(Server * server, User * user, string argument)
             if(arg1 == "GET") //stop http connections?
             {
 				user->ImmediateDisconnect();
-				//user->remove = true;
                 return;
             }
 
@@ -871,16 +867,14 @@ void Game::LoginHandler(Server * server, User * user, string argument)
 			{	//player already exists
 				user->Send("Welcome Back " + arg1 + "!\r\nEnter Password: ");
                 user->character = new Character(arg1, user);
-                user->character->player->password = Player::SelectPassword(arg1);
+                user->character->player->password = server->SQLSelectPassword(arg1);
                 user->connectedState = User::CONN_GET_OLD_PASSWORD;
 			}
 			else if((tempUser = Game::GetGame()->GetUserByPCName(arg1)) != NULL 
                     && tempUser->connectedState <= User::CONN_CONFIRM_NEW_PASSWORD) 
 			{   //player exists, but hasnt finished creating
 				user->Send("A character is currently being created with that name.\n\r");
-				//user->remove = true;
 				user->SetDisconnect();
-                //user->client->disconnect = true;
 			}
             else if(tempUser != NULL && tempUser->connectedState > User::CONN_CONFIRM_NEW_PASSWORD)
 			{   //player exists, but hasnt been saved yet
@@ -892,20 +886,28 @@ void Game::LoginHandler(Server * server, User * user, string argument)
 			}
 			else // user dosn't exist - create and ask for password
 			{
-				user->Send("User " + arg1 + " Does Not Exist - Creating\r\nEnter Password (Warning! Passwords are plaintext!):\r\n");
+				user->Send("User " + arg1 + " Does Not Exist - Creating\r\nEnter Password:\r\n");
                 user->connectedState = User::CONN_GET_NEW_PASSWORD;
                 user->character = Game::GetGame()->NewCharacter(arg1, user);
                 LogFile::Log("status", "Creating character : " + user->character->name);
-                //user->character->in_room = GetRoomIndex(2, 1); //sloppy
 			}
 			break;
 		}
 
         case User::CONN_GET_OLD_PASSWORD:
 		{
-            if(arg1 != user->character->player->password)
+            if(server->EncryptDecrypt(arg1) != user->character->player->password) //never decrypt password, just encrypt the input
             {
-                user->Send("Incorrect password - try again...\r\nEnter Password: ");
+				user->passwordAttempts++;
+				if (user->passwordAttempts >= User::MAX_PASSWORD_TRIES)
+				{
+					user->Send("Incorrect password - disconnecting...");
+					user->SetDisconnect();
+				}
+				else
+				{
+					user->Send("Incorrect password - try again...\r\nEnter Password: ");
+				}
                 break;
             }
 
@@ -929,18 +931,15 @@ void Game::LoginHandler(Server * server, User * user, string argument)
                 if(existingUser->IsConnected())
                 {
                     existingUser->Send("\n\rMultiple login detected. Disconnecting...\n\r");
-                    //existingUser->client->disconnect = true;
-					//existingUser->remove = true;
                     existingUser->SetDisconnect();
 
                 }
-                //RemoveUser(existingUser);
                 user->connectedState = existingUser->connectedState;
                 if(user->connectedState >= User::CONN_CHANGEPW1 && user->connectedState <= User::CONN_DELETE2)
                 {
+					//If we took over someone not CONN_PLAYING, drop them in CONN_MENU
                     user->connectedState = User::CONN_MENU;
                 }
-                //user->connectedState = User::CONN_PLAYING;
                 user->Send("Reconnecting...\r\n");
                 user->character->Message(user->character->name + " has reconnected.", Character::MSG_ROOM_NOTCHAR);
             }
@@ -951,30 +950,32 @@ void Game::LoginHandler(Server * server, User * user, string argument)
 		{
 			if(arg1.length() < 5)
 			{
-				user->Send("Too Short! Try again...\r\nEnter Password: ");
+				user->Send("Too Short (5-15 characters)! Try again...\r\nEnter Password: ");
 				return;
 			}
 			else if(arg1.length() > 15)
 			{
-				user->Send("Too Long! Try again...\r\nEnter Password: ");
+				user->Send("Too Long (5-15 characters)! Try again...\r\nEnter Password: ");
 				return;
 			}
-            user->character->player->password = arg1;
+            user->character->player->password = server->EncryptDecrypt(arg1);
             user->connectedState = User::CONN_CONFIRM_NEW_PASSWORD;
-            user->Send("Confirm Password:\r\n");
+            user->Send("Confirm Password: \r\n");
             break;
 		}
 
         case User::CONN_CONFIRM_NEW_PASSWORD:
 		{
-		    if(arg1 == user->character->player->password)
+		    if(server->EncryptDecrypt(arg1) == user->character->player->password)
             {
-                //user->Send("|YAccount Created!\r\n");
-                user->Send("|YChoose your class (Warrior Mage Cleric Rogue):|X ");
-                //TODO
-                //user->Send("|YChoose your race (Human Elf Dwarf Gnome, Minotaur, Ogre, ):|X ");
-                //user->connectedState = User::CONN_GET_RACE;
-                user->connectedState = User::CONN_GET_CLASS;	            
+				string raceChoice = "|YChoose your race (";
+				for (int i = 0; Character::race_table[i].id != -1; i++)
+				{
+					raceChoice += " " + Character::race_table[i].name;
+				}
+				raceChoice += " ):|X ";
+				user->Send(raceChoice);
+                user->connectedState = User::CONN_GET_RACE;
             }
             else // No Match
             {
@@ -985,40 +986,79 @@ void Game::LoginHandler(Server * server, User * user, string argument)
             break;
         }
 
-        case User::CONN_GET_SEX:
-        {
-            break;
-        }
-
         case User::CONN_GET_RACE:
         {
-            if(!Utilities::str_cmp("warrior", arg1) || !Utilities::str_cmp("mage", arg1)
-               || !Utilities::str_cmp("cleric", arg1) || !Utilities::str_cmp("rogue", arg1))
+			bool match = false;
+			int raceid = 0;
+			for (raceid = 0; Character::race_table[raceid].id != -1; raceid++)
+			{
+				if (!Utilities::str_cmp(Character::race_table[raceid].name, arg1))
+				{
+					match = true;
+					break;
+				}
+			}
+
+            if(match)
             {
                 user->Send("|YAre you sure you want this race (y/n):|X ");
-                arg1 = Utilities::ToLower(arg1);
-                arg1[0] = Utilities::UPPER(arg1[0]);
-                user->character->player->currentClass = GetClassByName(arg1);
-                user->connectedState = User::CONN_CONFIRM_CLASS;
+				user->character->race = raceid;
+				user->connectedState = User::CONN_CONFIRM_RACE;
             }
             else
             {
-                user->Send("|YChoose your race ():|X ");
-                user->connectedState = User::CONN_GET_CLASS;
+				user->Send("|YInvalid choice.|X\n\r");
+				string raceChoice = "|YChoose your race (";
+				for (int i = 0; Character::race_table[i].id != -1; i++)
+				{
+					raceChoice += " " + Character::race_table[i].name;
+				}
+				raceChoice += " ):|X ";
+				user->Send(raceChoice);
+				user->connectedState = User::CONN_GET_RACE;
             }
             break;
         }
 
         case User::CONN_CONFIRM_RACE:
         {
-
-            break;
+			if (!Utilities::str_cmp(arg1, "y"))
+			{
+				std::string classChoice = "|YChoose your class (";
+				std::map<int, Class *>::iterator iter;
+				for (iter = classes.begin(); iter != classes.end(); ++iter)
+				{
+					classChoice += " " + (*iter).second->name;
+				}
+				classChoice += " ):|X ";
+				user->Send(classChoice);
+				user->connectedState = User::CONN_GET_CLASS;
+			}
+			else
+			{
+				string raceChoice = "|YChoose your race (";
+				for (int i = 0; Character::race_table[i].id != -1; i++)
+				{
+					raceChoice += " " + Character::race_table[i].name;
+				}
+				raceChoice += " ):|X ";
+				user->Send(raceChoice);
+				user->connectedState = User::CONN_GET_RACE;
+			}
+			break;
         }
         
         case User::CONN_GET_CLASS:
         {
-            if(!Utilities::str_cmp("warrior", arg1) || !Utilities::str_cmp("mage", arg1)
-               || !Utilities::str_cmp("cleric", arg1) || !Utilities::str_cmp("rogue", arg1))
+			bool match = false;
+			std::map<int, Class *>::iterator iter;
+			for (iter = classes.begin(); iter != classes.end(); ++iter)
+			{
+				if (!Utilities::str_cmp((*iter).second->name, arg1))
+					match = true;
+			}
+
+            if(match)
             {
                 user->Send("|YAre you sure you want this class (y/n):|X ");
                 arg1 = Utilities::ToLower(arg1);
@@ -1028,7 +1068,15 @@ void Game::LoginHandler(Server * server, User * user, string argument)
             }
             else
             {
-                user->Send("|YChoose your class (Warrior Mage Cleric Rogue):|X ");
+				user->Send("|YInvalid choice.|X\n\r");
+				std::string classChoice = "|YChoose your class (";
+				std::map<int, Class *>::iterator iter;
+				for (iter = classes.begin(); iter != classes.end(); ++iter)
+				{
+					classChoice += " " + (*iter).second->name;
+				}
+				classChoice += " ):|X ";
+				user->Send(classChoice);
                 user->connectedState = User::CONN_GET_CLASS;
             }
             break;
@@ -1063,15 +1111,27 @@ void Game::LoginHandler(Server * server, User * user, string argument)
             }
             else
             {
-                user->Send("|YChoose your class (Warrior Mage Cleric Rogue):|X ");
-                user->connectedState = User::CONN_GET_CLASS;
+				std::string classChoice = "|YChoose your class (";
+				std::map<int, Class *>::iterator iter;
+				for (iter = classes.begin(); iter != classes.end(); ++iter)
+				{
+					classChoice += " " + (*iter).second->name;
+				}
+				classChoice += " ):|X ";
+				user->Send(classChoice);
+				user->connectedState = User::CONN_GET_CLASS;
             }
             break;
         }
 
+		case User::CONN_GET_SEX:
+		{
+			break;
+		}
+
         case User::CONN_CHANGEPW1:
         {
-            if(arg1 == user->character->player->password)
+            if(server->EncryptDecrypt(arg1) == user->character->player->password)
 			{
                 user->Send("Enter new password: ");
                 user->connectedState = User::CONN_CHANGEPW2;
@@ -1105,7 +1165,7 @@ void Game::LoginHandler(Server * server, User * user, string argument)
             if(arg1 == user->character->player->pwtemp)
             {
                 user->Send("Password changed.\n\r");
-                user->character->player->password = argument;
+                user->character->player->password = server->EncryptDecrypt(argument);
                 user->character->player->pwtemp.clear();
             }
             else
@@ -1120,7 +1180,7 @@ void Game::LoginHandler(Server * server, User * user, string argument)
 
         case User::CONN_DELETE1:
         {
-            if(arg1 == user->character->player->password)
+            if(server->EncryptDecrypt(arg1)== user->character->player->password)
             {
                 user->Send("|RDelete this character? (y/n):|X ");
                 user->connectedState = User::CONN_DELETE2;
@@ -1139,11 +1199,13 @@ void Game::LoginHandler(Server * server, User * user, string argument)
             if(arg1[0] == 'y' || arg1[0] == 'Y')
             {
                 Server::sqlQueue->Write("delete from players where name='" + user->character->name + "';");
-                Server::sqlQueue->Write("delete from affects where player_name='" + user->character->name + "';");
+                Server::sqlQueue->Write("delete from player_spell_affects where player='" + user->character->name + "';");
+				Server::sqlQueue->Write("delete from player_class_data where player='" + user->character->name + "';");
+				Server::sqlQueue->Write("delete from player_completed_quests where player='" + user->character->name + "';");
+				Server::sqlQueue->Write("delete from player_cooldowns where player='" + user->character->name + "';");
+				Server::sqlQueue->Write("delete from player_active_quests where player='" + user->character->name + "';");
+				Server::sqlQueue->Write("delete from player_inventory where player='" + user->character->name + "';");
 				user->SetDisconnect();
-				//user->remove = true;
-                //user->client->disconnect = true;
-                //server->remove_client(user->client);
             }
             else
             {
@@ -1238,8 +1300,13 @@ void Game::SaveGameStats()
 void Game::LoadRooms(Server * server)
 {
     StoreQueryResult roomres = server->sqlQueue->Read("select * from rooms");
-    if(roomres.empty())
-        return;
+	if (roomres.empty())
+	{
+		LogFile::Log("error", "Warning! No rooms loaded from database, creating default room. Set the new player room number in serverstats.txt line 2");
+		Room * r = new Room(1, "The One Room", "One room to rule them all.\n\r");
+		rooms.insert(std::pair<int, Room *>(r->id, r));
+		return;
+	}
 
 	int first, last;
 
@@ -1252,14 +1319,17 @@ void Game::LoadRooms(Server * server)
         r->area = row["area"];
 		
 		string flagtext = (string)row["flags"];
-        first = last = 0;
-        while(first < (int)flagtext.length())
-        {
-            last = (int)flagtext.find(";", first);
-            int flag = Utilities::atoi(flagtext.substr(first, last - first));
-            Utilities::FlagSet(r->flags, flag);
-            first = last + 1;
-        }
+		if (flagtext != "NULL")
+		{
+			first = last = 0;
+			while (first < (int)flagtext.length())
+			{
+				last = (int)flagtext.find(";", first);
+				int flag = Utilities::atoi(flagtext.substr(first, last - first));
+				Utilities::FlagSet(r->flags, flag);
+				first = last + 1;
+			}
+		}
 
         rooms.insert(std::pair<int, Room *>(r->id, r));
 
@@ -1387,7 +1457,7 @@ void Game::LoadSkills(Server * server)
         s->affectDescription = (string)row["affect_desc"];
         s->castTime = row["cast_time"];
         s->cooldown = row["cooldown"];
-        s->costFunction = row["cost_func"];
+        s->costFunction = row["cost_script"];
         
         skills.insert(std::pair<int, Skill *>(s->id, s));
 		Server::lua.script(s->castScript.c_str());
@@ -1395,13 +1465,6 @@ void Game::LoadSkills(Server * server)
 		Server::lua.script(s->tickScript.c_str());
 		Server::lua.script(s->removeScript.c_str());
 		Server::lua.script(s->costFunction.c_str());
-		/*
-        luaL_dostring(Server::luaState, s->castScript.c_str());
-        luaL_dostring(Server::luaState, s->applyScript.c_str());
-        luaL_dostring(Server::luaState, s->tickScript.c_str());
-        luaL_dostring(Server::luaState, s->removeScript.c_str());
-        luaL_dostring(Server::luaState, s->costFunction.c_str());
-		*/
     }
 }
 
@@ -1419,10 +1482,10 @@ void Game::LoadQuests(Server * server)
         Quest * q = new Quest();
         q->id = row["id"];
         q->name = (string)row["name"];
-        q->shortDescription = (string)row["short_desc"];
-        q->longDescription = (string)row["long_desc"];
-        q->progressMessage = (string)row["progress_msg"];
-        q->completionMessage = (string)row["completion_msg"];
+        q->shortDescription = (string)row["short_description"];
+        q->longDescription = (string)row["long_description"];
+        q->progressMessage = (string)row["progress_message"];
+        q->completionMessage = (string)row["completion_message"];
         q->questRequirement = row["quest_requirement"];
         q->questRestriction = row["quest_restriction"];
         q->experienceReward = row["exp_reward"];
@@ -1437,27 +1500,14 @@ void Game::LoadQuests(Server * server)
         if(q->end != NULL)
             q->end->questEnd.push_back(q);
 
-        //q->objectives //in format type,count,id,desc;type,count,id,desc;
-        string objectives = (string)row["objectives"];
-        int first=0, last=0;
-        while(first < (int)objectives.length())
-        {
-            last = (int)objectives.find(";", first);
-            int firstcomma = (int)objectives.find(',', first);
-            //int type = Utilities::atoi(objectives.substr(first, firstcomma));
-            int type = Utilities::atoi(objectives.substr(first, firstcomma-first));
-            int lastcomma = (int)objectives.find(',', firstcomma+1);
-            //int count = Utilities::atoi(objectives.substr(firstcomma+1, lastcomma));
-            int count = Utilities::atoi(objectives.substr(firstcomma+1, lastcomma-firstcomma+1));
-            firstcomma = lastcomma;
-            lastcomma = (int)objectives.find(',', firstcomma+1);
-            //int id = Utilities::atoi(objectives.substr(firstcomma+1, lastcomma));
-            int id = Utilities::atoi(objectives.substr(firstcomma+1, lastcomma-firstcomma+1));
-            string objdesc = objectives.substr(lastcomma+1, last-lastcomma-1);
-            q->AddObjective(type, count, id, objdesc);
-            first = last + 1;
-        }
-        quests.insert(std::pair<int, Quest *>(q->id, q));
+		StoreQueryResult objectiveres = server->sqlQueue->Read("select * from quest_objectives where quest=" + Utilities::itos(q->id));
+		StoreQueryResult::iterator j;
+		for (j = objectiveres.begin(); j != objectiveres.end(); j++)
+		{
+			row = *j;
+			q->AddObjective(row["type"], row["count"], row["id"], (string)row["description"]);
+		}
+		quests.insert(std::pair<int, Quest *>(q->id, q));
     }
 }
 
@@ -1475,6 +1525,7 @@ void Game::LoadItems(Server * server)
         Item * i = new Item();
         i->id = row["id"];
         i->name = (string)row["name"];
+		i->keywords = (string)row["keywords"];
         i->charLevel = row["char_level"];
         i->quality = row["quality"];
         i->itemLevel = row["item_level"];
@@ -1497,8 +1548,22 @@ void Game::LoadItems(Server * server)
 void Game::LoadClasses(Server * server)
 {
     StoreQueryResult classres = server->sqlQueue->Read("select * from classes");
-    if(classres.empty())
-        return;
+
+	if (classres.empty())
+	{
+		LogFile::Log("error", "Warning! No classes loaded from database. Creating default class \"warrior\".");
+		Class * c = new Class();
+		c->id = 1;
+		c->name = "warrior";
+		c->color = "|M";
+		c->agilityPerLevel = 1;
+		c->intellectPerLevel = 0;
+		c->strengthPerLevel = 2;
+		c->vitalityPerLevel = 3;
+		c->wisdomPerLevel = 0;
+		classes[c->id] = c;
+		return;
+	}
 
     Row row;
     StoreQueryResult::iterator iter;
@@ -1509,30 +1574,23 @@ void Game::LoadClasses(Server * server)
         c->id = row["id"];
         c->name = (string)row["name"];
         c->color = (string)row["color"];
-        c->agilityIncrease = row["agility_increase"];
-        c->intelligenceIncrease = row["int_increase"];
-        c->strengthIncrease = row["strength_increase"];
-        c->vitalityIncrease = row["vitality_increase"];
-        c->wisdomIncrease = row["wisdom_increase"];
+        c->agilityPerLevel = row["agility_per_level"];
+        c->intellectPerLevel = row["intellect_per_level"];
+        c->strengthPerLevel = row["strength_per_level"];
+        c->vitalityPerLevel = row["vitality_per_level"];
+        c->wisdomPerLevel = row["wisdom_per_level"];
         c->items = row["items"];
-        string skilltext = (string)row["skills"];
-        int first=0, last=0;
-        while(first < (int)skilltext.length())
-        {
-            Class::SkillData skd;
-            last = (int)skilltext.find(";", first);
-            int firstcomma = (int)skilltext.find(",", first);
-            int id = Utilities::atoi(skilltext.substr(first, firstcomma-first));
-            int lastcomma = (int)skilltext.find(",", firstcomma+1);
-            int level = Utilities::atoi(skilltext.substr(firstcomma+1, lastcomma-firstcomma+1));
-            int cost = Utilities::atoi(skilltext.substr(lastcomma+1, last-lastcomma+1));
 
-            skd.skill = Game::GetGame()->GetSkill(id);
-            skd.level = level;
-            skd.learnCost = cost;
-            c->classSkills.push_back(skd);
-            first = last + 1;
-        }
+		StoreQueryResult skillsres = server->sqlQueue->Read("SELECT * from class_skills where class=" + Utilities::itos(c->id));
+		StoreQueryResult::iterator j;
+		for (j = skillsres.begin(); j != skillsres.end(); j++)
+		{
+			row = *j;
+			Class::SkillData skd;
+			skd.skill = Game::GetGame()->GetSkill(row["skill"]);
+			skd.level = row["level"];
+			c->classSkills.push_back(skd);
+		}
         classes[c->id] = c;
     }
 }
@@ -1548,7 +1606,7 @@ void Game::LoadAreas(Server * server)
     for(iter = areares.begin(); iter != areares.end(); ++iter)
     {
         row = *iter;
-        Area * a = new Area(row["id"], (string)row["name"], row["pvp"], row["level_range_low"], row["level_range_high"]);
+        Area * a = new Area(row["id"], (string)row["name"], /*row["pvp"],*/ row["level_range_low"], row["level_range_high"]);
         areas[a->GetID()] = a;
     }
 }
@@ -1566,7 +1624,8 @@ void Game::LoadHelp(Server * server)
         row = *iter;
         Help * h = new Help();
 		h->id = row["id"];
-		h->name = (string)row["name"];
+		h->title = (string)row["title"];
+		h->search_string = (string)row["search_string"];
 		h->text = (string)row["text"];
 		helpIndex[h->id] = h;
     }
@@ -1663,15 +1722,15 @@ void Game::LoadNPCS(Server * server)
 
         loaded->id = row["id"];
         loaded->name = row["name"];
+		loaded->keywords = row["keywords"];
         loaded->title = row["title"];
         loaded->sex = row["sex"];
         loaded->level = row["level"];
         loaded->agility = row["agility"];
-        loaded->intelligence = row["intelligence"];
+        loaded->intellect = row["intellect"];
         loaded->strength = row["strength"];
         loaded->vitality = row["vitality"];
         loaded->wisdom = row["wisdom"];
-        //TODO: add equipment and buff bonuses (for npcs??)
         loaded->maxHealth = loaded->health = row["health"];
         loaded->maxMana = loaded->mana = row["mana"];
         loaded->maxStamina = loaded->stamina = row["stamina"];
@@ -1679,57 +1738,43 @@ void Game::LoadNPCS(Server * server)
         loaded->npcDamageHigh = row["damage_high"];
         loaded->npcDamageLow = row["damage_low"];
 
-        string skilltext = (string)row["skills"];
-        int first=0, last=0;
-        while(first < (int)skilltext.length())
-        {
-            last = (int)skilltext.find(";", first);
-            int id = Utilities::atoi(skilltext.substr(first, last - first));
-            loaded->AddSkill(Game::GetGame()->GetSkill(id));
-            first = last + 1;
-        }
+		string flagtext = (string)row["flags"];
+		int first, last;
+		first = last = 0;
+		while (first < (int)flagtext.length())
+		{
+			last = (int)flagtext.find(";", first);
+			int flag = Utilities::atoi(flagtext.substr(first, last - first));
+			Utilities::FlagSet(loaded->flags, flag);
+			first = last + 1;
+		}
 
-        string flagtext = (string)row["flags"];
-        first = last = 0;
-        while(first < (int)flagtext.length())
-        {
-            last = (int)flagtext.find(";", first);
-            int flag = Utilities::atoi(flagtext.substr(first, last - first));
-            Utilities::FlagSet(loaded->flags, flag);
-            first = last + 1;
-        }
+		StoreQueryResult::iterator j;
+		StoreQueryResult npcskillres = server->sqlQueue->Read("select * from npc_skills where npc=" + loaded->id);
+		for (j = npcskillres.begin(); j != npcskillres.end(); j++)
+		{
+			int skillid = row["skill"];
+			loaded->AddSkill(Game::GetGame()->GetSkill(skillid));
+		}
 
-        //loaded->drops //in format percent,id,id,...,id;
-        //100,3,5,2,4;
-        //50,3;
-        string drops = (string)row["drops"];
-        first = last = 0;
-        while(first < (int)drops.length())
-        {
-            last = (int)drops.find(";", first);
+		StoreQueryResult npcdropsres = server->sqlQueue->Read("select * from npc_drops where npc=" + loaded->id);
+		for (j = npcdropsres.begin(); j != npcdropsres.end(); j++)
+		{
+			string drops = (string)row["items"];
+			int percent = row["percent"];
 
-            Character::DropData dd;
-            int firstcomma = (int)drops.find(',', first);
-            if(firstcomma == std::string::npos)
-            {
-                dd.percent = Utilities::atoi(drops.substr(first, last));
-            }
-            else
-            {
-                dd.percent = Utilities::atoi(drops.substr(first, firstcomma));
-                do
-                {
-                    int lastcomma = (int)drops.find(',', firstcomma+1);
-                    if(lastcomma == std::string::npos)
-                        lastcomma = last;
-
-                    dd.id.push_back(Utilities::atoi(drops.substr(firstcomma+1, lastcomma)));
-                    firstcomma = lastcomma + 1;
-                }while(firstcomma < last);
-            }
-            loaded->drops.push_back(dd);           
-            first = last + 1;
-        }
+			Character::DropData dd;
+			dd.percent = percent;
+			
+			first = last = 0;
+			while (first < (int)drops.length())
+			{
+				last = (int)drops.find(";", first);
+				dd.id.push_back(Utilities::atoi(drops.substr(first, last)));
+				first = last + 1;
+			}
+			loaded->drops.push_back(dd);
+		}
         characterIndex[loaded->id] = loaded;
     }
 }
@@ -1883,7 +1928,7 @@ Help * Game::GetHelpByName(string name)
 	std::map<int, Help*>::iterator iter;
     for(iter = helpIndex.begin(); iter != helpIndex.end(); ++iter)
     {
-        if(!Utilities::str_cmp((*iter).second->name, name))
+        if(!Utilities::str_cmp((*iter).second->title, name))
         {
             return (*iter).second;
         }
@@ -2063,7 +2108,7 @@ Help * Game::CreateHelpAnyID(string name)
         ctr++;
     }
 
-    Help * pHelp = new Help(name, ctr);
+    Help * pHelp = new Help(name, name, ctr);
     pHelp->changed = true;
     helpIndex.insert(std::pair<int, Help *>(pHelp->id, pHelp));
     return pHelp;

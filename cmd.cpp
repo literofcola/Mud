@@ -381,11 +381,13 @@ void cmd_commands(Character * ch, string argument)
     int newline = 1;
     for(int cmd = 0; whichTable[cmd].name.length() > 0; cmd++)
 	{
-		if(whichTable[cmd].level >= 0 || ch->player->IMMORTAL())
+		if (whichTable[cmd].level >= 0 || ch->player->IMMORTAL())
+		{
 			ch->Send(whichTable[cmd].name + "  ");
+			newline++;
+		}
 		if(newline % 4 == 0)
 			ch->Send("\n\r");
-		newline++;
 	}
 	ch->Send("\n\r");
 }
@@ -422,7 +424,7 @@ void cmd_score(Character * ch, string argument)
     ch->Send("Health: " + Utilities::itos(ch->health) + "/" + Utilities::itos(ch->maxHealth));
     ch->Send("  Mana: " + Utilities::itos(ch->mana) + "/" + Utilities::itos(ch->maxMana));
     ch->Send("  Stamina: " + Utilities::itos(ch->stamina) + "/" + Utilities::itos(ch->maxStamina) + "\n\r");
-    ch->Send("Agility: " + Utilities::itos(ch->agility) + " Intelligence: " + Utilities::itos(ch->intelligence)
+    ch->Send("Agility: " + Utilities::itos(ch->agility) + " Intellect: " + Utilities::itos(ch->intellect)
         + " Strength: " + Utilities::itos(ch->strength) + " Vitality: " + Utilities::itos(ch->vitality) + " Wisdom: "
         + Utilities::itos(ch->wisdom) + "\n\r");
     ch->Send("Experience: " + Utilities::itos(ch->player->experience) + "\n\r");
@@ -448,6 +450,9 @@ void cmd_who(Character * ch, string argument)
 	    {
 		    wplayer = (*iter)->character->player;
             std::stringstream sstr;
+			string classname = (*iter)->character->player->currentClass->name;
+			classname[0] = Utilities::UPPER(classname[0]);
+
             sstr << " " << left << setw(12) << (*iter)->character->name;
             sstr << " |B[ |W" << right << setw(3) << (wplayer->IMMORTAL() ? wplayer->immlevel : (*iter)->character->level);
             sstr << "|B:|W" << left << setw(3) << (wplayer->IMMORTAL() ? "--" : Utilities::itos(wplayer->GetClassLevel(wplayer->currentClass->id)));
@@ -455,7 +460,7 @@ void cmd_who(Character * ch, string argument)
             if(wplayer->IMMORTAL())
                 sstr << " |W" << left << setw(9) << "Immortal";
             else if((*iter)->character->level < Game::MAX_LEVEL)
-                sstr << " |B" << left << setw(9) << (*iter)->character->player->currentClass->name;
+                sstr << " |B" << left << setw(9) << classname;
             else
                 sstr << " |DHero";
             sstr << " |B] " << left << ((*iter)->character->combat ? "|C<Combat>" : "") 
@@ -542,13 +547,25 @@ void cmd_class(Character * ch, string argument)
     {
         if(arg2.empty())
         {
-            ch->Send("Valid classes are: Warrior, Mage, Rogue, Cleric\n\r");
+			ch->Send("Valid classes are: ");
+			std::map<int, Class *>::iterator iter;
+			for (iter = Game::GetGame()->classes.begin(); iter != Game::GetGame()->classes.end(); ++iter)
+			{
+				ch->Send(" " + (*iter).second->name);
+			}
+			ch->Send("\n\r");
             return;
         }
         Class * newclass = Game::GetGame()->GetClassByName(arg2);
         if(newclass == NULL)
         {
-            ch->Send("Valid classes are: Warrior, Mage, Rogue, Cleric\n\r");
+			ch->Send("Valid classes are: ");
+			std::map<int, Class *>::iterator iter;
+			for (iter = Game::GetGame()->classes.begin(); iter != Game::GetGame()->classes.end(); ++iter)
+			{
+				ch->Send(" " + (*iter).second->name);
+			}
+			ch->Send("\n\r");
             return;
         }
         ch->player->currentClass = newclass;
@@ -605,7 +622,7 @@ void cmd_help(Character * ch, string argument)
 
 		for(iter = Game::GetGame()->helpIndex.begin(); iter != Game::GetGame()->helpIndex.end(); ++iter)
 		{
-			if(!Utilities::str_prefix(arg1, (*iter).second->name))
+			if(!Utilities::str_prefix(arg1, (*iter).second->title))
 			{
 				found.push_back((*iter).second);
 			}
@@ -618,7 +635,7 @@ void cmd_help(Character * ch, string argument)
 		{
 			for(int i = 0; i < (int)found.size(); i++)
 			{
-				ch->Send("|M[|X" + Utilities::itos(found[i]->id) + "|M]|X " + Utilities::ToUpper(found[i]->name) + "\n\r");
+				ch->Send("|M[|X" + Utilities::itos(found[i]->id) + "|M]|X " + Utilities::ToUpper(found[i]->title) + "\n\r");
 			}
 		}
 		else
@@ -955,7 +972,7 @@ void cmd_quest(Character * ch, string argument)
         std::vector< std::vector<int> >::iterator objiter = ch->player->questObjectives.begin() + qnum - 1;
         ch->player->questLog.erase(qiter);
         ch->player->questObjectives.erase(objiter);
-        ch->player->completedQuests[complete->id] = complete;
+        ch->player->completedQuests.insert(complete->id);
 
         ch->Send(complete->name + " completed!\n\r");
         ch->Send(complete->completionMessage + "\n\r");
@@ -1035,6 +1052,10 @@ void cmd_quit(Character * ch, string argument)
 	ch->queryData = NULL;
 	ch->hasQuery = true;
 	ch->queryPrompt = "Quit? (y/n) ";
+	/*if (ch->level == 1)
+	{
+		ch->queryPrompt += "|R(Level one characters will not be saved)|X: ";
+	}*/
 	ch->queryFunction = cmd_quit_Query;
 }
 

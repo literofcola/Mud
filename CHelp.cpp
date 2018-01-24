@@ -28,15 +28,16 @@
 Help::Help()
 {
 	id = -1;
-	name = "";
+	title = "";
 	text = "";
 	changed = false;
 	remove = false;
 }
 
-Help::Help(string name_, int id_)
+Help::Help(string title_, string search_string_, int id_)
 {
-	name = name_;
+	title = title_;
+	search_string = search_string_;
 	id = id_;
 	text = "";
 	changed = false;
@@ -53,12 +54,12 @@ void Help::Save()
     if(!changed)
         return;
 
-    string sql = "INSERT INTO help (id, name, text)";
+    string sql = "INSERT INTO help (id, title, search_string, text)";
 	sql += " values (" + Utilities::itos(id);
-    sql += ",'" + Utilities::SQLFixQuotes(name) + "','" + Utilities::SQLFixQuotes(text);
+    sql += ",'" + Utilities::SQLFixQuotes(title) + "','" + Utilities::SQLFixQuotes(title) + "','" + Utilities::SQLFixQuotes(text);
     sql += "')";
 
-    sql += " ON DUPLICATE KEY UPDATE id=VALUES(id), name=VALUES(name), text=VALUES(text)";
+    sql += " ON DUPLICATE KEY UPDATE id=VALUES(id), title=VALUES(title), search_string=VALUES(search_string), text=VALUES(text)";
 
     Server::sqlQueue->Write(sql);
 
