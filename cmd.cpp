@@ -141,7 +141,7 @@ void cmd_look(Character * ch, string argument)
             (exitstatus[9] ? "|WD|Y" : "-") << "-> " << (exitstatus[2] ? "|WE" : "|B-") << "|X\n\r";
 
         string areaname = "|X";
-        Area * this_area = Game::GetGame()->areas[inroom->area];
+        Area * this_area = Game::GetGame()->GetArea(inroom->area);
         if(this_area != NULL)
         {
             //TODO add pvp room rules to Game somewhere...
@@ -386,8 +386,9 @@ void cmd_commands(Character * ch, string argument)
 			ch->Send(whichTable[cmd].name + "  ");
 			newline++;
 		}
-		if(newline % 4 == 0)
+		if(newline % 5 == 0)
 			ch->Send("\n\r");
+		
 	}
 	ch->Send("\n\r");
 }
@@ -440,38 +441,49 @@ void cmd_score(Character * ch, string argument)
 void cmd_who(Character * ch, string argument)
 {
     ch->Send("|YPlayers online: |X\n\r");
-    ch->Send("|B`-----------------------------------------------------------------------'|X\n\r");
+    ch->Send("|B`-------------------------------------------------------------------------------'|X\n\r");
     int found = 0;
     Player * wplayer;
     std::list<User *>::iterator iter;
+	std::map<int, Class *>::iterator classiter;
+	Class * myclass = nullptr;
+	std::stringstream sstr;
     for(iter = Game::GetGame()->users.begin(); iter != Game::GetGame()->users.end(); ++iter)
     {
         if((*iter)->IsConnected() && (*iter)->connectedState == User::CONN_PLAYING && (*iter)->character && (*iter)->character->player)
 	    {
 		    wplayer = (*iter)->character->player;
-            std::stringstream sstr;
-			string classname = (*iter)->character->player->currentClass->name;
-			classname[0] = Utilities::UPPER(classname[0]);
-
+			sstr.str("");
+			sstr.clear();
+			//name
             sstr << " " << left << setw(12) << (*iter)->character->name;
-            sstr << " |B[ |W" << right << setw(3) << (wplayer->IMMORTAL() ? wplayer->immlevel : (*iter)->character->level);
-            sstr << "|B:|W" << left << setw(3) << (wplayer->IMMORTAL() ? "--" : Utilities::itos(wplayer->GetClassLevel(wplayer->currentClass->id)));
-            sstr << " |B" << right << ((*iter)->character->sex == 1 ? "M" : "F");
-            if(wplayer->IMMORTAL())
-                sstr << " |W" << left << setw(9) << "Immortal";
-            else if((*iter)->character->level < Game::MAX_LEVEL)
-                sstr << " |B" << left << setw(9) << classname;
-            else
-                sstr << " |DHero";
-            sstr << " |B] " << left << ((*iter)->character->combat ? "|C<Combat>" : "") 
-                 << ((*iter)->character->editState > Character::ED_NONE ? "|G[Building]" : "") << ((*iter)->character->IsGhost() ? "|B<Ghost>" : "");
+			//total level
+            sstr << " |B[|W" << right << setw(3) << (wplayer->IMMORTAL() ? wplayer->immlevel : (*iter)->character->level) << "|B]";
+			//gender
+			sstr << " |B" << right << ((*iter)->character->gender == 1 ? "M" : "F");
+			//race
+			sstr << " |B" << left << setw(8) << Character::race_table[(*iter)->character->race].name << " ";
+			//classes
+			if (wplayer->IMMORTAL())
+			{
+				sstr << "|B[|WImmortal|B]";
+			}
+			else
+			{
+				for (classiter = Game::GetGame()->classes.begin(); classiter != Game::GetGame()->classes.end(); classiter++)
+				{
+					myclass = (*classiter).second;
+					sstr << "|B[" << myclass->color << myclass->name << " " << right << setw(3) << Utilities::itos(wplayer->GetClassLevel(myclass->id)) << "|B]";
+				}
+			}
+            sstr << left << ((*iter)->character->combat ? "|R<X>" : "") << ((*iter)->character->IsGhost() ? "|D<G>" : "");
             sstr << "|X\n\r";
 
 		    ch->Send(sstr.str());
 		    found++;
 	    }
     }
-    ch->Send("|B`-----------------------------------------------------------------------'|X\n\r");
+    ch->Send("|B`-------------------------------------------------------------------------------'|X\n\r");
     ch->Send(Utilities::itos(found) + " players found.\n\r");
 }
 
@@ -1052,10 +1064,10 @@ void cmd_quit(Character * ch, string argument)
 	ch->queryData = NULL;
 	ch->hasQuery = true;
 	ch->queryPrompt = "Quit? (y/n) ";
-	/*if (ch->level == 1)
+	if (ch->level == 1)
 	{
 		ch->queryPrompt += "|R(Level one characters will not be saved)|X: ";
-	}*/
+	}
 	ch->queryFunction = cmd_quit_Query;
 }
 

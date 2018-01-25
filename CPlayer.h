@@ -28,8 +28,8 @@ public:
     bool isGhost;
 
     //Inventory and equipment
-    std::vector<Item *> equipped;   //TODO save to db (save id only... no "oldstat" items? how to save enchants, gems?)
-    std::list<Item *> inventory;
+    std::vector<Item *> equipped;   //TODO save id only... no "oldstat" items... if all we save is the id, effectively the same thing?
+    std::list<Item *> inventory;	
     int inventorySize;
     int maxInventorySize; //new players start with 16 slots
 

@@ -31,14 +31,14 @@ Area::Area(int id_)
     changed = true;
 }
 
-Area::Area(int id_, std::string name_, /*int pvp_,*/ int level_range_low_, int level_range_high_)
+Area::Area(int id_, std::string name_, /*int pvp_,*/int level_range_low_, int level_range_high_)
 {
     id = id_;
     name = name_;
-    //pvp = pvp_;
     level_range_low = level_range_low_;
     level_range_high = level_range_high_;
     changed = true;
+	pvp = 0;
 }
 
 Area::~Area()

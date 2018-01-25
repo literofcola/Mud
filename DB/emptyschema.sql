@@ -165,9 +165,10 @@ DROP TABLE IF EXISTS `npcs`;
 CREATE TABLE `npcs` (
   `id` int(11) NOT NULL,
   `name` varchar(100) NOT NULL,
-  `keywords` tinytext,
+  `keywords` tinytext NOT NULL,
   `level` int(11) NOT NULL,
-  `sex` int(11) NOT NULL,
+  `gender` int(11) NOT NULL,
+  `race` int(11) NOT NULL,
   `agility` int(11) NOT NULL,
   `intellect` int(11) NOT NULL,
   `strength` int(11) NOT NULL,
@@ -292,24 +293,25 @@ DROP TABLE IF EXISTS `players`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `players` (
   `name` varchar(12) NOT NULL,
-  `password` varchar(15) DEFAULT NULL,
-  `immlevel` int(11) DEFAULT NULL,
-  `title` varchar(45) DEFAULT NULL,
-  `experience` int(11) DEFAULT NULL,
-  `room` int(11) DEFAULT NULL,
-  `level` int(11) DEFAULT NULL,
-  `sex` int(11) DEFAULT NULL,
-  `agility` int(11) DEFAULT NULL,
-  `intellect` int(11) DEFAULT NULL,
-  `strength` int(11) DEFAULT NULL,
-  `vitality` int(11) DEFAULT NULL,
-  `wisdom` int(11) DEFAULT NULL,
-  `health` int(11) DEFAULT NULL,
-  `mana` int(11) DEFAULT NULL,
-  `stamina` int(11) DEFAULT NULL,
-  `class` int(11) DEFAULT NULL,
-  `recall` int(11) DEFAULT NULL,
-  `ghost` tinyint(4) DEFAULT NULL,
+  `password` varchar(15) NOT NULL,
+  `immlevel` int(11) NOT NULL,
+  `title` varchar(45) NOT NULL,
+  `experience` int(11) NOT NULL,
+  `room` int(11) NOT NULL,
+  `level` int(11) NOT NULL,
+  `gender` int(11) NOT NULL,
+  `race` int(11) NOT NULL,
+  `agility` int(11) NOT NULL,
+  `intellect` int(11) NOT NULL,
+  `strength` int(11) NOT NULL,
+  `vitality` int(11) NOT NULL,
+  `wisdom` int(11) NOT NULL,
+  `health` int(11) NOT NULL,
+  `mana` int(11) NOT NULL,
+  `stamina` int(11) NOT NULL,
+  `class` int(11) NOT NULL,
+  `recall` int(11) NOT NULL,
+  `ghost` tinyint(4) NOT NULL,
   PRIMARY KEY (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -448,4 +450,4 @@ CREATE TABLE `triggers` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-01-23 23:06:52
+-- Dump completed on 2018-01-25  1:41:35

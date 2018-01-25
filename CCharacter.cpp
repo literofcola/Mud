@@ -44,15 +44,15 @@ const double Character::COMBAT_MOVE_SPEED = 0.75;
 //TODO: racial skills?
 Character::RaceType Character::race_table[] = 
 {
-    { Character::Races::RACE_HUMAN, "human"	},
-    { Character::Races::RACE_ELF, "elf"		},
-	{ Character::Races::RACE_DWARF, "dwarf"	},
-	{ Character::Races::RACE_ORC, "orc"		},
-	{ Character::Races::RACE_GNOME, "gnome"	},
-	{ Character::Races::RACE_GOBLIN, "goblin"	},
-	{ Character::Races::RACE_UNDEAD, "undead"	},
-	{ Character::Races::RACE_MINOTAUR, "minotaur" },
-	{ Character::Races::RACE_TROLL, "troll"	},
+    { Character::Races::RACE_HUMAN, "Human"	},
+    { Character::Races::RACE_ELF, "Elf"		},
+	{ Character::Races::RACE_DWARF, "Dwarf"	},
+	{ Character::Races::RACE_ORC, "Orc"		},
+	{ Character::Races::RACE_GNOME, "Gnome"	},
+	{ Character::Races::RACE_GOBLIN, "Goblin"	},
+	{ Character::Races::RACE_UNDEAD, "Undead"	},
+	{ Character::Races::RACE_MINOTAUR, "Minotaur" },
+	{ Character::Races::RACE_TROLL, "Troll"	},
 	{-1, ""			}
 };
 
@@ -104,7 +104,7 @@ Character::Character(const Character & copy)
     title = copy.title;
     player = NULL;
     level = copy.level;
-    sex = copy.sex;
+    gender = copy.gender;
     agility = copy.agility;
     intellect = copy.intellect;
     strength = copy.strength;
@@ -164,7 +164,7 @@ void Character::SetDefaults()
     room = NULL;
     target = NULL;
     level = 1;
-    sex = 1;
+    gender = 1;
     agility = intellect = strength = vitality = wisdom = 10;
     health = maxHealth = vitality * Character::HEALTH_FROM_VITALITY;
     mana = maxMana = intellect * Character::MANA_FROM_INTELLECT;
@@ -191,7 +191,8 @@ void Character::SetDefaults()
 	stringTable["keywords"] = &keywords;
     intTable["id"] = &id;
     intTable["level"] = &level;
-    intTable["sex"] = &sex;
+    intTable["gender"] = &gender;
+	intTable["race"] = &race;
     intTable["agility"] = &agility;
     intTable["intellect"] = &intellect;
     intTable["strength"] = &strength;
@@ -469,7 +470,8 @@ void Character::GeneratePrompt(double currentTime)
 	if(GetTarget() != NULL)
 	{
         string targetLevel;
-        if(GetTarget()->IsNPC() && Game::LevelDifficulty(level, GetTarget()->level) == 5) //NPC >= 10 levels
+        if(GetTarget()->IsNPC() && !Utilities::FlagIsSet(target->flags, Character::FLAG_FRIENDLY)
+			&& Game::LevelDifficulty(level, GetTarget()->level) == 5) //NPC >= 10 levels
         {
             targetLevel = "|R??";
         }
@@ -887,7 +889,8 @@ Character * Character::LoadPlayer(std::string name, User * user)
     Character * loaded = Game::GetGame()->NewCharacter(name, user);
 
     loaded->name = row["name"];
-    loaded->sex = row["sex"];
+    loaded->gender = row["gender"];
+	loaded->race = row["race"];
     loaded->title = row["title"];
     loaded->level = row["level"];
     loaded->agility = row["agility"];
@@ -1053,48 +1056,6 @@ Character * Character::LoadPlayer(std::string name, User * user)
     return loaded;
 }
 
-/*Character * Character::LoadNPC(Server * server, int id) 
-{
-    StoreQueryResult characterres = server->sqlQueue->Read("select * from npcs where id=" + Utilities::itos(id));
-    if(characterres.empty())
-        return NULL;
-
-    Row row = *characterres.begin();
-
-    //Character * loaded = server->game->NewCharacter(); //Don't add to in-game characters
-    Character * loaded = new Character();
-
-    loaded->name = row["name"];
-    loaded->sex = row["sex"];
-    loaded->level = row["level"];
-    loaded->agility = row["agility"];
-    loaded->intellect = row["intellect"];
-    loaded->strength = row["strength"];
-    loaded->vitality = row["vitality"];
-    loaded->wisdom = row["wisdom"];
-    //TODO: add equipment and buff bonuses (for npcs??)
-    loaded->health = row["health"];
-    loaded->mana = row["mana"];
-    loaded->stamina = row["stamina"];
-    loaded->maxHealth = loaded->vitality * Character::HEALTH_FROM_VITALITY;
-    loaded->maxMana = loaded->intellect * Character::MANA_FROM_INTELLECT;
-    loaded->maxStamina = loaded->strength * Character::STAMINA_FROM_STRENGTH;
-
-    string skilltext = (string)row["skills"];
-    int first=0, last=0;
-    while(first < skilltext.length())
-    {
-        last = skilltext.find(";", first);
-        int id = Utilities::atoi(skilltext.substr(first, last - first));
-        loaded->AddSkill(Game::GetGame()->GetSkill(id));
-        first = last + 1;
-    }
-
-    string skilltext = (string)row["skills"];
-
-    return loaded;
-}*/
-
 void Character::Save()
 {
     string sql;
@@ -1103,11 +1064,11 @@ void Character::Save()
         string password = Utilities::SQLFixQuotes(player->password);
         string fixtitle = Utilities::SQLFixQuotes(title);
 
-        sql = "INSERT INTO players (name, password, immlevel, title, experience, room, level, sex, agility, intellect, strength, vitality, ";
+        sql = "INSERT INTO players (name, password, immlevel, title, experience, room, level, gender, race, agility, intellect, strength, vitality, ";
         sql += "wisdom, health, mana, stamina, class, recall, ghost) values ('";
         sql += name + "','" + password + "'," + Utilities::itos(player->immlevel);
         sql += ",'" + fixtitle + "'," + Utilities::itos(player->experience) + "," + Utilities::itos(room->id);
-        sql += "," + Utilities::itos(level) + "," + Utilities::itos(sex) + ",";
+        sql += "," + Utilities::itos(level) + "," + Utilities::itos(gender) + "," + Utilities::itos(race) + ",";
         sql += Utilities::itos(agility) + "," + Utilities::itos(intellect) + "," + Utilities::itos(strength) + ",";
         sql += Utilities::itos(vitality) + "," + Utilities::itos(wisdom) + ",";
         sql += Utilities::itos(health) + "," + Utilities::itos(mana) + "," + Utilities::itos(stamina);
@@ -1118,7 +1079,7 @@ void Character::Save()
             sql += "0)";
 
         sql += " ON DUPLICATE KEY UPDATE name=VALUES(name), password=VALUES(password), immlevel=VALUES(immlevel), title=VALUES(title), ";
-        sql += "experience=VALUES(experience), room=VALUES(room), level=VALUES(level), sex=VALUES(sex), agility=VALUES(agility), ";
+        sql += "experience=VALUES(experience), room=VALUES(room), level=VALUES(level), gender=VALUES(gender), race=VALUES(race), agility=VALUES(agility), ";
         sql += "intellect=VALUES(intellect), strength=VALUES(strength), vitality=VALUES(vitality), wisdom=VALUES(wisdom), ";
         sql += "health=VALUES(health), mana=VALUES(mana), stamina=VALUES(stamina), ";
         sql += "class=VALUES(class), ";
@@ -1138,12 +1099,12 @@ void Character::Save()
 		for (int i = 0; i < (int)player->questLog.size(); i++)
 		{
 			string qasql = "INSERT INTO player_active_quests (player, quest, objectives) values ('" + name + "',";
-			qasql += Utilities::itos(player->questLog[i]->id) + ",'";
+			qasql += Utilities::itos(player->questLog[i]->id) + ",";
 			for (int j = 0; j < (int)player->questObjectives[i].size(); j++)
 			{
 				qasql += "," + Utilities::itos(player->questObjectives[i][j]);
 			}
-			qasql += "')";
+			qasql += ")";
 			Server::sqlQueue->Write(qasql);
 		}
 
@@ -1183,10 +1144,10 @@ void Character::Save()
     {
         string fixtitle = Utilities::SQLFixQuotes(title);
 
-        sql = "INSERT INTO npcs (id, name, keywords, level, sex, agility, intellect, strength, vitality, ";
+        sql = "INSERT INTO npcs (id, name, keywords, level, gender, race, agility, intellect, strength, vitality, ";
         sql += "wisdom, health, mana, stamina, title, attack_speed, damage_low, damage_high, flags) values (";
         sql += Utilities::itos(id) + ", '";
-        sql += name + "', '" + keywords + "', " + Utilities::itos(level) + "," + Utilities::itos(sex) + ",";
+        sql += name + "', '" + keywords + "', " + Utilities::itos(level) + "," + Utilities::itos(gender) + "," + Utilities::itos(race) + ",";
         sql += Utilities::itos(agility) + "," + Utilities::itos(intellect) + "," + Utilities::itos(strength) + ",";
         sql += Utilities::itos(vitality) + "," + Utilities::itos(wisdom) + ",";
         sql += Utilities::itos(health) + "," + Utilities::itos(mana) + "," + Utilities::itos(stamina);
@@ -1200,7 +1161,7 @@ void Character::Save()
 		}
 		sql += "')";
 
-        sql += " ON DUPLICATE KEY UPDATE id=VALUES(id), name=VALUES(name), level=VALUES(level), sex=VALUES(sex), agility=VALUES(agility), ";
+        sql += " ON DUPLICATE KEY UPDATE id=VALUES(id), name=VALUES(name), level=VALUES(level), gender=VALUES(gender), race=VALUES(race), agility=VALUES(agility), ";
         sql += "intellect=VALUES(intellect), strength=VALUES(strength), vitality=VALUES(vitality), wisdom=VALUES(wisdom), ";
         sql += "health=VALUES(health), mana=VALUES(mana), stamina=VALUES(stamina), ";
         sql += "title=VALUES(title), attack_speed=VALUES(attack_speed), damage_low=VALUES(damage_low), ";
@@ -2248,7 +2209,7 @@ bool Character::HasThreat(Character * ch)
 
 std::string Character::HisHer()
 {
-    return (sex == 1 ? "his" : "her");
+    return (gender == 1 ? "his" : "her");
 }
 
 bool Character::CanMove()
@@ -2407,10 +2368,15 @@ bool Character::ChangeRooms(Room * toroom)
 			json roominfo;
 			roominfo["name"] = toroom->name;
 			roominfo["num"] = toroom->id;
-			if(toroom->area != 0)
-				roominfo["zone"] = Game::GetGame()->areas[toroom->area]->name;
+			if(toroom->area != 0 && Game::GetGame()->GetArea(toroom->area) != NULL)
+			{
+				roominfo["zone"] = Game::GetGame()->GetArea(toroom->area)->name;
+			}
 			else
+			{
 				roominfo["zone"] = "None";
+			}
+
 			for (int i = 0; i < Exit::DIR_LAST; i++)
 			{
 				if (toroom->exits[i] && toroom->exits[i]->to)

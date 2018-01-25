@@ -128,7 +128,7 @@ void npcEditCmd_title(Character * ch, string argument);
 void npcEditCmd_flag(Character * ch, string argument);
 void npcEditCmd_drop(Character * ch, string argument);
 void npcEditCmd_level(Character * ch, string argument);
-void npcEditCmd_sex(Character * ch, string argument);
+void npcEditCmd_gender(Character * ch, string argument);
 void npcEditCmd_agility(Character * ch, string argument);
 void npcEditCmd_intellect(Character * ch, string argument);
 void npcEditCmd_strength(Character * ch, string argument);

@@ -403,7 +403,7 @@ void Game::GameLoop(Server * server)
                 //LogFile::Log("status", "removing user via remove flag in gameloop");
                 if(user->character)
                 {
-					//if (user->connectedState == User::CONN_PLAYING && user->character->level > 1) //don't save fresh characters
+					if (user->connectedState == User::CONN_PLAYING && user->character->level > 1) //don't save fresh characters
 					{
 						user->character->SaveSpellAffects();
 						user->character->SaveCooldowns();
@@ -1082,35 +1082,35 @@ void Game::LoginHandler(Server * server, User * user, string argument)
             break;
         }
 
-        case User::CONN_CONFIRM_CLASS:
-        {
-            if(!Utilities::str_cmp(arg1, "y"))
-            {
-                user->character->player->AddClass(user->character->player->currentClass->id, 1);
-                string classitems = user->character->player->currentClass->items;
-                int first = 0, last = 0;
-                while(first < (int)classitems.length())
-                {
-                    last = (int)classitems.find(";", first);
-                    if(last == std::string::npos)
-                        break;
-                    int id = Utilities::atoi(classitems.substr(first, last-first));
-                    first = last + 1;
-                    Item * itemIndex = GetItemIndex(id);
-                    if(itemIndex == NULL)
-                    {
-                        LogFile::Log("error", "Item " + Utilities::itos(id) + " does not exist.");
-                        continue;
-                    }
-                    itemIndex = user->character->player->NewItemInventory(itemIndex);
-                    user->character->player->EquipItemFromInventory(itemIndex, user->character->player->GetEquipLocation(itemIndex));
-                }
+		case User::CONN_CONFIRM_CLASS:
+		{
+			if (!Utilities::str_cmp(arg1, "y"))
+			{
+				user->character->player->AddClass(user->character->player->currentClass->id, 1);
+				string classitems = user->character->player->currentClass->items;
+				int first = 0, last = 0;
+				while (first < (int)classitems.length())
+				{
+					last = (int)classitems.find(";", first);
+					if (last == std::string::npos)
+						break;
+					int id = Utilities::atoi(classitems.substr(first, last - first));
+					first = last + 1;
+					Item * itemIndex = GetItemIndex(id);
+					if (itemIndex == NULL)
+					{
+						LogFile::Log("error", "Item " + Utilities::itos(id) + " does not exist.");
+						continue;
+					}
+					itemIndex = user->character->player->NewItemInventory(itemIndex);
+					user->character->player->EquipItemFromInventory(itemIndex, user->character->player->GetEquipLocation(itemIndex));
+				}
 
-                user->Send("|B.|C1 |MEnter world\n\r |C2|B.|MChange password\n\r|B.|C3 |MDelete this character\n\r |C4|B.|MQuit|X\n\r: ");
-                user->connectedState = User::CONN_MENU;
-            }
-            else
-            {
+				user->Send("|YEnter character gender: 'M' / 'F' :|X ");
+				user->connectedState = User::CONN_GET_GENDER;
+			}
+			else
+			{
 				std::string classChoice = "|YChoose your class (";
 				std::map<int, Class *>::iterator iter;
 				for (iter = classes.begin(); iter != classes.end(); ++iter)
@@ -1120,12 +1120,34 @@ void Game::LoginHandler(Server * server, User * user, string argument)
 				classChoice += " ):|X ";
 				user->Send(classChoice);
 				user->connectedState = User::CONN_GET_CLASS;
-            }
-            break;
-        }
+			}
+			break;
+		}
 
-		case User::CONN_GET_SEX:
+		case User::CONN_GET_GENDER:
 		{
+			bool valid = false;
+			if (!Utilities::str_cmp(arg1, "m"))
+			{
+				valid = true;
+				user->character->gender = 1;
+			}
+			else if (!Utilities::str_cmp(arg1, "f"))
+			{
+				valid = true;
+				user->character->gender = 2;
+			}
+			else
+			{
+				user->Send("|YEnter character gender: 'M' / 'F' :|X ");
+				user->connectedState = User::CONN_GET_GENDER;
+			}
+
+			if (valid)
+			{
+				user->Send("|B.|C1 |MEnter world\n\r |C2|B.|MChange password\n\r|B.|C3 |MDelete this character\n\r |C4|B.|MQuit|X\n\r: ");
+				user->connectedState = User::CONN_MENU;
+			}
 			break;
 		}
 
@@ -1166,6 +1188,7 @@ void Game::LoginHandler(Server * server, User * user, string argument)
             {
                 user->Send("Password changed.\n\r");
                 user->character->player->password = server->EncryptDecrypt(argument);
+				Server::sqlQueue->Write("UPDATE players SET password = '" + user->character->player->password + "' WHERE name='" + user->character->name + "'");
                 user->character->player->pwtemp.clear();
             }
             else
@@ -1724,7 +1747,8 @@ void Game::LoadNPCS(Server * server)
         loaded->name = row["name"];
 		loaded->keywords = row["keywords"];
         loaded->title = row["title"];
-        loaded->sex = row["sex"];
+        loaded->gender = row["gender"];
+		loaded->race = row["race"];
         loaded->level = row["level"];
         loaded->agility = row["agility"];
         loaded->intellect = row["intellect"];
@@ -1750,14 +1774,14 @@ void Game::LoadNPCS(Server * server)
 		}
 
 		StoreQueryResult::iterator j;
-		StoreQueryResult npcskillres = server->sqlQueue->Read("select * from npc_skills where npc=" + loaded->id);
+		StoreQueryResult npcskillres = server->sqlQueue->Read("select * from npc_skills where npc=" + Utilities::itos(loaded->id));
 		for (j = npcskillres.begin(); j != npcskillres.end(); j++)
 		{
 			int skillid = row["skill"];
 			loaded->AddSkill(Game::GetGame()->GetSkill(skillid));
 		}
 
-		StoreQueryResult npcdropsres = server->sqlQueue->Read("select * from npc_drops where npc=" + loaded->id);
+		StoreQueryResult npcdropsres = server->sqlQueue->Read("select * from npc_drops where npc=" + Utilities::itos(loaded->id));
 		for (j = npcdropsres.begin(); j != npcdropsres.end(); j++)
 		{
 			string drops = (string)row["items"];

@@ -24,7 +24,7 @@ public:
 
     int id;
     int level;
-    int sex;
+    int gender;
     int agility;
     int intellect;
     int strength;
@@ -49,7 +49,7 @@ public:
 	{
 		RACE_HUMAN, RACE_ELF, RACE_DWARF, RACE_ORC, RACE_GNOME, RACE_GOBLIN, RACE_UNDEAD, RACE_MINOTAUR, RACE_TROLL
 	};
-    //TODO, make this a class? std::list<Skill*> racials? starting stat bonuses
+    //TODO, make this a class? std::list<Skill*> racials? starting stat bonuses?
     struct RaceType
     {
         int id;

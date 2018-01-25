@@ -1507,7 +1507,7 @@ void npcEditCmd_show(Character * ch, string argument)
     ch->Send("ID:        [" + Utilities::itos(pChar->id) + "]\n\r");
     ch->Send("Level:     [" + Utilities::itos(pChar->level) + "]\n\r");
     ch->Send("Title:     [" + pChar->title + "]\n\r");
-    ch->Send("Sex:       [" + Utilities::itos(pChar->sex) + "]\n\r");
+    ch->Send("Gender:    [" + Utilities::itos(pChar->gender) + "]\n\r");
     ch->Send("Agility:   [" + Utilities::itos(pChar->agility) + "]\n\r");
     ch->Send("Intellect: [" + Utilities::itos(pChar->intellect) + "]\n\r");
     ch->Send("Strength:  [" + Utilities::itos(pChar->strength) + "]\n\r");
@@ -1796,7 +1796,7 @@ void npcEditCmd_level(Character * ch, string argument)
     pChar->level = level;
 }
 
-void npcEditCmd_sex(Character * ch, string argument)
+void npcEditCmd_gender(Character * ch, string argument)
 {
     Character * pChar = (Character *)ch->editData;
 
@@ -1805,17 +1805,17 @@ void npcEditCmd_sex(Character * ch, string argument)
 
     if(arg1.empty() || !Utilities::IsNumber(arg1))
     {
-        ch->Send("sex <1|2>\n\r");
+        ch->Send("gender <1|2>\n\r");
         return;
     }
-    int sex = Utilities::atoi(arg1);
-    if(sex != 1 && sex != 2)
+    int gender = Utilities::atoi(arg1);
+    if(gender != 1 && gender != 2)
     {
-        ch->Send("Sex must be 1 for male, 2 for female.\n\r");
+        ch->Send("Gender must be 1 for male, 2 for female.\n\r");
         return;
     }
     pChar->changed = true;
-    pChar->sex = sex;
+    pChar->gender = gender;
 }
 
 void npcEditCmd_agility(Character * ch, string argument)
@@ -2969,7 +2969,7 @@ void questEditCmd_end(Character * ch, string argument)
         ch->Send("An npc with that id does not exist.\n\r");
         return;
     }
-    if(pQuest->start)
+    if(pQuest->end)
     {
         std::vector<Quest*>::iterator iter;
         for(iter = pQuest->end->questEnd.begin(); iter != pQuest->end->questEnd.end(); ++iter)

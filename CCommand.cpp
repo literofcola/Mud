@@ -376,7 +376,7 @@ const class Command npcEditCmd_table[] =
     { "flag",       npcEditCmd_flag, 0, 0, 1, 1 },
     { "drop",       npcEditCmd_drop, 0, 0, 1, 1 },
     { "level",      npcEditCmd_level, 0, 0, 1, 1 },
-    { "sex",        npcEditCmd_sex, 0, 0, 1, 1 },
+    { "gender",     npcEditCmd_gender, 0, 0, 1, 1 },
     { "agility",    npcEditCmd_agility, 0, 0, 1, 1 },
     { "intellect",  npcEditCmd_intellect, 0, 0, 1, 1 },
     { "strength",   npcEditCmd_strength, 0, 0, 1, 1 },

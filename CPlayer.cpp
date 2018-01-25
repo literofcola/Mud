@@ -378,7 +378,7 @@ Item * Player::RemoveItemEquipped(int index)
 }
 
 //return the equip location for this item given what the player is currently wearing
-// might be different from equip->equipLocation for weapons, double slot items (ring trinket)
+// unfortunately different from equip->equipLocation, especially for weapons, double slot items (ring trinket)
 int Player::GetEquipLocation(Item * equip)
 {
     int equipSlot = Player::EQUIP_LAST;
@@ -394,8 +394,7 @@ int Player::GetEquipLocation(Item * equip)
         case Item::EQUIP_WAIST:
         case Item::EQUIP_WRIST:
         case Item::EQUIP_SHOULDER:
-            //corresponds to Character::EquipSlots
-            equipSlot = equip->equipLocation;
+            equipSlot = equip->equipLocation - 1; //If we change Item::EquipLocation or Player::EquipmentSlot, we'll be back here when stuff goes weird 
             break;
         case Item::EQUIP_FINGER:
             if(equipped[Player::EQUIP_FINGER1] == NULL)
