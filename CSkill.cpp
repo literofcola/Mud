@@ -33,12 +33,12 @@ Skill::Skill()
     targetType = Skill::TARGET_SELF;
 
     intTable["id"] = &id;
-    doubleTable["castTime"] = &castTime;
+    doubleTable["casttime"] = &castTime;
     doubleTable["cooldown"] = &cooldown;
     stringTable["name"] = &name;
     stringTable["long_name"] = &long_name;
     stringTable["function_name"] = &function_name;
-    stringTable["affectDescription"] = &affectDescription;
+    stringTable["affectdescription"] = &affectDescription;
 }
 
 Skill::Skill(int id_, std::string long_name_)

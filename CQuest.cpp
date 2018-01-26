@@ -211,8 +211,8 @@ void Quest::Save()
     sql += Utilities::itos(experienceReward) + "," + Utilities::itos(moneyReward) + "," + Utilities::itos(shareable) + ", ";
     sql += Utilities::itos(levelRequirement) + "," + Utilities::itos(questRestriction) + ")";
 
-    sql += " ON DUPLICATE KEY UPDATE id=VALUES(id), name=VALUES(name), short_description=VALUES(short_description), long_desc=VALUES(long_desc), ";
-    sql += "progress_msg=VALUES(progress_msg), completion_msg=VALUES(completion_msg), level=VALUES(level), ";
+    sql += " ON DUPLICATE KEY UPDATE id=VALUES(id), name=VALUES(name), short_description=VALUES(short_description), long_description=VALUES(long_description), ";
+    sql += "progress_message=VALUES(progress_message), completion_message=VALUES(completion_message), level=VALUES(level), ";
     sql += "quest_requirement=VALUES(quest_requirement), start=VALUES(start), end=VALUES(end), exp_reward=VALUES(exp_reward), ";
     sql += "money_reward=VALUES(money_reward), shareable=VALUES(shareable), level_requirement=VALUES(level_requirement), ";
     sql += "quest_restriction=VALUES(quest_restriction)";

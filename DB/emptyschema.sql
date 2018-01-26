@@ -107,22 +107,22 @@ DROP TABLE IF EXISTS `items`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `items` (
   `id` int(11) NOT NULL,
-  `name` varchar(100) DEFAULT NULL,
-  `keywords` tinytext,
-  `item_level` int(11) DEFAULT NULL,
-  `char_level` int(11) DEFAULT NULL,
-  `equip_location` int(11) DEFAULT NULL,
-  `quality` int(11) DEFAULT NULL,
-  `binds` int(11) DEFAULT NULL,
-  `type` int(11) DEFAULT NULL,
-  `quest` int(11) DEFAULT NULL,
-  `armor` int(11) DEFAULT NULL,
-  `durability` int(11) DEFAULT NULL,
-  `unique` int(11) DEFAULT NULL,
-  `damage_low` int(11) DEFAULT NULL,
-  `damage_high` int(11) DEFAULT NULL,
-  `value` int(11) DEFAULT NULL,
-  `speed` decimal(10,0) DEFAULT NULL,
+  `name` varchar(100) NOT NULL,
+  `keywords` tinytext NOT NULL,
+  `item_level` int(11) NOT NULL,
+  `char_level` int(11) NOT NULL,
+  `equip_location` int(11) NOT NULL,
+  `quality` int(11) NOT NULL,
+  `binds` int(11) NOT NULL,
+  `type` int(11) NOT NULL,
+  `quest` int(11) NOT NULL,
+  `armor` int(11) NOT NULL,
+  `durability` int(11) NOT NULL,
+  `unique` int(11) NOT NULL,
+  `damage_low` int(11) NOT NULL,
+  `damage_high` int(11) NOT NULL,
+  `value` int(11) NOT NULL,
+  `speed` decimal(10,1) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -450,4 +450,4 @@ CREATE TABLE `triggers` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-01-25  1:41:35
+-- Dump completed on 2018-01-25 21:38:04

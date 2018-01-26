@@ -92,7 +92,7 @@ CREATE TABLE `classes` (
 
 LOCK TABLES `classes` WRITE;
 /*!40000 ALTER TABLE `classes` DISABLE KEYS */;
-INSERT INTO `classes` VALUES (1,'Warrior','|M',1,0,2,3,0,'3;4;5;6;'),(2,'Rogue','|Y',3,0,1,2,0,''),(3,'Mage','|C',0,4,0,1,1,''),(4,'Cleric','|W',0,2,0,2,2,'');
+INSERT INTO `classes` VALUES (1,'Warrior','|M',1,0,2,3,0,'3;4;5;6;'),(2,'Rogue','|Y',3,0,1,2,0,'11;12;13;14;'),(3,'Mage','|C',0,4,0,1,1,'7;8;9;10;'),(4,'Cleric','|W',0,2,0,2,2,'15;16;17;10');
 /*!40000 ALTER TABLE `classes` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -117,7 +117,7 @@ CREATE TABLE `exits` (
 
 LOCK TABLES `exits` WRITE;
 /*!40000 ALTER TABLE `exits` DISABLE KEYS */;
-INSERT INTO `exits` VALUES (2,0,3),(2,6,4),(3,4,2),(4,2,2),(4,6,5),(5,0,6),(5,2,4),(5,6,7),(6,4,5),(7,2,5);
+INSERT INTO `exits` VALUES (2,0,3),(2,2,8),(2,4,9),(2,6,4),(3,4,2),(4,2,2),(4,6,5),(5,0,6),(5,2,4),(5,6,7),(6,4,5),(7,2,5),(8,6,2),(9,0,2);
 /*!40000 ALTER TABLE `exits` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -155,22 +155,22 @@ DROP TABLE IF EXISTS `items`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `items` (
   `id` int(11) NOT NULL,
-  `name` varchar(100) DEFAULT NULL,
-  `keywords` tinytext,
-  `item_level` int(11) DEFAULT NULL,
-  `char_level` int(11) DEFAULT NULL,
-  `equip_location` int(11) DEFAULT NULL,
-  `quality` int(11) DEFAULT NULL,
-  `binds` int(11) DEFAULT NULL,
-  `type` int(11) DEFAULT NULL,
-  `quest` int(11) DEFAULT NULL,
-  `armor` int(11) DEFAULT NULL,
-  `durability` int(11) DEFAULT NULL,
-  `unique` int(11) DEFAULT NULL,
-  `damage_low` int(11) DEFAULT NULL,
-  `damage_high` int(11) DEFAULT NULL,
-  `value` int(11) DEFAULT NULL,
-  `speed` decimal(10,0) DEFAULT NULL,
+  `name` varchar(100) NOT NULL,
+  `keywords` tinytext NOT NULL,
+  `item_level` int(11) NOT NULL,
+  `char_level` int(11) NOT NULL,
+  `equip_location` int(11) NOT NULL,
+  `quality` int(11) NOT NULL,
+  `binds` int(11) NOT NULL,
+  `type` int(11) NOT NULL,
+  `quest` int(11) NOT NULL,
+  `armor` int(11) NOT NULL,
+  `durability` int(11) NOT NULL,
+  `unique` int(11) NOT NULL,
+  `damage_low` int(11) NOT NULL,
+  `damage_high` int(11) NOT NULL,
+  `value` int(11) NOT NULL,
+  `speed` decimal(10,1) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -181,7 +181,7 @@ CREATE TABLE `items` (
 
 LOCK TABLES `items` WRITE;
 /*!40000 ALTER TABLE `items` DISABLE KEYS */;
-INSERT INTO `items` VALUES (1,'The One Ring','one ring',15,10,11,2,2,13,0,0,0,0,0,0,140,0),(2,'Test Item of Power','test item power',5,2,1,4,1,0,0,100,100,1,0,0,1000,0),(3,'Worn Greatsword','',1,1,16,1,0,4,0,0,25,0,1,3,4,4),(4,'Recruit\'s Vest','',1,1,5,1,0,3,0,10,55,0,0,0,2,0),(5,'Recruit\'s Pants','',1,1,9,1,0,3,0,1,40,0,0,0,2,0),(6,'Recruit\'s Boots','',1,1,10,1,0,3,0,8,25,0,0,0,1,0);
+INSERT INTO `items` VALUES (1,'The One Ring','one ring',15,10,11,2,2,13,0,0,0,0,0,0,140,0.0),(2,'Test Item of Power','test item power',5,2,1,4,1,0,0,100,100,1,0,0,1000,0.0),(3,'Worn Greatsword','',1,1,16,1,0,4,0,0,25,0,1,3,4,3.6),(4,'Recruit\'s Vest','',1,1,5,1,0,0,0,3,55,0,0,0,2,0.0),(5,'Recruit\'s Pants','',1,1,9,1,0,0,0,3,40,0,0,0,2,0.0),(6,'Recruit\'s Boots','',1,1,10,1,0,0,0,2,25,0,0,0,1,0.0),(7,'Apprentice\'s Boots','',1,1,10,1,0,0,0,2,25,0,0,0,2,0.0),(8,'Apprentice\'s Robe','',1,1,5,1,0,0,0,3,55,0,0,0,2,0.0),(9,'Apprentice\'s Pants','',1,1,9,1,0,0,0,3,40,0,0,0,2,0.0),(10,'Bent Staff','',1,1,16,1,0,9,0,0,25,0,2,3,4,3.6),(11,'Footpad\'s Pants','',1,1,9,1,0,0,0,2,40,0,0,0,2,0.0),(12,'Footpad\'s Vest','',1,1,5,1,0,0,0,3,55,0,0,0,2,0.0),(13,'Footpad\'s Shoes','',1,1,10,1,0,0,0,3,25,0,0,0,1,0.0),(14,'Worn Shortsword','',1,1,14,1,0,4,0,0,20,0,1,2,3,2.6),(15,'Neophyte\'s Pants','',1,1,9,1,0,0,0,3,40,0,0,0,2,0.0),(16,'Neophyte\'s Boots','',0,0,0,0,0,13,0,0,0,0,0,0,0,0.0),(17,'Neophyte\'s Robe','',0,0,0,0,0,13,0,0,0,0,0,0,0,0.0);
 /*!40000 ALTER TABLE `items` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -293,6 +293,7 @@ CREATE TABLE `player_active_quests` (
 
 LOCK TABLES `player_active_quests` WRITE;
 /*!40000 ALTER TABLE `player_active_quests` DISABLE KEYS */;
+INSERT INTO `player_active_quests` VALUES ('Boris',1,'3');
 /*!40000 ALTER TABLE `player_active_quests` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -389,7 +390,7 @@ CREATE TABLE `player_inventory` (
 
 LOCK TABLES `player_inventory` WRITE;
 /*!40000 ALTER TABLE `player_inventory` DISABLE KEYS */;
-INSERT INTO `player_inventory` VALUES ('Boris',4,0),('Boris',5,0),('Boris',6,0),('Boris',3,0),('Boris',4,1),('Boris',3,1),('Bob',4,0),('Bob',5,0),('Bob',6,0),('Bob',3,0),('Paladin',4,0),('Paladin',5,0),('Paladin',6,0),('Paladin',3,0),('Monk',4,0),('Monk',5,0),('Monk',6,0),('Monk',3,0);
+INSERT INTO `player_inventory` VALUES ('Paladin',4,0),('Paladin',5,0),('Paladin',6,0),('Paladin',3,0),('Monk',4,0),('Monk',5,0),('Monk',6,0),('Monk',3,0),('Bob',4,0),('Bob',5,0),('Bob',6,0),('Bob',3,0),('Boris',4,0),('Boris',5,0),('Boris',6,0),('Boris',3,0),('Boris',4,1),('Boris',3,1);
 /*!40000 ALTER TABLE `player_inventory` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -491,6 +492,7 @@ CREATE TABLE `quest_objectives` (
 
 LOCK TABLES `quest_objectives` WRITE;
 /*!40000 ALTER TABLE `quest_objectives` DISABLE KEYS */;
+INSERT INTO `quest_objectives` VALUES (1,2,2,6,'Blackrock Worg slain');
 /*!40000 ALTER TABLE `quest_objectives` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -527,6 +529,7 @@ CREATE TABLE `quests` (
 
 LOCK TABLES `quests` WRITE;
 /*!40000 ALTER TABLE `quests` DISABLE KEYS */;
+INSERT INTO `quests` VALUES (1,'Beating Them Back!','Kill 6 Blackrock Worgs.','So you\'re the new recruit from Stormwind, eh? I\'m Marshal McBride, commander of this garrison. Glad to have you on board.\n\r\n\rYou\'ve arrived just in time. The Blackrock orcs have managed to sneak into Northshire through a break in the mountain. My soldiers are doing the best that they can to push them back, but I fear they will be overwhelmed soon.\n\r\n\rHead northwest into the forest and kill the attacking Blackrock worgs! Help my soldiers! \n\r','','You\'ve bought us a little time, but we\'ve got even bigger problems to deal with now.\n\r',3,0,1,1,500,50,0,1,0);
 /*!40000 ALTER TABLE `quests` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -582,7 +585,7 @@ CREATE TABLE `rooms` (
 
 LOCK TABLES `rooms` WRITE;
 /*!40000 ALTER TABLE `rooms` DISABLE KEYS */;
-INSERT INTO `rooms` VALUES (1,'The One Room','One Room to rule them all.\n\r',0,''),(2,'On the Steps of Northshire Abbey','',1,'0;'),(3,'Northshire Abbey','',1,''),(4,'Dermot\'s Wagon','',1,''),(5,'Northshire Valley','',1,''),(6,'Northshire Valley','',1,''),(7,'Northshire Valley','',1,'');
+INSERT INTO `rooms` VALUES (1,'The One Room','One Room to rule them all.\n\r',0,''),(2,'On the Steps of Northshire Abbey','',1,'0;'),(3,'Northshire Abbey','',1,''),(4,'Dermot\'s Wagon','',1,''),(5,'Northshire Valley','',1,''),(6,'Northshire Valley','',1,''),(7,'Northshire Valley','',1,''),(8,'','',1,''),(9,'','',1,'');
 /*!40000 ALTER TABLE `rooms` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -659,4 +662,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-01-25  1:41:37
+-- Dump completed on 2018-01-25 21:45:09

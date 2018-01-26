@@ -87,7 +87,8 @@ public:
     //static void SearchCharacters(Game * g, Character * ch, std::string argument);
     bool SearchComparisonInt(int field_value, int search_value, int conditional_type);
     bool SearchComparisonString(std::string field_value, std::string search_value, int conditional_type);
-    int Search(std::string table_name, std::string field_name, int conditional_type, std::string argument, int data_type, std::string & result);
+	bool SearchComparisonDouble(double field_value, double search_value, int conditional_type);
+	int Search(std::string table_name, std::string field_name, int conditional_type, std::string argument, int data_type, std::string & result);
     /*template <typename T1>
     int DoSearch(T1 table_name, std::string field_name, std::string argument, int data_type, std::string & result);*/
 

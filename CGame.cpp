@@ -2296,6 +2296,34 @@ bool Game::SearchComparisonInt(int field_value, int search_value, int conditiona
     return false;
 }
 
+bool Game::SearchComparisonDouble(double field_value, double search_value, int conditional_type)
+{
+	switch (conditional_type)
+	{
+	case 1:
+		if (field_value == search_value)	//hmm, not likely for a double
+			return true;
+		return false;
+	case 2:
+		if (field_value != search_value)
+			return true;
+		return false;
+	case 3:
+		if (field_value < search_value)
+			return true;
+		return false;
+	case 4:
+		if (field_value > search_value)
+			return true;
+		return false;
+	case 5:
+		return false;
+	default:
+		return false;
+	}
+	return false;
+}
+
 bool Game::SearchComparisonString(string field_value, string search_value, int conditional_type)
 {
     switch(conditional_type)
@@ -2324,6 +2352,7 @@ bool Game::SearchComparisonString(string field_value, string search_value, int c
 
 int Game::Search(string table_name, string field_name, int conditional_type, string argument, int data_type, string & result)
 {
+	//There has to be a way to reduce the code replication in this function but I haven't found it
     /*
     DIDNT WORK!!!
     if(!Utilities::str_cmp(table_name, "rooms"))
@@ -2345,159 +2374,274 @@ int Game::Search(string table_name, string field_name, int conditional_type, str
     //TODO: typeid keyword!!!!!!!
 
     int value = 0;
+	int whichtable = 0;
     if(data_type == 1)
         value = Utilities::atoi(argument);
 
     int results_found = 0;
     if(!Utilities::str_cmp(table_name, "rooms"))
     {
-        if(rooms.begin() != rooms.end() && ((data_type == 1 && rooms.begin()->second->intTable.find(field_name) == rooms.begin()->second->intTable.end())
-            || (data_type == 2 && rooms.begin()->second->stringTable.find(field_name) == rooms.begin()->second->stringTable.end())))
-        {
-            result += "Invalid field_name.\n\r";
-            return 0;
-        }
-        std::map<int, Room *>::iterator iter;
-        for(iter = rooms.begin(); iter != rooms.end(); iter++)
-        {
-            if(data_type == 1)
-            {
-                if(SearchComparisonInt(*(iter->second->intTable[field_name]), value, conditional_type))
-                {
-                    result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + Utilities::itos(*(iter->second->intTable[field_name])) + "\n\r";
-                    ++results_found;
-                }
-            }
-            else if(data_type == 2)
-            {
-                if(SearchComparisonString(*(iter->second->stringTable[field_name]), argument, conditional_type))
-                {
-                    result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + *(iter->second->stringTable[field_name]) + "\n\r";
-                    ++results_found;
-                }
-            }
-        }
-        return results_found;
+		if (rooms.begin() == rooms.end())
+		{
+			result += "No rooms in the room list.\n\r";
+			return 0;
+		}
+		if (data_type == 1 && rooms.begin()->second->intTable.find(field_name) != rooms.begin()->second->intTable.end())
+		{
+			whichtable = 1;
+		}
+		else if (data_type == 2 && rooms.begin()->second->stringTable.find(field_name) != rooms.begin()->second->stringTable.end())
+		{
+			whichtable = 3;
+		}
+		else
+		{
+			result += "Invalid field_name.\n\r";
+			return 0;
+		}
+
+		std::map<int, Room *>::iterator iter;
+		for (iter = rooms.begin(); iter != rooms.end(); iter++)
+		{
+			switch (whichtable)
+			{
+			case 1:
+				if (SearchComparisonInt(*(iter->second->intTable[field_name]), value, conditional_type))
+				{
+					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + Utilities::itos(*(iter->second->intTable[field_name])) + "\n\r";
+					++results_found;
+				}
+				break;
+			case 3:
+				if (SearchComparisonString(*(iter->second->stringTable[field_name]), argument, conditional_type))
+				{
+					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + *(iter->second->stringTable[field_name]) + "\n\r";
+					++results_found;
+				}
+				break;
+			}
+		}
+		return results_found;
     }
     else if(!Utilities::str_cmp(table_name, "items"))
     {
-        if(itemIndex.begin() != itemIndex.end() && ((data_type == 1 && itemIndex.begin()->second->intTable.find(field_name) == itemIndex.begin()->second->intTable.end())
-            || (data_type == 2 && itemIndex.begin()->second->stringTable.find(field_name) == itemIndex.begin()->second->stringTable.end())))
-        {
-            result += "Invalid field_name.\n\r";
-            return 0;
-        }
+		if (itemIndex.begin() == itemIndex.end())
+		{
+			result += "No items in the item list.\n\r";
+			return 0;
+		}
+		if (data_type == 1 && itemIndex.begin()->second->intTable.find(field_name) != itemIndex.begin()->second->intTable.end())
+		{
+			whichtable = 1;
+		}
+		else if (data_type == 1 && itemIndex.begin()->second->doubleTable.find(field_name) != itemIndex.begin()->second->doubleTable.end())
+		{
+			whichtable = 2;
+		}
+		else if(data_type == 2 && itemIndex.begin()->second->stringTable.find(field_name) != itemIndex.begin()->second->stringTable.end())
+		{
+			whichtable = 3;
+		}
+		else
+		{
+			result += "Invalid field_name.\n\r";
+			return 0;
+		}
+
         std::map<int, Item *>::iterator iter;
         for(iter = itemIndex.begin(); iter != itemIndex.end(); iter++)
         {
-            if(data_type == 1)
-            {
-                if(SearchComparisonInt(*(iter->second->intTable[field_name]), value, conditional_type))
-                {
-                    result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + Utilities::itos(*(iter->second->intTable[field_name])) + "\n\r";
-                    ++results_found;
-                }
-            }
-            else if(data_type == 2)
-            {
-                if(SearchComparisonString(*(iter->second->stringTable[field_name]), argument, conditional_type))
-                {
-                    result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + *(iter->second->stringTable[field_name]) + "\n\r";
-                    ++results_found;
-                }
-            }
+			switch (whichtable)
+			{
+			case 1:
+				if (SearchComparisonInt(*(iter->second->intTable[field_name]), value, conditional_type))
+				{
+					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + Utilities::itos(*(iter->second->intTable[field_name])) + "\n\r";
+					++results_found;
+				}
+				break;
+			case 2:
+				if (SearchComparisonDouble(*(iter->second->doubleTable[field_name]), value, conditional_type))
+				{
+					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + Utilities::itos(*(iter->second->doubleTable[field_name])) + "\n\r";
+					++results_found;
+				}
+				break;
+			case 3:
+				if (SearchComparisonString(*(iter->second->stringTable[field_name]), argument, conditional_type))
+				{
+					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + *(iter->second->stringTable[field_name]) + "\n\r";
+					++results_found;
+				}
+				break;
+			}
         }
         return results_found;
     }
     else if(!Utilities::str_cmp(table_name, "characters"))
     {
-        if(characterIndex.begin() != characterIndex.end() && ((data_type == 1 && characterIndex.begin()->second->intTable.find(field_name) == characterIndex.begin()->second->intTable.end())
-            || (data_type == 2 && characterIndex.begin()->second->stringTable.find(field_name) == characterIndex.begin()->second->stringTable.end())))
-        {
-            result += "Invalid field_name.\n\r";
-            return 0;
-        }
-        std::map<int, Character *>::iterator iter;
-        for(iter = characterIndex.begin(); iter != characterIndex.end(); iter++)
-        {
-            if(data_type == 1)
-            {
-                if(SearchComparisonInt(*(iter->second->intTable[field_name]), value, conditional_type))
-                {
-                    result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + Utilities::itos(*(iter->second->intTable[field_name])) + "\n\r";
-                    ++results_found;
-                }
-            }
-            else if(data_type == 2)
-            {
-                if(SearchComparisonString(*(iter->second->stringTable[field_name]), argument, conditional_type))
-                {
-                    result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + *(iter->second->stringTable[field_name]) + "\n\r";
-                    ++results_found;
-                }
-            }
-        }
-        return results_found;
+		if (characterIndex.begin() == characterIndex.end())
+		{
+			result += "No characters in the character list.\n\r";
+			return 0;
+		}
+		if (data_type == 1 && characterIndex.begin()->second->intTable.find(field_name) != characterIndex.begin()->second->intTable.end())
+		{
+			whichtable = 1;
+		}
+		else if (data_type == 1 && characterIndex.begin()->second->doubleTable.find(field_name) != characterIndex.begin()->second->doubleTable.end())
+		{
+			whichtable = 2;
+		}
+		else if (data_type == 2 && characterIndex.begin()->second->stringTable.find(field_name) != characterIndex.begin()->second->stringTable.end())
+		{
+			whichtable = 3;
+		}
+		else
+		{
+			result += "Invalid field_name.\n\r";
+			return 0;
+		}
+
+		std::map<int, Character *>::iterator iter;
+		for (iter = characterIndex.begin(); iter != characterIndex.end(); iter++)
+		{
+			switch (whichtable)
+			{
+			case 1:
+				if (SearchComparisonInt(*(iter->second->intTable[field_name]), value, conditional_type))
+				{
+					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + Utilities::itos(*(iter->second->intTable[field_name])) + "\n\r";
+					++results_found;
+				}
+				break;
+			case 2:
+				if (SearchComparisonDouble(*(iter->second->doubleTable[field_name]), value, conditional_type))
+				{
+					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + Utilities::itos(*(iter->second->doubleTable[field_name])) + "\n\r";
+					++results_found;
+				}
+				break;
+			case 3:
+				if (SearchComparisonString(*(iter->second->stringTable[field_name]), argument, conditional_type))
+				{
+					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + *(iter->second->stringTable[field_name]) + "\n\r";
+					++results_found;
+				}
+				break;
+			}
+		}
+		return results_found;
     }
     else if(!Utilities::str_cmp(table_name, "quests"))
     {
-        if(quests.begin() != quests.end() && ((data_type == 1 && quests.begin()->second->intTable.find(field_name) == quests.begin()->second->intTable.end())
-            || (data_type == 2 && quests.begin()->second->stringTable.find(field_name) == quests.begin()->second->stringTable.end())))
-        {
-            result += "Invalid field_name.\n\r";
-            return 0;
-        }
-        std::map<int, Quest *>::iterator iter;
-        for(iter = quests.begin(); iter != quests.end(); iter++)
-        {
-            if(data_type == 1)
-            {
-                if(SearchComparisonInt(*(iter->second->intTable[field_name]), value, conditional_type))
-                {
-                    result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + Utilities::itos(*(iter->second->intTable[field_name])) + "\n\r";
-                    ++results_found;
-                }
-            }
-            else if(data_type == 2)
-            {
-                if(SearchComparisonString(*(iter->second->stringTable[field_name]), argument, conditional_type))
-                {
-                    result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + *(iter->second->stringTable[field_name]) + "\n\r";
-                    ++results_found;
-                }
-            }
-        }
-        return results_found;
+		if (quests.begin() == quests.end())
+		{
+			result += "No quests in the quest list.\n\r";
+			return 0;
+		}
+		if (data_type == 1 && quests.begin()->second->intTable.find(field_name) != quests.begin()->second->intTable.end())
+		{
+			whichtable = 1;
+		}
+		else if (data_type == 1 && quests.begin()->second->doubleTable.find(field_name) != quests.begin()->second->doubleTable.end())
+		{
+			whichtable = 2;
+		}
+		else if (data_type == 2 && quests.begin()->second->stringTable.find(field_name) != quests.begin()->second->stringTable.end())
+		{
+			whichtable = 3;
+		}
+		else
+		{
+			result += "Invalid field_name.\n\r";
+			return 0;
+		}
+
+		std::map<int, Quest *>::iterator iter;
+		for (iter = quests.begin(); iter != quests.end(); iter++)
+		{
+			switch (whichtable)
+			{
+			case 1:
+				if (SearchComparisonInt(*(iter->second->intTable[field_name]), value, conditional_type))
+				{
+					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + Utilities::itos(*(iter->second->intTable[field_name])) + "\n\r";
+					++results_found;
+				}
+				break;
+			case 2:
+				if (SearchComparisonDouble(*(iter->second->doubleTable[field_name]), value, conditional_type))
+				{
+					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + Utilities::itos(*(iter->second->doubleTable[field_name])) + "\n\r";
+					++results_found;
+				}
+				break;
+			case 3:
+				if (SearchComparisonString(*(iter->second->stringTable[field_name]), argument, conditional_type))
+				{
+					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + *(iter->second->stringTable[field_name]) + "\n\r";
+					++results_found;
+				}
+				break;
+			}
+		}
+		return results_found;
     }
     else if(!Utilities::str_cmp(table_name, "skills"))
     {
-        if(skills.begin() != skills.end() && ((data_type == 1 && skills.begin()->second->intTable.find(field_name) == skills.begin()->second->intTable.end())
-            || (data_type == 2 && skills.begin()->second->stringTable.find(field_name) == skills.begin()->second->stringTable.end())))
-        {
-            result += "Invalid field_name.\n\r";
-            return 0;
-        }
-        std::map<int, Skill *>::iterator iter;
-        for(iter = skills.begin(); iter != skills.end(); iter++)
-        {
-            if(data_type == 1)
-            {
-                if(SearchComparisonInt(*(iter->second->intTable[field_name]), value, conditional_type))
-                {
-                    result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + Utilities::itos(*(iter->second->intTable[field_name])) + "\n\r";
-                    ++results_found;
-                }
-            }
-            else if(data_type == 2)
-            {
-                if(SearchComparisonString(*(iter->second->stringTable[field_name]), argument, conditional_type))
-                {
-                    result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + *(iter->second->stringTable[field_name]) + "\n\r";
-                    ++results_found;
-                }
-            }
-        }
-        return results_found;
+		if (skills.begin() == skills.end())
+		{
+			result += "No skills in the skill list.\n\r";
+			return 0;
+		}
+		if (data_type == 1 && skills.begin()->second->intTable.find(field_name) != skills.begin()->second->intTable.end())
+		{
+			whichtable = 1;
+		}
+		else if (data_type == 1 && skills.begin()->second->doubleTable.find(field_name) != skills.begin()->second->doubleTable.end())
+		{
+			whichtable = 2;
+		}
+		else if (data_type == 2 && skills.begin()->second->stringTable.find(field_name) != skills.begin()->second->stringTable.end())
+		{
+			whichtable = 3;
+		}
+		else
+		{
+			result += "Invalid field_name.\n\r";
+			return 0;
+		}
+
+		std::map<int, Skill *>::iterator iter;
+		for (iter = skills.begin(); iter != skills.end(); iter++)
+		{
+			switch (whichtable)
+			{
+			case 1:
+				if (SearchComparisonInt(*(iter->second->intTable[field_name]), value, conditional_type))
+				{
+					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + Utilities::itos(*(iter->second->intTable[field_name])) + "\n\r";
+					++results_found;
+				}
+				break;
+			case 2:
+				if (SearchComparisonDouble(*(iter->second->doubleTable[field_name]), value, conditional_type))
+				{
+					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + Utilities::itos(*(iter->second->doubleTable[field_name])) + "\n\r";
+					++results_found;
+				}
+				break;
+			case 3:
+				if (SearchComparisonString(*(iter->second->stringTable[field_name]), argument, conditional_type))
+				{
+					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + *(iter->second->stringTable[field_name]) + "\n\r";
+					++results_found;
+				}
+				break;
+			}
+		}
+		return results_found;
     }
     else
     {

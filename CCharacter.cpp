@@ -1017,7 +1017,6 @@ Character * Character::LoadPlayer(std::string name, User * user)
 				first = last + 1;
 				i++;
 			}
-			//search for a ';' to grab the last objective
 			count = Utilities::atoi(objectives.substr(first, objectives.length() - first));
 			loaded->player->questObjectives[i].push_back(count);
 		}
@@ -1099,7 +1098,7 @@ void Character::Save()
 		for (int i = 0; i < (int)player->questLog.size(); i++)
 		{
 			string qasql = "INSERT INTO player_active_quests (player, quest, objectives) values ('" + name + "',";
-			qasql += Utilities::itos(player->questLog[i]->id) + ",";
+			qasql += Utilities::itos(player->questLog[i]->id);
 			for (int j = 0; j < (int)player->questObjectives[i].size(); j++)
 			{
 				qasql += "," + Utilities::itos(player->questObjectives[i][j]);
