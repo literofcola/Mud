@@ -39,7 +39,7 @@ using namespace std;
 
 //in rooms per second
 const double Character::NORMAL_MOVE_SPEED = 2.5;
-const double Character::COMBAT_MOVE_SPEED = 0.75;
+const double Character::COMBAT_MOVE_SPEED = 0.5;
 
 //TODO: racial skills?
 Character::RaceType Character::race_table[] = 
@@ -1236,6 +1236,11 @@ void Character::SetLevel(int newlevel)
     {
         player->SetClassLevel(player->currentClass->id, 
                               Utilities::UMAX(0, player->GetClassLevel(player->currentClass->id) + (newlevel - level)));
+	
+		player->statPoints += Player::STATS_PER_LEVEL;
+		Send("|WYou gain " + Utilities::itos(Player::STATS_PER_LEVEL) + " attribute points. Set with \"train\" command.|X\n\r");
+
+		/*
         if(player->currentClass->agilityPerLevel > 0)
         {
             agility += player->currentClass->agilityPerLevel * (newlevel - level);
@@ -1261,6 +1266,7 @@ void Character::SetLevel(int newlevel)
             wisdom += player->currentClass->wisdomPerLevel*(newlevel - level);
             Send("|WYour wisdom increases by " + Utilities::itos(player->currentClass->wisdomPerLevel*(newlevel - level)) + ".|X\n\r");
         }
+		*/
     }
     level = newlevel;
     health = maxHealth = vitality * Character::HEALTH_FROM_VITALITY;

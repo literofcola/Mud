@@ -25,11 +25,13 @@ public:
     int id;
     int level;
     int gender;
-    int agility;
-    int intellect;
-    int strength;
-    int vitality;
-    int wisdom;
+
+    int agility;	//crit chance and avoidance
+    int intellect;  //mana and spell power
+    int strength;	//stamina and attack power
+    int vitality;	//health
+    int wisdom;		//mana regen
+
     int health;     //current health
     int maxHealth;  //permanent health(vitality*10) + gear and buff bonuses
     int mana;

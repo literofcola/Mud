@@ -30,6 +30,7 @@ Player::Player(User * user_)
     saved = -1;
     immlevel = 0;
     experience = 0;
+	statPoints = 0;
 	recall = 0;
     isGhost = false;
     isCorpse = false;

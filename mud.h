@@ -83,6 +83,7 @@ void cmd_cooldowns(Character * ch, string argument);
 void cmd_affects(Character * ch, string argument);
 void cmd_learn(Character * ch, string argument);
 bool cmd_learn_Query(Character * ch, string argument);
+void cmd_train(Character * ch, string argument);
 
 //cmd_track.cpp
 void cmd_track(Character * ch, string argument);

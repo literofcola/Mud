@@ -21,6 +21,8 @@ public:
     std::string pwtemp;
     int immlevel;
     int experience;
+	int statPoints;
+	static const int STATS_PER_LEVEL = 6;
 	int recall; //ID of recall room
     double lastCombatAction; //Timestamp for pvp combat flag
     double hoursPlayed;

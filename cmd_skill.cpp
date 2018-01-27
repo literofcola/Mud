@@ -309,9 +309,10 @@ void cmd_skills(Character * ch, string argument)
 	std::map<string, Skill *>::iterator iter;
     for(iter = ch->knownSkills.begin(); iter != ch->knownSkills.end(); ++iter)
     {
-		skill_string << "|G" << left << setw(40) << (*iter).second->long_name << " |MCast name:|G " << setw(20);
+		skill_string << "|G" << left << setw(25) << (*iter).second->long_name << " |MCast name:|G " << setw(25);
 		skill_string << (*iter).second->name << " |MCast time:|G " << setw(5) << Utilities::dtos((*iter).second->castTime, 2);
-		skill_string << " |MCooldown:|G " << Utilities::dtos((*iter).second->cooldown, 2) << "|X\n\r";
+		skill_string << " |MCooldown:|G " << Utilities::dtos((*iter).second->cooldown, 2) << "\n\r";
+		skill_string << "  |Y-- " << (*iter).second->affectDescription << "\n\r";
 		ch->Send(skill_string.str());
 		skill_string.str("");
         //ch->Send("|G" + (*iter).second->long_name + " |MCast name:|G " + (*iter).second->name 
@@ -334,6 +335,7 @@ void cmd_cooldowns(Character * ch, string argument)
     }
 }
 
+//todo: learn is outdated, new plan is to figure out known skills via class skills only. Saving this function for immortal use
 void cmd_learn(Character * ch, string argument)
 {
     if(!ch || !ch->player)
@@ -590,4 +592,48 @@ void cmd_affects(Character * ch, string argument)
             }
         }
     }
+}
+
+void cmd_train(Character * ch, string argument)
+{
+	if (!ch || !ch->player)
+		return;
+
+	if (argument.empty())
+	{
+		ch->Send("Specify an attribute to increase: agility intellect strength vitality wisdom\n\r");
+		return;
+	}
+	if (!Utilities::str_cmp(argument, "agility"))
+	{
+		ch->agility++;
+		ch->Send("|WAgility increased: " + Utilities::itos(ch->agility) + "|X\n\r");
+		return;
+	}
+	else if (!Utilities::str_cmp(argument, "intellect"))
+	{
+		ch->intellect++;
+		ch->Send("|WIntellect increased: " + Utilities::itos(ch->intellect) + "|X\n\r");
+		return;
+	}
+	else if (!Utilities::str_cmp(argument, "strength"))
+	{
+		ch->strength++;
+		ch->Send("|WStrength increased: " + Utilities::itos(ch->strength) + "|X\n\r");
+		return;
+	}
+	else if (!Utilities::str_cmp(argument, "vitality"))
+	{
+		ch->vitality++;
+		ch->Send("|WVitality increased: " + Utilities::itos(ch->vitality) + "|X\n\r");
+		return;
+	}
+	else if (!Utilities::str_cmp(argument, "wisdom"))
+	{
+		ch->wisdom++;
+		ch->Send("|WWisdom increased: " + Utilities::itos(ch->wisdom) + "|X\n\r");
+		return;
+	}
+	ch->Send("Specify an attribute to increase: agility intellect strength vitality wisdom\n\r");
+	return;
 }

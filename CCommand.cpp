@@ -197,6 +197,7 @@ class Command cmd_table[] =
     /*{ "sneak",		cmd_sneak,		POS_STANDING,	1,  LOG_NORMAL, 1 },
     { "split",		cmd_split,		POS_RESTING,	1,  LOG_NORMAL, 1 },
     { "steal",		cmd_steal,		POS_STANDING,	1,  LOG_NORMAL, 1 },*/
+	{ "train",		cmd_train,		1, 0, 0, 0 },
     /*{ "visible",	cmd_visible,		POS_SLEEPING,	1,  LOG_NORMAL, 1 },*/
     { "wake",		cmd_wake,		1, 0, 0, 1 },
     /*{ "where",		cmd_where,		POS_RESTING,	1,  LOG_NORMAL, 1 },
