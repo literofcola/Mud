@@ -351,6 +351,14 @@ void Character::QueryClear()
 	hasQuery = false;
 }
 
+void Character::ResetMaxStats()
+{
+	//todo: check equipment bonuses
+	maxHealth = vitality * Character::HEALTH_FROM_VITALITY;
+	maxMana = intellect * Character::MANA_FROM_INTELLECT;
+	maxStamina = strength * Character::STAMINA_FROM_STRENGTH;
+}
+
 void Character::GeneratePrompt(double currentTime)
 {
 	string prompt = "\n\r";
@@ -901,9 +909,10 @@ Character * Character::LoadPlayer(std::string name, User * user)
     loaded->health = row["health"];
     loaded->mana = row["mana"];
     loaded->stamina = row["stamina"];
-    loaded->maxHealth = loaded->vitality * Character::HEALTH_FROM_VITALITY;
-    loaded->maxMana = loaded->intellect * Character::MANA_FROM_INTELLECT;
-    loaded->maxStamina = loaded->strength * Character::STAMINA_FROM_STRENGTH;
+	//loaded->ResetMaxStats();
+    //loaded->maxHealth = loaded->vitality * Character::HEALTH_FROM_VITALITY;
+    //loaded->maxMana = loaded->intellect * Character::MANA_FROM_INTELLECT;
+    //loaded->maxStamina = loaded->strength * Character::STAMINA_FROM_STRENGTH;
 
     loaded->room = Game::GetGame()->GetRoom(row["room"]); 
 
@@ -915,6 +924,7 @@ Character * Character::LoadPlayer(std::string name, User * user)
     loaded->player->experience = row["experience"];
 	loaded->player->recall = row["recall"];
     loaded->player->isGhost = row["ghost"];
+	loaded->player->statPoints = row["stat_points"];
 
 	StoreQueryResult playerclassres = Server::sqlQueue->Read("SELECT * FROM player_class_data where player='" + loaded->name + "'");
 	StoreQueryResult::iterator iter;
@@ -985,6 +995,8 @@ Character * Character::LoadPlayer(std::string name, User * user)
 			}
 		}
 	}
+
+	loaded->ResetMaxStats(); //Set maxhealth/stamina/mana based on post equipment stats
 
 	StoreQueryResult playerqcres = Server::sqlQueue->Read("SELECT * FROM player_completed_quests where player='" + loaded->name + "'");
 	for (iter = playerqcres.begin(); iter != playerqcres.end(); ++iter)
@@ -1064,7 +1076,7 @@ void Character::Save()
         string fixtitle = Utilities::SQLFixQuotes(title);
 
         sql = "INSERT INTO players (name, password, immlevel, title, experience, room, level, gender, race, agility, intellect, strength, vitality, ";
-        sql += "wisdom, health, mana, stamina, class, recall, ghost) values ('";
+        sql += "wisdom, health, mana, stamina, class, recall, ghost, stat_points) values ('";
         sql += name + "','" + password + "'," + Utilities::itos(player->immlevel);
         sql += ",'" + fixtitle + "'," + Utilities::itos(player->experience) + "," + Utilities::itos(room->id);
         sql += "," + Utilities::itos(level) + "," + Utilities::itos(gender) + "," + Utilities::itos(race) + ",";
@@ -1073,16 +1085,17 @@ void Character::Save()
         sql += Utilities::itos(health) + "," + Utilities::itos(mana) + "," + Utilities::itos(stamina);
 		sql += "," + Utilities::itos(player->currentClass->id) + "," + Utilities::itos(player->recall) + ", ";
         if(IsGhost() || IsCorpse())
-            sql += "1)";
+            sql += "1,";
         else
-            sql += "0)";
+            sql += "0,";
+		sql += Utilities::itos(player->statPoints) + ")";
 
         sql += " ON DUPLICATE KEY UPDATE name=VALUES(name), password=VALUES(password), immlevel=VALUES(immlevel), title=VALUES(title), ";
         sql += "experience=VALUES(experience), room=VALUES(room), level=VALUES(level), gender=VALUES(gender), race=VALUES(race), agility=VALUES(agility), ";
         sql += "intellect=VALUES(intellect), strength=VALUES(strength), vitality=VALUES(vitality), wisdom=VALUES(wisdom), ";
         sql += "health=VALUES(health), mana=VALUES(mana), stamina=VALUES(stamina), ";
         sql += "class=VALUES(class), ";
-        sql += "recall=VALUES(recall), ghost=VALUES(ghost)";
+        sql += "recall=VALUES(recall), ghost=VALUES(ghost), stat_points=VALUES(stat_points)";
 
 		//player_completed_quests
 		std::set<int>::iterator questiter;
@@ -1232,47 +1245,20 @@ void Character::SetLevel(int newlevel)
     if(level == newlevel || newlevel > Game::MAX_LEVEL || newlevel < 1)
         return;
 
+	Send("|WYou have reached level " + Utilities::itos(newlevel) + "!|X\n\r");
+
     if(player)
     {
         player->SetClassLevel(player->currentClass->id, 
-                              Utilities::UMAX(0, player->GetClassLevel(player->currentClass->id) + (newlevel - level)));
+                              Utilities::MAX(0, player->GetClassLevel(player->currentClass->id) + (newlevel - level)));
 	
 		player->statPoints += Player::STATS_PER_LEVEL;
-		Send("|WYou gain " + Utilities::itos(Player::STATS_PER_LEVEL) + " attribute points. Set with \"train\" command.|X\n\r");
-
-		/*
-        if(player->currentClass->agilityPerLevel > 0)
-        {
-            agility += player->currentClass->agilityPerLevel * (newlevel - level);
-            Send("|WYour agility increases by " + Utilities::itos(player->currentClass->agilityPerLevel*(newlevel - level)) + ".|X\n\r");
-        }
-        if(player->currentClass->intellectPerLevel > 0)
-        {
-            intellect += player->currentClass->intellectPerLevel*(newlevel - level);
-            Send("|WYour intellect increases by " + Utilities::itos(player->currentClass->intellectPerLevel*(newlevel - level)) + ".|X\n\r");
-        }
-        if(player->currentClass->strengthPerLevel > 0)
-        {
-            strength += player->currentClass->strengthPerLevel*(newlevel - level);
-            Send("|WYour strength increases by " + Utilities::itos(player->currentClass->strengthPerLevel*(newlevel - level)) + ".|X\n\r");
-        }
-        if(player->currentClass->vitalityPerLevel > 0)
-        {
-            vitality += player->currentClass->vitalityPerLevel*(newlevel - level);
-            Send("|WYour vitality increases by " + Utilities::itos(player->currentClass->vitalityPerLevel*(newlevel - level)) + ".|X\n\r");
-        }
-        if(player->currentClass->wisdomPerLevel > 0)
-        {
-            wisdom += player->currentClass->wisdomPerLevel*(newlevel - level);
-            Send("|WYour wisdom increases by " + Utilities::itos(player->currentClass->wisdomPerLevel*(newlevel - level)) + ".|X\n\r");
-        }
-		*/
+		Send("|WYou gain " + Utilities::itos(Player::STATS_PER_LEVEL) + " attribute points. Spend with the \"train\" command.|X\n\r");
     }
-    level = newlevel;
-    health = maxHealth = vitality * Character::HEALTH_FROM_VITALITY;
-    mana = maxMana = intellect * Character::MANA_FROM_INTELLECT;
-    stamina = maxStamina = strength * Character::STAMINA_FROM_STRENGTH;
-    Send("|WYou are now level " + Utilities::itos(newlevel) + ".|X\n\r");
+	level = newlevel;
+	health = maxHealth;
+	mana = maxMana;
+	stamina = maxStamina;
 }
 
 int Character::GetLevel()

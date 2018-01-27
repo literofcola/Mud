@@ -440,6 +440,12 @@ int Player::GetEquipLocation(Item * equip)
 
 bool Player::EquipItemFromInventory(Item * wear, int equipSlot)
 {
+	if (equipSlot < 0 || equipSlot >= Player::EQUIP_LAST)
+	{
+		LogFile::Log("error", "EquipItemFromInventory, invalid equipSlot");
+		return false;
+	}
+
     if(equipped[equipSlot] != NULL)
     {
         LogFile::Log("error", "EquipItemFromInventory, equipped[equipSlot] != NULL");

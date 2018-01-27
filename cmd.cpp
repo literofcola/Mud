@@ -428,6 +428,7 @@ void cmd_score(Character * ch, string argument)
     ch->Send("Agility: " + Utilities::itos(ch->agility) + " Intellect: " + Utilities::itos(ch->intellect)
         + " Strength: " + Utilities::itos(ch->strength) + " Vitality: " + Utilities::itos(ch->vitality) + " Wisdom: "
         + Utilities::itos(ch->wisdom) + "\n\r");
+	ch->Send("Attribute Points available: " + Utilities::itos(ch->player->statPoints) + "\n\r");
     ch->Send("Experience: " + Utilities::itos(ch->player->experience) + "\n\r");
     ch->Send("You have " + Utilities::itos(ch->player->experience) + " experience and need " 
                     + Utilities::itos(Game::ExperienceForLevel(ch->level+1)) + " experience to reach level " 

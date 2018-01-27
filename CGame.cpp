@@ -1579,11 +1579,6 @@ void Game::LoadClasses(Server * server)
 		c->id = 1;
 		c->name = "warrior";
 		c->color = "|M";
-		c->agilityPerLevel = 1;
-		c->intellectPerLevel = 0;
-		c->strengthPerLevel = 2;
-		c->vitalityPerLevel = 3;
-		c->wisdomPerLevel = 0;
 		classes[c->id] = c;
 		return;
 	}
@@ -1597,11 +1592,6 @@ void Game::LoadClasses(Server * server)
         c->id = row["id"];
         c->name = (string)row["name"];
         c->color = (string)row["color"];
-        c->agilityPerLevel = row["agility_per_level"];
-        c->intellectPerLevel = row["intellect_per_level"];
-        c->strengthPerLevel = row["strength_per_level"];
-        c->vitalityPerLevel = row["vitality_per_level"];
-        c->wisdomPerLevel = row["wisdom_per_level"];
         c->items = row["items"];
 
 		StoreQueryResult skillsres = server->sqlQueue->Read("SELECT * from class_skills where class=" + Utilities::itos(c->id));

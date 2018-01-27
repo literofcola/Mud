@@ -21,6 +21,7 @@
 #include "CGame.h"
 #include "CServer.h"
 #include "utils.h"
+#include "mud.h"
 
 using namespace std;
 
@@ -103,6 +104,22 @@ void cmd_recall(Character * ch, string argument)
 		ch->Send("You cannot set your recall location here.\n\r");
 		return;
 	}
-	ch->player->recall = ch->room->id;
-    ch->Send("Recall location set.\n\r");
+
+	ch->queryData = new int(ch->room->id);
+	ch->hasQuery = true;
+	ch->queryPrompt = "Set recall location here? (y/n) ";
+	ch->queryFunction = cmd_recall_Query;
+}
+
+bool cmd_recall_Query(Character * ch, string argument)
+{
+	if (!Utilities::str_cmp(argument, "yes") || !Utilities::str_cmp(argument, "y"))
+	{
+		ch->player->recall = *((int*)ch->queryData);
+		ch->Send("Recall location set.\n\r");
+	}
+	if (ch->queryData)
+		delete ch->queryData;
+	ch->QueryClear();
+	return true;
 }

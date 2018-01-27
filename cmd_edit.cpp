@@ -3063,11 +3063,6 @@ void classEditCmd_show(Character * ch, string argument)
     ch->Send("Name:      [" + pClass->name + "]\n\r");
     ch->Send("ID:        [" + Utilities::itos(pClass->id) + "]\n\r");
     ch->Send("Color string: [|" + pClass->color + "]\n\r");
-    ch->Send("agility_per_level:  [" + Utilities::itos(pClass->agilityPerLevel) + "]\n\r");
-    ch->Send("intellect_per_level:[" + Utilities::itos(pClass->intellectPerLevel) + "]\n\r");
-    ch->Send("strength_per_level: [" + Utilities::itos(pClass->strengthPerLevel) + "]\n\r");
-    ch->Send("vitality_per_level: [" + Utilities::itos(pClass->vitalityPerLevel) + "]\n\r");
-    ch->Send("wisdom_per_level:   [" + Utilities::itos(pClass->wisdomPerLevel) + "]\n\r");
 
     ch->Send("Skills (ID, Level, Cost): ");
     std::list<Class::SkillData>::iterator iter;
@@ -3076,29 +3071,6 @@ void classEditCmd_show(Character * ch, string argument)
         ch->Send("{" + Utilities::itos((*iter).skill->id) + "," + Utilities::itos((*iter).level) + "," +
                     Utilities::itos((*iter).learnCost) + "} ");
     }
-}
-
-void classEditCmd_agility(Character * ch, string argument)
-{
-    Class * pClass = (Class *)ch->editData;
-
-    string arg1;
-    argument = Utilities::one_argument(argument, arg1);
-
-    if(!Utilities::IsNumber(arg1))
-    {
-        ch->Send("agility_per_level <#>\n\r");
-        return;
-    }
-    int agil = Utilities::atoi(arg1);
-    if(agil < 0)
-    {
-        ch->Send("agility_per_level must be >= 0\n\r");
-        return;
-    }
-    pClass->agilityPerLevel = agil;
-    pClass->changed = true;
-    ch->Send("agility_per_level set.\n\r");
 }
 
 void helpEditCmd_show(Character * ch, string argument)

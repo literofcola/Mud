@@ -166,6 +166,7 @@ public:
     std::map<std::string, double*> doubleTable;
 
     //TODO sort these functions!
+	void ResetMaxStats();
     void GeneratePrompt(double currentTime);
     void QueryClear();
     void Send(std::string str);

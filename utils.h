@@ -43,19 +43,19 @@ namespace Utilities
     /*
      * Utility macros.
      */
-    inline int UMIN(int a, int b)
+    inline int MIN(int a, int b)
     {	return a < b ? a : b;    }
 
-    inline int UMAX(int a, int b)
+    inline int MAX(int a, int b)
     {	return a > b ? a : b;    }
 
-    inline double UMIN(double a, double b)
+    inline double MIN(double a, double b)
     {	return a < b ? a : b;    }
 
-    inline double UMAX(double a, double b)
+    inline double MAX(double a, double b)
     {	return a > b ? a : b;    }
 
-    inline int URANGE(int a, int b, int c)
+    inline int RANGE(int a, int b, int c)
     {
 	    return b < a ? a : b > c ? c : b;
     }

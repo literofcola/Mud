@@ -65,7 +65,7 @@ class Command cmd_table[] =
     /*{ "gt",		cmd_clantalk,	POS_DEAD,		1,		LOG_NORMAL, 1 },
     { "guild",		cmd_clan,		POS_DEAD,		1,		LOG_NORMAL, 1 },
     { "order",		cmd_order,		POS_RESTING,	1,		LOG_NORMAL, 1 },*/
-    { "learn",      cmd_learn,	    1, 0, 0, 0 },
+    { "learn",      cmd_learn,	    -1, 0, 0, 0 },
     //{ "rest",		cmd_rest,		POS_SLEEPING,	0 },
     { "sit",		cmd_sit,		1, 0, 0, 1 },
     { "sockets",    cmd_sockets,	-3, 0, 1, 1 },
@@ -418,7 +418,6 @@ const class Command questEditCmd_table[] =
 const class Command classEditCmd_table[] =
 {
     { "show",       classEditCmd_show, 0, 0, 1, 1  },
-    { "agility_per_level", classEditCmd_agility, 0, 0, 1, 1  },
     { "",			0,  0, 0, 1, 1                 }
 };
 

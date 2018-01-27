@@ -12,12 +12,6 @@ public:
     std::string name;
     std::string color;
     std::string items;
-    //Level up stat bonuses
-    int agilityPerLevel;
-    int intellectPerLevel;
-    int strengthPerLevel;
-    int vitalityPerLevel;
-    int wisdomPerLevel;
 
     struct SkillData
     {

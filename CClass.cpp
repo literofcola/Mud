@@ -31,11 +31,6 @@ Class::Class()
     name = "";
     color = "";
     items = "";
-	agilityPerLevel = 0;
-	intellectPerLevel = 0;
-	strengthPerLevel = 0;
-	vitalityPerLevel = 0;
-	wisdomPerLevel = 0;
 
     changed = false;
 }
@@ -50,15 +45,10 @@ void Class::Save()
     if(!changed)
         return;
 
-    string sql = "INSERT INTO classes (id, name, color, agility_per_level, intellect_per_level, strength_per_level, vitality_per_level,";
-    sql += " wisdom_per_level) values (";
-    sql += Utilities::itos(id) + ",'" + Utilities::SQLFixQuotes(name) + "','" + Utilities::SQLFixQuotes(color);
-    sql += "'," + Utilities::itos(agilityPerLevel) + "," + Utilities::itos(intellectPerLevel);
-    sql += "," + Utilities::itos(strengthPerLevel) + "," + Utilities::itos(vitalityPerLevel) + ",";
-    sql += Utilities::itos(wisdomPerLevel);
+    string sql = "INSERT INTO classes (id, name, color, items) values(";
+    sql += Utilities::itos(id) + ",'" + Utilities::SQLFixQuotes(name) + "','" + Utilities::SQLFixQuotes(color) + "','" + Utilities::SQLFixQuotes(items) + "'";
 
-    sql += ") ON DUPLICATE KEY UPDATE id=VALUES(id), name=VALUES(name), color=VALUES(color), agility_per_level=VALUES(agility_per_level), ";
-    sql += "intellect_per_level=VALUES(intellect_per_level), strength_per_level=VALUES(strength_per_level), vitality_per_level=VALUES(vitality_per_level), wisdom_per_level=VALUES(wisdom_per_level)";
+	sql += ") ON DUPLICATE KEY UPDATE id=VALUES(id), name=VALUES(name), color=VALUES(color), items=VALUES(items)";
 
     Server::sqlQueue->Write(sql);
 

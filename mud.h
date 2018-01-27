@@ -74,9 +74,10 @@ void cmd_stand(Character * ch, string argument);
 void cmd_sleep(Character * ch, string argument);
 void cmd_wake(Character * ch, string argument);
 void cmd_recall(Character * ch, string argument);
+bool cmd_recall_Query(Character * ch, string argument);
 
 //cmd_skill.cpp
-void cmd_castCallback(Character * ch, Skill * sk, void * target);
+void cmd_castCallback(Character::DelayData delayData);
 void cmd_cast(Character * ch, string argument);
 void cmd_skills(Character * ch, string argument);
 void cmd_cooldowns(Character * ch, string argument);
@@ -176,7 +177,6 @@ void questEditCmd_expreward(Character * ch, string argument);
 void questEditCmd_moneyreward(Character * ch, string argument);
 void questEditCmd_shareable(Character * ch, string argument);
 void classEditCmd_show(Character * ch, string argument);
-void classEditCmd_agility(Character * ch, string argument);
 void helpEditCmd_show(Character * ch, string argument);
 void helpEditCmd_text(Character * ch, string argument);
 void helpEditCmd_name(Character * ch, string argument);

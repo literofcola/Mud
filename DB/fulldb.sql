@@ -92,7 +92,7 @@ CREATE TABLE `classes` (
 
 LOCK TABLES `classes` WRITE;
 /*!40000 ALTER TABLE `classes` DISABLE KEYS */;
-INSERT INTO `classes` VALUES (1,'Warrior','|M',1,0,2,3,0,'3;4;5;6;'),(2,'Rogue','|Y',3,0,1,2,0,'11;12;13;14;'),(3,'Mage','|C',0,4,0,1,1,'7;8;9;10;'),(4,'Cleric','|W',0,2,0,2,2,'15;16;17;10');
+INSERT INTO `classes` VALUES (1,'Warrior','|M',1,0,2,3,0,'3;4;5;6;'),(2,'Rogue','|Y',3,0,1,2,0,'11;12;13;14;'),(3,'Mage','|C',0,4,0,1,1,'7;8;9;10;'),(4,'Cleric','|W',0,2,0,2,2,'15;16;17;10;');
 /*!40000 ALTER TABLE `classes` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -181,7 +181,7 @@ CREATE TABLE `items` (
 
 LOCK TABLES `items` WRITE;
 /*!40000 ALTER TABLE `items` DISABLE KEYS */;
-INSERT INTO `items` VALUES (1,'The One Ring','one ring',15,10,11,2,2,13,0,0,0,0,0,0,140,0.0),(2,'Test Item of Power','test item power',5,2,1,4,1,0,0,100,100,1,0,0,1000,0.0),(3,'Worn Greatsword','',1,1,16,1,0,4,0,0,25,0,1,3,4,3.6),(4,'Recruit\'s Vest','',1,1,5,1,0,0,0,3,55,0,0,0,2,0.0),(5,'Recruit\'s Pants','',1,1,9,1,0,0,0,3,40,0,0,0,2,0.0),(6,'Recruit\'s Boots','',1,1,10,1,0,0,0,2,25,0,0,0,1,0.0),(7,'Apprentice\'s Boots','',1,1,10,1,0,0,0,2,25,0,0,0,2,0.0),(8,'Apprentice\'s Robe','',1,1,5,1,0,0,0,3,55,0,0,0,2,0.0),(9,'Apprentice\'s Pants','',1,1,9,1,0,0,0,3,40,0,0,0,2,0.0),(10,'Bent Staff','',1,1,16,1,0,9,0,0,25,0,2,3,4,3.6),(11,'Footpad\'s Pants','',1,1,9,1,0,0,0,2,40,0,0,0,2,0.0),(12,'Footpad\'s Vest','',1,1,5,1,0,0,0,3,55,0,0,0,2,0.0),(13,'Footpad\'s Shoes','',1,1,10,1,0,0,0,3,25,0,0,0,1,0.0),(14,'Worn Shortsword','',1,1,14,1,0,4,0,0,20,0,1,2,3,2.6),(15,'Neophyte\'s Pants','',1,1,9,1,0,0,0,3,40,0,0,0,2,0.0),(16,'Neophyte\'s Boots','',0,0,0,0,0,13,0,0,0,0,0,0,0,0.0),(17,'Neophyte\'s Robe','',0,0,0,0,0,13,0,0,0,0,0,0,0,0.0);
+INSERT INTO `items` VALUES (1,'The One Ring','one ring',15,10,11,2,2,13,0,0,0,0,0,0,140,0.0),(2,'Test Item of Power','test item power',5,2,1,4,1,0,0,100,100,1,0,0,1000,0.0),(3,'Worn Greatsword','',1,1,16,1,0,4,0,0,25,0,1,3,4,3.6),(4,'Recruit\'s Vest','',1,1,5,1,0,0,0,3,55,0,0,0,2,0.0),(5,'Recruit\'s Pants','',1,1,9,1,0,0,0,3,40,0,0,0,2,0.0),(6,'Recruit\'s Boots','',1,1,10,1,0,0,0,2,25,0,0,0,1,0.0),(7,'Apprentice\'s Boots','',1,1,10,1,0,0,0,2,25,0,0,0,2,0.0),(8,'Apprentice\'s Robe','',1,1,5,1,0,0,0,3,55,0,0,0,2,0.0),(9,'Apprentice\'s Pants','',1,1,9,1,0,0,0,3,40,0,0,0,2,0.0),(10,'Bent Staff','',1,1,16,1,0,9,0,0,25,0,2,3,4,3.6),(11,'Footpad\'s Pants','',1,1,9,1,0,0,0,2,40,0,0,0,2,0.0),(12,'Footpad\'s Vest','',1,1,5,1,0,0,0,3,55,0,0,0,2,0.0),(13,'Footpad\'s Shoes','',1,1,10,1,0,0,0,3,25,0,0,0,1,0.0),(14,'Worn Shortsword','',1,1,14,1,0,4,0,0,20,0,1,2,3,2.6),(15,'Neophyte\'s Pants','',1,1,9,1,0,0,0,3,40,0,0,0,2,0.0),(16,'Neophyte\'s Boots','',1,1,10,1,0,0,0,2,25,0,0,0,2,0.0),(17,'Neophyte\'s Robe','',1,1,5,1,0,0,0,3,55,0,0,0,2,0.0);
 /*!40000 ALTER TABLE `items` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -366,6 +366,7 @@ CREATE TABLE `player_cooldowns` (
 
 LOCK TABLES `player_cooldowns` WRITE;
 /*!40000 ALTER TABLE `player_cooldowns` DISABLE KEYS */;
+INSERT INTO `player_cooldowns` VALUES ('Boris',1,1517036748.56);
 /*!40000 ALTER TABLE `player_cooldowns` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -455,6 +456,7 @@ CREATE TABLE `players` (
   `class` int(11) NOT NULL,
   `recall` int(11) NOT NULL,
   `ghost` tinyint(4) NOT NULL,
+  `stat_points` int(11) NOT NULL,
   PRIMARY KEY (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -465,7 +467,7 @@ CREATE TABLE `players` (
 
 LOCK TABLES `players` WRITE;
 /*!40000 ALTER TABLE `players` DISABLE KEYS */;
-INSERT INTO `players` VALUES ('Bob','\r\Z',0,'',16516800,2,240,1,0,139,512,118,446,269,2230,5120,1180,4,0,0),('Boris','\r\Z',10,'',16516800,2,240,1,7,249,10,488,727,10,3635,100,4880,1,0,0),('Monk','\r\Z',0,'',16516800,2,240,1,5,429,130,248,547,130,2735,1300,2480,2,0,0),('Paladin','\r\Z',0,'',16516800,2,240,1,4,129,250,248,607,250,3035,2500,2480,4,0,0),('Shaman','\r\Z',0,'',16516800,2,240,1,8,70,488,130,488,308,2440,4880,1300,1,0,0);
+INSERT INTO `players` VALUES ('Bob','\r\Z',0,'',16516800,2,240,1,0,139,512,118,446,269,2230,5120,1180,4,0,0,0),('Boris','\r\Z',10,'',16516800,2,240,1,7,249,10,488,727,10,3635,100,4880,1,2,0,0),('Monk','\r\Z',0,'',16516800,2,240,1,5,429,130,248,547,130,2735,1300,2480,2,0,0,0),('Paladin','\r\Z',0,'',16516800,2,240,1,4,129,250,248,607,250,3035,2500,2480,4,0,0,0),('Shaman','\r\Z',0,'',16516800,2,240,1,8,70,488,130,488,308,2440,4880,1300,1,0,0,0);
 /*!40000 ALTER TABLE `players` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -662,4 +664,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-01-26 19:51:39
+-- Dump completed on 2018-01-26 23:24:17
