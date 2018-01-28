@@ -57,11 +57,6 @@ CREATE TABLE `classes` (
   `id` int(11) NOT NULL,
   `name` varchar(12) DEFAULT NULL,
   `color` varchar(5) DEFAULT NULL,
-  `agility_per_level` int(11) DEFAULT NULL,
-  `intellect_per_level` int(11) DEFAULT NULL,
-  `strength_per_level` int(11) DEFAULT NULL,
-  `vitality_per_level` int(11) DEFAULT NULL,
-  `wisdom_per_level` int(11) DEFAULT NULL,
   `items` tinytext,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
@@ -172,16 +167,17 @@ CREATE TABLE `npcs` (
   `agility` int(11) NOT NULL,
   `intellect` int(11) NOT NULL,
   `strength` int(11) NOT NULL,
-  `vitality` int(11) NOT NULL,
+  `stamina` int(11) NOT NULL,
   `wisdom` int(11) NOT NULL,
   `health` int(11) NOT NULL,
   `mana` int(11) NOT NULL,
-  `stamina` int(11) NOT NULL,
+  `energy` int(11) NOT NULL,
+  `rage` int(11) NOT NULL,
   `title` varchar(45) NOT NULL,
   `attack_speed` double NOT NULL,
   `damage_low` int(11) NOT NULL,
   `damage_high` int(11) NOT NULL,
-  `flags` tinytext,
+  `flags` tinytext NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -304,11 +300,10 @@ CREATE TABLE `players` (
   `agility` int(11) NOT NULL,
   `intellect` int(11) NOT NULL,
   `strength` int(11) NOT NULL,
-  `vitality` int(11) NOT NULL,
+  `stamina` int(11) NOT NULL,
   `wisdom` int(11) NOT NULL,
   `health` int(11) NOT NULL,
   `mana` int(11) NOT NULL,
-  `stamina` int(11) NOT NULL,
   `class` int(11) NOT NULL,
   `recall` int(11) NOT NULL,
   `ghost` tinyint(4) NOT NULL,
@@ -451,4 +446,4 @@ CREATE TABLE `triggers` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-01-27 17:30:31
+-- Dump completed on 2018-01-28  6:03:10
