@@ -342,7 +342,7 @@ void cmd_look(Character * ch, string argument)
     }
 }
 
-// adds the target's health/mana/stamina to the players prompt
+// adds the target's health/mana/energy/rage to the players prompt
 // spells/skills done to a character automatically target that character
 // allow targeting in same room and adjacent rooms
 void cmd_target(Character * ch, string argument)
@@ -427,7 +427,7 @@ void cmd_score(Character * ch, string argument)
     ch->Send("  Energy: " + Utilities::itos(ch->energy) + "/" + Utilities::itos(ch->maxEnergy) + "\n\r");
 	ch->Send("  Rage: " + Utilities::itos(ch->rage) + "/" + Utilities::itos(ch->maxRage) + "\n\r");
     ch->Send("Agility: " + Utilities::itos(ch->agility) + " Intellect: " + Utilities::itos(ch->intellect)
-        + " Strength: " + Utilities::itos(ch->strength) + " Vitality: " + Utilities::itos(ch->vitality) + " Wisdom: "
+        + " Strength: " + Utilities::itos(ch->strength) + " Stamina: " + Utilities::itos(ch->stamina) + " Wisdom: "
         + Utilities::itos(ch->wisdom) + "\n\r");
 	ch->Send("Attribute Points available: " + Utilities::itos(ch->player->statPoints) + "\n\r");
     ch->Send("Experience: " + Utilities::itos(ch->player->experience) + "\n\r");

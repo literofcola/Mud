@@ -621,7 +621,7 @@ void cmd_train(Character * ch, string argument)
 
 	if (argument.empty())
 	{
-		ch->Send("Specify an attribute to increase: agility intellect strength vitality wisdom\n\r");
+		ch->Send("Specify an attribute to increase: agility intellect strength stamina wisdom\n\r");
 		return;
 	}
 	if (ch->player->statPoints <= 0)
@@ -647,11 +647,11 @@ void cmd_train(Character * ch, string argument)
 		ch->strength++;
 		ch->Send("|WStrength increased: " + Utilities::itos(ch->strength) + "|X\n\r");
 	}
-	else if (!Utilities::str_cmp(argument, "vitality"))
+	else if (!Utilities::str_cmp(argument, "stamina"))
 	{
 		ch->player->statPoints--;
-		ch->vitality++;
-		ch->Send("|WVitality increased: " + Utilities::itos(ch->vitality) + "|X\n\r");
+		ch->stamina++;
+		ch->Send("|WStamina increased: " + Utilities::itos(ch->stamina) + "|X\n\r");
 	}
 	else if (!Utilities::str_cmp(argument, "wisdom"))
 	{
@@ -661,7 +661,7 @@ void cmd_train(Character * ch, string argument)
 	}
 	else
 	{
-		ch->Send("Specify an attribute to increase: agility intellect strength vitality wisdom\n\r");
+		ch->Send("Specify an attribute to increase: agility intellect strength stamina wisdom\n\r");
 		return;
 	}
 	ch->ResetMaxStats();

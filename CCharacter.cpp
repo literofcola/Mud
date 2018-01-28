@@ -105,7 +105,7 @@ Character::Character(const Character & copy)
     agility = copy.agility;
     intellect = copy.intellect;
     strength = copy.strength;
-    vitality = copy.vitality;
+    stamina = copy.stamina;
     wisdom = copy.wisdom;
     health = maxHealth = copy.maxHealth;
     mana = maxMana = copy.maxMana;
@@ -161,13 +161,13 @@ void Character::SetDefaults()
     target = NULL;
     level = 1;
     gender = 1;
-    agility = intellect = strength = vitality = wisdom = 10;
+    agility = intellect = strength = stamina = wisdom = 10;
 	energy = maxEnergy = 100;
 	rage = 0;
 	maxRage = 100;
 	comboPoints = 0;
 	maxComboPoints = 5;
-    health = maxHealth = vitality * Character::HEALTH_FROM_VITALITY;
+    health = maxHealth = stamina * Character::HEALTH_FROM_STAMINA;
     mana = maxMana = intellect * Character::MANA_FROM_INTELLECT;
     npcAttackSpeed = 2.0;
     npcDamageLow = npcDamageHigh = 1;
@@ -196,11 +196,10 @@ void Character::SetDefaults()
     intTable["agility"] = &agility;
     intTable["intellect"] = &intellect;
     intTable["strength"] = &strength;
-    intTable["vitality"] = &vitality;
+    intTable["stamina"] = &stamina;
     intTable["wisdom"] = &wisdom;
     intTable["health"] = &health;
     intTable["mana"] = &mana;
-    //intTable["stamina"] = &stamina;
     doubleTable["attack_speed"] = &npcAttackSpeed;
     intTable["damage_low"] = &npcDamageLow;
     intTable["damage_high"] = &npcDamageHigh;
@@ -354,13 +353,12 @@ void Character::QueryClear()
 void Character::ResetMaxStats()
 {
 	//todo: check equipment bonuses
-	maxHealth = vitality * Character::HEALTH_FROM_VITALITY;
+	maxHealth = stamina * Character::HEALTH_FROM_STAMINA;
 	maxMana = intellect * Character::MANA_FROM_INTELLECT;
 	//todo: these might be higher based on skills or talents?
 	maxEnergy = 100;
 	maxRage = 100;
 	maxComboPoints = 5;
-	//maxStamina = strength * Character::STAMINA_FROM_STRENGTH;
 }
 
 void Character::GeneratePrompt(double currentTime)
@@ -424,7 +422,7 @@ void Character::GeneratePrompt(double currentTime)
         else
             statColor = "|R";
 
-        prompt += statColor + Utilities::itos(health) + "/|X" + Utilities::itos(maxHealth) + "|Bhp ";
+        prompt += statColor + Utilities::itos(health) + "/|X" + Utilities::itos(maxHealth) + "|Bh ";
 
         //Mana
         if(mana > 0 && maxMana > 0)
@@ -441,25 +439,44 @@ void Character::GeneratePrompt(double currentTime)
         else
             statColor = "|R";
 
-        prompt += statColor + Utilities::itos(mana) + "/|X" + Utilities::itos(maxMana) + "|Bmp ";
+        prompt += statColor + Utilities::itos(mana) + "/|X" + Utilities::itos(maxMana) + "|Bm ";
 
-        //Stamina
-        /*if(stamina > 0 && maxStamina > 0)
-            percent = (stamina * 100)/maxStamina;
-        else
-            percent = 0;
+		//Energy
+		/*if (energy > 0 && maxEnergy > 0)
+			percent = (energy * 100) / maxEnergy;
+		else
+			percent = 0;
 
-        if(percent >= 75)
-            statColor = "|x";
-        else if(percent >= 50)
-            statColor = "|G";
-        else if(percent >= 25)
-            statColor = "|Y";
-        else
-            statColor = "|R";
+		if (percent >= 75)
+			statColor = "|x";
+		else if (percent >= 50)
+			statColor = "|G";
+		else if (percent >= 25)
+			statColor = "|Y";
+		else
+			statColor = "|R";
+			
+		prompt += statColor + Utilities::itos(energy) + "/|X" + Utilities::itos(maxEnergy) + "|Ben "*/
+		prompt += "|X" + Utilities::itos(energy) + "/" + Utilities::itos(maxEnergy) + "|Be ";
 
-        prompt += statColor + Utilities::itos(stamina) + "/|X" + Utilities::itos(maxStamina) + "|Bst";
+		//Rage
+		/*if (mana > 0 && maxMana > 0)
+			percent = (mana * 100) / maxMana;
+		else
+			percent = 0;
+
+		if (percent >= 75)
+			statColor = "|x";
+		else if (percent >= 50)
+			statColor = "|G";
+		else if (percent >= 25)
+			statColor = "|Y";
+		else
+			statColor = "|R";
+
+		prompt += statColor + Utilities::itos(mana) + "/|X" + Utilities::itos(maxMana) + "|Bmp ";
 		*/
+		prompt += "|X" + Utilities::itos(rage) + "/|X" + Utilities::itos(maxRage) + "|Br";
     }
     else
     {
@@ -482,6 +499,12 @@ void Character::GeneratePrompt(double currentTime)
     //Target
 	if(GetTarget() != NULL)
 	{
+		string targetPrompt = "";
+		//Combo points
+		if (comboPoints > 0 && GetTarget() == comboPointTarget)
+		{
+			targetPrompt += "|R(" + Utilities::itos(comboPoints) + ")|X";
+		}
         string targetLevel;
         if(GetTarget()->IsNPC() && !Utilities::FlagIsSet(target->flags, Character::FLAG_FRIENDLY)
 			&& Game::LevelDifficulty(level, GetTarget()->level) == 5) //NPC >= 10 levels
@@ -504,7 +527,7 @@ void Character::GeneratePrompt(double currentTime)
         }
 
         //TODO: Target name coloring based on pvp/attack status
-		string targetPrompt = "|B<" + targetLevel + " ";
+		targetPrompt = "|B<" + targetLevel + " ";
         if(GetTarget() == this ||  Utilities::FlagIsSet(GetTarget()->flags, FLAG_FRIENDLY))
             targetPrompt += "|G";
         else if(Utilities::FlagIsSet(GetTarget()->flags, FLAG_NEUTRAL))
@@ -528,7 +551,7 @@ void Character::GeneratePrompt(double currentTime)
         else
             statColor = "|R";
 
-        targetPrompt += statColor + Utilities::itos(percent) + "|B%hp ";
+        targetPrompt += statColor + Utilities::itos(percent) + "|B%h ";
 
         //Mana
         if(GetTarget()->mana > 0 && GetTarget()->maxMana > 0)
@@ -545,31 +568,26 @@ void Character::GeneratePrompt(double currentTime)
         else
             statColor = "|R";
 
-        targetPrompt += statColor + Utilities::itos(percent) + "|B%mp ";
-
-        //Stamina
-        /*if(GetTarget()->stamina > 0 && GetTarget()->maxStamina > 0)
-            percent = (GetTarget()->stamina * 100)/GetTarget()->maxStamina;
-        else
-            percent = 0;
-
-        if(percent >= 75 || GetTarget()->maxStamina == 0)
-            statColor = "|x";
-        else if(percent >= 50)
-            statColor = "|G";
-        else if(percent >= 25)
-            statColor = "|Y";
-        else
-            statColor = "|R";
-
-        targetPrompt += statColor + Utilities::itos(percent) + "|B%st";
-        targetPrompt += ">|x";
-		*/
+        targetPrompt += statColor + Utilities::itos(percent) + "|B%m ";
 
 		prompt += targetPrompt;
+
+		//Energy
+		if (GetTarget()->GetEnergy() > 0 && GetTarget()->maxEnergy > 0)
+			percent = (GetTarget()->GetEnergy() * 100) / GetTarget()->maxEnergy;
+		else
+			percent = 0;
+		prompt += "|X" + Utilities::itos(percent) + "|B%e ";
+
+		//Rage
+		if (GetTarget()->GetRage() > 0 && GetTarget()->maxRage > 0)
+			percent = (GetTarget()->rage * 100) / GetTarget()->maxRage;
+		else
+			percent = 0;
+		prompt += "|X" + Utilities::itos(rage) + "/|X" + Utilities::itos(maxRage) + "|Br>|X";
 	}
 
-    //Target of target
+    //Target of target (changed to display name, level, health only)
 	if(GetTarget() != NULL && GetTarget()->GetTarget() != NULL)
 	{
         Character * targettarget = GetTarget()->GetTarget();
@@ -618,10 +636,10 @@ void Character::GeneratePrompt(double currentTime)
         else
             statColor = "|R";
 
-        targetPrompt += statColor + Utilities::itos(percent) + "|B%hp ";
+        targetPrompt += statColor + Utilities::itos(percent) + "|B%h>|X";
 
         //Mana
-        if(targettarget->mana > 0 && targettarget->maxMana > 0)
+        /*if(targettarget->mana > 0 && targettarget->maxMana > 0)
             percent = (targettarget->mana * 100)/targettarget->maxMana;
         else
             percent = 0;
@@ -636,24 +654,6 @@ void Character::GeneratePrompt(double currentTime)
             statColor = "|R";
 
         targetPrompt += statColor + Utilities::itos(percent) + "|B%mp ";
-
-        //Stamina
-        /*if(targettarget->stamina > 0 && targettarget->maxStamina > 0)
-            percent = (targettarget->stamina * 100)/targettarget->maxStamina;
-        else
-            percent = 0;
-
-        if(percent >= 75 || targettarget->maxStamina == 0)
-            statColor = "|x";
-        else if(percent >= 50)
-            statColor = "|G";
-        else if(percent >= 25)
-            statColor = "|Y";
-        else
-            statColor = "|R";
-
-        targetPrompt += statColor + Utilities::itos(percent) + "|B%st";
-        targetPrompt += ">|x";
 		*/
 		prompt += targetPrompt;
 	}
@@ -688,7 +688,8 @@ void Character::GeneratePrompt(double currentTime)
 	Send(prompt);
 
 	//Really we should send updates when individual stats CHANGE, not every prompt
-	json vitals = { { "hp", health }, { "hpmax", maxHealth }, { "mp", mana }, { "mpmax", maxMana }, { "en", energy }, { "enmax", maxEnergy } };
+	json vitals = { { "hp", health }, { "hpmax", maxHealth }, { "mp", mana }, { "mpmax", maxMana }, 
+				    { "en", energy }, { "enmax", maxEnergy }, { "rage", rage },{ "ragemax", maxRage } };
 	SendGMCP("char.vitals " + vitals.dump());
 }
 
@@ -910,14 +911,10 @@ Character * Character::LoadPlayer(std::string name, User * user)
     loaded->agility = row["agility"];
     loaded->intellect = row["intellect"];
     loaded->strength = row["strength"];
-    loaded->vitality = row["vitality"];
+    loaded->stamina = row["stamina"];
     loaded->wisdom = row["wisdom"];
     loaded->health = row["health"];
     loaded->mana = row["mana"];
-	//loaded->ResetMaxStats();
-    //loaded->maxHealth = loaded->vitality * Character::HEALTH_FROM_VITALITY;
-    //loaded->maxMana = loaded->intellect * Character::MANA_FROM_INTELLECT;
-    //loaded->maxStamina = loaded->strength * Character::STAMINA_FROM_STRENGTH;
 
     loaded->room = Game::GetGame()->GetRoom(row["room"]); 
 
@@ -1080,14 +1077,14 @@ void Character::Save()
         string password = Utilities::SQLFixQuotes(player->password);
         string fixtitle = Utilities::SQLFixQuotes(title);
 
-        sql = "INSERT INTO players (name, password, immlevel, title, experience, room, level, gender, race, agility, intellect, strength, vitality, ";
-        sql += "wisdom, health, mana, stamina, class, recall, ghost, stat_points) values ('";
+        sql = "INSERT INTO players (name, password, immlevel, title, experience, room, level, gender, race, agility, intellect, strength, stamina, ";
+        sql += "wisdom, health, mana, class, recall, ghost, stat_points) values ('";
         sql += name + "','" + password + "'," + Utilities::itos(player->immlevel);
         sql += ",'" + fixtitle + "'," + Utilities::itos(player->experience) + "," + Utilities::itos(room->id);
         sql += "," + Utilities::itos(level) + "," + Utilities::itos(gender) + "," + Utilities::itos(race) + ",";
         sql += Utilities::itos(agility) + "," + Utilities::itos(intellect) + "," + Utilities::itos(strength) + ",";
-        sql += Utilities::itos(vitality) + "," + Utilities::itos(wisdom) + ",";
-        sql += Utilities::itos(health) + "," + Utilities::itos(mana) + "," + Utilities::itos(stamina);
+        sql += Utilities::itos(stamina) + "," + Utilities::itos(wisdom) + ",";
+        sql += Utilities::itos(health) + "," + Utilities::itos(mana);
 		sql += "," + Utilities::itos(player->currentClass->id) + "," + Utilities::itos(player->recall) + ", ";
         if(IsGhost() || IsCorpse())
             sql += "1,";
@@ -1097,8 +1094,8 @@ void Character::Save()
 
         sql += " ON DUPLICATE KEY UPDATE name=VALUES(name), password=VALUES(password), immlevel=VALUES(immlevel), title=VALUES(title), ";
         sql += "experience=VALUES(experience), room=VALUES(room), level=VALUES(level), gender=VALUES(gender), race=VALUES(race), agility=VALUES(agility), ";
-        sql += "intellect=VALUES(intellect), strength=VALUES(strength), vitality=VALUES(vitality), wisdom=VALUES(wisdom), ";
-        sql += "health=VALUES(health), mana=VALUES(mana), stamina=VALUES(stamina), ";
+        sql += "intellect=VALUES(intellect), strength=VALUES(strength), stamina=VALUES(stamina), wisdom=VALUES(wisdom), ";
+        sql += "health=VALUES(health), mana=VALUES(mana), ";
         sql += "class=VALUES(class), ";
         sql += "recall=VALUES(recall), ghost=VALUES(ghost), stat_points=VALUES(stat_points)";
 
@@ -1161,13 +1158,13 @@ void Character::Save()
     {
         string fixtitle = Utilities::SQLFixQuotes(title);
 
-        sql = "INSERT INTO npcs (id, name, keywords, level, gender, race, agility, intellect, strength, vitality, ";
-        sql += "wisdom, health, mana, stamina, title, attack_speed, damage_low, damage_high, flags) values (";
+        sql = "INSERT INTO npcs (id, name, keywords, level, gender, race, agility, intellect, strength, stamina, ";
+        sql += "wisdom, health, mana, title, attack_speed, damage_low, damage_high, flags) values (";
         sql += Utilities::itos(id) + ", '";
         sql += name + "', '" + keywords + "', " + Utilities::itos(level) + "," + Utilities::itos(gender) + "," + Utilities::itos(race) + ",";
         sql += Utilities::itos(agility) + "," + Utilities::itos(intellect) + "," + Utilities::itos(strength) + ",";
-        sql += Utilities::itos(vitality) + "," + Utilities::itos(wisdom) + ",";
-        sql += Utilities::itos(health) + "," + Utilities::itos(mana) + "," + Utilities::itos(stamina);
+        sql += Utilities::itos(stamina) + "," + Utilities::itos(wisdom) + ",";
+        sql += Utilities::itos(health) + "," + Utilities::itos(mana);
         sql += ", '" + fixtitle + "', " + Utilities::dtos(npcAttackSpeed, 2) + ", " + Utilities::itos(npcDamageLow) + ", ";
         sql += Utilities::itos(npcDamageHigh) + ",'";
 
@@ -1179,8 +1176,8 @@ void Character::Save()
 		sql += "')";
 
         sql += " ON DUPLICATE KEY UPDATE id=VALUES(id), name=VALUES(name), level=VALUES(level), gender=VALUES(gender), race=VALUES(race), agility=VALUES(agility), ";
-        sql += "intellect=VALUES(intellect), strength=VALUES(strength), vitality=VALUES(vitality), wisdom=VALUES(wisdom), ";
-        sql += "health=VALUES(health), mana=VALUES(mana), stamina=VALUES(stamina), ";
+        sql += "intellect=VALUES(intellect), strength=VALUES(strength), stamina=VALUES(stamina), wisdom=VALUES(wisdom), ";
+        sql += "health=VALUES(health), mana=VALUES(mana), ";
         sql += "title=VALUES(title), attack_speed=VALUES(attack_speed), damage_low=VALUES(damage_low), ";
         sql += "damage_high=VALUES(damage_high), flags=VALUES(flags)";
 
@@ -1263,7 +1260,7 @@ void Character::SetLevel(int newlevel)
 	level = newlevel;
 	health = maxHealth;
 	mana = maxMana;
-	stamina = maxStamina;
+	energy = maxEnergy;
 }
 
 int Character::GetLevel()
@@ -1917,9 +1914,19 @@ int Character::GetMana()
     return mana;
 }
 
-int Character::GetStamina()
+int Character::GetEnergy()
 {
-    return stamina;
+	return energy;
+}
+
+int Character::GetRage()
+{
+	return rage;
+}
+
+int Character::GetComboPoints()
+{
+	return comboPoints;
 }
 
 void Character::AdjustHealth(Character * source, int amount)
@@ -2119,21 +2126,53 @@ void Character::AdjustMana(Character * source, int amount)
     SetMana(source, mana + amount);
 }
 
-
-void Character::AdjustStamina(Character * source, int amount)
+void Character::AdjustEnergy(Character * source, int amount)
 {
-    if(source == NULL)
-    {
-        //a possibility
-    }
-    if(amount < 0)
-    {
-        (stamina + amount >= 0) ? stamina += amount : stamina = 0;
-    }
-    else if(amount > 0)
-    {
-        (stamina + amount >= maxStamina) ? stamina = maxStamina : stamina += amount;
-    }
+	energy += amount;
+}
+
+//Energy adjusting function to be used by spells. Checks for AURA_RESOURCE_COST
+//A negative amount would indicate an energy gain
+void Character::ConsumeEnergy(int amount)
+{
+	int resource_cost = GetAuraModifier(SpellAffect::AURA_RESOURCE_COST, 1);
+
+	double increase = amount * (resource_cost / 100.0);
+	amount += (int)increase;
+
+	if (energy - amount < 0)
+	{
+		energy = 0;
+	}
+	else if (energy - amount > maxEnergy)
+	{
+		energy = maxEnergy;
+	}
+	else
+	{
+		energy -= amount;
+	}
+}
+
+void Character::SetComboPoints(int howmany)
+{
+	if (howmany < 0 || howmany > maxComboPoints)
+		return;
+	comboPoints = howmany;
+}
+
+void Character::GenerateComboPoint(Character * target)
+{
+	if (target != comboPointTarget)
+	{
+		comboPoints = 1;
+		comboPointTarget = target;
+		target->AddListener(this);
+	}
+	else if(comboPoints < maxComboPoints)
+	{
+		comboPoints++;
+	}
 }
 
 void Character::UpdateThreat(Character * ch, int value)
@@ -2570,6 +2609,12 @@ void Character::Notify(ListenerManager * lm)
     {
         RemoveThreat((Character*)lm, false);
     }
+
+	if (comboPointTarget && lm == comboPointTarget)
+	{
+		comboPointTarget->RemoveListener(this);
+		comboPointTarget = NULL;
+	}
 }
 
 //TODO function to print listeners on a target

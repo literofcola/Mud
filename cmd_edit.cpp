@@ -1511,7 +1511,7 @@ void npcEditCmd_show(Character * ch, string argument)
     ch->Send("Agility:   [" + Utilities::itos(pChar->agility) + "]\n\r");
     ch->Send("Intellect: [" + Utilities::itos(pChar->intellect) + "]\n\r");
     ch->Send("Strength:  [" + Utilities::itos(pChar->strength) + "]\n\r");
-    ch->Send("Vitality:  [" + Utilities::itos(pChar->vitality) + "]\n\r");
+    ch->Send("Stamina:  [" + Utilities::itos(pChar->stamina) + "]\n\r");
     ch->Send("Wisdom:    [" + Utilities::itos(pChar->wisdom) + "]\n\r");
     ch->Send("Health:    [" + Utilities::itos(pChar->health) + "]\n\r");
     ch->Send("Mana:      [" + Utilities::itos(pChar->mana) + "]\n\r");
@@ -1884,7 +1884,7 @@ void npcEditCmd_strength(Character * ch, string argument)
     pChar->strength = strength;
 }
 
-void npcEditCmd_vitality(Character * ch, string argument)
+void npcEditCmd_stamina(Character * ch, string argument)
 {
     Character * pChar = (Character *)ch->editData;
 
@@ -1893,17 +1893,17 @@ void npcEditCmd_vitality(Character * ch, string argument)
 
     if(arg1.empty() || !Utilities::IsNumber(arg1))
     {
-        ch->Send("vitality <#>\n\r");
+        ch->Send("stamina <#>\n\r");
         return;
     }
-    int vitality = Utilities::atoi(arg1);
-    if(vitality < 0)
+    int stamina = Utilities::atoi(arg1);
+    if(stamina < 0)
     {
-        ch->Send("Vitality must be >= 0.\n\r");
+        ch->Send("Stamina must be >= 0.\n\r");
         return;
     }
     pChar->changed = true;
-    pChar->vitality = vitality;
+    pChar->stamina = stamina;
 }
 
 void npcEditCmd_wisdom(Character * ch, string argument)

@@ -505,10 +505,9 @@ void Game::WorldUpdate(Server * server)
                  //if more than 5 seconds since last cast, regen 20% of wisdom as mana
 			    curr->AdjustMana(curr, (int)ceil(curr->wisdom * 0.2));
             }
-			if(curr->stamina < curr->maxStamina)
+			if(curr->energy < curr->maxEnergy)
             {
-				curr->AdjustStamina(NULL, curr->strength / 2);
-                //curr->Send("Regen: " + Utilities::itos(curr->strength / 2) + " stamina.\n\r");
+				curr->AdjustEnergy(curr, 20); //1 energy per .1 second regen
             }
 
             //Check NPC TIMER triggers
@@ -1743,7 +1742,7 @@ void Game::LoadNPCS(Server * server)
         loaded->agility = row["agility"];
         loaded->intellect = row["intellect"];
         loaded->strength = row["strength"];
-        loaded->vitality = row["vitality"];
+        loaded->stamina = row["stamina"];
         loaded->wisdom = row["wisdom"];
         loaded->maxHealth = loaded->health = row["health"];
         loaded->maxMana = loaded->mana = row["mana"];

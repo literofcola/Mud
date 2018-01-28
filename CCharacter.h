@@ -29,7 +29,7 @@ public:
     int agility;	//crit chance and avoidance
     int intellect;  //mana and spell power
     int strength;	//attack power
-    int vitality;	//health
+    int stamina;	//health
     int wisdom;		//mana regen
 
 	enum ResourceType
@@ -42,16 +42,14 @@ public:
 	int maxRage;
 	int comboPoints;
 	int maxComboPoints;
+	Character * comboPointTarget;
 
     int health;     //current health
-    int maxHealth;  //permanent health(vitality*5) + gear and buff bonuses
+    int maxHealth;  //permanent health(stamina*5) + gear and buff bonuses
     int mana;
     int maxMana;
-    //int stamina;
-    //int maxStamina;
-    static const int HEALTH_FROM_VITALITY = 5;
+    static const int HEALTH_FROM_STAMINA = 5;
     static const int MANA_FROM_INTELLECT = 10;
-    //static const int STAMINA_FROM_STRENGTH = 10;
     std::string name;
     std::string title;
     Room * room;
@@ -215,13 +213,18 @@ public:
     void OneHit(Character * victim, int damage);
     int GetHealth();
     int GetMana();
-    //int GetStamina();
+	int GetEnergy();
+	int GetRage();
+	int GetComboPoints();
+	void SetComboPoints(int howmany);
+	void GenerateComboPoint(Character * target);
     bool HasResource(int which, int amount);
     void AdjustHealth(Character * source, int amount);
     void ConsumeMana(int amount);
+	void ConsumeEnergy(int amount);
     void SetMana(Character * source, int amount);
     void AdjustMana(Character * source, int amount);
-    //void AdjustStamina(Character * source, int amount);
+	void AdjustEnergy(Character * source, int amount);
     void ApplyExperience(int amount);
     void RemoveThreat(Character * ch, bool removeall);
     SpellAffect * AddSpellAffect(int isDebuff, Character * caster, std::string name,
