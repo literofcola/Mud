@@ -160,6 +160,26 @@ void cmd_castCallback(Character::DelayData delayData)
 	}
 }
 
+//Stub command synonym for cast for more skills that are less spell like
+void cmd_do(Character * ch, string argument)
+{
+	if (!ch)
+		return;
+
+	if (ch->delay_active)
+	{
+		ch->Send("Another action is in progress!\n\r");
+		return;
+	}
+
+	if (argument.empty())
+	{
+		ch->Send("Do what skill?\n\r");
+		return;
+	}
+	cmd_cast(ch, argument);
+}
+
 void cmd_cast(Character * ch, string argument)
 {
     if(!ch)
@@ -173,7 +193,7 @@ void cmd_cast(Character * ch, string argument)
 
     if(argument.empty())
     {
-        ch->Send("Cast what?\n\r");
+        ch->Send("Cast what spell?\n\r");
         return;
     }
 

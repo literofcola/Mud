@@ -1747,7 +1747,8 @@ void Game::LoadNPCS(Server * server)
         loaded->wisdom = row["wisdom"];
         loaded->maxHealth = loaded->health = row["health"];
         loaded->maxMana = loaded->mana = row["mana"];
-        loaded->maxStamina = loaded->stamina = row["stamina"];
+        loaded->maxEnergy = loaded->energy = row["energy"];
+		loaded->maxRage = row["rage"];
         loaded->npcAttackSpeed = row["attack_speed"];
         loaded->npcDamageHigh = row["damage_high"];
         loaded->npcDamageLow = row["damage_low"];

@@ -64,10 +64,7 @@ Character::flag_type Character::flag_table[] =
     { Character::FLAG_GUILD, "guild" },
     { Character::FLAG_VENDOR, "vendor" },
     { Character::FLAG_REPAIR, "repair" },
-    { Character::FLAG_MAGETRAIN, "magetrain" },		//todo: combine these into one trainer?
-    { Character::FLAG_WARRIORTRAIN, "warriortrain" },
-    { Character::FLAG_ROGUETRAIN, "roguetrain" },
-    { Character::FLAG_CLERICTRAIN, "clerictrain" },
+    { Character::FLAG_TRAINER, "trainer" },
     { -1, "" }
 };
 
@@ -112,7 +109,6 @@ Character::Character(const Character & copy)
     wisdom = copy.wisdom;
     health = maxHealth = copy.maxHealth;
     mana = maxMana = copy.maxMana;
-    stamina = maxStamina = copy.maxStamina;
     npcAttackSpeed = copy.npcAttackSpeed;
     npcDamageLow = copy.npcDamageLow;
     npcDamageHigh = copy.npcDamageHigh;
@@ -166,9 +162,13 @@ void Character::SetDefaults()
     level = 1;
     gender = 1;
     agility = intellect = strength = vitality = wisdom = 10;
+	energy = maxEnergy = 100;
+	rage = 0;
+	maxRage = 100;
+	comboPoints = 0;
+	maxComboPoints = 5;
     health = maxHealth = vitality * Character::HEALTH_FROM_VITALITY;
     mana = maxMana = intellect * Character::MANA_FROM_INTELLECT;
-    stamina = maxStamina = strength * Character::STAMINA_FROM_STRENGTH;
     npcAttackSpeed = 2.0;
     npcDamageLow = npcDamageHigh = 1;
     delay_active = false;
@@ -200,7 +200,7 @@ void Character::SetDefaults()
     intTable["wisdom"] = &wisdom;
     intTable["health"] = &health;
     intTable["mana"] = &mana;
-    intTable["stamina"] = &stamina;
+    //intTable["stamina"] = &stamina;
     doubleTable["attack_speed"] = &npcAttackSpeed;
     intTable["damage_low"] = &npcDamageLow;
     intTable["damage_high"] = &npcDamageHigh;
@@ -356,7 +356,11 @@ void Character::ResetMaxStats()
 	//todo: check equipment bonuses
 	maxHealth = vitality * Character::HEALTH_FROM_VITALITY;
 	maxMana = intellect * Character::MANA_FROM_INTELLECT;
-	maxStamina = strength * Character::STAMINA_FROM_STRENGTH;
+	//todo: these might be higher based on skills or talents?
+	maxEnergy = 100;
+	maxRage = 100;
+	maxComboPoints = 5;
+	//maxStamina = strength * Character::STAMINA_FROM_STRENGTH;
 }
 
 void Character::GeneratePrompt(double currentTime)
@@ -440,7 +444,7 @@ void Character::GeneratePrompt(double currentTime)
         prompt += statColor + Utilities::itos(mana) + "/|X" + Utilities::itos(maxMana) + "|Bmp ";
 
         //Stamina
-        if(stamina > 0 && maxStamina > 0)
+        /*if(stamina > 0 && maxStamina > 0)
             percent = (stamina * 100)/maxStamina;
         else
             percent = 0;
@@ -455,6 +459,7 @@ void Character::GeneratePrompt(double currentTime)
             statColor = "|R";
 
         prompt += statColor + Utilities::itos(stamina) + "/|X" + Utilities::itos(maxStamina) + "|Bst";
+		*/
     }
     else
     {
@@ -543,7 +548,7 @@ void Character::GeneratePrompt(double currentTime)
         targetPrompt += statColor + Utilities::itos(percent) + "|B%mp ";
 
         //Stamina
-        if(GetTarget()->stamina > 0 && GetTarget()->maxStamina > 0)
+        /*if(GetTarget()->stamina > 0 && GetTarget()->maxStamina > 0)
             percent = (GetTarget()->stamina * 100)/GetTarget()->maxStamina;
         else
             percent = 0;
@@ -559,6 +564,7 @@ void Character::GeneratePrompt(double currentTime)
 
         targetPrompt += statColor + Utilities::itos(percent) + "|B%st";
         targetPrompt += ">|x";
+		*/
 
 		prompt += targetPrompt;
 	}
@@ -632,7 +638,7 @@ void Character::GeneratePrompt(double currentTime)
         targetPrompt += statColor + Utilities::itos(percent) + "|B%mp ";
 
         //Stamina
-        if(targettarget->stamina > 0 && targettarget->maxStamina > 0)
+        /*if(targettarget->stamina > 0 && targettarget->maxStamina > 0)
             percent = (targettarget->stamina * 100)/targettarget->maxStamina;
         else
             percent = 0;
@@ -648,7 +654,7 @@ void Character::GeneratePrompt(double currentTime)
 
         targetPrompt += statColor + Utilities::itos(percent) + "|B%st";
         targetPrompt += ">|x";
-
+		*/
 		prompt += targetPrompt;
 	}
     
@@ -682,7 +688,7 @@ void Character::GeneratePrompt(double currentTime)
 	Send(prompt);
 
 	//Really we should send updates when individual stats CHANGE, not every prompt
-	json vitals = { { "hp", health }, { "hpmax", maxHealth }, { "mp", mana }, { "mpmax", maxMana }, { "st", stamina }, { "stmax", maxStamina } };
+	json vitals = { { "hp", health }, { "hpmax", maxHealth }, { "mp", mana }, { "mpmax", maxMana }, { "en", energy }, { "enmax", maxEnergy } };
 	SendGMCP("char.vitals " + vitals.dump());
 }
 
@@ -908,7 +914,6 @@ Character * Character::LoadPlayer(std::string name, User * user)
     loaded->wisdom = row["wisdom"];
     loaded->health = row["health"];
     loaded->mana = row["mana"];
-    loaded->stamina = row["stamina"];
 	//loaded->ResetMaxStats();
     //loaded->maxHealth = loaded->vitality * Character::HEALTH_FROM_VITALITY;
     //loaded->maxMana = loaded->intellect * Character::MANA_FROM_INTELLECT;
@@ -996,7 +1001,7 @@ Character * Character::LoadPlayer(std::string name, User * user)
 		}
 	}
 
-	loaded->ResetMaxStats(); //Set maxhealth/stamina/mana based on post equipment stats
+	loaded->ResetMaxStats(); //Set maxhealth/mana/energy/rage/combos based on post equipment stats
 
 	StoreQueryResult playerqcres = Server::sqlQueue->Read("SELECT * FROM player_completed_quests where player='" + loaded->name + "'");
 	for (iter = playerqcres.begin(); iter != playerqcres.end(); ++iter)
@@ -1514,7 +1519,7 @@ void Character::LoadCooldowns()
         }
     }
 
-    string sql = "DELETE FROM cooldowns WHERE player='" + name + "';";
+    string sql = "DELETE FROM player_cooldowns WHERE player='" + name + "';";
     Server::sqlQueue->Write(sql);
 }
 
@@ -2023,18 +2028,26 @@ bool Character::HasResource(int which, int amount)
 
     switch(which)
     {
-        case 1:
+        case RESOURCE_HEALTH:
             if(health >= amount)
                 return true;
             break;
-        case 2:
+        case RESOURCE_MANA:
             if(mana >= amount)
                 return true;
             break;
-        case 3:
-            if(stamina >= amount)
+        case RESOURCE_ENERGY:
+            if(energy >= amount)
                 return true;
             break;
+		case RESOURCE_RAGE:
+			if (rage >= amount)
+				return true;
+			break;
+		case RESOURCE_COMBO:
+			if (comboPoints >= amount)
+				return true;
+			break;
         default:
             LogFile::Log("error", "Character::HasResource, bad resource id");
             return false;
@@ -2044,6 +2057,7 @@ bool Character::HasResource(int which, int amount)
 
 //Mana adjusting function to be used by spells. Invokes 5 second rule and checks for AURA_RESOURCE_COST
 //A negative amount would indicate a mana gain
+//todo: we have ConsumeMana, SetMana, AdjustMana, ridiculous. Sort that out
 void Character::ConsumeMana(int amount)
 {
     int resource_cost = GetAuraModifier(SpellAffect::AURA_RESOURCE_COST, 1);
@@ -2074,6 +2088,7 @@ void Character::ConsumeMana(int amount)
 
 void Character::SetMana(Character * source, int amount)
 {
+	//todo: this stuff should probably be in "AdjustMana" while this is just a simple set function
     if(source == NULL)
     {
         //a possibility

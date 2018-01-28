@@ -1,3 +1,4 @@
+-- CCharacter.h enum MessageType
 MSG_CHAR = 0;
 MSG_CHAR_VICT = 1;
 MSG_ROOM = 2;
@@ -5,14 +6,18 @@ MSG_ROOM_NOTCHAR = 3;
 MSG_ROOM_NOTVICT = 4;
 MSG_ROOM_NOTCHARVICT = 5;
 
-function getlevel(character)
-    return character:GetLevel();
-end
+-- CCharacter.h enum ResourceType
+RESOURCE_HEALTH = 1;
+RESOURCE_MANA = 2;
+RESOURCE_ENERGY = 3;
+RESOURCE_RAGE = 4;
+RESOURCE_COMBO = 5;
 
-function setlevel(character, level)
-    character:SetLevel(level);
-end
-
-function add(first, second)
-    return first + second
-end
+-- CCharacter.h enum Flags
+FLAG_FRIENDLY = 0;
+FLAG_NEUTRAL = 1;
+FLAG_AGGRESSIVE = 2;
+FLAG_GUILD = 3;
+FLAG_VENDOR = 4;
+FLAG_REPAIR = 5;
+FLAG_TRAINER = 6;

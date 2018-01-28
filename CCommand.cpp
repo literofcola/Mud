@@ -31,8 +31,8 @@
 //Immortal commands start at -1 (Where absolute value == immlevel required)
 class Command cmd_table[] =
 {
-    // Common movement commands.
-    //name, function, level, isMovement, whileCorpse, whileGhost
+	// Common movement commands.
+	//name, function, level, isMovement, whileCorpse, whileGhost
 	{ "north",		cmd_north,		1, 1, 0, 1 },
 	{ "east",		cmd_east,		1, 1, 0, 1 },
 	{ "south",		cmd_south,		1, 1, 0, 1 },
@@ -48,9 +48,10 @@ class Command cmd_table[] =
 	{ "southwest",  cmd_southwest,  1, 1, 0, 1 },
 	{ "northwest",  cmd_northwest,  1, 1, 0, 1 },
 
-    //Common other commands.
-    //Placed here so one and two letter abbreviations work.
-    { "cast",		cmd_cast,		1, 0, 0, 0 },
+	//Common other commands.
+	//Placed here so one and two letter abbreviations work.
+	{ "cast",		cmd_cast,		1, 0, 0, 0 },
+	{ "do",			cmd_do,			1, 0, 0, 0 },
     { "cancel",     cmd_cancel,     1, 0, 0, 0 },
     /*{ "auction",    cmd_auction,	POS_RESTING,	1 },
     { "buy",		cmd_buy,		POS_RESTING,	1,		LOG_NORMAL, 1 },

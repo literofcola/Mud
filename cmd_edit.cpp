@@ -1515,7 +1515,7 @@ void npcEditCmd_show(Character * ch, string argument)
     ch->Send("Wisdom:    [" + Utilities::itos(pChar->wisdom) + "]\n\r");
     ch->Send("Health:    [" + Utilities::itos(pChar->health) + "]\n\r");
     ch->Send("Mana:      [" + Utilities::itos(pChar->mana) + "]\n\r");
-    ch->Send("Stamina:   [" + Utilities::itos(pChar->stamina) + "]\n\r");
+    ch->Send("Energy:    [" + Utilities::itos(pChar->energy) + "]\n\r");
     ch->Send("attack_speed: [" + Utilities::dtos(pChar->npcAttackSpeed, 2) + "]\n\r");
     ch->Send("damage_low:   [" + Utilities::itos(pChar->npcDamageLow) + "]\n\r");
     ch->Send("damage_high:  [" + Utilities::itos(pChar->npcDamageHigh) + "]\n\r");
@@ -1619,7 +1619,7 @@ void npcEditCmd_flag(Character * ch, string argument)
 
     if(arg1.empty())
     {
-        ch->Send("flags: friendly neutral aggressive magetrain roguetrain warriortrain clerictrain guild repair\n\r");
+        ch->Send("flags: friendly neutral aggressive trainer guild repair\n\r");
         return;
     }
 
@@ -1643,7 +1643,7 @@ void npcEditCmd_flag(Character * ch, string argument)
             return;
         }
     }
-    ch->Send("flags: friendly neutral aggressive magetrain roguetrain warriortrain clerictrain guild repair\n\r");
+    ch->Send("flags: friendly neutral aggressive trainer guild repair\n\r");
 }
 
 void npcEditCmd_drop(Character * ch, string argument)
@@ -1970,28 +1970,6 @@ void npcEditCmd_mana(Character * ch, string argument)
     }
     pChar->changed = true;
     pChar->mana = mana;
-}
-
-void npcEditCmd_stamina(Character * ch, string argument)
-{
-    Character * pChar = (Character *)ch->editData;
-
-    string arg1;
-    argument = Utilities::one_argument(argument, arg1);
-
-    if(arg1.empty() || !Utilities::IsNumber(arg1))
-    {
-        ch->Send("stamina <#>\n\r");
-        return;
-    }
-    int stamina = Utilities::atoi(arg1);
-    if(stamina < 1)
-    {
-        ch->Send("Stamina must be > 0.\n\r");
-        return;
-    }
-    pChar->changed = true;
-    pChar->stamina = stamina;
 }
 
 void npcEditCmd_attackSpeed(Character * ch, string argument)

@@ -424,7 +424,8 @@ void cmd_score(Character * ch, string argument)
         ch->Send("Immortal Level: " + Utilities::itos(ch->player->immlevel) + "\n\r");
     ch->Send("Health: " + Utilities::itos(ch->health) + "/" + Utilities::itos(ch->maxHealth));
     ch->Send("  Mana: " + Utilities::itos(ch->mana) + "/" + Utilities::itos(ch->maxMana));
-    ch->Send("  Stamina: " + Utilities::itos(ch->stamina) + "/" + Utilities::itos(ch->maxStamina) + "\n\r");
+    ch->Send("  Energy: " + Utilities::itos(ch->energy) + "/" + Utilities::itos(ch->maxEnergy) + "\n\r");
+	ch->Send("  Rage: " + Utilities::itos(ch->rage) + "/" + Utilities::itos(ch->maxRage) + "\n\r");
     ch->Send("Agility: " + Utilities::itos(ch->agility) + " Intellect: " + Utilities::itos(ch->intellect)
         + " Strength: " + Utilities::itos(ch->strength) + " Vitality: " + Utilities::itos(ch->vitality) + " Wisdom: "
         + Utilities::itos(ch->wisdom) + "\n\r");

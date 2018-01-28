@@ -28,19 +28,30 @@ public:
 
     int agility;	//crit chance and avoidance
     int intellect;  //mana and spell power
-    int strength;	//stamina and attack power
+    int strength;	//attack power
     int vitality;	//health
     int wisdom;		//mana regen
 
+	enum ResourceType
+	{
+		RESOURCE_HEALTH = 1, RESOURCE_MANA, RESOURCE_ENERGY, RESOURCE_RAGE, RESOURCE_COMBO
+	};
+	int energy;
+	int maxEnergy;
+	int rage;
+	int maxRage;
+	int comboPoints;
+	int maxComboPoints;
+
     int health;     //current health
-    int maxHealth;  //permanent health(vitality*10) + gear and buff bonuses
+    int maxHealth;  //permanent health(vitality*5) + gear and buff bonuses
     int mana;
     int maxMana;
-    int stamina;
-    int maxStamina;
+    //int stamina;
+    //int maxStamina;
     static const int HEALTH_FROM_VITALITY = 5;
     static const int MANA_FROM_INTELLECT = 10;
-    static const int STAMINA_FROM_STRENGTH = 10;
+    //static const int STAMINA_FROM_STRENGTH = 10;
     std::string name;
     std::string title;
     Room * room;
@@ -76,7 +87,7 @@ public:
 	enum Flags
     {
         FLAG_FRIENDLY,FLAG_NEUTRAL,FLAG_AGGRESSIVE,FLAG_GUILD,FLAG_VENDOR,FLAG_REPAIR,
-        FLAG_MAGETRAIN, FLAG_WARRIORTRAIN, FLAG_ROGUETRAIN, FLAG_CLERICTRAIN
+        FLAG_TRAINER
     };
     struct flag_type
     {
@@ -204,13 +215,13 @@ public:
     void OneHit(Character * victim, int damage);
     int GetHealth();
     int GetMana();
-    int GetStamina();
+    //int GetStamina();
     bool HasResource(int which, int amount);
     void AdjustHealth(Character * source, int amount);
     void ConsumeMana(int amount);
     void SetMana(Character * source, int amount);
     void AdjustMana(Character * source, int amount);
-    void AdjustStamina(Character * source, int amount);
+    //void AdjustStamina(Character * source, int amount);
     void ApplyExperience(int amount);
     void RemoveThreat(Character * ch, bool removeall);
     SpellAffect * AddSpellAffect(int isDebuff, Character * caster, std::string name,
