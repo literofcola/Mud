@@ -103,7 +103,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalOptions>ws2_32.lib lua53.lib libmysqld.lib mysqlpp_d.lib zlibwapi.lib %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>ws2_32.lib lua53_d.lib libmysqld.lib mysqlpp_d.lib zlibwapi.lib %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -119,7 +119,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalOptions>ws2_32.lib lua53.lib libmysqld.lib mysqlpp_d.lib zlibwapi.lib %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>ws2_32.lib lua53_d.lib libmysqld.lib mysqlpp_d.lib zlibwapi.lib %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

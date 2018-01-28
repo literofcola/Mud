@@ -51,7 +51,6 @@ class Command cmd_table[] =
 	//Common other commands.
 	//Placed here so one and two letter abbreviations work.
 	{ "cast",		cmd_cast,		1, 0, 0, 0 },
-	{ "do",			cmd_do,			1, 0, 0, 0 },
     { "cancel",     cmd_cancel,     1, 0, 0, 0 },
     /*{ "auction",    cmd_auction,	POS_RESTING,	1 },
     { "buy",		cmd_buy,		POS_RESTING,	1,		LOG_NORMAL, 1 },

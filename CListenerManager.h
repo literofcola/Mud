@@ -12,7 +12,14 @@ public:
     void NotifyListeners();
 
 private:
-    std::list<Listener*> listeners_;
+	struct ListenerCount
+	{
+		ListenerCount(Listener * l) : listener(l), refcount(1) {};
+		bool operator==(const Listener * l) { return l == listener; };
+		Listener * listener;
+		int refcount;		//A listener might subscribe to a ListenerManager for various reasons:
+	};						//   threat list, targeting, reset, spells... RemoveListener needs to know ALL reasons for listening are through
+    std::list<ListenerCount> listeners_;
 };
 
 #endif

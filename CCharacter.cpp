@@ -527,7 +527,7 @@ void Character::GeneratePrompt(double currentTime)
         }
 
         //TODO: Target name coloring based on pvp/attack status
-		targetPrompt = "|B<" + targetLevel + " ";
+		targetPrompt += "|B<" + targetLevel + " ";
         if(GetTarget() == this ||  Utilities::FlagIsSet(GetTarget()->flags, FLAG_FRIENDLY))
             targetPrompt += "|G";
         else if(Utilities::FlagIsSet(GetTarget()->flags, FLAG_NEUTRAL))
@@ -2163,10 +2163,15 @@ void Character::SetComboPoints(int howmany)
 
 void Character::GenerateComboPoint(Character * target)
 {
-	if (target != comboPointTarget)
+	if (target == nullptr)
+		return;
+
+	if (target != comboPointTarget)	//Changing our combo target
 	{
-		comboPoints = 1;
+		if (comboPointTarget != nullptr)	//If we had a previous combo target...
+			comboPointTarget->RemoveListener(this);
 		comboPointTarget = target;
+		comboPoints = 1;
 		target->AddListener(this);
 	}
 	else if(comboPoints < maxComboPoints)

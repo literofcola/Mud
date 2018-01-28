@@ -106,6 +106,48 @@ void cmd_cancel(Character * ch, string argument)
 
 void cmd_look(Character * ch, string argument)
 {
+	if (argument == "compasstest")
+	{
+		const std::string formattest = R"(
+  |CNorthshire |X- |WOn the Steps of Northshire Abbey
+|B(------------------------------------------------------------------------------------------) 
+|W(NW)|GSisol, Snoogans, Chrissy,|X 99 more...   |W(N)           |GMinotorious, Avemor, |X99 more...|W(NE)
+                              |GDeathsmasher, Kabouter, |X99 more...                              
+|W(W) |GRajani, Abos, Prothis, |X99 more...   |Y<---X--->|G      |GTyrell, Brodie, Angoon, |X99 more...|W(E)
+                           |GWolfeater, Lydda, Crysknife, |X99 more...       
+|W(SW)|GCutlex, Stakker, Gnarls, |X99 more...|W    (S)          |GPuolituinen, Arcadin, |X99 more...|W(SE)
+|B(------------------------------------------------------------------------------------------)
+|Y[?] |GMarshal McBride is here.
+
+|B<|X3635/3635|Bh|X 100/100|Bm|X 100/100|Be |X0/100|Br>
+
+  |CNorthshire |X- |WOn the Steps of Northshire Abbey
+|B(------------------------------------------------------------------------------------------) 
+|W(NW)|GSisol, Snoogans                       |W(N)                                           |W(NE)
+                              |GDeathsmasher, Kabouter, |X3 more...                              
+|W(W) |GRajani, Abos, Prothis, |X1 more...   |Y<---X--->|G                                         |W(E)
+                                       |GWolfeater       
+|W(SW)                                      |W(S)         |GPuolituinen, Arcadin, |X10 more...  |W(SE)
+|B(------------------------------------------------------------------------------------------)
+|Y[?] |GMarshal McBride is here.
+
+|B<|X3635/3635|Bh|X 100/100|Bm|X 100/100|Be |X0/100|Br>
+
+  |CNorthshire |X- |WOn the Steps of Northshire Abbey
+|B(------------------------------------------------------------------------------------------) 
+|W |B--                                       |W(N)                                            |B--
+                              
+|W(W)                                    |Y<---X--->|G                                         |W(E)
+       
+|W |B--                                       |W(S)                                            |B--
+|B(------------------------------------------------------------------------------------------)
+|Y[?] |GMarshal McBride is here.
+
+|B<|X3635/3635|Bh|X 100/100|Bm|X 100/100|Be |X0/100|Br>
+		)";
+		ch->Send(formattest + "\n\r");
+		return;
+	}
     string arg1;
     argument = Utilities::one_argument(argument, arg1);
 

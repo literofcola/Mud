@@ -4,7 +4,7 @@
 
 ListenerManager::~ListenerManager()
 {
-    std::list<Listener*>::iterator iter = listeners_.begin();
+    std::list<ListenerCount>::iterator iter = listeners_.begin();
     while(iter != listeners_.end())
     {
         iter = listeners_.erase(iter);
@@ -13,33 +13,40 @@ ListenerManager::~ListenerManager()
 
 void ListenerManager::AddListener(Listener * l )
 {
-    //l->remove = false;
-    if(!HasListener(l))
-    {
-        listeners_.push_front(l);
-    }
+	std::list<ListenerCount>::iterator findIter = std::find(listeners_.begin(), listeners_.end(), l);
+	if (findIter != listeners_.end())
+	{
+		findIter->refcount++;
+	}
+	else
+	{
+		listeners_.push_front(l);
+	}
 }
 
 void ListenerManager::RemoveListener(Listener * l)
 {
-    //listeners_.remove(l);
-    std::list<Listener*>::iterator iter;
+    std::list<ListenerCount>::iterator iter;
     for(iter = listeners_.begin(); iter != listeners_.end(); ++iter)
     {
-        if((*iter) == l)
+        if((*iter).listener == l)
         {
-            listeners_.erase(iter);
-            break;
+			iter->refcount--;
+			if (iter->refcount == 0)
+			{
+				listeners_.erase(iter);
+				break;
+			}
         }
     }
 }
 
 bool ListenerManager::HasListener(Listener * l)
 {
-    std::list<Listener*>::iterator iter;
+    std::list<ListenerCount>::iterator iter;
     for(iter = listeners_.begin(); iter != listeners_.end(); ++iter)
     {
-        if((*iter) == l)
+        if((*iter).listener == l)
         {
             return true;
         }
@@ -54,10 +61,10 @@ bool ListenerManager::HasListener(Listener * l)
 
 void ListenerManager::NotifyListeners()
 {
-    std::list<Listener*>::iterator iter = listeners_.begin();
+    std::list<ListenerCount>::iterator iter = listeners_.begin();
     while(iter != listeners_.end()) //This form allows for a call to RemoveListener from within Notify, maybe??
     {
-        Listener * l = (*iter);
+        Listener * l = (*iter).listener;
         ++iter;
         l->Notify(this);
     }

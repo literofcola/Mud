@@ -79,7 +79,6 @@ bool cmd_recall_Query(Character * ch, string argument);
 //cmd_skill.cpp
 void cmd_castCallback(Character::DelayData delayData);
 void cmd_cast(Character * ch, string argument);
-void cmd_do(Character * ch, string argument);
 void cmd_skills(Character * ch, string argument);
 void cmd_cooldowns(Character * ch, string argument);
 void cmd_affects(Character * ch, string argument);
