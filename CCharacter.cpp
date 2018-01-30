@@ -168,7 +168,8 @@ void Character::SetDefaults()
 	comboPoints = 0;
 	maxComboPoints = 5;
     health = maxHealth = stamina * Character::HEALTH_FROM_STAMINA;
-    mana = maxMana = intellect * Character::MANA_FROM_INTELLECT;
+	mana = maxMana = 100; //TODO mana is based on class level (add class->mana_per_level in db)
+    //mana = maxMana = intellect * Character::MANA_FROM_INTELLECT;
     npcAttackSpeed = 2.0;
     npcDamageLow = npcDamageHigh = 1;
     delay_active = false;
@@ -223,6 +224,14 @@ Character::~Character()
         //LogFile::Log("status", "Removing listener reset ID " + Utilities::itos(reset->id) + " from character " + this->name);
         this->RemoveListener(reset);
     }
+}
+
+void Character::SendBW(std::string str)
+{
+	if (player == NULL || player->user == NULL)
+		return;
+
+	player->user->SendBW(str);
 }
 
 void Character::Send(std::string str)
@@ -1159,12 +1168,12 @@ void Character::Save()
         string fixtitle = Utilities::SQLFixQuotes(title);
 
         sql = "INSERT INTO npcs (id, name, keywords, level, gender, race, agility, intellect, strength, stamina, ";
-        sql += "wisdom, health, mana, title, attack_speed, damage_low, damage_high, flags) values (";
+        sql += "wisdom, health, mana, energy, rage, title, attack_speed, damage_low, damage_high, flags) values (";
         sql += Utilities::itos(id) + ", '";
         sql += name + "', '" + keywords + "', " + Utilities::itos(level) + "," + Utilities::itos(gender) + "," + Utilities::itos(race) + ",";
         sql += Utilities::itos(agility) + "," + Utilities::itos(intellect) + "," + Utilities::itos(strength) + ",";
         sql += Utilities::itos(stamina) + "," + Utilities::itos(wisdom) + ",";
-        sql += Utilities::itos(health) + "," + Utilities::itos(mana);
+        sql += Utilities::itos(health) + "," + Utilities::itos(mana) + "," + Utilities::itos(energy) + "," + Utilities::itos(rage);
         sql += ", '" + fixtitle + "', " + Utilities::dtos(npcAttackSpeed, 2) + ", " + Utilities::itos(npcDamageLow) + ", ";
         sql += Utilities::itos(npcDamageHigh) + ",'";
 
@@ -1177,7 +1186,7 @@ void Character::Save()
 
         sql += " ON DUPLICATE KEY UPDATE id=VALUES(id), name=VALUES(name), level=VALUES(level), gender=VALUES(gender), race=VALUES(race), agility=VALUES(agility), ";
         sql += "intellect=VALUES(intellect), strength=VALUES(strength), stamina=VALUES(stamina), wisdom=VALUES(wisdom), ";
-        sql += "health=VALUES(health), mana=VALUES(mana), ";
+        sql += "health=VALUES(health), mana=VALUES(mana), energy=VALUES(energy), rage=VALUES(rage),";
         sql += "title=VALUES(title), attack_speed=VALUES(attack_speed), damage_low=VALUES(damage_low), ";
         sql += "damage_high=VALUES(damage_high), flags=VALUES(flags)";
 
@@ -1255,7 +1264,7 @@ void Character::SetLevel(int newlevel)
                               Utilities::MAX(0, player->GetClassLevel(player->currentClass->id) + (newlevel - level)));
 	
 		player->statPoints += Player::STATS_PER_LEVEL;
-		Send("|WYou gain " + Utilities::itos(Player::STATS_PER_LEVEL) + " attribute points. Spend with the \"train\" command.|X\n\r");
+		Send("|WYou gain " + Utilities::itos(Player::STATS_PER_LEVEL) + " attribute points. Assign attribute points with the \"train\" command.|X\n\r");
     }
 	level = newlevel;
 	health = maxHealth;
@@ -1279,7 +1288,7 @@ Player * Character::GetPlayer()
 }
 
 SpellAffect * Character::AddSpellAffect(int isDebuff, Character * caster, string name,
-                               bool hidden, bool stackable, int ticks, double duration, int category, Skill * sk)
+                               bool hidden, bool stackable, int ticks, double duration, int category, Skill * sk, string affect_description)
 {
     if(!stackable) //if name and skill are the same as an existing affect, dont add it
     {
@@ -1294,9 +1303,14 @@ SpellAffect * Character::AddSpellAffect(int isDebuff, Character * caster, string
         }
         for(; iter != end; ++iter)
         {
-            if(!Utilities::str_cmp((*iter)->name, name) && (*iter)->skill == sk)
-                return NULL;
-        }
+			if (!Utilities::str_cmp((*iter)->name, name) && (*iter)->skill == sk) 
+			{
+				//Found it, refresh the duration
+				(*iter)->ticksRemaining = (*iter)->ticks;
+				(*iter)->appliedTime = Game::currentTime;
+				return NULL;
+			}
+		}
     }
 
     SpellAffect * sa = new SpellAffect();
@@ -1305,6 +1319,7 @@ SpellAffect * Character::AddSpellAffect(int isDebuff, Character * caster, string
     sa->stackable = stackable;
     sa->ticks = ticks;
     sa->duration = duration;
+	sa->affectDescription = affect_description;
     sa->skill = sk;
     sa->debuff = isDebuff;
     sa->appliedTime = Game::currentTime;
@@ -1891,8 +1906,15 @@ void Character::OneHit(Character * victim, int damage)
         victim->UpdateThreat(this, damage);
         Send("My threat on " + victim->name + " is " + Utilities::itos(victim->GetThreat(this)) + "\n\r");
     }
-    
+	if (victim->CancelCast())
+		victim->Send("Action Interrupted!\n\r");
+
     victim->AdjustHealth(this, -damage);
+}
+
+int Character::GetIntellect()
+{
+	return intellect;
 }
 
 bool Character::IsFighting(Character * target)
@@ -1912,6 +1934,11 @@ int Character::GetHealth()
 int Character::GetMana()
 {
     return mana;
+}
+
+int Character::GetMaxMana()
+{
+	return maxMana;
 }
 
 int Character::GetEnergy()
@@ -2262,6 +2289,16 @@ std::string Character::HisHer()
     return (gender == 1 ? "his" : "her");
 }
 
+bool Character::CancelCast()
+{
+	if(delay_active && delayData.sk->interruptFlags.test(Skill::Interrupt::INTERRUPT_HIT))
+	{
+		delay_active = false;
+		return true;
+	}
+	return false;
+}
+
 bool Character::CanMove()
 {
     if(player && player->IMMORTAL())
@@ -2354,7 +2391,7 @@ bool Character::HasSkillByName(string name) //Not guaranteed to be the same skil
     return false;
 }
 
-void Character::SetCooldown(Skill * sk, std::string name, bool global, double length)
+void Character::SetCooldown(Skill * sk, std::string name, bool global, double length) //USE LENGTH -1 TO USE SKILL->COOLDOWN
 {
     if(global)//Set 1.5 second cooldown on everything
     {
@@ -2675,8 +2712,16 @@ void Character::AddClassSkills()
 		return;
 
 	std::list<Player::ClassData>::iterator iter;
-	for (iter = player->classList.begin(); iter != player->classList.end(); ++iter)
+	for (iter = player->classList.begin(); iter != player->classList.end(); ++iter) //For every class this player has multiclassed into...
 	{
-		AddSkill(Game::GetGame()->GetSkill((*iter).id));
+		Class * iclass = Game::GetGame()->classes.at(iter->id);	//Grab that class from the game...
+		std::list<Class::SkillData>::iterator csiter;
+		for (csiter = iclass->classSkills.begin(); csiter != iclass->classSkills.end(); csiter++) //For every skill players of that class get...
+		{
+			if (csiter->level <= iter->level || player->IMMORTAL()) //if that skill's level < our level of the class, add it
+			{
+				AddSkill(csiter->skill);
+			}
+		}
 	}
 }

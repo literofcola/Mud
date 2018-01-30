@@ -208,9 +208,12 @@ void Game::GameLoop(Server * server)
 
 			if (user->lastInput + IDLE_TIMEOUT <= Game::currentTime)
 			{
-				if (!user->character 
+				if (!user->character
 					|| (user->character && user->character->player && !user->character->player->IMMORTAL()))
+				{
+					user->Send("Idle timeout exceeded. Disconnecting.\n\r");
 					user->SetDisconnect();
+				}
 			}
 
 			if(!user->IsConnected() || user->remove)
@@ -1086,6 +1089,8 @@ void Game::LoginHandler(Server * server, User * user, string argument)
 			if (!Utilities::str_cmp(arg1, "y"))
 			{
 				user->character->player->AddClass(user->character->player->currentClass->id, 1);
+				user->character->AddClassSkills();
+				//function-ize the default items
 				string classitems = user->character->player->currentClass->items;
 				int first = 0, last = 0;
 				while (first < (int)classitems.length())
@@ -1476,8 +1481,23 @@ void Game::LoadSkills(Server * server)
         s->applyScript = (string)row["apply_script"];
         s->tickScript = (string)row["tick_script"];
         s->removeScript = (string)row["remove_script"];
-        s->affectDescription = (string)row["affect_desc"];
+        s->description = (string)row["description"];
+		s->costDescription = (string)row["cost_description"];
         s->castTime = row["cast_time"];
+		
+		string iflagtext = (string)row["interrupt_flags"];
+		if (iflagtext != "NULL")
+		{
+			int first = 0, last = 0;
+			while (first < (int)iflagtext.length())
+			{
+				last = (int)iflagtext.find(";", first);
+				int flag = Utilities::atoi(iflagtext.substr(first, last - first));
+				s->interruptFlags.set(flag);
+				first = last + 1;
+			}
+		}
+
         s->cooldown = row["cooldown"];
         s->costFunction = row["cost_script"];
         
@@ -1996,8 +2016,16 @@ Room * Game::CreateRoomAnyID()
 
 Skill * Game::CreateSkillAnyID(string arg)
 {
+	std::map<int, Skill *>::iterator iter;
+	iter = std::find_if(skills.begin(), skills.end(), Skill::CompareSkillToString(arg));
+	
+	if (iter != skills.end())
+	{
+		return nullptr;
+	}
+
     int ctr = 1;
-    std::map<int,Skill *>::iterator iter;
+	
     for(iter = skills.begin(); iter != skills.end(); ++iter)
     {
         if(ctr != iter->second->id)
@@ -2611,21 +2639,21 @@ int Game::Search(string table_name, string field_name, int conditional_type, str
 			case 1:
 				if (SearchComparisonInt(*(iter->second->intTable[field_name]), value, conditional_type))
 				{
-					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + Utilities::itos(*(iter->second->intTable[field_name])) + "\n\r";
+					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->long_name + ":  " + Utilities::itos(*(iter->second->intTable[field_name])) + "\n\r";
 					++results_found;
 				}
 				break;
 			case 2:
 				if (SearchComparisonDouble(*(iter->second->doubleTable[field_name]), value, conditional_type))
 				{
-					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + Utilities::itos(*(iter->second->doubleTable[field_name])) + "\n\r";
+					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->long_name + ":  " + Utilities::itos(*(iter->second->doubleTable[field_name])) + "\n\r";
 					++results_found;
 				}
 				break;
 			case 3:
 				if (SearchComparisonString(*(iter->second->stringTable[field_name]), argument, conditional_type))
 				{
-					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + *(iter->second->stringTable[field_name]) + "\n\r";
+					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->long_name + ":  " + *(iter->second->stringTable[field_name]) + "\n\r";
 					++results_found;
 				}
 				break;

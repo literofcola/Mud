@@ -14,6 +14,7 @@ public:
     int ticks;
     int ticksRemaining;
     double duration;
+	std::string affectDescription;
     double appliedTime;
     Character * caster;
     std::string casterName; //At least save the name if caster becomes an invalid pointer

@@ -27,7 +27,7 @@ public:
     int gender;
 
     int agility;	//crit chance and avoidance
-    int intellect;  //mana and spell power
+    int intellect;  //spell power... mana pool based completely off class level
     int strength;	//attack power
     int stamina;	//health
     int wisdom;		//mana regen
@@ -178,6 +178,7 @@ public:
 	void ResetMaxStats();
     void GeneratePrompt(double currentTime);
     void QueryClear();
+	void SendBW(std::string str);
     void Send(std::string str);
 	void Send(char * str);
 	void SendGMCP(std::string str);
@@ -201,6 +202,7 @@ public:
 	Player * GetPlayer();
     std::string GetName();
     std::string HisHer();
+	bool CancelCast();
     void EnterCombat(Character * victim);
     void ExitCombat();
     bool InCombat();
@@ -211,8 +213,10 @@ public:
     bool HasThreat(Character * ch);
     void AutoAttack(Character * victim);
     void OneHit(Character * victim, int damage);
+	int GetIntellect();
     int GetHealth();
     int GetMana();
+	int GetMaxMana();
 	int GetEnergy();
 	int GetRage();
 	int GetComboPoints();
@@ -228,7 +232,7 @@ public:
     void ApplyExperience(int amount);
     void RemoveThreat(Character * ch, bool removeall);
     SpellAffect * AddSpellAffect(int isDebuff, Character * caster, std::string name,
-                        bool hidden, bool stackable, int ticks, double duration, int category, Skill * sk);
+                        bool hidden, bool stackable, int ticks, double duration, int category, Skill * sk, std::string affect_description);
     SpellAffect * HasSpellAffect(std::string name);
     int CleanseSpellAffect(Character * cleanser, int category, int howMany = -1);
     void RemoveSpellAffect(int isDebuff, int id);
@@ -250,7 +254,7 @@ public:
     bool HasSkillByName(std::string name);
     void RemoveSkill(Skill * sk);
     void RemoveSkill(std::string name);
-    void SetCooldown(Skill * sk, std::string name, bool global, double length = -1);
+    void SetCooldown(Skill * sk, std::string name, bool global, double length);
     double GetCooldownRemaining(Skill * sk);
     bool IsNPC();
     bool IsCorpse();

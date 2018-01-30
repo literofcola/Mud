@@ -132,28 +132,15 @@ void cmd_castCallback(Character::DelayData delayData)
     {
 		sol::function lua_cast_func = Server::lua[func.c_str()];
 		lua_cast_func(delayData.caster, delayData.charTarget, delayData.sk);
-        //luabind::call_function<void>(Server::luaState, func.c_str(), delayData.caster, delayData.charTarget, delayData.sk);
     }
-	/*catch(const std::runtime_error & e)
-	{
-        LogFile::Log("error", e.what());
-		const char * logstring = lua_tolstring(Server::luaState, -1, NULL);
-		if(logstring != NULL)
-			LogFile::Log("error", logstring);
-	}*/
 	catch (const sol::error& e)
 	{
 		LogFile::Log("error", e.what());
 	}
-	/*
-	catch(const std::exception & e)
+	catch (const std::exception& e)
 	{
 		LogFile::Log("error", e.what());
-		const char * logstring = lua_tolstring(Server::luaState, -1, NULL);
-		if(logstring != NULL)
-			LogFile::Log("error", logstring);
 	}
-	*/
 	catch(...)
 	{
 		LogFile::Log("error", "call_function unhandled exception cmd_castcallback _cast");
@@ -279,8 +266,11 @@ void cmd_cast(Character * ch, string argument)
         return;
     }
 
-     ch->Message("|W" + ch->name + " begins to cast " + spell->long_name + "...|X", Character::MSG_ROOM_NOTCHAR);
-     ch->Send("|WYou begin to cast " + spell->long_name + "...|X\n\r");
+	if (spell->castTime != 0)
+	{
+		ch->Message("|W" + ch->name + " begins to cast " + spell->long_name + "...|X", Character::MSG_ROOM_NOTCHAR);
+		ch->Send("|WYou begin to cast " + spell->long_name + "...|X\n\r");
+	}
  
     //Start global cooldown
     ch->SetCooldown(NULL, "", true, 0);
@@ -309,14 +299,13 @@ void cmd_skills(Character * ch, string argument)
 	std::map<string, Skill *>::iterator iter;
     for(iter = ch->knownSkills.begin(); iter != ch->knownSkills.end(); ++iter)
     {
-		skill_string << "|G" << left << setw(25) << (*iter).second->long_name << " |MCast name:|G " << setw(25);
-		skill_string << (*iter).second->name << " |MCast time:|G " << setw(5) << Utilities::dtos((*iter).second->castTime, 2);
-		skill_string << " |MCooldown:|G " << Utilities::dtos((*iter).second->cooldown, 2) << "\n\r";
-		skill_string << "  |Y-- " << (*iter).second->affectDescription << "\n\r";
+		skill_string << "|G" << left << setw(20) << (*iter).second->long_name << " |MCast name:|G " << setw(20) << (*iter).second->name;
+		skill_string << " |MCast time:|G " << setw(5) << Utilities::dtos((*iter).second->castTime, 2);
+		skill_string << " |MCooldown:|G " << setw(7) << Utilities::dtos((*iter).second->cooldown, 2);
+		skill_string << " |MCost: |G" << iter->second->costDescription;
+		skill_string << "\n\r  |Y-- " << (*iter).second->description << "\n\r";
 		ch->Send(skill_string.str());
 		skill_string.str("");
-        //ch->Send("|G" + (*iter).second->long_name + " |MCast name:|G " + (*iter).second->name 
-        //    + " |MCast time:|G " + Utilities::dtos((*iter).second->castTime, 2) + " |MCooldown:|G " + Utilities::dtos((*iter).second->cooldown, 2) + "|X\n\r");
     }
 }
 
@@ -360,7 +349,7 @@ void cmd_learn(Character * ch, string argument)
 					{
 						stringstream learnstring;
 						learnstring << "|G" << left << setw(40) << sk->long_name << " |MCast name:|G " << setw(20);
-						learnstring << sk->name << " |MDesc:|G " << sk->affectDescription << "|X\n\r";
+						learnstring << sk->name << " |MDesc:|G " << sk->description << "|X\n\r";
 						ch->Send(learnstring.str());
 						learnstring.str("");
 
@@ -536,7 +525,7 @@ void cmd_affects(Character * ch, string argument)
                 {
                     oneaffect += (*iter)->GetAffectCategoryName() + " || ";
                 }
-                oneaffect += (*iter)->skill->affectDescription + "\n\r";
+                oneaffect += (*iter)->affectDescription + "\n\r";
                 ch->Send(oneaffect);
             }
         }
@@ -550,7 +539,7 @@ void cmd_affects(Character * ch, string argument)
                 {
                     oneaffect += (*iter)->GetAffectCategoryName() + " || ";
                 }
-                oneaffect += (*iter)->skill->affectDescription + "\n\r";
+                oneaffect += (*iter)->affectDescription + "\n\r";
                 ch->Send(oneaffect);
             }
         }
@@ -569,7 +558,7 @@ void cmd_affects(Character * ch, string argument)
                 {
                     oneaffect += (*iter)->GetAffectCategoryName() + " || ";
                 }
-                oneaffect += (*iter)->skill->affectDescription + "\n\r";
+                oneaffect += (*iter)->affectDescription + "\n\r";
                 ch->Send(oneaffect);            
             }
         }
@@ -587,7 +576,7 @@ void cmd_affects(Character * ch, string argument)
                 {
                     oneaffect += (*iter)->GetAffectCategoryName() + " || ";
                 }
-                oneaffect += (*iter)->skill->affectDescription + "\n\r";
+                oneaffect += (*iter)->affectDescription + "\n\r";
                 ch->Send(oneaffect);
             }
         }

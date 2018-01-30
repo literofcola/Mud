@@ -90,8 +90,14 @@ void cmd_edit(Character * ch, string argument)
                 ch->Send("Syntax: edit skill create <name>\n\r");
                 return;
             }
-            ch->editState = Character::ED_SKILL;
+            
             ch->editData = Game::GetGame()->CreateSkillAnyID(arg3);
+			if (ch->editData == nullptr)
+			{
+				ch->Send("Error: skill with that name already exists\n\r");
+				return;
+			}
+			ch->editState = Character::ED_SKILL;
             ch->Send("Ok.\n\r");
         }
         else if(Utilities::IsNumber(arg2))
@@ -1256,15 +1262,23 @@ void skillEditCmd_show(Character * ch, string argument)
     ch->Send("name:      [" + pSkill->name + "]\n\r");
     ch->Send("id:        [" + Utilities::itos(pSkill->id) + "]\n\r");
     ch->Send("cast_time: [" + Utilities::dtos(pSkill->castTime, 2) + " seconds]\n\r");
+	ch->Send("interrupt_flags: [");
+	for (std::size_t i = 0; i < pSkill->interruptFlags.size(); ++i) 
+	{
+		if(pSkill->interruptFlags[i])
+			ch->Send(Utilities::itos(i) + " ");
+	}
+	ch->Send("]\n\r");
     ch->Send("cooldown:  [" + Utilities::dtos(pSkill->cooldown, 2) + " seconds]\n\r");
     ch->Send("target_type:   [" + Utilities::itos(pSkill->targetType) + "]\n\r");
     ch->Send("function_name: [" + pSkill->function_name + "]\n\r");
-    ch->Send("affect_desc:   [" + pSkill->affectDescription + "]\n\r");
-    ch->Send("Cost function:\n\r" + pSkill->costFunction + "\n\r");
-    ch->Send("Cast script:\n\r" + pSkill->castScript + "\n\r");
-    ch->Send("Apply script:\n\r" + pSkill->applyScript + "\n\r");
-    ch->Send("Tick script:\n\r" + pSkill->tickScript + "\n\r");
-    ch->Send("Remove script:\n\r" + pSkill->removeScript + "\n\r");
+    ch->Send("description:   [" + pSkill->description + "]\n\r");
+	ch->Send("cost_desc:   [" + pSkill->costDescription + "]\n\r");
+    ch->SendBW("Cost function:\n\r" + pSkill->costFunction + "\n\r");
+    ch->SendBW("Cast script:\n\r" + pSkill->castScript + "\n\r");
+    ch->SendBW("Apply script:\n\r" + pSkill->applyScript + "\n\r");
+    ch->SendBW("Tick script:\n\r" + pSkill->tickScript + "\n\r");
+    ch->SendBW("Remove script:\n\r" + pSkill->removeScript + "\n\r");
 }
 
 void skillEditCmd_name(Character * ch, string argument)
@@ -1338,7 +1352,7 @@ void skillEditCmd_target_type(Character * ch, string argument)
 
     if(arg1.empty() || !Utilities::IsNumber(arg1))
     {
-        ch->Send("target_type 0(TARGET_SELF), 1(TARGET_OTHER), 2(TARGET_HOSTILE), 3(TARGET_ANY), 4(TARGET_FRIENDLY), 5(TARGET_NONE)\n\r");
+        ch->Send("target_type 0(TARGET_SELF), 1(TARGET_OTHER), 2(TARGET_HOSTILE), 3(TARGET_ANY), 4(TARGET_FRIENDLY), 5(TARGET_NONE), 6(TARGET_PASSIVE)\n\r");
         return;
     }
     pSkill->changed = true;
@@ -1381,7 +1395,7 @@ void skillEditCmd_reload(Character * ch, string argument)
 	*/
 }
 
-void skillEditCmd_affect_desc(Character * ch, string argument)
+void skillEditCmd_description(Character * ch, string argument)
 {
     Skill * pSkill = (Skill *)ch->editData;
 
@@ -1390,15 +1404,34 @@ void skillEditCmd_affect_desc(Character * ch, string argument)
 		return;
 	}
 
-	if(argument.length() > 150)
+	if(argument.length() > 255)
 	{
-		ch->Send("Maximum length is 150 characters.\n\r");
+		ch->Send("Maximum length is 255 characters.\n\r");
 		return;
 	}
 
-	pSkill->affectDescription = argument;
+	pSkill->description = argument;
     pSkill->changed = true;
-	ch->Send("affect_desc set.\n\r");
+	ch->Send("description set.\n\r");
+}
+void skillEditCmd_cost_description(Character * ch, string argument)
+{
+	Skill * pSkill = (Skill *)ch->editData;
+
+	if (argument.empty())
+	{
+		return;
+	}
+
+	if (argument.length() > 255)
+	{
+		ch->Send("Maximum length is 255 characters.\n\r");
+		return;
+	}
+
+	pSkill->costDescription = argument;
+	pSkill->changed = true;
+	ch->Send("cost_description set.\n\r");
 }
 
 void skillEditCmd_cast_script(Character * ch, string argument)
@@ -1472,6 +1505,24 @@ void skillEditCmd_cast_time(Character * ch, string argument)
     pSkill->castTime = ct;
     pSkill->changed = true;
     ch->Send("cast_time set.\n\r");
+}
+
+void skillEditCmd_interrupt_flags(Character * ch, string argument)
+{
+	Skill * pSkill = (Skill *)ch->editData;
+
+	string arg;
+	Utilities::one_argument(argument, arg);
+	//enum Interrupt { INTERRUPT_MOVE, INTERRUPT_HIT, INTERRUPT_NOPUSHBACK };
+	int flag;
+	if (!Utilities::IsNumber(arg) || (flag = Utilities::atoi(arg)) < 0)
+	{
+		ch->Send("Interrupt flags: 0 INTERRUPT_MOVE, 1 INTERRUPT_HIT, 2 INTERRUPT_NOPUSHBACK\n\r");
+		return;
+	}
+	pSkill->interruptFlags.set(flag);
+	pSkill->changed = true;
+	ch->Send("interrupt_flag set.\n\r");
 }
 
 void skillEditCmd_cooldown(Character * ch, string argument)
@@ -3046,8 +3097,8 @@ void classEditCmd_show(Character * ch, string argument)
     std::list<Class::SkillData>::iterator iter;
     for(iter = pClass->classSkills.begin(); iter != pClass->classSkills.end(); ++iter)
     {
-        ch->Send("{" + Utilities::itos((*iter).skill->id) + "," + Utilities::itos((*iter).level) + "," +
-                    Utilities::itos((*iter).learnCost) + "} ");
+        ch->Send("{" + Utilities::itos((*iter).skill->id) + "," + Utilities::itos((*iter).level) + "} ");
+                    //Utilities::itos((*iter).learnCost) + "} ");
     }
 }
 

@@ -402,11 +402,13 @@ DROP TABLE IF EXISTS `skills`;
 CREATE TABLE `skills` (
   `id` int(11) NOT NULL,
   `long_name` varchar(100) NOT NULL,
-  `name` varchar(100) DEFAULT NULL,
+  `name` varchar(100) NOT NULL,
   `cooldown` double DEFAULT NULL,
   `target_type` int(11) DEFAULT NULL,
-  `affect_desc` text,
+  `description` tinytext,
+  `cost_description` tinytext,
   `cast_time` double DEFAULT NULL,
+  `interrupt_flags` varchar(15) DEFAULT NULL,
   `function_name` varchar(100) DEFAULT NULL,
   `cast_script` text,
   `apply_script` text,
@@ -446,4 +448,4 @@ CREATE TABLE `triggers` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-01-28  6:03:10
+-- Dump completed on 2018-01-30  5:17:05

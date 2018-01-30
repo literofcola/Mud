@@ -88,9 +88,8 @@ void cmd_attack(Character * ch, string argument)
 
 void cmd_cancel(Character * ch, string argument)
 {
-    if(ch && ch->delay_active)
+    if(ch && ch->CancelCast())
     {
-        ch->delay_active = false;
         ch->Send("Action Cancelled!\n\r");
     }
     else if(ch && ch->meleeActive)
@@ -198,22 +197,20 @@ void cmd_look(Character * ch, string argument)
 
             areaname += this_area->name;
         }
-        roomstream << " " << left << setw(57) << areaname <<
-            setw(8) << (exitstatus[5] ? "|WSW" : "|B--") <<
-            setw(7) << (exitstatus[4] ? "|WS" : "|B-") <<
-            setw(7) << (exitstatus[3] ? "|WSE" : "|B--") << "|X\n\r";
+
+		roomstream << " " << left << setw(26) << areaname;
+		std::string roomflags = "";
+		if (Utilities::FlagIsSet(inroom->flags, Room::Flags::FLAG_RECALL))
+			roomflags += "[Recall]";
+		if (ch->player && ch->player->IMMORTAL())
+			roomflags += "[Room ID: " + Utilities::itos(inroom->id) + "]";
+
+		roomstream << "|Y" << right << setw(26) << roomflags;
+		roomstream << right << setw(9) << (exitstatus[5] ? "|WSW" : "|B--") <<
+					  setw(7) << (exitstatus[4] ? "|WS" : "|B-") <<
+					  setw(8) << (exitstatus[3] ? "|WSE" : "|B--") << "|X\n\r\n\r";
 
         ch->Send(roomstream.str());
-
-	    if(ch->player && ch->player->IMMORTAL())
-	    {
-            ch->Send("|Y[Room ID: " + Utilities::itos(inroom->id) + "]|X\n\r");
-		    /*ch->SendToChar("|Y[Area: " + itos(ch->in_room->area->area_number) + 
-						    " Room: " + itos(ch->in_room->vnum) + " (" + itos(ch->x) + ", " + itos(ch->y) + ")"
-						    + "]|X\n\r");*/
-	    }
-	    else
-		    ch->Send("\n\r");
 
 	    /*if(ch->in_room->area->terrainmap && ch->playerData)
 	    {
