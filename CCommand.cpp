@@ -390,6 +390,7 @@ const class Command npcEditCmd_table[] =
     { "attack_speed",npcEditCmd_attackSpeed, 0, 0, 1, 1 },
     { "damage_low",  npcEditCmd_damageLow, 0, 0, 1, 1 },
     { "damage_high", npcEditCmd_damageHigh, 0, 0, 1, 1 },
+	{ "speechtext", npcEditCmd_speechText, 0, 0, 1, 1 },
     { "skill",      npcEditCmd_skill, 0, 0, 1, 1 },
     { "trigger",    npcEditCmd_trigger, 0, 0, 1, 1 },
     { "",			0, 0, 0, 1, 1 }

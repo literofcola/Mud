@@ -143,6 +143,7 @@ void npcEditCmd_mana(Character * ch, string argument);
 void npcEditCmd_attackSpeed(Character * ch, string argument);
 void npcEditCmd_damageLow(Character * ch, string argument);
 void npcEditCmd_damageHigh(Character * ch, string argument);
+void npcEditCmd_speechText(Character * ch, string argument);
 void npcEditCmd_trigger(Character * ch, string argument);
 void npcEditCmd_skill(Character * ch, string argument);
 void itemEditCmd_show(Character * ch, string argument);

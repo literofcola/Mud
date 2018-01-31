@@ -38,8 +38,8 @@ extern "C"
 using namespace std;
 
 //in rooms per second
-const double Character::NORMAL_MOVE_SPEED = 2.5;
-const double Character::COMBAT_MOVE_SPEED = 0.5;
+//const double Character::NORMAL_MOVE_SPEED = 2.5;
+//const double Character::COMBAT_MOVE_SPEED = 0.5;
 
 //TODO: racial skills?
 Character::RaceType Character::race_table[] = 
@@ -102,6 +102,7 @@ Character::Character(const Character & copy)
     player = NULL;
     level = copy.level;
     gender = copy.gender;
+	race = copy.race;
     agility = copy.agility;
     intellect = copy.intellect;
     strength = copy.strength;
@@ -109,6 +110,10 @@ Character::Character(const Character & copy)
     wisdom = copy.wisdom;
     health = maxHealth = copy.maxHealth;
     mana = maxMana = copy.maxMana;
+	energy = maxEnergy = copy.maxEnergy;
+	rage = 0;
+	maxRage = copy.maxRage;
+	speechText = copy.speechText;
     npcAttackSpeed = copy.npcAttackSpeed;
     npcDamageLow = copy.npcDamageLow;
     npcDamageHigh = copy.npcDamageHigh;
@@ -893,7 +898,7 @@ void Character::Move(int direction)
     //check npc aggro
     for(std::list<Character*>::iterator iter = room->characters.begin(); iter != room->characters.end(); ++iter)
     {
-        if((*iter)->IsNPC() && Utilities::FlagIsSet((*iter)->flags, Character::FLAG_AGGRESSIVE) && !(*iter)->InCombat())
+        if((*iter)->IsNPC() && Utilities::FlagIsSet((*iter)->flags, Character::FLAG_AGGRESSIVE) && !(*iter)->InCombat() && player && !player->IMMORTAL())
         {
             (*iter)->EnterCombat(this);
             EnterCombat(*iter);
@@ -1018,30 +1023,31 @@ Character * Character::LoadPlayer(std::string name, User * user)
 	}
 
 	StoreQueryResult playerqares = Server::sqlQueue->Read("SELECT * FROM player_active_quests where player='" + loaded->name + "'");
+	int i = 0;
 	for (iter = playerqares.begin(); iter != playerqares.end(); ++iter)
 	{
 		Row qarow = *iter;
 		int id = qarow["quest"];
 		string objectives = (string)qarow["objectives"];
+		
 		Quest * q;
 		if ((q = Game::GetGame()->GetQuest(id)) != NULL)
 		{
 			loaded->player->questLog.push_back(q);
 			std::vector<int> playerObjectives;
-			loaded->player->questObjectives.push_back(playerObjectives); //I dont think this does anything...
+			loaded->player->questObjectives.push_back(playerObjectives);
 
 			int count;
 			int first = 0;
-			int i = 0;
 			for (int last = (int)objectives.find(","); last != std::string::npos; last = (int)objectives.find(",", first))
 			{
 				count = Utilities::atoi(objectives.substr(first, last - first));
 				loaded->player->questObjectives[i].push_back(count);
 				first = last + 1;
-				i++;
 			}
 			count = Utilities::atoi(objectives.substr(first, objectives.length() - first));
 			loaded->player->questObjectives[i].push_back(count);
+			i++;
 		}
 	}
 	/*
@@ -1168,7 +1174,7 @@ void Character::Save()
         string fixtitle = Utilities::SQLFixQuotes(title);
 
         sql = "INSERT INTO npcs (id, name, keywords, level, gender, race, agility, intellect, strength, stamina, ";
-        sql += "wisdom, health, mana, energy, rage, title, attack_speed, damage_low, damage_high, flags) values (";
+        sql += "wisdom, health, mana, energy, rage, title, attack_speed, damage_low, damage_high, flags, speechtext) values (";
         sql += Utilities::itos(id) + ", '";
         sql += name + "', '" + keywords + "', " + Utilities::itos(level) + "," + Utilities::itos(gender) + "," + Utilities::itos(race) + ",";
         sql += Utilities::itos(agility) + "," + Utilities::itos(intellect) + "," + Utilities::itos(strength) + ",";
@@ -1182,13 +1188,13 @@ void Character::Save()
 		{
 			sql += Utilities::itos((*flagiter)) + ";";
 		}
-		sql += "')";
+		sql += "','" + Utilities::SQLFixQuotes(speechText) + "')";
 
         sql += " ON DUPLICATE KEY UPDATE id=VALUES(id), name=VALUES(name), level=VALUES(level), gender=VALUES(gender), race=VALUES(race), agility=VALUES(agility), ";
         sql += "intellect=VALUES(intellect), strength=VALUES(strength), stamina=VALUES(stamina), wisdom=VALUES(wisdom), ";
         sql += "health=VALUES(health), mana=VALUES(mana), energy=VALUES(energy), rage=VALUES(rage),";
         sql += "title=VALUES(title), attack_speed=VALUES(attack_speed), damage_low=VALUES(damage_low), ";
-        sql += "damage_high=VALUES(damage_high), flags=VALUES(flags)";
+        sql += "damage_high=VALUES(damage_high), flags=VALUES(flags), speechtext=VALUES(speechtext)";
 
 		//save skills
 		Server::sqlQueue->Write("DELETE FROM npc_skills where npc=" + Utilities::itos(id));
@@ -1782,7 +1788,7 @@ void Character::ExitCombat()
 
 bool Character::InCombat()
 {
-    if(combat && meleeActive)
+    if(combat)// && meleeActive)
         return true;
     return false;
 }
@@ -1904,7 +1910,7 @@ void Character::OneHit(Character * victim, int damage)
     if(victim->IsNPC())
     {
         victim->UpdateThreat(this, damage);
-        Send("My threat on " + victim->name + " is " + Utilities::itos(victim->GetThreat(this)) + "\n\r");
+        //Send("My threat on " + victim->name + " is " + Utilities::itos(victim->GetThreat(this)) + "\n\r");
     }
 	if (victim->CancelCast())
 		victim->Send("Action Interrupted!\n\r");

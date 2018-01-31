@@ -178,6 +178,7 @@ CREATE TABLE `npcs` (
   `damage_low` int(11) NOT NULL,
   `damage_high` int(11) NOT NULL,
   `flags` tinytext NOT NULL,
+  `speechtext` text NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -448,4 +449,4 @@ CREATE TABLE `triggers` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-01-30  5:17:05
+-- Dump completed on 2018-01-31  4:16:54

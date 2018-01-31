@@ -19,7 +19,7 @@ public:
     std::string completionMessage;
     int level;
     int questRequirement; //id of a quest that must be completed to offer this quest
-    int questRestriction; //TODO if questRestriction is already complete OR active, don't offer this quest
+    int questRestriction; //id of a quest that must not be already completed or active to offer this quest
     int levelRequirement;
     Character * start;
     Character * end;

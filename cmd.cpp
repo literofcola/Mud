@@ -776,9 +776,19 @@ void cmd_quest(Character * ch, string argument)
         {
             if(ch->player->QuestActive(*questiter))
             {
+				if (!found && !ch->GetTarget()->speechText.empty())
+					ch->Send(ch->GetTarget()->speechText + "\n\r");
                 //TODO color ? by complete status
                 found = true;
-                ch->Send("|Y? " + Quest::GetDifficultyColor(ch->level, (*questiter)->level) + (*questiter)->name + " (" + Utilities::itos((*questiter)->level) + ")|X\n\r");
+                ch->Send("|Y? " + Quest::GetDifficultyColor(ch->level, (*questiter)->level) + (*questiter)->name + " (" + Utilities::itos((*questiter)->level) + ")|X");
+				if (!(*questiter)->progressMessage.empty())
+				{
+					ch->Send(" : " + (*questiter)->progressMessage + "\n\r");
+				}
+				else
+				{
+					ch->Send("\n\r");
+				}
             }
         }
         int ctr = 1;
@@ -786,6 +796,8 @@ void cmd_quest(Character * ch, string argument)
         {
             if(ch->player->QuestEligible(*questiter))
             {
+				if (!found && !ch->GetTarget()->speechText.empty())
+					ch->Send(ch->GetTarget()->speechText + "\n\r");
                 found = true;
                 ch->Send(Utilities::itos(ctr) + ". |Y! " + Quest::GetDifficultyColor(ch->level, (*questiter)->level) 
                            + (*questiter)->name + " (" + Utilities::itos((*questiter)->level) + ")|X\n\r");
@@ -1094,7 +1106,7 @@ void cmd_quit(Character * ch, string argument)
     //Do a few checks here, but just query the player with a quit-function callback.
     if(ch->combat)
     {
-        ch->Send("You can't do that while fighting!\n\r");
+        ch->Send("You can't do that while in combat!\n\r");
         return;
     }
     if(ch->delay_active)
@@ -1119,7 +1131,7 @@ bool cmd_quit_Query(Character * ch, string argument)
 	{
         if(ch && ch->combat)
         {
-            ch->Send("You can't do that while fighting!\n\r");
+            ch->Send("You can't do that while in combat!\n\r");
             return true;
         }
         if(ch->delay_active)

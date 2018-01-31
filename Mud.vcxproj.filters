@@ -207,4 +207,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="lua_constants.lua">
+      <Filter>Source Files</Filter>
+    </None>
+  </ItemGroup>
 </Project>

@@ -717,6 +717,24 @@ void roomEditCmd_reset(Character * ch, string argument)
                 ch->Send("Added reset #" + Utilities::itos(new_reset->id) + "\n\r");
             }
         }
+		else if (!Utilities::str_cmp(arg2, "obj")) //TODO
+		{
+			/*if (Utilities::IsNumber(arg3))
+			{
+				int id = Utilities::atoi(arg3);
+				Character * npc = Game::GetGame()->GetCharacterIndex(id);
+				if (npc == NULL)
+				{
+					ch->Send("NPC with that id does not exist.\n\r");
+					return;
+				}
+				Reset * new_reset = new Reset();
+				new_reset->type = 1;
+				new_reset->npcID = id;
+				pRoom->AddReset(new_reset);
+				ch->Send("Added reset #" + Utilities::itos(new_reset->id) + "\n\r");
+			}*/
+		}
     }
     else if(!Utilities::str_cmp(arg1, "delete"))
 	{
@@ -1572,6 +1590,7 @@ void npcEditCmd_show(Character * ch, string argument)
     ch->Send("damage_high:  [" + Utilities::itos(pChar->npcDamageHigh) + "]\n\r");
     double dps = ((pChar->npcDamageLow + pChar->npcDamageHigh) / 2.0) / pChar->npcAttackSpeed;
     ch->Send("(" + Utilities::dtos(dps, 2) + " damage per second)\n\r");
+	ch->Send("speechtext: " + pChar->speechText + "\n\r");
 
     //double movementSpeed; //default = 3 rooms per second
     //double lastMoveTime;
@@ -2087,6 +2106,21 @@ void npcEditCmd_damageHigh(Character * ch, string argument)
     }
     pChar->changed = true;
     pChar->npcDamageHigh = damage_high;
+}
+
+void npcEditCmd_speechText(Character * ch, string argument)
+{
+	Character * pChar = (Character *)ch->editData;
+
+	if (argument.empty())
+	{
+		ch->Send("Set speechtext to what?\n\r");
+		return;
+	}
+
+	pChar->speechText = argument;
+	pChar->changed = true;
+	ch->Send("speechText set.\n\r");
 }
 
 void npcEditCmd_skill(Character * ch, string argument)
@@ -2891,6 +2925,13 @@ void questEditCmd_questrequirement(Character * ch, string argument)
         ch->Send("quest_requirement must be >= 0\n\r");
         return;
     }
+	else if (requirement == 0)
+	{
+		ch->Send("quest_requirement cleared\n\r");
+		pQuest->questRequirement = 0;
+		pQuest->changed = true;
+		return;
+	}
     Quest * q = Game::GetGame()->GetQuest(requirement);
     if(q == NULL)
     {
@@ -2920,6 +2961,13 @@ void questEditCmd_questrestriction(Character * ch, string argument)
         ch->Send("quest_restriction must be >= 0\n\r");
         return;
     }
+	else if (restriction == 0)
+	{
+		ch->Send("quest_restriction cleared\n\r");
+		pQuest->questRestriction = 0;
+		pQuest->changed = true;
+		return;
+	}
     Quest * q = Game::GetGame()->GetQuest(restriction);
     if(q == NULL)
     {

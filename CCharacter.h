@@ -58,7 +58,7 @@ public:
     int race; //index into Character::race_table
 	enum Races
 	{
-		RACE_HUMAN, RACE_ELF, RACE_DWARF, RACE_ORC, RACE_GNOME, RACE_GOBLIN, RACE_UNDEAD, RACE_MINOTAUR, RACE_TROLL
+		RACE_NONE, RACE_HUMAN, RACE_ELF, RACE_DWARF, RACE_ORC, RACE_GNOME, RACE_GOBLIN, RACE_UNDEAD, RACE_MINOTAUR, RACE_TROLL
 	};
     //TODO, make this a class? std::list<Skill*> racials? starting stat bonuses?
     struct RaceType
@@ -78,6 +78,7 @@ public:
     Reset * reset; //reset that spawned this npc, if any
     std::vector<Quest *> questStart;
     std::vector<Quest *> questEnd;
+	std::string speechText;
 	std::string keywords;
     bool changed;
     std::vector<int> flags; //a vector of constants to indicate flag is set
@@ -96,9 +97,9 @@ public:
     bool remove;
 
     //Movement
-    double movementSpeed; //default = 2.5 rooms per second
-    static const double NORMAL_MOVE_SPEED;
-    static const double COMBAT_MOVE_SPEED; //30% of normal, 0.75 rooms per second
+    double movementSpeed; 
+    static constexpr double NORMAL_MOVE_SPEED = 1;						//default move speed in rooms per second
+    static constexpr double COMBAT_MOVE_SPEED = NORMAL_MOVE_SPEED * .3; //30% of normal
     double lastMoveTime;
     std::deque<void(*)(Character *, std::string)> movementQueue;
 

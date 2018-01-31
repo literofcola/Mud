@@ -107,7 +107,7 @@ void cmd_recall(Character * ch, string argument)
 
 	ch->queryData = new int(ch->room->id);
 	ch->hasQuery = true;
-	ch->queryPrompt = "Set recall location here? (y/n) ";
+	ch->queryPrompt = "Set recall location to: |W" + ch->room->name + "|X? (y/n) ";
 	ch->queryFunction = cmd_recall_Query;
 }
 

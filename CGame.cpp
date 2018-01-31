@@ -1264,8 +1264,17 @@ void Game::LoginHandler(Server * server, User * user, string argument)
                 //user->Send("Logged In!\r\n");
                 if(user->character->room == NULL)
                 {
-                    if(!user->character->ChangeRoomsID(newplayerRoom))
-                        user->character->ChangeRooms(rooms.begin()->second);
+					Room * toroom = GetRoom(newplayerRoom);
+					if (!toroom)
+					{
+						user->character->ChangeRooms(rooms.begin()->second);
+					}
+					else
+					{
+						user->character->ChangeRoomsID(newplayerRoom);
+						if(user->character->player)
+							user->character->player->recall = newplayerRoom;
+					}
                 }
                 else
                 {
@@ -1771,6 +1780,7 @@ void Game::LoadNPCS(Server * server)
         loaded->npcAttackSpeed = row["attack_speed"];
         loaded->npcDamageHigh = row["damage_high"];
         loaded->npcDamageLow = row["damage_low"];
+		loaded->speechText = row["speechtext"];
 
 		string flagtext = (string)row["flags"];
 		int first, last;
@@ -1787,6 +1797,7 @@ void Game::LoadNPCS(Server * server)
 		StoreQueryResult npcskillres = server->sqlQueue->Read("select * from npc_skills where npc=" + Utilities::itos(loaded->id));
 		for (j = npcskillres.begin(); j != npcskillres.end(); j++)
 		{
+			row = *j;
 			int skillid = row["skill"];
 			loaded->AddSkill(Game::GetGame()->GetSkill(skillid));
 		}
@@ -1794,6 +1805,7 @@ void Game::LoadNPCS(Server * server)
 		StoreQueryResult npcdropsres = server->sqlQueue->Read("select * from npc_drops where npc=" + Utilities::itos(loaded->id));
 		for (j = npcdropsres.begin(); j != npcdropsres.end(); j++)
 		{
+			row = *j;
 			string drops = (string)row["items"];
 			int percent = row["percent"];
 
@@ -2159,6 +2171,10 @@ Help * Game::CreateHelpAnyID(string name)
 //the total exp needed for any level
 int Game::ExperienceForLevel(int level)
 {
+	//TODO
+	static std::vector<int> experience_table = { 400, 900, 1500, 2100 };
+
+
     if(level < 1)
         level = 1;
     else if(level > Game::MAX_LEVEL)
