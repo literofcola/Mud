@@ -72,22 +72,22 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>E:\mysql-5.7.20-winx64\include;E:\mysql++-3.2.3\lib;E:\lua-5.3.4\src;E:\zlib-1.2.11;E:\sol2-develop;C:\Program Files (x86)\Visual Leak Detector\include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\mysql-5.7.20-winx64\include;C:\mysql++-3.2.3\lib;C:\lua-5.3.4\src;C:\zlib-1.2.11;C:\sol2-develop;C:\Program Files (x86)\Visual Leak Detector\include;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Program Files (x86)\Visual Leak Detector\lib\Win32;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>E:\mysql-5.7.20-winx64\include;E:\mysql++-3.2.3\lib;E:\lua-5.3.4\src;E:\zlib-1.2.11;E:\sol2-develop;C:\Program Files (x86)\Visual Leak Detector\include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\mysql-5.7.20-winx64\include;C:\mysql++-3.2.3\lib;C:\lua-5.3.4\src;C:\zlib-1.2.11;C:\sol2-develop;C:\Program Files (x86)\Visual Leak Detector\include;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Program Files (x86)\Visual Leak Detector\lib\Win32;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>E:\mysql-5.7.20-winx64\include;E:\mysql++-3.2.3\lib;E:\lua-5.3.4\src;E:\zlib-1.2.11;E:\sol2-develop;C:\Program Files (x86)\Visual Leak Detector\include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\mysql-5.7.20-winx64\include;C:\mysql++-3.2.3\lib;C:\lua-5.3.4\src;C:\zlib-1.2.11;C:\sol2-develop;C:\Program Files (x86)\Visual Leak Detector\include;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Program Files (x86)\Visual Leak Detector\lib\Win32;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>E:\mysql-5.7.20-winx64\include;E:\mysql++-3.2.3\lib;E:\lua-5.3.4\src;E:\zlib-1.2.11;E:\sol2-develop;C:\Program Files (x86)\Visual Leak Detector\include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\mysql-5.7.20-winx64\include;C:\mysql++-3.2.3\lib;C:\lua-5.3.4\src;C:\zlib-1.2.11;C:\sol2-develop;C:\Program Files (x86)\Visual Leak Detector\include;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Program Files (x86)\Visual Leak Detector\lib\Win32;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
