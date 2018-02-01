@@ -2187,8 +2187,24 @@ int Game::ExperienceForLevel(int level)
 
 int Game::CalculateExperience(Character * ch, Character * victim)
 {
-    //TODO
-    return 100;
+	if (LevelDifficulty(ch->level, victim->level) == 0) //no xp for "gray" con npcs
+		return 0;
+	//todo: use threat table to determine if this character was helped outside of tapped group
+	// and group modifiers if helpers wouldnt get exp from the npc...
+	double xp = ch->level * 5 + 45;	//base xp
+	if (victim->level > ch->level)
+	{
+		double difference = victim->level - ch->level;
+		if (difference > 10)
+			difference = 10.0;
+		xp = xp * (1.0 + 0.05*difference);	//higher level victim, slightly higher exp
+	}
+	else if (victim->level < ch->level)
+	{
+		double difference = ch->level - victim->level;
+		xp = xp * (1.0 - (difference / 7.0));		//lower level victim, less exp
+	}
+	return ceil(xp);
 }
 
 int Game::LevelDifficulty(int level1, int level2)
@@ -2201,10 +2217,29 @@ int Game::LevelDifficulty(int level1, int level2)
         return 3;
     else if(level2 >= level1 - 2)   //Yellow
         return 2;
-    else if(level2 >= level1 - 5)   //Green
+    else if(level2 >= level1 - 4)   //Green
         return 1;
     else                            //Gray
         return 0;
+}
+
+std::string Game::LevelDifficultyColor(int leveldifficulty)
+{
+	switch (leveldifficulty)
+	{
+	case 0:
+		return "|D";
+	case 1:
+		return "|G";
+	case 2:
+		return "|Y";
+	case 3:
+		return "|M";
+	case 4:
+	case 5:
+		return "|R";
+	}
+	return "";
 }
 
 Character * Game::LoadNPCRoom(int id, Room * toroom)

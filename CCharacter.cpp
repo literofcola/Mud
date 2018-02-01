@@ -368,7 +368,7 @@ void Character::ResetMaxStats()
 {
 	//todo: check equipment bonuses
 	maxHealth = stamina * Character::HEALTH_FROM_STAMINA;
-	maxMana = intellect * Character::MANA_FROM_INTELLECT;
+	maxMana = intellect * Character::MANA_FROM_INTELLECT; //todo: no more mana from intellect, go through our class levels to figure it out
 	//todo: these might be higher based on skills or talents?
 	maxEnergy = 100;
 	maxRage = 100;
@@ -519,24 +519,15 @@ void Character::GeneratePrompt(double currentTime)
 		{
 			targetPrompt += "|R(" + Utilities::itos(comboPoints) + ")|X";
 		}
-        string targetLevel;
+
+		string targetLevel = Game::LevelDifficultyColor(Game::LevelDifficulty(level, GetTarget()->level));
         if(GetTarget()->IsNPC() && !Utilities::FlagIsSet(target->flags, Character::FLAG_FRIENDLY)
 			&& Game::LevelDifficulty(level, GetTarget()->level) == 5) //NPC >= 10 levels
         {
-            targetLevel = "|R??";
+            targetLevel += "??";
         }
         else
         {
-            int difficulty = Game::LevelDifficulty(level, GetTarget()->level);
-            switch(difficulty)
-            {
-            case 0: targetLevel = "|D"; break;
-            case 1: targetLevel = "|G"; break;
-            case 2: targetLevel = "|Y"; break;
-            case 3: targetLevel = "|M"; break;
-            case 4: targetLevel = "|R"; break;
-            case 5: targetLevel = "|R"; break;
-            }
             targetLevel += Utilities::itos(GetTarget()->level);
         }
 
@@ -605,23 +596,13 @@ void Character::GeneratePrompt(double currentTime)
 	if(GetTarget() != NULL && GetTarget()->GetTarget() != NULL)
 	{
         Character * targettarget = GetTarget()->GetTarget();
-        string targetLevel;
+		string targetLevel = Game::LevelDifficultyColor(Game::LevelDifficulty(level, targettarget->level));
         if(player == NULL && Game::LevelDifficulty(level, targettarget->level) == 5) //NPC >= 10 levels
         {
-            targetLevel = "|R??";
+            targetLevel += "??";
         }
         else
         {
-            int difficulty = Game::LevelDifficulty(level, targettarget->level);
-            switch(difficulty)
-            {
-            case 0: targetLevel = "|D"; break;
-            case 1: targetLevel = "|G"; break;
-            case 2: targetLevel = "|Y"; break;
-            case 3: targetLevel = "|M"; break;
-            case 4: targetLevel = "|R"; break;
-            case 5: targetLevel = "|R"; break;
-            }
             targetLevel += Utilities::itos(targettarget->level);
         }
 
@@ -1262,7 +1243,7 @@ void Character::SetLevel(int newlevel)
     if(level == newlevel || newlevel > Game::MAX_LEVEL || newlevel < 1)
         return;
 
-	Send("|WYou have reached level " + Utilities::itos(newlevel) + "!|X\n\r");
+	Send("|W***You have reached level " + Utilities::itos(newlevel) + "!***|X\n\r");
 
     if(player)
     {
@@ -1271,7 +1252,18 @@ void Character::SetLevel(int newlevel)
 	
 		player->statPoints += Player::STATS_PER_LEVEL;
 		Send("|WYou gain " + Utilities::itos(Player::STATS_PER_LEVEL) + " attribute points. Assign attribute points with the \"train\" command.|X\n\r");
-    }
+		
+		//todo meh, would need a functor struct to use find_if and avoid this traversal
+		std::list<Class::SkillData>::iterator newskills;
+		for (newskills = player->currentClass->classSkills.begin(); newskills != player->currentClass->classSkills.end(); newskills++)
+		{
+			if (newskills->level == newlevel) //Found a new skill to add
+			{
+				AddSkill(newskills->skill);
+				Send("|WYou have learned the skill \"" + newskills->skill->long_name + "\"|X\n\r");
+			}
+		}
+	}
 	level = newlevel;
 	health = maxHealth;
 	mana = maxMana;
@@ -1834,7 +1826,7 @@ void Character::AutoAttack(Character * victim)
                 int high = player->equipped[Player::EQUIP_MAINHAND]->damageHigh;
                 int low = player->equipped[Player::EQUIP_MAINHAND]->damageLow;
                 if(high != low)
-                    damage_main = (Server::rand() % (high - low)) + low;
+                    damage_main = (Server::rand() % (high+1 - low)) + low;
                 else
                     damage_main = low;
             }
@@ -1851,7 +1843,7 @@ void Character::AutoAttack(Character * victim)
                 int high = player->equipped[Player::EQUIP_OFFHAND]->damageHigh;
                 int low = player->equipped[Player::EQUIP_OFFHAND]->damageLow;
                 if(high != low)
-                    damage_off = (Server::rand() % (high - low)) + low;
+                    damage_off = (Server::rand() % (high+1 - low)) + low;
                 else
                     damage_off = low;
                 attack_oh = true; //offhand attack only if we're holding a weapon (no attack if empty)
@@ -1860,6 +1852,7 @@ void Character::AutoAttack(Character * victim)
 
         if(attack_mh && lastAutoAttack_main + weaponSpeed_main <= Game::currentTime)
         {
+			damage_main += strength / 3.5;
             if(victim->target == NULL) //Force a target on our victim
             {     
                 victim->SetTarget(this);
@@ -1876,6 +1869,7 @@ void Character::AutoAttack(Character * victim)
         }
         if(attack_oh && lastAutoAttack_off + weaponSpeed_off <= Game::currentTime)
         {
+			damage_off += strength / 3.5;
             if(victim->target == NULL) //Force a target on our victim
             {     
                 victim->SetTarget(this);
@@ -1916,6 +1910,44 @@ void Character::OneHit(Character * victim, int damage)
 		victim->Send("Action Interrupted!\n\r");
 
     victim->AdjustHealth(this, -damage);
+}
+
+int Character::GetMainhandDamageRandomHit()
+{
+	if (player == NULL)
+		return 1;
+
+	int damage = 1;
+	if (player->equipped[Player::EQUIP_MAINHAND] != NULL
+		&& player->equipped[Player::EQUIP_MAINHAND]->speed > 0
+		&& player->equipped[Player::EQUIP_MAINHAND]->damageHigh > 0)
+	{
+		int high = player->equipped[Player::EQUIP_MAINHAND]->damageHigh;
+		int low = player->equipped[Player::EQUIP_MAINHAND]->damageLow;
+		if (high != low)
+			damage = (Server::rand() % (high+1 - low)) + low;
+		else
+			damage = low;
+	}
+	return damage;
+}
+
+double Character::GetMainhandDamagePerSecond()
+{
+	if (player == NULL)
+		return 1;
+
+	double dps = 1;
+	if (player->equipped[Player::EQUIP_MAINHAND] != NULL
+		&& player->equipped[Player::EQUIP_MAINHAND]->speed > 0 
+		&& player->equipped[Player::EQUIP_MAINHAND]->damageHigh > 0)
+	{
+		double weaponSpeed_main = player->equipped[Player::EQUIP_MAINHAND]->speed;
+		int high = player->equipped[Player::EQUIP_MAINHAND]->damageHigh;
+		int low = player->equipped[Player::EQUIP_MAINHAND]->damageLow;
+		dps = ((low + high) / 2.0) / weaponSpeed_main;
+	}
+	return dps;
 }
 
 int Character::GetIntellect()

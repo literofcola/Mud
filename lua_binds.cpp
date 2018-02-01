@@ -76,6 +76,7 @@ void Lua_DefineClasses(sol::state * lua)
 			"ConsumeMana", &Character::ConsumeMana,
 			"ConsumeEnergy", &Character::ConsumeEnergy,
 			"GenerateComboPoint", &Character::GenerateComboPoint,
+			"GetMainhandDamagePerSecond", &Character::GetMainhandDamagePerSecond,
 			"GetName", &Character::GetName,
 			"HisHer", &Character::HisHer,
 			"EnterCombat", &Character::EnterCombat,

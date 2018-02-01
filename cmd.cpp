@@ -292,6 +292,8 @@ void cmd_look(Character * ch, string argument)
 		    string disconnected = "";
             string title = "";
             string fighting = ".";
+			string level = "";
+			string aggressionColor = "|G";
 
 		    if((*i)->player && (*i)->player->user && !(*i)->player->user->IsConnected())
 			    disconnected = "|Y[DISCONNECTED] |X";
@@ -301,6 +303,10 @@ void cmd_look(Character * ch, string argument)
             else if(!(*i)->title.empty())
                 title = " <" + (*i)->title + ">";
 
+			level += "<" + 
+				Game::LevelDifficultyColor(Game::LevelDifficulty(ch->level, (*i)->level))
+				+ Utilities::itos((*i)->level) + "|X> ";
+
             if((*i)->InCombat())
             {
                 if((*i)->IsFighting(ch))
@@ -309,7 +315,20 @@ void cmd_look(Character * ch, string argument)
                     fighting = ", fighting " + (*i)->GetTarget()->name + ".";
             }
 
-		    ch->Send(disconnected + questicon + "|G" + (*i)->name + title + " is here" + fighting + "|X\n\r");
+			//TODO functionize this
+			if (Utilities::FlagIsSet((*i)->flags, Character::Flags::FLAG_FRIENDLY))
+			{
+				aggressionColor = "|G";
+			}
+			else if (Utilities::FlagIsSet((*i)->flags, Character::Flags::FLAG_NEUTRAL))
+			{
+				aggressionColor = "|Y";
+			}
+			else if (Utilities::FlagIsSet((*i)->flags, Character::Flags::FLAG_AGGRESSIVE))
+			{
+				aggressionColor = "|R";
+			}
+		    ch->Send(disconnected + level + questicon + aggressionColor + (*i)->name + title + " is here" + fighting + "|X\n\r");
 	    }
     }
     else // "look argument" //TODO, look at things in the room with higher priority

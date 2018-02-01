@@ -214,6 +214,8 @@ public:
     bool HasThreat(Character * ch);
     void AutoAttack(Character * victim);
     void OneHit(Character * victim, int damage);
+	double GetMainhandDamagePerSecond();
+	int GetMainhandDamageRandomHit();
 	int GetIntellect();
     int GetHealth();
     int GetMana();
