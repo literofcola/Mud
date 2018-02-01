@@ -1955,6 +1955,11 @@ int Character::GetIntellect()
 	return intellect;
 }
 
+int Character::GetStrength()
+{
+	return strength;
+}
+
 bool Character::IsFighting(Character * target)
 {
     if(this == target)
@@ -2243,6 +2248,18 @@ void Character::GenerateComboPoint(Character * target)
 	{
 		comboPoints++;
 	}
+}
+
+int Character::SpendComboPoints(Character * target)
+{
+	if (target == nullptr || comboPointTarget == nullptr || target != comboPointTarget || comboPoints <= 0)
+		return 0;
+
+	comboPointTarget->RemoveListener(this);
+	comboPointTarget = nullptr;
+	int combos = comboPoints;
+	comboPoints = 0;
+	return combos;
 }
 
 void Character::UpdateThreat(Character * ch, int value)

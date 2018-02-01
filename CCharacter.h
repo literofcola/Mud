@@ -217,6 +217,7 @@ public:
 	double GetMainhandDamagePerSecond();
 	int GetMainhandDamageRandomHit();
 	int GetIntellect();
+	int GetStrength();
     int GetHealth();
     int GetMana();
 	int GetMaxMana();
@@ -225,6 +226,7 @@ public:
 	int GetComboPoints();
 	void SetComboPoints(int howmany);
 	void GenerateComboPoint(Character * target);
+	int SpendComboPoints(Character * target);
     bool HasResource(int which, int amount);
     void AdjustHealth(Character * source, int amount);
     void ConsumeMana(int amount);
