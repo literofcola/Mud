@@ -49,7 +49,8 @@ public:
     int mana;
     int maxMana;
     static const int HEALTH_FROM_STAMINA = 5;
-    static const int MANA_FROM_INTELLECT = 10;
+    static const int MANA_FROM_INTELLECT = 10; //todo: move intellect into class per level up!
+	static constexpr double STRENGTH_DAMAGE_MODIFIER = 0.30;	//auto attack damage increased by 30% of strength
     std::string name;
     std::string title;
     Room * room;
@@ -215,6 +216,8 @@ public:
     void AutoAttack(Character * victim);
     void OneHit(Character * victim, int damage);
 	double GetMainhandDamagePerSecond();
+	int GetOffhandDamageRandomHit();
+	double GetOffhandDamagePerSecond();
 	int GetMainhandDamageRandomHit();
 	int GetIntellect();
 	int GetStrength();

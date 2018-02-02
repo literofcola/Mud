@@ -162,17 +162,16 @@ void SpellAffect::Save(std::string charname)
 {
     double timeleft = (appliedTime + duration) - Game::currentTime;
 
-    string affectsql = "INSERT INTO affects (player, hidden, stackable, ticks, duration, skill, debuff, timeleft, ";
-    affectsql += "caster, auras, data, category) ";
-    affectsql += "values ('" + charname + "', " + Utilities::itos(hidden) + ", " + Utilities::itos(stackable) + ", " + Utilities::itos(ticks);
-    affectsql += ", " + Utilities::dtos(duration, 1) + ", ";
-    if(skill)
-            affectsql += Utilities::itos(skill->id);
-    else
-            affectsql += "0";
-
-    affectsql += Utilities::itos(debuff) + ", ";
-    affectsql += Utilities::dtos(timeleft, 1) + ", '" + casterName + "', '";
+	string affectsql = "INSERT INTO player_spell_affects (player, caster, skill, ticks, duration, timeleft, stackable, hidden, debuff, ";
+	affectsql += "category, auras, data) ";
+	affectsql += "values ('" + charname + "','" + casterName + "',";
+	if (skill)
+		affectsql += Utilities::itos(skill->id);
+	else
+		affectsql += "0";
+	affectsql += "," + Utilities::itos(ticks) + "," + Utilities::dtos(duration, 1) + "," + Utilities::dtos(timeleft, 1);
+	affectsql += "," + Utilities::itos(stackable) + "," + Utilities::itos(hidden) + "," + Utilities::itos(debuff);
+	affectsql += "," + Utilities::itos(affectCategory) + ",'";
 
     std::list<struct AuraAffect>::iterator iter;
 
@@ -198,7 +197,7 @@ void SpellAffect::Save(std::string charname)
         affectsql += "s," + (*iter).first + "," + (*iter).second + ";";
     }
 
-    affectsql += "', " + Utilities::itos(affectCategory) + ");";
+    affectsql += "');";
     Server::sqlQueue->Write(affectsql);
 }
 
@@ -236,7 +235,7 @@ void SpellAffect::Load(Character * ch)
         sa->casterName = row["caster"];
         sa->affectCategory = row["category"];
         double tick_interval = (double)row["duration"] / row["ticks"];
-        sa->ticksRemaining = (int)(row["timeleft"] / tick_interval);
+        sa->ticksRemaining = (int)(row["timeleft"] / tick_interval) + 1;
 
         if(sa->debuff)
         {

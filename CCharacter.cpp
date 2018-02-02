@@ -1818,41 +1818,17 @@ void Character::AutoAttack(Character * victim)
     }
     else if(player != NULL)
     {
-        if(player->equipped[Player::EQUIP_MAINHAND] != NULL)
-        {
-            if(player->equipped[Player::EQUIP_MAINHAND]->speed > 0 && player->equipped[Player::EQUIP_MAINHAND]->damageHigh > 0)
-            {
-                weaponSpeed_main = player->equipped[Player::EQUIP_MAINHAND]->speed;
-                int high = player->equipped[Player::EQUIP_MAINHAND]->damageHigh;
-                int low = player->equipped[Player::EQUIP_MAINHAND]->damageLow;
-                if(high != low)
-                    damage_main = (Server::rand() % (high+1 - low)) + low;
-                else
-                    damage_main = low;
-            }
-            else
-            {
-                attack_mh = false; //no mainhand attack only if we're holding a non weapon
-            }
-        }
-        if(player->equipped[Player::EQUIP_OFFHAND] != NULL)
-        {
-            if(player->equipped[Player::EQUIP_OFFHAND]->speed > 0 && player->equipped[Player::EQUIP_OFFHAND]->damageHigh > 0)
-            {
-                weaponSpeed_off = player->equipped[Player::EQUIP_OFFHAND]->speed;
-                int high = player->equipped[Player::EQUIP_OFFHAND]->damageHigh;
-                int low = player->equipped[Player::EQUIP_OFFHAND]->damageLow;
-                if(high != low)
-                    damage_off = (Server::rand() % (high+1 - low)) + low;
-                else
-                    damage_off = low;
-                attack_oh = true; //offhand attack only if we're holding a weapon (no attack if empty)
-            }
-        }
+		damage_main = GetMainhandDamageRandomHit();
+		if(damage_main == 0)
+			attack_mh = false; //no mainhand attack if we're holding a non weapon
+
+		damage_off = GetOffhandDamageRandomHit();
+		if(damage_off == 0)
+			attack_oh = false;
 
         if(attack_mh && lastAutoAttack_main + weaponSpeed_main <= Game::currentTime)
         {
-			damage_main += strength / 3.5;
+			damage_main += ceil(strength * Character::STRENGTH_DAMAGE_MODIFIER);
             if(victim->target == NULL) //Force a target on our victim
             {     
                 victim->SetTarget(this);
@@ -1869,7 +1845,7 @@ void Character::AutoAttack(Character * victim)
         }
         if(attack_oh && lastAutoAttack_off + weaponSpeed_off <= Game::currentTime)
         {
-			damage_off += strength / 3.5;
+			damage_off += ceil(strength * Character::STRENGTH_DAMAGE_MODIFIER);
             if(victim->target == NULL) //Force a target on our victim
             {     
                 victim->SetTarget(this);
@@ -1929,6 +1905,10 @@ int Character::GetMainhandDamageRandomHit()
 		else
 			damage = low;
 	}
+	else
+	{
+		return 0;
+	}
 	return damage;
 }
 
@@ -1946,6 +1926,56 @@ double Character::GetMainhandDamagePerSecond()
 		int high = player->equipped[Player::EQUIP_MAINHAND]->damageHigh;
 		int low = player->equipped[Player::EQUIP_MAINHAND]->damageLow;
 		dps = ((low + high) / 2.0) / weaponSpeed_main;
+	}
+	else
+	{
+		return 0;
+	}
+	return dps;
+}
+
+int Character::GetOffhandDamageRandomHit()
+{
+	if (player == NULL)
+		return 1;
+
+	int damage = 1;
+	if (player->equipped[Player::EQUIP_OFFHAND] != NULL
+		&& player->equipped[Player::EQUIP_OFFHAND]->speed > 0
+		&& player->equipped[Player::EQUIP_OFFHAND]->damageHigh > 0)
+	{
+		int high = player->equipped[Player::EQUIP_OFFHAND]->damageHigh;
+		int low = player->equipped[Player::EQUIP_OFFHAND]->damageLow;
+		if (high != low)
+			damage = (Server::rand() % (high + 1 - low)) + low;
+		else
+			damage = low;
+	}
+	else
+	{
+		return 0;
+	}
+	return damage;
+}
+
+double Character::GetOffhandDamagePerSecond()
+{
+	if (player == NULL)
+		return 1;
+
+	double dps = 1;
+	if (player->equipped[Player::EQUIP_OFFHAND] != NULL
+		&& player->equipped[Player::EQUIP_OFFHAND]->speed > 0
+		&& player->equipped[Player::EQUIP_OFFHAND]->damageHigh > 0)
+	{
+		double weaponSpeed_main = player->equipped[Player::EQUIP_OFFHAND]->speed;
+		int high = player->equipped[Player::EQUIP_OFFHAND]->damageHigh;
+		int low = player->equipped[Player::EQUIP_OFFHAND]->damageLow;
+		dps = ((low + high) / 2.0) / weaponSpeed_main;
+	}
+	else
+	{
+		return 0;
 	}
 	return dps;
 }
