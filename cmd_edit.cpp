@@ -1383,11 +1383,17 @@ void skillEditCmd_reload(Character * ch, string argument)
 
 	ch->Send("Reloading LUA scripts.\n\r");
 
-	Server::lua.script(pSkill->costFunction.c_str());
-	Server::lua.script(pSkill->castScript.c_str());
-	Server::lua.script(pSkill->applyScript.c_str());
-	Server::lua.script(pSkill->tickScript.c_str());
-	Server::lua.script(pSkill->removeScript.c_str());
+	try {
+		Server::lua.script(pSkill->costFunction.c_str());
+		Server::lua.script(pSkill->castScript.c_str());
+		Server::lua.script(pSkill->applyScript.c_str());
+		Server::lua.script(pSkill->tickScript.c_str());
+		Server::lua.script(pSkill->removeScript.c_str());
+	}
+	catch (const std::exception & e)
+	{
+		LogFile::Log("error", e.what());
+	}
 
 	/*
     if(luaL_dostring(Server::luaState, pSkill->costFunction.c_str()))

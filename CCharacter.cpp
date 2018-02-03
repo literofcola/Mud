@@ -166,7 +166,7 @@ void Character::SetDefaults()
     target = NULL;
     level = 1;
     gender = 1;
-    agility = intellect = strength = stamina = wisdom = 10;
+    agility = intellect = strength = stamina = wisdom = 5;
 	energy = maxEnergy = 100;
 	rage = 0;
 	maxRage = 100;
@@ -1798,6 +1798,7 @@ void Character::AutoAttack(Character * victim)
     bool attack_mh = true;
     bool attack_oh = false; //weapon required for offhand attack (no unarmed)
 
+	//NPC autoattack
     if(player == NULL && lastAutoAttack_main + npcAttackSpeed <= Game::currentTime)
     {
         if(victim->target == NULL) //Force a target on our victim
@@ -1813,15 +1814,19 @@ void Character::AutoAttack(Character * victim)
         int damage = npcDamageLow;
         if(npcDamageHigh != npcDamageLow)
             damage = (Server::rand() % (npcDamageHigh - npcDamageLow)) + npcDamageLow;
+		if (victim->player)
+			victim->GenerateRageOnTakeDamage(damage);
         OneHit(victim, damage); //TODO fancy damage calculations, block miss hit crit 
         //victim may be invalid here if it was killed!
     }
-    else if(player != NULL)
+    else if(player != NULL) //Player autoattack
     {
+		weaponSpeed_main = GetMainhandWeaponSpeed();
 		damage_main = GetMainhandDamageRandomHit();
 		if(damage_main == 0)
 			attack_mh = false; //no mainhand attack if we're holding a non weapon
 
+		weaponSpeed_off = GetOffhandWeaponSpeed();
 		damage_off = GetOffhandDamageRandomHit();
 		if(damage_off == 0)
 			attack_oh = false;
@@ -1839,7 +1844,7 @@ void Character::AutoAttack(Character * victim)
             if(victim->player)
                 victim->player->lastCombatAction = Game::currentTime;
             lastAutoAttack_main = Game::currentTime;
-
+			GenerateRageOnAttack(damage_main, weaponSpeed_main, true, false);
             OneHit(victim, damage_main); //TODO fancy damage calculations, block miss hit crit 
             //victim may be invalid if it was killed!
         }
@@ -1856,7 +1861,7 @@ void Character::AutoAttack(Character * victim)
             if(victim->player)
                 victim->player->lastCombatAction = Game::currentTime;
             lastAutoAttack_off = Game::currentTime;
-
+			GenerateRageOnAttack(damage_off, weaponSpeed_off, false, false);
             OneHit(victim, damage_off); //TODO fancy damage calculations, block miss hit crit 
             //victim may be invalid if it was killed!
         }
@@ -1886,6 +1891,32 @@ void Character::OneHit(Character * victim, int damage)
 		victim->Send("Action Interrupted!\n\r");
 
     victim->AdjustHealth(this, -damage);
+}
+
+double Character::GetMainhandWeaponSpeed()
+{
+	if (player == NULL)	//These checks probably mean this should be a CPlayer function
+		return 0;
+
+	if (player->equipped[Player::EQUIP_MAINHAND] != NULL
+		&& player->equipped[Player::EQUIP_MAINHAND]->speed > 0)
+	{
+		return player->equipped[Player::EQUIP_MAINHAND]->speed;
+	}
+	return 0;
+}
+
+double Character::GetOffhandWeaponSpeed()
+{
+	if (player == NULL)	//These checks probably mean this should be a CPlayer function
+		return 0;
+
+	if (player->equipped[Player::EQUIP_OFFHAND] != NULL
+		&& player->equipped[Player::EQUIP_OFFHAND]->speed > 0)
+	{
+		return player->equipped[Player::EQUIP_OFFHAND]->speed;
+	}
+	return 0;
 }
 
 int Character::GetMainhandDamageRandomHit()
@@ -2014,6 +2045,11 @@ int Character::GetMaxMana()
 	return maxMana;
 }
 
+int Character::GetMaxHealth()
+{
+	return maxHealth;
+}
+
 int Character::GetEnergy()
 {
 	return energy;
@@ -2022,6 +2058,30 @@ int Character::GetEnergy()
 int Character::GetRage()
 {
 	return rage;
+}
+
+void Character::GenerateRageOnAttack(int damage, double weapon_speed, bool mainhand, bool wascrit)
+{
+	//Rage generation stuff, inspired by wow, for now
+	double conversionvalue = (.008 * level * level) + 4;
+	double hitfactor = 1.75;
+	if (mainhand)
+		hitfactor *= 2;
+	if (wascrit)
+		hitfactor *= 2;
+	int limit = (15 * damage) / conversionvalue;
+	int ragegen = ((15 * damage) / (4 * conversionvalue)) + ((hitfactor * weapon_speed) / 2);
+	if (ragegen > limit)
+		AdjustRage(this, limit);
+	else
+		AdjustRage(this, ragegen);
+}
+
+void Character::GenerateRageOnTakeDamage(int damage)
+{
+	//Rage generation stuff, inspired by wow, for now
+	double conversionvalue = (.008 * level * level) + 4;
+	AdjustRage(this, (5 * damage) / (2 * conversionvalue));
 }
 
 int Character::GetComboPoints()
@@ -2228,7 +2288,22 @@ void Character::AdjustMana(Character * source, int amount)
 
 void Character::AdjustEnergy(Character * source, int amount)
 {
-	energy += amount;
+	if (energy + amount > maxEnergy)
+		energy = maxEnergy;
+	else if (energy + amount < 0)
+		energy = 0;
+	else
+		energy += amount;
+}
+
+void Character::AdjustRage(Character * source, int amount)
+{
+	if (rage + amount > maxRage)
+		rage = maxRage;
+	else if (rage + amount < 0)
+		rage = 0;
+	else
+		rage += amount;
 }
 
 //Energy adjusting function to be used by spells. Checks for AURA_RESOURCE_COST
@@ -2251,6 +2326,27 @@ void Character::ConsumeEnergy(int amount)
 	else
 	{
 		energy -= amount;
+	}
+}
+
+void Character::ConsumeRage(int amount)
+{
+	int resource_cost = GetAuraModifier(SpellAffect::AURA_RESOURCE_COST, 1);
+
+	double increase = amount * (resource_cost / 100.0);
+	amount += (int)increase;
+
+	if (rage - amount < 0)
+	{
+		rage = 0;
+	}
+	else if (rage - amount > maxRage)
+	{
+		rage = maxRage;
+	}
+	else
+	{
+		rage -= amount;
 	}
 }
 

@@ -512,6 +512,11 @@ void Game::WorldUpdate(Server * server)
             {
 				curr->AdjustEnergy(curr, 20); //1 energy per .1 second regen
             }
+			//Rage decay, 1 per second
+			if (!curr->combat && curr->rage > 0)
+			{
+				curr->AdjustRage(curr, -2);
+			}
 
             //Check NPC TIMER triggers
             Trigger * trig = NULL;
@@ -1511,11 +1516,17 @@ void Game::LoadSkills(Server * server)
         s->costFunction = row["cost_script"];
         
         skills.insert(std::pair<int, Skill *>(s->id, s));
-		Server::lua.script(s->castScript.c_str());
-		Server::lua.script(s->applyScript.c_str());
-		Server::lua.script(s->tickScript.c_str());
-		Server::lua.script(s->removeScript.c_str());
-		Server::lua.script(s->costFunction.c_str());
+		try {
+			Server::lua.script(s->castScript.c_str());
+			Server::lua.script(s->applyScript.c_str());
+			Server::lua.script(s->tickScript.c_str());
+			Server::lua.script(s->removeScript.c_str());
+			Server::lua.script(s->costFunction.c_str());
+		}
+		catch (const std::exception & e)
+		{
+			LogFile::Log("error", e.what());
+		}
     }
 }
 

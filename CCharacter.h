@@ -48,7 +48,7 @@ public:
     int maxHealth;  //permanent health(stamina*5) + gear and buff bonuses
     int mana;
     int maxMana;
-    static const int HEALTH_FROM_STAMINA = 5;
+    static const int HEALTH_FROM_STAMINA = 10;
     static const int MANA_FROM_INTELLECT = 10; //todo: move intellect into class per level up!
 	static constexpr double STRENGTH_DAMAGE_MODIFIER = 0.30;	//auto attack damage increased by 30% of strength
     std::string name;
@@ -215,17 +215,22 @@ public:
     bool HasThreat(Character * ch);
     void AutoAttack(Character * victim);
     void OneHit(Character * victim, int damage);
+	double GetMainhandWeaponSpeed();
 	double GetMainhandDamagePerSecond();
 	int GetOffhandDamageRandomHit();
 	double GetOffhandDamagePerSecond();
+	double GetOffhandWeaponSpeed();
 	int GetMainhandDamageRandomHit();
 	int GetIntellect();
 	int GetStrength();
     int GetHealth();
     int GetMana();
 	int GetMaxMana();
+	int GetMaxHealth();
 	int GetEnergy();
 	int GetRage();
+	void GenerateRageOnAttack(int damage, double weapon_speed, bool mainhand, bool wascrit);
+	void GenerateRageOnTakeDamage(int damage);
 	int GetComboPoints();
 	void SetComboPoints(int howmany);
 	void GenerateComboPoint(Character * target);
@@ -234,9 +239,11 @@ public:
     void AdjustHealth(Character * source, int amount);
     void ConsumeMana(int amount);
 	void ConsumeEnergy(int amount);
+	void ConsumeRage(int amount);
     void SetMana(Character * source, int amount);
     void AdjustMana(Character * source, int amount);
 	void AdjustEnergy(Character * source, int amount);
+	void AdjustRage(Character * source, int amount);
     void ApplyExperience(int amount);
     void RemoveThreat(Character * ch, bool removeall);
     SpellAffect * AddSpellAffect(int isDebuff, Character * caster, std::string name,
