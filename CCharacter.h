@@ -122,7 +122,8 @@ public:
     };
     std::list<LeashData> leashData;
     std::map<int, Exit*> wanderPath;
-    std::map<int, Exit*> leashPath;
+    std::list<std::pair<Room *, int>> leashPath;
+
     struct Threat
     {
         Character * ch;
@@ -142,12 +143,12 @@ public:
     DelayData delayData;
     bool delay_active;
     void (*delayFunction)(DelayData);
-    std::list<SpellAffect *> buffs; //TODO http://www.boost.org/doc/libs/1_37_0/libs/ptr_container/doc/ptr_container.html
+    std::list<SpellAffect *> buffs;
     std::list<SpellAffect *> debuffs;
     bool debuffs_invalid;
     bool buffs_invalid;
     std::map<std::string, Skill *> knownSkills;
-    std::map<std::string, double> cooldowns; //TODO, save cooldowns
+    std::map<std::string, double> cooldowns;
     double lastSpellCast;  //time stamp for mana regen 5 second rule
 
     std::map<int, Trigger> triggers;
@@ -242,6 +243,7 @@ public:
 	void ConsumeRage(int amount);
     void SetMana(Character * source, int amount);
     void AdjustMana(Character * source, int amount);
+	void SetHealth(Character * source, int amount);
 	void AdjustEnergy(Character * source, int amount);
 	void AdjustRage(Character * source, int amount);
     void ApplyExperience(int amount);

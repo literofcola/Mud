@@ -313,9 +313,9 @@ void Game::GameLoop(Server * server)
 		}
 
         //todo: we can probably accept new users while in the WorldUpdate
-        //LeaveCriticalSection(&userListCS); //Locks out the AcceptThread from adding a new user to the userlist
+        LeaveCriticalSection(&userListCS); //Locks out the AcceptThread from adding a new user to the userlist
 		WorldUpdate(server);
-        //EnterCriticalSection(&userListCS); //Locks out the AcceptThread from adding a new user to the userlist
+        EnterCriticalSection(&userListCS); //Locks out the AcceptThread from adding a new user to the userlist
 
 		//output
         iter = users.begin();
@@ -500,7 +500,10 @@ void Game::WorldUpdate(Server * server)
             //Stat regeneration
             if(!curr->combat && curr->health < curr->maxHealth)
             {
-                curr->AdjustHealth(NULL, (int)ceil(curr->maxHealth * 0.01)); //Regen 1% of health every 2 seconds, out of combat
+				if (curr->IsNPC())
+					curr->SetHealth(curr, curr->maxHealth); //NPC's heal immediately out of combat
+				else
+					curr->AdjustHealth(NULL, (int)ceil(curr->maxHealth * 0.01)); //Regen 1% of health every 2 seconds, out of combat
                 //curr->Send("Regen: " + Utilities::itos((int)ceil(curr->maxHealth * 0.01)) + " health.\n\r");
             }
 			if(curr->mana < curr->maxMana && curr->lastSpellCast + 5.0  <= Game::currentTime)
@@ -563,7 +566,7 @@ void Game::WorldUpdate(Server * server)
         }
         //Combat update
         if(curr->combat)
-        { //in addition to our list of aggressors will need to keep a list of chars whose aggro list we're on (for npc combat)
+        { //in addition to our list of aggressors will need to keep a list of chars whose aggro list we're on (for npc combat) (2/28/18: don't know what this means or why)
             if(!curr->GetTarget() || curr->GetTarget() == curr)
             {  //Turn off auto attack. cmd_target should take care of this, but just in case
                 curr->meleeActive = false;
@@ -574,31 +577,86 @@ void Game::WorldUpdate(Server * server)
             }
             else if(!curr->meleeActive && curr->GetTarget() && curr->GetTarget()->GetTarget() && curr->GetTarget()->GetTarget() == curr
                 && curr->GetTarget()->meleeActive && curr->GetTarget()->room == curr->room)
-            {
+            { //So... If we're not attacking, we have a target, our target's target is us, and is attacking us, and theyre in the same room, start attacking them back
                 curr->AutoAttack(curr->GetTarget());
             }
 
-            if(curr->player && curr->player->lastCombatAction + 5 <= currentTime)
-            {   //Exit combat after 5 seconds of no activity in pvp
+			//Players exit combat after 5 seconds of no activity AND (TODO) when we have no npcs on our threat list
+            if(curr->player && curr->player->lastCombatAction + 5 <= currentTime)// && curr->HasListener( !curr->GetTopThreat())
+            {   
                 curr->ExitCombat();
             }
-            //TODO: for npcs, check threat list and leash data, see if we need to chase a target, or reset/exit combat
-            if(curr->IsNPC() && curr->GetTopThreat())
+
+			//Threat management, chasing/leashing (NPC's start chasing AFTER movementspeed delay)
+            if(curr->IsNPC() && curr->GetTopThreat()) 
             {
-                if(curr->GetTopThreat()->room != curr->room)
+				if (!curr->movementQueue.empty()) //We have a movement pending
+				{
+					if(curr->CanMove()) //Move! (checks movespeed auras and movement speed timestamp)
+					{
+						curr->movementQueue.pop_front();
+						//track target... Give up 4 rooms away from target...
+						Exit::Direction chasedir = FindDirection(curr, curr->GetTopThreat(), 4);
+						if (chasedir != Exit::DIR_LAST)
+						{
+							//record the path we take backwards for backtracking
+							curr->leashPath.push_back(std::make_pair(curr->room, chasedir));
+							curr->Move(chasedir);
+							if(curr->GetTopThreat()->room == curr->room)
+								curr->EnterCombat(curr->GetTopThreat());
+						}
+						else
+						{
+							//target more than 4 rooms away, leash!
+							std::pair<Room *, int> path;
+							curr->ExitCombat();
+							while (!curr->leashPath.empty())
+							{
+								path = curr->leashPath.back();
+								curr->leashPath.pop_back();
+								
+								//Fake enter/leave messages. We can't use ->Move() since that tests for valid exits
+								//  among other things (think leashing back through 1 way exits)
+								curr->Message(curr->name + " leaves " + Exit::exitNames[Exit::exitOpposite[path.second]] + ".", Character::MSG_ROOM_NOTCHAR);
+								curr->ChangeRooms(path.first);
+								curr->Message(curr->name + " has arrived from " 
+									+ ((path.second != Exit::DIR_UP && path.second != Exit::DIR_DOWN) ? "the " : "") 
+									+ Exit::reverseExitNames[Exit::exitOpposite[path.second]] + ".", Character::MSG_ROOM_NOTCHAR);
+							}
+						}
+					}
+				}
+                else if(curr->GetTopThreat()->room != curr->room && curr->movementQueue.empty()) //We need to chase threat target, and not already pending a move...
                 {
-                    //track target... Give up 4 rooms away (TODO need better leash mechanic)
-                    Exit::Direction chasedir = FindDirection(curr, curr->GetTopThreat(), 4);
-                    if(chasedir != Exit::DIR_LAST)
-                    {
-                        curr->Move(chasedir);
-                    }
-                    else
-                    {
-                        //todo: reset
-                    }
+					//Decide if we should try to chase based on how far we are from our reset
+					if (curr->leashPath.size() > 4) //Leash!
+					{
+						curr->ExitCombat();
+						std::pair<Room *, int> path;
+						while (!curr->leashPath.empty())
+						{
+							path = curr->leashPath.back();
+							curr->leashPath.pop_back();
+
+							//Fake enter/leave messages. We can't use ->Move() since that tests for valid exits
+							//  among other things (think leashing back through 1 way exits)
+							curr->Message(curr->name + " leaves " + Exit::exitNames[Exit::exitOpposite[path.second]] + ".", Character::MSG_ROOM_NOTCHAR);
+							curr->ChangeRooms(path.first);
+							curr->Message(curr->name + " has arrived from "
+								+ ((path.second != Exit::DIR_UP && path.second != Exit::DIR_DOWN) ? "the " : "")
+								+ Exit::reverseExitNames[Exit::exitOpposite[path.second]] + ".", Character::MSG_ROOM_NOTCHAR);
+						}
+					}
+					else
+					{
+						//Just push a placeholder that indicates we have a movement pending, since we're going to "track" the target after movespeed delay
+						curr->movementQueue.push_back(nullptr);
+						curr->lastMoveTime = currentTime; //queue up the next move after delay
+						curr->meleeActive = false;		  //target isn't in the room...
+					}
                 }
-                if(curr->GetTopThreat() != curr->GetTarget())
+				//New top threat, change target
+                if(curr->GetTopThreat() && curr->GetTopThreat() != curr->GetTarget())
                 {
                     curr->SetTarget(curr->GetTopThreat());
                 }

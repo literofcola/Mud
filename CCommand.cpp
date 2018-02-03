@@ -629,9 +629,9 @@ bool Command::Interpret(Character * ch, string argument)
 
     //For movement commands..
     if(whichTable[cmd].isMovement)
-    {
+    {		
         //if we can't move yet, add to the movement queue
-        if(!ch->CanMove())
+        if(!ch->CanMove() || !ch->movementQueue.empty())
         {
             ch->movementQueue.push_back(whichFunction);
             return false;

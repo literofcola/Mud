@@ -1749,22 +1749,17 @@ void Character::EnterCombat(Character * victim)
     }
     combat = true;
     victim->combat = true;
-    //AddAggressor(victim);
-    //victim->AddAggressor(this);
 
     if(player)
         player->lastCombatAction = Game::currentTime;
     if(victim->player)
         victim->player->lastCombatAction = Game::currentTime;
 
-    if(victim->IsNPC())
-    {
+	if (victim->IsNPC())
+	{
         victim->UpdateThreat(this, 0);
     }
 
-    //SpellAffect * sa = AddSpellAffect(true, this, "combat_movement_speed", true, false, 0, 0, NULL);
-    //if(sa != NULL)
-    //    sa->ApplyAura(SpellAffect::AURA_MOD_MOVESPEED, -70);
     movementSpeed = Character::COMBAT_MOVE_SPEED;
     victim->movementSpeed = Character::COMBAT_MOVE_SPEED;
 }
@@ -2286,6 +2281,27 @@ void Character::AdjustMana(Character * source, int amount)
     SetMana(source, mana + amount);
 }
 
+void Character::SetHealth(Character * source, int amount)
+{
+	if (source == NULL)
+	{
+		//a possibility (why do we even need a source?)
+	}
+
+	if (amount < 0)
+	{
+		health = 0;
+	}
+	else if (amount > maxHealth)
+	{
+		health = maxHealth;
+	}
+	else
+	{
+		health = amount;
+	}
+}
+
 void Character::AdjustEnergy(Character * source, int amount)
 {
 	if (energy + amount > maxEnergy)
@@ -2485,12 +2501,12 @@ bool Character::CanMove()
     if(player && player->IMMORTAL())
         return true;
 
-	double movespeed = GetMoveSpeed();
+	double movespeedPercent = GetMoveSpeed();
 
-    if(movespeed <= 0)
+    if(movespeedPercent <= 0)
         return false;
 
-    return (Game::currentTime > lastMoveTime + (1.0/(movementSpeed * movespeed)));
+    return (Game::currentTime > lastMoveTime + (1.0/(movementSpeed * movespeedPercent)));
 }
 
 double Character::GetMoveSpeed()
@@ -2721,6 +2737,7 @@ bool Character::ChangeRooms(Room * toroom)
 	        }
         }
     }
+
     return true;
 }
 
