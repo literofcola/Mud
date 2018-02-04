@@ -57,6 +57,7 @@ void cmd_remove(Character * ch, string argument);
 void cmd_wear(Character * ch, string argument);
 void cmd_drop(Character * ch, string argument);
 bool cmd_drop_Query(Character * ch, string argument);
+void cmd_eat(Character * ch, string argument);
 
 //cmd_move.cpp
 void cmd_north(Character * ch, string argument);
@@ -154,6 +155,7 @@ void itemEditCmd_quality(Character * ch, string argument);
 void itemEditCmd_equip_location(Character * ch, string argument);
 void itemEditCmd_binds(Character * ch, string argument);
 void itemEditCmd_type(Character * ch, string argument);
+void itemEditCmd_skillid(Character * ch, string argument);
 void itemEditCmd_quest(Character * ch, string argument);
 void itemEditCmd_unique(Character * ch, string argument);
 void itemEditCmd_armor(Character * ch, string argument);

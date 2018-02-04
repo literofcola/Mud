@@ -29,6 +29,7 @@ const struct SpellAffect::AuraTable aura_table[] =
 {
     { "MOVE_SPEED", SpellAffect::AURA_MOVE_SPEED },
     { "RESOURCE_COST", SpellAffect::AURA_RESOURCE_COST },
+	{ "EATING", SpellAffect::AURA_EATING },
     { "", 0 }
 };
 
@@ -294,4 +295,9 @@ void SpellAffect::Load(Character * ch)
     }
     string affectsql = "DELETE FROM player_spell_affects WHERE player = '" + ch->name + "'";
     Server::sqlQueue->Write(affectsql);
+}
+
+bool SpellAffect::CompareAuraByID::operator()(AuraAffect & elem) const
+{
+	return value == elem.affectID;
 }

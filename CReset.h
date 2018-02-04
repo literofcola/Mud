@@ -16,6 +16,7 @@ public:
     int interval; //WorldUpdate only checks resets every 30 seconds
     int wanderDistance;
     int leashDistance;
+	static const int RESET_LEASH_DEFAULT = 4;
 
     double lastReset; //timestamp
     bool removeme;

@@ -2307,6 +2307,7 @@ void itemEditCmd_show(Character * ch, string argument)
     ch->Send("equip_location: [" + Utilities::itos(pItem->equipLocation) + "]\n\r");
     ch->Send("binds:          [" + Utilities::itos(pItem->binds) + "]\n\r");
     ch->Send("type:           [" + Utilities::itos(pItem->type) + "]\n\r");
+	ch->Send("skillid:        [" + Utilities::itos(pItem->useSkillID) + "]\n\r");
     ch->Send("quest item:     [" + Utilities::itos(pItem->quest) + "]\n\r");
     ch->Send("unique:         [" + Utilities::itos(pItem->unique) + "]\n\r");
     ch->Send("armor:          [" + Utilities::itos(pItem->armor) + "]\n\r");
@@ -2470,6 +2471,28 @@ void itemEditCmd_type(Character * ch, string argument)
     }
     pItem->changed = true;
     pItem->type = type;
+}
+
+void itemEditCmd_skillid(Character * ch, string argument)
+{
+	Item * pItem = (Item *)ch->editData;
+
+	string arg1;
+	argument = Utilities::one_argument(argument, arg1);
+
+	if (arg1.empty() || !Utilities::IsNumber(arg1))
+	{
+		ch->Send("skillid: #\n\r");
+		return;
+	}
+	int skillid = Utilities::atoi(arg1);
+	if (skillid < 0)
+	{
+		ch->Send("skillid: >= 0\n\r");
+		return;
+	}
+	pItem->changed = true;
+	pItem->useSkillID = skillid;
 }
 
 void itemEditCmd_quest(Character * ch, string argument)

@@ -77,12 +77,22 @@ void cmd_down(Character * ch, string argument)
 
 void cmd_sit(Character * ch, string argument)
 {
-    ch->Send("cmd_sit\n\r");
+	if (ch->position == Character::Position::POSITION_SITTING)
+	{
+		ch->Send("You are already sitting.\n\r");
+		return;
+	}
+	ch->Sit();
 }
 
 void cmd_stand(Character * ch, string argument)
 {
-    ch->Send("cmd_stand\n\r");
+	if (ch->position == Character::Position::POSITION_STANDING)
+	{
+		ch->Send("You are already standing.\n\r");
+		return;
+	}
+	ch->Stand();
 }
 
 void cmd_sleep(Character * ch, string argument)

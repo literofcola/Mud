@@ -54,6 +54,7 @@ public:
 	int type; //for armor: cloth leather mail plate, 
               //for weapon: sword dagger mace axe polearm staff, 
               //for equip_none: container food("eat/drink") consumable("use")
+	int useSkillID;	//for spell affect management for "use" and "eat/drink"
     int quest;     //will drop for all members of a party with appropriate quest only
     int quality;
 	int unique;

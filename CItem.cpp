@@ -82,6 +82,7 @@ Item::Item(const Item & copy)
     equipLocation = copy.equipLocation;
     binds = copy.binds;
     type = copy.type;
+	useSkillID = copy.useSkillID;
     armor = copy.armor;
     quest = copy.quest;
     unique = copy.unique;
@@ -102,6 +103,7 @@ void Item::SetDefaults()
     quality = Item::QUALITY_POOR;
     binds = Item::BIND_NONE;
     type = Item::TYPE_MISC;
+	useSkillID = 0;
     armor = 0;
     quest = false;
     unique = false;
@@ -143,17 +145,17 @@ void Item::Save()
         return;
 
     string sql = "INSERT INTO items (items.id, items.name, items.keywords, items.item_level, items.char_level, items.equip_location, items.quality,";
-    sql += " items.binds, items.type, items.quest, items.armor, items.durability, items.unique, items.damage_low, items.damage_high, items.value, items.speed) values (";
+    sql += " items.binds, items.type, items.skill_id, items.quest, items.armor, items.durability, items.unique, items.damage_low, items.damage_high, items.value, items.speed) values (";
     sql += Utilities::itos(id) + ", '" + Utilities::SQLFixQuotes(name) + "', '" + Utilities::SQLFixQuotes(keywords) + "', " + Utilities::itos(itemLevel);
     sql += ", " + Utilities::itos(charLevel) + ", " + Utilities::itos(equipLocation);
-    sql += ", " + Utilities::itos(quality) + ", " + Utilities::itos(binds) + ", " + Utilities::itos(type) + ", " + (quest ? "1" : "0");
+    sql += ", " + Utilities::itos(quality) + ", " + Utilities::itos(binds) + ", " + Utilities::itos(type) + ", " + Utilities::itos(useSkillID) + ", " + (quest ? "1" : "0");
     sql += ", " + Utilities::itos(armor) + ", " + Utilities::itos(durability) + ", " + (unique ? "1" : "0");
     sql += ", " + Utilities::itos(damageLow) + ", " + Utilities::itos(damageHigh) + ", " + Utilities::itos(value);
     sql += ", " + Utilities::dtos(speed, 1) + ")";
 
     sql += " ON DUPLICATE KEY UPDATE items.id=VALUES(items.id), items.name=VALUES(items.name), items.keywords=VALUES(items.keywords),items.item_level=VALUES(items.item_level), ";
     sql += "items.char_level=VALUES(items.char_level), items.equip_location=VALUES(items.equip_location), items.quality=VALUES(items.quality), ";
-    sql += "items.binds=VALUES(items.binds), items.type=VALUES(items.type), items.quest=VALUES(items.quest), items.armor=VALUES(items.armor), ";
+    sql += "items.binds=VALUES(items.binds), items.type=VALUES(items.type), items.skill_id=VALUES(items.skill_id),items.quest=VALUES(items.quest), items.armor=VALUES(items.armor), ";
     sql += "items.durability=VALUES(items.durability), items.unique=VALUES(items.unique), items.damage_low=VALUES(items.damage_low), ";
     sql += "items.damage_high=VALUES(items.damage_high), items.value=VALUES(items.value), items.speed=VALUES(items.speed)";
     

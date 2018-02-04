@@ -110,6 +110,7 @@ CREATE TABLE `items` (
   `quality` int(11) NOT NULL,
   `binds` int(11) NOT NULL,
   `type` int(11) NOT NULL,
+  `skill_id` int(11) NOT NULL,
   `quest` int(11) NOT NULL,
   `armor` int(11) NOT NULL,
   `durability` int(11) NOT NULL,
@@ -449,4 +450,4 @@ CREATE TABLE `triggers` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-02-03  0:13:17
+-- Dump completed on 2018-02-04  2:12:11

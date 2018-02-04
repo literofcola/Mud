@@ -70,8 +70,17 @@ public:
 
     enum Auras
     {
-        AURA_MOVE_SPEED = 1, AURA_RESOURCE_COST = 2
+        AURA_MOVE_SPEED = 1, AURA_RESOURCE_COST = 2, AURA_EATING = 3
     };
+
+	//Comparison functor
+	struct CompareAuraByID
+	{
+		CompareAuraByID(int val) : value(val) {}
+		bool operator()(struct AuraAffect & elem) const;
+	private:
+		int value;
+	};
 
 private:
 };

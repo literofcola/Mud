@@ -103,6 +103,11 @@ public:
     static constexpr double COMBAT_MOVE_SPEED = NORMAL_MOVE_SPEED * .3; //30% of normal
     double lastMoveTime;
     std::deque<void(*)(Character *, std::string)> movementQueue;
+	enum Position
+	{
+		POSITION_ANY, POSITION_SITTING, POSITION_STANDING
+	};
+	int position; //standing, sitting... only used for eating/drinking right now?
 
     //Combat
     bool combat;
@@ -154,17 +159,13 @@ public:
     std::map<int, Trigger> triggers;
     void AddTrigger(Trigger & trig);
     Trigger * GetTrigger(int id, int type = -1);
-    /*enum TriggerType //moved to CTrigger.h
-    {
-        ENTER_CHAR, ENTER_NPC, ENTER_PC, EXIT_CHAR, EXIT_NPC, EXIT_PC, TIMER, TRIG_LAST
-    };*/
-
 
     bool hasQuery;
 	bool (*queryFunction)(Character *, std::string);
 	void * queryData;
     std::string queryPrompt;
 
+	//this should for sure be in user right...
     enum EditState
     {
         ED_NONE, ED_ROOM, ED_SKILL, ED_NPC, ED_ITEM, ED_QUEST, ED_CLASS, ED_PLAYER, ED_HELP, ED_AREA
@@ -195,6 +196,8 @@ public:
     void ClearTarget();
     Character * GetTarget();
     void Move(int direction);
+	void Sit();
+	void Stand();
     bool ChangeRoomsID(int roomid);
     bool ChangeRooms(Room * room);
     static Character * LoadPlayer(std::string name, User * user);
@@ -204,7 +207,8 @@ public:
     int GetLevel();
 	Player * GetPlayer();
     std::string GetName();
-    std::string HisHer();
+	bool CheckThreatCombat();
+	std::string HisHer();
 	bool CancelCast();
     void EnterCombat(Character * victim);
     void ExitCombat();
@@ -252,6 +256,7 @@ public:
                         bool hidden, bool stackable, int ticks, double duration, int category, Skill * sk, std::string affect_description);
     SpellAffect * HasSpellAffect(std::string name);
     int CleanseSpellAffect(Character * cleanser, int category, int howMany = -1);
+	bool RemoveSpellAffectsByAura(int isDebuff, int auraid);
     void RemoveSpellAffect(int isDebuff, int id);
     void RemoveSpellAffect(int isDebuff, std::string name);
     void RemoveAllSpellAffects();

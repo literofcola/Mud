@@ -121,6 +121,7 @@ Character::Character(const Character & copy)
     combat = false;
     meleeActive = false;
     movementSpeed = NORMAL_MOVE_SPEED;
+	position = copy.position;
     lastMoveTime = 0;
     changed = false;
 
@@ -181,6 +182,7 @@ void Character::SetDefaults()
     combat = false;
     meleeActive = false;
     movementSpeed = NORMAL_MOVE_SPEED;
+	position = Character::Position::POSITION_STANDING;
     lastMoveTime = 0;
     changed = false;
     reset = NULL;
@@ -805,6 +807,8 @@ void Character::Move(int direction)
 		return;
 	}
     
+	Stand();
+
     if(delay_active)
     {
         delay_active = false;
@@ -886,6 +890,29 @@ void Character::Move(int direction)
             (*iter)->AutoAttack(this);
         }
     }
+}
+
+void Character::Sit()
+{
+	if (position == Position::POSITION_SITTING)
+		return;
+
+	Send("You sit down.\n\r");
+	position = Position::POSITION_SITTING;
+}
+
+void Character::Stand()
+{
+	if (position == Position::POSITION_STANDING)
+		return;
+
+	if (RemoveSpellAffectsByAura(false, SpellAffect::Auras::AURA_EATING)) //true if we removed a spell affect
+	{
+		Send("You stop eating.\n\r");
+	}
+
+	Send("You stand up.\n\r");
+	position = Position::POSITION_STANDING;
 }
 
 Character * Character::LoadPlayer(std::string name, User * user)
@@ -1412,6 +1439,55 @@ int Character::CleanseSpellAffect(Character * cleanser, int category, int howMan
     return removed_count;
 }
 
+bool Character::RemoveSpellAffectsByAura(int isDebuff, int auraid)
+{
+	std::list<SpellAffect*>::iterator iter;
+	bool removed = false;
+	if (isDebuff)
+	{
+		iter = debuffs.begin();
+		while ( iter != debuffs.end())
+		{
+			std::list<SpellAffect::AuraAffect>::iterator findme;
+			findme = std::find_if((*iter)->auraAffects.begin(), (*iter)->auraAffects.end(), SpellAffect::CompareAuraByID(auraid));
+			if (findme != (*iter)->auraAffects.end())
+			{
+				removed = true;
+				(*iter)->auraAffects.clear();
+				delete (*iter);
+				iter = debuffs.erase(iter);
+				break;
+			}
+			else
+			{
+				iter++;
+			}
+		}
+	}
+	else
+	{
+		iter = buffs.begin();
+		while (iter != buffs.end())
+		{
+			std::list<SpellAffect::AuraAffect>::iterator findme;
+			findme = std::find_if((*iter)->auraAffects.begin(), (*iter)->auraAffects.end(), SpellAffect::CompareAuraByID(auraid));
+			if (findme != (*iter)->auraAffects.end())
+			{
+				removed = true;
+				(*iter)->auraAffects.clear();
+				delete (*iter);
+				iter = buffs.erase(iter);
+				break;
+			}
+			else
+			{
+				iter++;
+			}
+		}
+	}
+	return removed;
+}
+
 void Character::RemoveSpellAffect(int isDebuff, int id)
 {
     std::list<SpellAffect*>::iterator iter;
@@ -1755,7 +1831,7 @@ void Character::EnterCombat(Character * victim)
     if(victim->player)
         victim->player->lastCombatAction = Game::currentTime;
 
-	if (victim->IsNPC())
+	if (IsNPC() || victim->IsNPC())
 	{
         victim->UpdateThreat(this, 0);
     }
@@ -1877,10 +1953,10 @@ void Character::OneHit(Character * victim, int damage)
     victim->Send("|Y" + name + " hits you for " + Utilities::itos(damage) + " damage.|X\n\r");
     Message("|Y" + name + "'s attack hits " + victim->name + " for " + Utilities::itos(damage) + " damage.|X", Character::MSG_ROOM_NOTCHARVICT, victim);
     
-    if(victim->IsNPC())
+    if(IsNPC() || victim->IsNPC())
     {
         victim->UpdateThreat(this, damage);
-        //Send("My threat on " + victim->name + " is " + Utilities::itos(victim->GetThreat(this)) + "\n\r");
+        Send("My threat on " + victim->name + " is " + Utilities::itos(victim->GetThreat(this)) + "\n\r");
     }
 	if (victim->CancelCast())
 		victim->Send("Action Interrupted!\n\r");
@@ -2422,12 +2498,21 @@ void Character::UpdateThreat(Character * ch, int value)
 
 Character * Character::GetTopThreat()
 {
-    std::list<Threat>::iterator iter = threatList.begin();
-    if(iter != threatList.end())
-    {
-        return (*iter).ch;
-    }
-    return NULL;
+	if (threatList.empty())
+		return nullptr;
+
+	int max = 0;
+	Character * maxch = nullptr;
+	for (std::list<Threat>::iterator iter = threatList.begin(); iter != threatList.end(); iter++)
+	{
+		if (iter->threat >= max)
+		{
+			max = iter->threat;
+			maxch = iter->ch;
+		}
+	}
+
+    return maxch;
 }
 
 void Character::RemoveThreat(Character * ch, bool removeall)
@@ -2479,6 +2564,20 @@ bool Character::HasThreat(Character * ch)
         }
     }
     return false;
+}
+
+//Go through our threat list and see if anyone on it (NPCs) is still in combat. Used to determine player combat status
+bool Character::CheckThreatCombat()
+{
+	std::list<Threat>::iterator iter;
+	for (iter = threatList.begin(); iter != threatList.end(); ++iter)
+	{
+		if ((*iter).ch->InCombat())
+		{
+			return true;
+		}
+	}
+	return false;
 }
 
 std::string Character::HisHer()

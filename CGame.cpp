@@ -503,8 +503,7 @@ void Game::WorldUpdate(Server * server)
 				if (curr->IsNPC())
 					curr->SetHealth(curr, curr->maxHealth); //NPC's heal immediately out of combat
 				else
-					curr->AdjustHealth(NULL, (int)ceil(curr->maxHealth * 0.01)); //Regen 1% of health every 2 seconds, out of combat
-                //curr->Send("Regen: " + Utilities::itos((int)ceil(curr->maxHealth * 0.01)) + " health.\n\r");
+					curr->AdjustHealth(NULL, (int)ceil(curr->GetLevel()*0.1 + 2.5)); 
             }
 			if(curr->mana < curr->maxMana && curr->lastSpellCast + 5.0  <= Game::currentTime)
             {
@@ -582,7 +581,7 @@ void Game::WorldUpdate(Server * server)
             }
 
 			//Players exit combat after 5 seconds of no activity AND (TODO) when we have no npcs on our threat list
-            if(curr->player && curr->player->lastCombatAction + 5 <= currentTime)// && curr->HasListener( !curr->GetTopThreat())
+            if(curr->player && curr->player->lastCombatAction + 5 <= currentTime && !curr->CheckThreatCombat())
             {   
                 curr->ExitCombat();
             }
@@ -595,11 +594,14 @@ void Game::WorldUpdate(Server * server)
 					if(curr->CanMove()) //Move! (checks movespeed auras and movement speed timestamp)
 					{
 						curr->movementQueue.pop_front();
-						//track target... Give up 4 rooms away from target...
-						Exit::Direction chasedir = FindDirection(curr, curr->GetTopThreat(), 4);
+						//track target... Give up leashDistance rooms away from target... (todo, separate this from leashdist?)
+						int leashdist = Reset::RESET_LEASH_DEFAULT;
+						if (curr->reset && curr->reset->leashDistance != 0)
+							leashdist = curr->reset->leashDistance;
+						Exit::Direction chasedir = FindDirection(curr, curr->GetTopThreat(), leashdist);
 						if (chasedir != Exit::DIR_LAST)
 						{
-							//record the path we take backwards for backtracking
+							//record the path we take for backtracking
 							curr->leashPath.push_back(std::make_pair(curr->room, chasedir));
 							curr->Move(chasedir);
 							if(curr->GetTopThreat()->room == curr->room)
@@ -607,9 +609,10 @@ void Game::WorldUpdate(Server * server)
 						}
 						else
 						{
-							//target more than 4 rooms away, leash!
+							//target more than leashDistance rooms away, leash!
 							std::pair<Room *, int> path;
 							curr->ExitCombat();
+							curr->ClearTarget();
 							while (!curr->leashPath.empty())
 							{
 								path = curr->leashPath.back();
@@ -629,9 +632,13 @@ void Game::WorldUpdate(Server * server)
                 else if(curr->GetTopThreat()->room != curr->room && curr->movementQueue.empty()) //We need to chase threat target, and not already pending a move...
                 {
 					//Decide if we should try to chase based on how far we are from our reset
-					if (curr->leashPath.size() > 4) //Leash!
+					int leashdist = Reset::RESET_LEASH_DEFAULT;
+					if (curr->reset && curr->reset->leashDistance != 0)
+						leashdist = curr->reset->leashDistance;
+					if (curr->leashPath.size() >= leashdist) //Leash!
 					{
 						curr->ExitCombat();
+						curr->ClearTarget();
 						std::pair<Room *, int> path;
 						while (!curr->leashPath.empty())
 						{
@@ -1652,6 +1659,7 @@ void Game::LoadItems(Server * server)
         i->equipLocation = row["equip_location"];
         i->binds = row["binds"];
         i->type = row["type"];
+		i->useSkillID = row["skill_id"];
         i->quest = row["quest"];
         i->armor = row["armor"];
         i->durability = row["durability"];
@@ -2242,7 +2250,20 @@ int Game::ExperienceForLevel(int level)
 {
 	//TODO
 	static std::vector<int> experience_table = { 400, 900, 1500, 2100 };
+	/*
+	character is level 32-59):
 
+XP to Level = (65x2 - 165x - 6750) × .82
+
+XP to Level for levels 11-27 can be found by:
+
+XP to Level = -.4x3 + 40.4x2 + 396x
+
+For all levels lower than 11 the XP to Level can be expressed as the second grade function:
+
+XP to Level = 40x2 + 360x 
+
+*/
 
     if(level < 1)
         level = 1;

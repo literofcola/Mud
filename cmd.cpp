@@ -64,9 +64,10 @@ void cmd_attack(Character * ch, string argument)
         ch->Send("You can't attack yourself!\n\r");
         return;
     }
-    if(Utilities::FlagIsSet(target->flags, Character::FLAG_FRIENDLY) && (!ch->player || !ch->player->IMMORTAL()))
+    if((target->IsNPC() && Utilities::FlagIsSet(target->flags, Character::FLAG_FRIENDLY))
+		|| (!target->IsNPC() && ch->room->pvp == 0))
     {
-        ch->Send("That target is friendly.\n\r");
+        ch->Send("You can't attack that target.\n\r");
         return;
     }
 
@@ -316,7 +317,11 @@ void cmd_look(Character * ch, string argument)
             }
 
 			//TODO functionize this
-			if (Utilities::FlagIsSet((*i)->flags, Character::Flags::FLAG_FRIENDLY))
+			if (!(*i)->IsNPC())
+			{
+				aggressionColor = "|C";
+			}
+			else if (Utilities::FlagIsSet((*i)->flags, Character::Flags::FLAG_FRIENDLY))
 			{
 				aggressionColor = "|G";
 			}

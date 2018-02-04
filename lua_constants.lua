@@ -72,6 +72,7 @@ AFFECT_LAST = 7
 -- CSpellAffect.h enum Auras
 AURA_MOVE_SPEED = 1
 AURA_RESOURCE_COST = 2
+AURA_EATING = 3
 
 -- CExit.h enum Direction
 DIR_NORTH = 0;

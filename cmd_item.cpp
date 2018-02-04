@@ -391,3 +391,60 @@ bool cmd_drop_Query(Character * ch, string argument)
     }
     return false;
 }
+
+void cmd_eat(Character * ch, string argument)
+{
+	if (!ch || !ch->player)
+		return;
+
+	if (ch->delay_active)
+	{
+		ch->Send("Another action is in progress!\n\r");
+		return;
+	}
+
+	string arg1;
+	Utilities::one_argument(argument, arg1);
+
+	if (arg1.empty())
+	{
+		ch->Send("Eat what?\n\r");
+		return;
+	}
+
+	Item * eat = ch->player->GetItemInventory(arg1);
+
+	if (!eat)
+	{
+		ch->Send("You're not carrying that item.\n\r");
+		return;
+	}
+
+	if (eat->type != Item::TYPE_FOOD && eat->type != Item::TYPE_CONSUMABLE)
+	{
+		ch->Send("That's not edible.\n\r");
+		return;
+	}
+	
+	if (eat->type == Item::TYPE_FOOD)
+	{
+		if (ch->InCombat())
+		{
+			ch->Send("You can't do that while in combat.\n\r");
+			return;
+		}
+		Skill * sk = Game::GetGame()->GetSkill(eat->useSkillID);
+		if (sk == nullptr)
+		{
+			LogFile::Log("error", "Item \"" + eat->name + "\": cmd_eat bad skillid");
+			return;
+		}
+		ch->Sit();
+		ch->player->RemoveItemInventory(eat);
+		ch->Send("You start eating " + eat->name + ".\n\r");
+		int totalheal = ceil((30 * ch->GetLevel()) + 50);
+		int healpersecond = ceil(totalheal / 30);
+		ch->AddSpellAffect(0, ch, sk->long_name, false, false, 10, 30, SpellAffect::AFFECT_NONE,
+			sk, "Restores " + Utilities::itos(healpersecond) + " health per second.");
+	}
+}
