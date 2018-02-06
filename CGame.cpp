@@ -841,21 +841,14 @@ void Game::WorldUpdate(Server * server)
         //Target range update
         if(!(curr->player && curr->player->IMMORTAL()) && curr->GetTarget() && curr->GetTarget()->room != curr->room)
         {
-            //Allow target to remain active in same room and adjacent rooms
-            bool found = false;
-            for(int i = 0; i < Exit::DIR_LAST; i++)
-            {
-                if(curr->room->exits[i] && curr->room->exits[i]->to == curr->GetTarget()->room)
-                {
-                    found = true;
-                    break;
-                }
-            }
-            if(!found) //Clear the target
-            {
-                curr->Send("Target out of range.\n\r");
-                curr->ClearTarget();
-            }
+            //Allow target to remain active in same room and up to two rooms away
+			Exit::Direction dir = FindDirection(curr, curr->GetTarget(), 3);
+			if (dir == Exit::DIR_LAST) //Clear the target
+			{
+				curr->Send("Target out of range.\n\r");
+				curr->ClearTarget();
+			}
+				
         }
     }
 
@@ -2248,31 +2241,21 @@ Help * Game::CreateHelpAnyID(string name)
 //the total exp needed for any level
 int Game::ExperienceForLevel(int level)
 {
-	//TODO
-	static std::vector<int> experience_table = { 400, 900, 1500, 2100 };
-	/*
-	character is level 32-59):
+	if (level < 0)
+		level = 0;
+	else if (level > Game::MAX_LEVEL)
+		level = Game::MAX_LEVEL;
 
-XP to Level = (65x2 - 165x - 6750) × .82
-
-XP to Level for levels 11-27 can be found by:
-
-XP to Level = -.4x3 + 40.4x2 + 396x
-
-For all levels lower than 11 the XP to Level can be expressed as the second grade function:
-
-XP to Level = 40x2 + 360x 
-
-*/
-
-    if(level < 1)
-        level = 1;
-    else if(level > Game::MAX_LEVEL)
-        level = Game::MAX_LEVEL;
+	if (level < 11)
+		return (level * level * 40) + (360 * level);
+	else if (level >= 11 && level <= 29)
+		return (int)ceil((-0.4 * level * level * level) + (40.4 * level * level) + (396 * level));
+	else
+		return (int)ceil(((65 * level * level) - (165 * level) - 6750) * .82);
 
     //cout << "ExperienceForLevel(" << level << ") returning " << (int)pow((double)(level),2) * 300 << endl;
-    int temp = (int)(pow((double)level-1, 1.9) * 500);
-    return temp - (temp % 100);
+    /*int temp = (int)(pow((double)level-1, 1.9) * 500);
+    return temp - (temp % 100);*/
 }
 
 int Game::CalculateExperience(Character * ch, Character * victim)

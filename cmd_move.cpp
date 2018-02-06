@@ -109,6 +109,11 @@ void cmd_recall(Character * ch, string argument)
 {
 	if(ch == NULL || ch->player == NULL)
 		return;
+	Room * current = Game::GetGame()->GetRoom(ch->player->recall);
+	if (current != nullptr)
+	{
+		ch->Send("Your current recall room is: " + current->name + "\n\r");
+	}
 	if(ch->room == NULL || !Utilities::FlagIsSet(ch->room->flags, Room::FLAG_RECALL))
 	{
 		ch->Send("You cannot set your recall location here.\n\r");

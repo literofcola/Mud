@@ -94,7 +94,7 @@ class Command cmd_table[] =
     /*{ "read",		cmd_read,		POS_RESTING,	1,  LOG_NORMAL, 1 },
     { "report",		cmd_report,		POS_RESTING,	1,  LOG_NORMAL, 1 },*/
     { "score",		cmd_score,		1, 0, 1, 1, Character::POSITION_ANY },
-    /*{ "scan",		cmd_scan,		POS_RESTING,	1,  LOG_NORMAL, 1 },*/
+    { "scan",		cmd_scan,		1, 0, 1, 1, Character::POSITION_ANY },
     { "skills",		cmd_skills,		1, 0, 1, 1, Character::POSITION_ANY },
     /*{ "socials",	cmd_socials,		POS_DEAD,		1,  LOG_NORMAL, 1 },
     { "time",		cmd_time,		POS_DEAD,		1,  LOG_NORMAL, 1 },

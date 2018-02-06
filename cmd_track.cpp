@@ -118,7 +118,7 @@ Exit::Direction FindDirection(Character * ch, Character * target, int depth)
             currentDepth++;
             if(currentDepth > depth)
             {
-                ch->Send("depth limit exceeded " + Utilities::itos(currentDepth) + "\n\r");
+                //ch->Send("depth limit exceeded " + Utilities::itos(currentDepth) + "\n\r");
                 break;
             }
             continue;
@@ -149,7 +149,7 @@ Exit::Direction FindDirection(Character * ch, Character * target, int depth)
             {
                 if(visited.find(searchme->exits[i]->to->id) == visited.end())
                 {
-                    ch->Send("searching room " + Utilities::itos(searchme->exits[i]->to->id) + "\n\r");
+                    //ch->Send("searching room " + Utilities::itos(searchme->exits[i]->to->id) + "\n\r");
                     visited[searchme->exits[i]->to->id] = searchme;
                     searchQ.push_back(searchme->exits[i]->to);
                 }

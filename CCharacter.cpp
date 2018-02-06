@@ -879,6 +879,8 @@ void Character::Move(int direction)
     Message(name + " has arrived from " + ((direction != Exit::DIR_UP && direction != Exit::DIR_DOWN) ? "the " : "") + Exit::reverseExitNames[direction] + ".", MSG_ROOM_NOTCHAR);
 
     cmd_look(this, "");
+	Send("\n\r");
+	cmd_scan(this, "");
 
     //check npc aggro
     for(std::list<Character*>::iterator iter = room->characters.begin(); iter != room->characters.end(); ++iter)
@@ -1956,7 +1958,7 @@ void Character::OneHit(Character * victim, int damage)
     if(IsNPC() || victim->IsNPC())
     {
         victim->UpdateThreat(this, damage);
-        Send("My threat on " + victim->name + " is " + Utilities::itos(victim->GetThreat(this)) + "\n\r");
+        //Send("My threat on " + victim->name + " is " + Utilities::itos(victim->GetThreat(this)) + "\n\r");
     }
 	if (victim->CancelCast())
 		victim->Send("Action Interrupted!\n\r");
@@ -2595,6 +2597,26 @@ bool Character::CancelCast()
 	return false;
 }
 
+std::string Character::AggressionColor(Character * target)
+{
+	if (!target->IsNPC())
+	{
+		return "|C";
+	}
+	else if (Utilities::FlagIsSet(target->flags, Character::Flags::FLAG_FRIENDLY))
+	{
+		return "|G";
+	}
+	else if (Utilities::FlagIsSet(target->flags, Character::Flags::FLAG_NEUTRAL))
+	{
+		return "|Y";
+	}
+	else// if (Utilities::FlagIsSet(target->flags, Character::Flags::FLAG_AGGRESSIVE))
+	{
+		return "|R";
+	}
+}
+
 bool Character::CanMove()
 {
     if(player && player->IMMORTAL())
@@ -2873,7 +2895,7 @@ void Character::ApplyExperience(int amount)
 
     player->SetExperience(player->experience + amount);
 
-    while(player->experience < Game::ExperienceForLevel(level))
+    while(player->experience < Game::ExperienceForLevel(level-1))
     {
         //lose levels
         SetLevel(level - 1);

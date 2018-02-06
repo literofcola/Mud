@@ -43,6 +43,11 @@ void cmd_attack(Character * ch, string argument)
         if(ch->GetTarget())
         {
             target = ch->GetTarget();
+			if (target->room != ch->room)
+			{
+				ch->Send("They aren't here.\n\r");
+				return;
+			}
         }
         else
         {
@@ -315,24 +320,8 @@ void cmd_look(Character * ch, string argument)
                 else if((*i)->GetTarget() != NULL)
                     fighting = ", fighting " + (*i)->GetTarget()->name + ".";
             }
+			aggressionColor = ch->AggressionColor((*i));
 
-			//TODO functionize this
-			if (!(*i)->IsNPC())
-			{
-				aggressionColor = "|C";
-			}
-			else if (Utilities::FlagIsSet((*i)->flags, Character::Flags::FLAG_FRIENDLY))
-			{
-				aggressionColor = "|G";
-			}
-			else if (Utilities::FlagIsSet((*i)->flags, Character::Flags::FLAG_NEUTRAL))
-			{
-				aggressionColor = "|Y";
-			}
-			else if (Utilities::FlagIsSet((*i)->flags, Character::Flags::FLAG_AGGRESSIVE))
-			{
-				aggressionColor = "|R";
-			}
 		    ch->Send(disconnected + level + questicon + aggressionColor + (*i)->name + title + " is here" + fighting + "|X\n\r");
 	    }
     }
@@ -501,6 +490,60 @@ void cmd_score(Character * ch, string argument)
     double movespeed = ch->GetMoveSpeed();
     ch->Send("Current movement speed: " + Utilities::dtos(ch->movementSpeed * movespeed, 2) + " rooms per second ("
         + Utilities::dtos(movespeed*100, 0) + "% of normal)\n\r");
+}
+
+void cmd_scan(Character * ch, string argument)
+{
+	if (!ch || !ch->room)
+		return;
+
+	std::list<Character *>::iterator iter;
+	Room * scan_room;
+	stringstream out;
+	int depth = 3;
+	string depthcolors[3] = { "|r", "|m", "|y" };
+	bool found = false;
+
+	for (int i = 0; i < Exit::DIR_LAST; i++)
+	{
+		out << setw(11) << Exit::exitNames[i] + ": ";
+		scan_room = ch->room;
+		for(int j = 0; j < depth; j++)
+		{
+			if (scan_room->exits[i] && scan_room->exits[i]->to)
+			{
+				scan_room = scan_room->exits[i]->to;
+			}
+			else
+			{
+				break;
+			}
+			if(!scan_room->characters.empty())
+			{
+				found = true;
+				out << depthcolors[j] << "[" << Utilities::itos(j + 1) << "]: ";
+				std::list<Character *>::iterator iter = scan_room->characters.begin();
+				while (iter != scan_room->characters.end())
+				{
+					out << ch->AggressionColor(*iter) << (*iter)->name;
+					iter++;
+					if (iter != scan_room->characters.end())
+					{
+						out << "|X, ";
+					}
+				}
+				out << "|X ";
+			}
+		}
+		if (found)
+		{
+			out << "|X\n\r";
+			ch->Send(out.str());
+			found = false;
+		}
+		out.str("");
+		out.clear();
+	}
 }
 
 void cmd_who(Character * ch, string argument)

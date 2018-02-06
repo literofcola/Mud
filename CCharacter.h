@@ -210,6 +210,7 @@ public:
 	bool CheckThreatCombat();
 	std::string HisHer();
 	bool CancelCast();
+	std::string AggressionColor(Character * target);
     void EnterCombat(Character * victim);
     void ExitCombat();
     bool InCombat();

@@ -17,6 +17,7 @@ void cmd_look(Character * ch, string argument);
 void cmd_target(Character * ch, string argument);
 void cmd_commands(Character * ch, string argument);
 void cmd_score(Character * ch, string argument);
+void cmd_scan(Character * ch, string argument);
 void cmd_who(Character * ch, string argument);
 void cmd_title(Character * ch, string argument);
 void cmd_group(Character * ch, string argument);

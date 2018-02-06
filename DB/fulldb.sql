@@ -317,7 +317,7 @@ CREATE TABLE `player_class_data` (
 
 LOCK TABLES `player_class_data` WRITE;
 /*!40000 ALTER TABLE `player_class_data` DISABLE KEYS */;
-INSERT INTO `player_class_data` VALUES ('Bob',1,40),('Bob',2,30),('Bob',3,81),('Bob',4,89),('Bobo',1,1),('Boris',1,59),('Boris',2,60),('Boris',3,60),('Boris',4,60);
+INSERT INTO `player_class_data` VALUES ('Bob',1,40),('Bob',2,30),('Bob',3,81),('Bob',4,89),('Boris',1,59),('Boris',2,60),('Boris',3,60),('Boris',4,60);
 /*!40000 ALTER TABLE `player_class_data` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -389,7 +389,7 @@ CREATE TABLE `player_inventory` (
 
 LOCK TABLES `player_inventory` WRITE;
 /*!40000 ALTER TABLE `player_inventory` DISABLE KEYS */;
-INSERT INTO `player_inventory` VALUES ('Bob',4,0),('Bob',5,0),('Bob',6,0),('Bob',3,0),('Bob',20,1),('Boris',14,0),('Boris',21,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Bobo',4,0),('Bobo',5,0),('Bobo',6,0),('Bobo',3,0);
+INSERT INTO `player_inventory` VALUES ('Bob',4,0),('Bob',5,0),('Bob',6,0),('Bob',3,0),('Bob',20,1),('Boris',14,0),('Boris',21,1),('Boris',20,1),('Boris',20,1),('Boris',20,1);
 /*!40000 ALTER TABLE `player_inventory` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -464,7 +464,7 @@ CREATE TABLE `players` (
 
 LOCK TABLES `players` WRITE;
 /*!40000 ALTER TABLE `players` DISABLE KEYS */;
-INSERT INTO `players` VALUES ('Bob','\r\Z',0,'',16516800,2,240,1,0,139,512,118,446,269,4460,5120,4,0,0,0),('Bobo','\r\Z',0,'',0,2,1,1,7,5,5,5,5,5,50,100,1,2,0,0),('Boris','\r\Z',10,'',16516800,2,240,1,7,249,110,488,727,10,7270,1100,2,2,0,4208);
+INSERT INTO `players` VALUES ('Bob','\r\Z',0,'',16516800,7,240,1,0,139,512,118,446,269,4460,5120,4,0,0,0),('Boris','\r\Z',10,'',16516800,17,240,1,7,249,110,488,727,10,7270,1100,2,2,0,4208);
 /*!40000 ALTER TABLE `players` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -663,4 +663,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-02-04  2:12:13
+-- Dump completed on 2018-02-06  5:38:13
