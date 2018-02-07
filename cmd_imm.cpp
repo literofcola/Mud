@@ -80,10 +80,10 @@ void cmd_restore(Character * ch, string argument)
         if(u->character)
         {
             u->Send("Your health has been restored!\n\r");
-            u->character->health = u->character->maxHealth;
-            u->character->mana = u->character->maxMana;
-			u->character->energy = u->character->maxEnergy;
-			u->character->rage = u->character->maxRage;
+            u->character->SetHealth(u->character->GetMaxHealth());
+            u->character->SetMana(u->character->GetMaxMana());
+			u->character->SetEnergy(u->character->GetMaxEnergy());
+			u->character->SetRage(u->character->GetMaxRage());
             if(u->character->player)
                 u->character->player->isGhost = false;
         }

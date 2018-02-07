@@ -369,11 +369,11 @@ void Character::QueryClear()
 void Character::ResetMaxStats()
 {
 	//todo: check equipment bonuses
-	maxHealth = stamina * Character::HEALTH_FROM_STAMINA;
-	maxMana = intellect * Character::MANA_FROM_INTELLECT; //todo: no more mana from intellect, go through our class levels to figure it out
+	SetMaxHealth(stamina * Character::HEALTH_FROM_STAMINA);
+	SetMaxMana(intellect * Character::MANA_FROM_INTELLECT); //todo: no more mana from intellect, go through our class levels to figure it out
 	//todo: these might be higher based on skills or talents?
-	maxEnergy = 100;
-	maxRage = 100;
+	SetMaxEnergy(100);
+	SetMaxRage(100);
 	maxComboPoints = 5;
 }
 
@@ -587,11 +587,11 @@ void Character::GeneratePrompt(double currentTime)
 		prompt += "|X" + Utilities::itos(percent) + "|B%e ";
 
 		//Rage
-		if (GetTarget()->GetRage() > 0 && GetTarget()->maxRage > 0)
-			percent = (GetTarget()->rage * 100) / GetTarget()->maxRage;
+		if (GetTarget()->GetRage() > 0 && GetTarget()->GetMaxRage() > 0)
+			percent = (GetTarget()->GetRage() * 100) / GetTarget()->GetMaxRage();
 		else
 			percent = 0;
-		prompt += "|X" + Utilities::itos(rage) + "/|X" + Utilities::itos(maxRage) + "|Br>|X";
+		prompt += "|X" + Utilities::itos(percent) + "|B%r>|X";
 	}
 
     //Target of target (changed to display name, level, health only)
@@ -683,11 +683,6 @@ void Character::GeneratePrompt(double currentTime)
     
     prompt += "\n\r";
 	Send(prompt);
-
-	//Really we should send updates when individual stats CHANGE, not every prompt
-	json vitals = { { "hp", health }, { "hpmax", maxHealth }, { "mp", mana }, { "mpmax", maxMana }, 
-				    { "en", energy }, { "enmax", maxEnergy }, { "rage", rage },{ "ragemax", maxRage } };
-	SendGMCP("char.vitals " + vitals.dump());
 }
 
 Character * Character::GetCharacterRoom(string name)
@@ -879,8 +874,6 @@ void Character::Move(int direction)
     Message(name + " has arrived from " + ((direction != Exit::DIR_UP && direction != Exit::DIR_DOWN) ? "the " : "") + Exit::reverseExitNames[direction] + ".", MSG_ROOM_NOTCHAR);
 
     cmd_look(this, "");
-	Send("\n\r");
-	cmd_scan(this, "");
 
     //check npc aggro
     for(std::list<Character*>::iterator iter = room->characters.begin(); iter != room->characters.end(); ++iter)
@@ -2108,6 +2101,11 @@ int Character::GetHealth()
     return health;
 }
 
+int Character::GetMaxHealth()
+{
+	return maxHealth;
+}
+
 int Character::GetMana()
 {
     return mana;
@@ -2118,19 +2116,24 @@ int Character::GetMaxMana()
 	return maxMana;
 }
 
-int Character::GetMaxHealth()
-{
-	return maxHealth;
-}
-
 int Character::GetEnergy()
 {
 	return energy;
 }
 
+int Character::GetMaxEnergy()
+{
+	return maxEnergy;
+}
+
 int Character::GetRage()
 {
 	return rage;
+}
+
+int Character::GetMaxRage()
+{
+	return maxRage;
 }
 
 void Character::GenerateRageOnAttack(int damage, double weapon_speed, bool mainhand, bool wascrit)
@@ -2169,7 +2172,6 @@ void Character::AdjustHealth(Character * source, int amount)
         //a possibility
 		source = this; //self damage!?!? Will this work?
     }
-    //TODO: update threat values for damage and healing (if in combat only?)
     if(amount < 0)
     {
         (health + amount >= 0) ? health += amount : health = 0;
@@ -2180,6 +2182,12 @@ void Character::AdjustHealth(Character * source, int amount)
     {
         (health + amount >= maxHealth) ? health = maxHealth : health += amount;
     }
+
+	if (IsPlayer())
+	{
+		json vitals = { { "hp", health } };
+		SendGMCP("char.vitals " + vitals.dump());
+	}
 
     if(health == 0) //todo: functionize me. ROM = "ExtractChar"
     {
@@ -2323,49 +2331,129 @@ void Character::ConsumeMana(int amount)
     {
         this->lastSpellCast = Game::currentTime;
     }   
+	if (IsPlayer())
+	{
+		json vitals = { { "mp", mana } };
+		SendGMCP("char.vitals " + vitals.dump());
+	}
 }
 
 
-void Character::SetMana(Character * source, int amount)
+void Character::SetMana(int amount)
 {
-	//todo: this stuff should probably be in "AdjustMana" while this is just a simple set function
-    if(source == NULL)
-    {
-        //a possibility
-    }
-    
-    if(amount < 0)
-    {
-        mana = 0;
-    }
-    else if(amount > maxMana)
-    {
-        mana = maxMana;
-    }
-    else
-    {
-        mana = amount;
-    }
+	if (amount < 0)
+	{
+		mana = 0;
+	}
+	else if (amount > maxMana)
+	{
+		mana = maxMana;
+	}
+	else
+	{
+		mana = amount;
+	}
+	if (IsPlayer())
+	{
+		json vitals = { { "mp", mana } };
+		SendGMCP("char.vitals " + vitals.dump());
+	}
+}
 
-    //start 5 second rule if source was ourself and we lost mana
-    if(source == this && amount < 0)
-    {
-        this->lastSpellCast = Game::currentTime;
-    }
+void Character::SetEnergy(int amount)
+{
+	if (amount < 0)
+	{
+		energy = 0;
+	}
+	else if (amount > maxEnergy)
+	{
+		energy = maxEnergy;
+	}
+	else
+	{
+		energy = amount;
+	}
+	if (IsPlayer())
+	{
+		json vitals = { { "en", energy } };
+		SendGMCP("char.vitals " + vitals.dump());
+	}
+}
+
+void Character::SetRage(int amount)
+{
+	if (amount < 0)
+	{
+		rage = 0;
+	}
+	else if (amount > maxRage)
+	{
+		rage = maxRage;
+	}
+	else
+	{
+		rage = amount;
+	}
+	if (IsPlayer())
+	{
+		json vitals = { { "rage", rage } };
+		SendGMCP("char.vitals " + vitals.dump());
+	}
+}
+
+void Character::SetMaxHealth(int amount)
+{
+	maxHealth = amount;
+	if (IsPlayer())
+	{
+		json vitals = { { "hpmax", maxHealth } };
+		SendGMCP("char.vitals " + vitals.dump());
+	}
+}
+
+void Character::SetMaxMana(int amount)
+{
+	maxMana = amount;
+	if (IsPlayer())
+	{
+		json vitals = { { "mpmax", maxMana } };
+		SendGMCP("char.vitals " + vitals.dump());
+	}
+}
+
+void Character::SetMaxEnergy(int amount)
+{
+	maxEnergy = amount;
+	if (IsPlayer())
+	{
+		json vitals = { { "enmax", maxEnergy } };
+		SendGMCP("char.vitals " + vitals.dump());
+	}
+}
+
+void Character::SetMaxRage(int amount)
+{
+	maxRage = amount;
+	if (IsPlayer())
+	{
+		json vitals = { { "ragemax", maxRage } };
+		SendGMCP("char.vitals " + vitals.dump());
+	}
 }
 
 void Character::AdjustMana(Character * source, int amount)
 {
-    SetMana(source, mana + amount);
+	//start 5 second rule if source was ourself and we lost mana
+	if (source == this && amount < 0)
+	{
+		this->lastSpellCast = Game::currentTime;
+	}
+    SetMana(mana + amount);
 }
 
-void Character::SetHealth(Character * source, int amount)
+void Character::SetHealth(int amount)
 {
-	if (source == NULL)
-	{
-		//a possibility (why do we even need a source?)
-	}
-
 	if (amount < 0)
 	{
 		health = 0;
@@ -2378,6 +2466,11 @@ void Character::SetHealth(Character * source, int amount)
 	{
 		health = amount;
 	}
+	if (IsPlayer())
+	{
+		json vitals = { { "hp", health } };
+		SendGMCP("char.vitals " + vitals.dump());
+	}
 }
 
 void Character::AdjustEnergy(Character * source, int amount)
@@ -2388,6 +2481,11 @@ void Character::AdjustEnergy(Character * source, int amount)
 		energy = 0;
 	else
 		energy += amount;
+	if (IsPlayer())
+	{
+		json vitals = { { "en", energy } };
+		SendGMCP("char.vitals " + vitals.dump());
+	}
 }
 
 void Character::AdjustRage(Character * source, int amount)
@@ -2398,6 +2496,11 @@ void Character::AdjustRage(Character * source, int amount)
 		rage = 0;
 	else
 		rage += amount;
+	if (IsPlayer())
+	{
+		json vitals = { { "rage", rage } };
+		SendGMCP("char.vitals " + vitals.dump());
+	}
 }
 
 //Energy adjusting function to be used by spells. Checks for AURA_RESOURCE_COST
@@ -2421,6 +2524,11 @@ void Character::ConsumeEnergy(int amount)
 	{
 		energy -= amount;
 	}
+	if (IsPlayer())
+	{
+		json vitals = { { "en", energy } };
+		SendGMCP("char.vitals " + vitals.dump());
+	}
 }
 
 void Character::ConsumeRage(int amount)
@@ -2441,6 +2549,11 @@ void Character::ConsumeRage(int amount)
 	else
 	{
 		rage -= amount;
+	}
+	if (IsPlayer())
+	{
+		json vitals = { { "rage", rage } };
+		SendGMCP("char.vitals " + vitals.dump());
 	}
 }
 
@@ -2758,6 +2871,11 @@ double Character::GetCooldownRemaining(Skill * sk)
 bool Character::IsNPC()
 {
     return (player == NULL);
+}
+
+bool Character::IsPlayer()
+{
+	return (player != NULL);
 }
 
 //room == NULL to remove from room only

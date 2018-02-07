@@ -111,48 +111,6 @@ void cmd_cancel(Character * ch, string argument)
 
 void cmd_look(Character * ch, string argument)
 {
-	if (argument == "compasstest")
-	{
-		const std::string formattest = R"(
-  |CNorthshire |X- |WOn the Steps of Northshire Abbey
-|B(------------------------------------------------------------------------------------------) 
-|W(NW)|GSisol, Snoogans, Chrissy,|X 99 more...   |W(N)           |GMinotorious, Avemor, |X99 more...|W(NE)
-                              |GDeathsmasher, Kabouter, |X99 more...                              
-|W(W) |GRajani, Abos, Prothis, |X99 more...   |Y<---X--->|G      |GTyrell, Brodie, Angoon, |X99 more...|W(E)
-                           |GWolfeater, Lydda, Crysknife, |X99 more...       
-|W(SW)|GCutlex, Stakker, Gnarls, |X99 more...|W    (S)          |GPuolituinen, Arcadin, |X99 more...|W(SE)
-|B(------------------------------------------------------------------------------------------)
-|Y[?] |GMarshal McBride is here.
-
-|B<|X3635/3635|Bh|X 100/100|Bm|X 100/100|Be |X0/100|Br>
-
-  |CNorthshire |X- |WOn the Steps of Northshire Abbey
-|B(------------------------------------------------------------------------------------------) 
-|W(NW)|GSisol, Snoogans                       |W(N)                                           |W(NE)
-                              |GDeathsmasher, Kabouter, |X3 more...                              
-|W(W) |GRajani, Abos, Prothis, |X1 more...   |Y<---X--->|G                                         |W(E)
-                                       |GWolfeater       
-|W(SW)                                      |W(S)         |GPuolituinen, Arcadin, |X10 more...  |W(SE)
-|B(------------------------------------------------------------------------------------------)
-|Y[?] |GMarshal McBride is here.
-
-|B<|X3635/3635|Bh|X 100/100|Bm|X 100/100|Be |X0/100|Br>
-
-  |CNorthshire |X- |WOn the Steps of Northshire Abbey
-|B(------------------------------------------------------------------------------------------) 
-|W |B--                                       |W(N)                                            |B--
-                              
-|W(W)                                    |Y<---X--->|G                                         |W(E)
-       
-|W |B--                                       |W(S)                                            |B--
-|B(------------------------------------------------------------------------------------------)
-|Y[?] |GMarshal McBride is here.
-
-|B<|X3635/3635|Bh|X 100/100|Bm|X 100/100|Be |X0/100|Br>
-		)";
-		ch->Send(formattest + "\n\r");
-		return;
-	}
     string arg1;
     argument = Utilities::one_argument(argument, arg1);
 
@@ -324,6 +282,8 @@ void cmd_look(Character * ch, string argument)
 
 		    ch->Send(disconnected + level + questicon + aggressionColor + (*i)->name + title + " is here" + fighting + "|X\n\r");
 	    }
+		ch->Send("\n\r");
+		cmd_scan(ch, "");
     }
     else // "look argument" //TODO, look at things in the room with higher priority
     {
@@ -474,10 +434,10 @@ void cmd_score(Character * ch, string argument)
     }
     if(ch->player->IMMORTAL())
         ch->Send("Immortal Level: " + Utilities::itos(ch->player->immlevel) + "\n\r");
-    ch->Send("Health: " + Utilities::itos(ch->health) + "/" + Utilities::itos(ch->maxHealth));
-    ch->Send("  Mana: " + Utilities::itos(ch->mana) + "/" + Utilities::itos(ch->maxMana));
-    ch->Send("  Energy: " + Utilities::itos(ch->energy) + "/" + Utilities::itos(ch->maxEnergy) + "\n\r");
-	ch->Send("  Rage: " + Utilities::itos(ch->rage) + "/" + Utilities::itos(ch->maxRage) + "\n\r");
+    ch->Send("Health: " + Utilities::itos(ch->GetHealth()) + "/" + Utilities::itos(ch->GetMaxHealth()));
+    ch->Send("  Mana: " + Utilities::itos(ch->GetMana()) + "/" + Utilities::itos(ch->GetMaxMana()));
+    ch->Send("  Energy: " + Utilities::itos(ch->GetEnergy()) + "/" + Utilities::itos(ch->GetMaxEnergy()) + "\n\r");
+	ch->Send("  Rage: " + Utilities::itos(ch->GetRage()) + "/" + Utilities::itos(ch->GetMaxRage()) + "\n\r");
     ch->Send("Agility: " + Utilities::itos(ch->agility) + " Intellect: " + Utilities::itos(ch->intellect)
         + " Strength: " + Utilities::itos(ch->strength) + " Stamina: " + Utilities::itos(ch->stamina) + " Wisdom: "
         + Utilities::itos(ch->wisdom) + "\n\r");

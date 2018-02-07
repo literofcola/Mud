@@ -36,18 +36,9 @@ public:
 	{
 		RESOURCE_HEALTH = 1, RESOURCE_MANA, RESOURCE_ENERGY, RESOURCE_RAGE, RESOURCE_COMBO
 	};
-	int energy;
-	int maxEnergy;
-	int rage;
-	int maxRage;
-	int comboPoints;
-	int maxComboPoints;
+	
+    
 	Character * comboPointTarget;
-
-    int health;     //current health
-    int maxHealth;  //permanent health(stamina*5) + gear and buff bonuses
-    int mana;
-    int maxMana;
     static const int HEALTH_FROM_STAMINA = 10;
     static const int MANA_FROM_INTELLECT = 10; //todo: move intellect into class per level up!
 	static constexpr double STRENGTH_DAMAGE_MODIFIER = 0.30;	//auto attack damage increased by 30% of strength
@@ -230,27 +221,36 @@ public:
 	int GetIntellect();
 	int GetStrength();
     int GetHealth();
+	int GetMaxHealth();
     int GetMana();
 	int GetMaxMana();
-	int GetMaxHealth();
 	int GetEnergy();
+	int GetMaxEnergy();
 	int GetRage();
+	int GetMaxRage();
+	void SetHealth(int amount);
+	void SetMana(int amount);
+	void SetEnergy(int amount);
+	void SetRage(int amount);
+	void SetMaxHealth(int amount);
+	void SetMaxMana(int amount);
+	void SetMaxEnergy(int amount);
+	void SetMaxRage(int amount);
 	void GenerateRageOnAttack(int damage, double weapon_speed, bool mainhand, bool wascrit);
 	void GenerateRageOnTakeDamage(int damage);
 	int GetComboPoints();
 	void SetComboPoints(int howmany);
 	void GenerateComboPoint(Character * target);
 	int SpendComboPoints(Character * target);
-    bool HasResource(int which, int amount);
-    void AdjustHealth(Character * source, int amount);
     void ConsumeMana(int amount);
 	void ConsumeEnergy(int amount);
 	void ConsumeRage(int amount);
-    void SetMana(Character * source, int amount);
+	void AdjustHealth(Character * source, int amount);
     void AdjustMana(Character * source, int amount);
-	void SetHealth(Character * source, int amount);
 	void AdjustEnergy(Character * source, int amount);
 	void AdjustRage(Character * source, int amount);
+	bool HasResource(int which, int amount);
+
     void ApplyExperience(int amount);
     void RemoveThreat(Character * ch, bool removeall);
     SpellAffect * AddSpellAffect(int isDebuff, Character * caster, std::string name,
@@ -280,6 +280,7 @@ public:
     void SetCooldown(Skill * sk, std::string name, bool global, double length);
     double GetCooldownRemaining(Skill * sk);
     bool IsNPC();
+	bool IsPlayer();
     bool IsCorpse();
     bool IsGhost();
 	void AddClassSkills();
@@ -288,6 +289,16 @@ public:
 private:
 
     Character * target;
+	int health;     //current health
+	int maxHealth;  //permanent health(stamina*5) + gear and buff bonuses
+	int mana;
+	int maxMana;
+	int energy;
+	int maxEnergy;
+	int rage;
+	int maxRage;
+	int comboPoints;
+	int maxComboPoints;
 	
 };
 

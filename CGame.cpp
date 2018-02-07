@@ -498,24 +498,24 @@ void Game::WorldUpdate(Server * server)
         if(doTwoSecondTick)
         {
             //Stat regeneration
-            if(!curr->combat && curr->health < curr->maxHealth)
+            if(!curr->combat && curr->GetHealth() < curr->GetMaxHealth())
             {
 				if (curr->IsNPC())
-					curr->SetHealth(curr, curr->maxHealth); //NPC's heal immediately out of combat
+					curr->SetHealth(curr->GetMaxHealth()); //NPC's heal immediately out of combat
 				else
-					curr->AdjustHealth(NULL, (int)ceil(curr->GetLevel()*0.1 + 2.5)); 
+					curr->AdjustHealth(NULL, (int)ceil(curr->GetLevel()*0.5 + 2.5)); 
             }
-			if(curr->mana < curr->maxMana && curr->lastSpellCast + 5.0  <= Game::currentTime)
+			if(curr->GetMana() < curr->GetMaxMana() && curr->lastSpellCast + 5.0  <= Game::currentTime)
             {
-                 //if more than 5 seconds since last cast, regen 20% of wisdom as mana
-			    curr->AdjustMana(curr, (int)ceil(curr->wisdom * 0.2));
+                 //if more than 5 seconds since last cast, regen 10% of wisdom as mana
+			    curr->AdjustMana(curr, (int)ceil(curr->wisdom * 0.1));
             }
-			if(curr->energy < curr->maxEnergy)
+			if(curr->GetEnergy() < curr->GetMaxEnergy())
             {
 				curr->AdjustEnergy(curr, 20); //1 energy per .1 second regen
             }
 			//Rage decay, 1 per second
-			if (!curr->combat && curr->rage > 0)
+			if (!curr->combat && curr->GetRage() > 0)
 			{
 				curr->AdjustRage(curr, -2);
 			}
@@ -1325,6 +1325,11 @@ void Game::LoginHandler(Server * server, User * user, string argument)
                     Utilities::itos(max_players_since_boot) + "|M.|X\n\r");
                 user->Send("|MYou are player [|X" + Utilities::itos(++total_past_connections) + "|M] connected since May 19th, 2010.|X\n\r\n\r");
                 //user->Send("Logged In!\r\n");
+
+				json vitals = { { "hp", user->character->GetHealth() },{ "hpmax", user->character->GetMaxHealth() },{ "mp", user->character->GetMana() },{ "mpmax", user->character->GetMaxMana() },
+								{ "en", user->character->GetEnergy() }, { "enmax", user->character->GetMaxEnergy() },{ "rage", user->character->GetRage() } ,{ "ragemax", user->character->GetMaxRage() } };
+				user->SendGMCP("char.vitals " + vitals.dump());
+
                 if(user->character->room == NULL)
                 {
 					Room * toroom = GetRoom(newplayerRoom);
@@ -1843,10 +1848,14 @@ void Game::LoadNPCS(Server * server)
         loaded->strength = row["strength"];
         loaded->stamina = row["stamina"];
         loaded->wisdom = row["wisdom"];
-        loaded->maxHealth = loaded->health = row["health"];
-        loaded->maxMana = loaded->mana = row["mana"];
-        loaded->maxEnergy = loaded->energy = row["energy"];
-		loaded->maxRage = row["rage"];
+		loaded->SetHealth(row["health"]);
+		loaded->SetMaxHealth(row["health"]);
+		loaded->SetMana(row["mana"]);
+		loaded->SetMaxMana(row["mana"]);
+		loaded->SetEnergy(row["energy"]);
+		loaded->SetMaxEnergy(row["energy"]);
+		loaded->SetRage(row["rage"]);
+		loaded->SetMaxRage(row["rage"]);
         loaded->npcAttackSpeed = row["attack_speed"];
         loaded->npcDamageHigh = row["damage_high"];
         loaded->npcDamageLow = row["damage_low"];

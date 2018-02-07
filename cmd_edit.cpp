@@ -1588,9 +1588,9 @@ void npcEditCmd_show(Character * ch, string argument)
     ch->Send("Strength:  [" + Utilities::itos(pChar->strength) + "]\n\r");
     ch->Send("Stamina:  [" + Utilities::itos(pChar->stamina) + "]\n\r");
     ch->Send("Wisdom:    [" + Utilities::itos(pChar->wisdom) + "]\n\r");
-    ch->Send("Health:    [" + Utilities::itos(pChar->health) + "]\n\r");
-    ch->Send("Mana:      [" + Utilities::itos(pChar->mana) + "]\n\r");
-    ch->Send("Energy:    [" + Utilities::itos(pChar->energy) + "]\n\r");
+    ch->Send("Health:    [" + Utilities::itos(pChar->GetHealth()) + "]\n\r");
+    ch->Send("Mana:      [" + Utilities::itos(pChar->GetMana()) + "]\n\r");
+    ch->Send("Energy:    [" + Utilities::itos(pChar->GetEnergy()) + "]\n\r");
     ch->Send("attack_speed: [" + Utilities::dtos(pChar->npcAttackSpeed, 2) + "]\n\r");
     ch->Send("damage_low:   [" + Utilities::itos(pChar->npcDamageLow) + "]\n\r");
     ch->Send("damage_high:  [" + Utilities::itos(pChar->npcDamageHigh) + "]\n\r");
@@ -2023,7 +2023,7 @@ void npcEditCmd_health(Character * ch, string argument)
         return;
     }
     pChar->changed = true;
-    pChar->health = health;
+    pChar->SetMaxHealth(health);
 }
 
 void npcEditCmd_mana(Character * ch, string argument)
@@ -2045,7 +2045,7 @@ void npcEditCmd_mana(Character * ch, string argument)
         return;
     }
     pChar->changed = true;
-    pChar->mana = mana;
+	pChar->SetMaxMana(mana);
 }
 
 void npcEditCmd_attackSpeed(Character * ch, string argument)
