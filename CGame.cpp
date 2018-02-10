@@ -2250,21 +2250,14 @@ Help * Game::CreateHelpAnyID(string name)
 //the total exp needed for any level
 int Game::ExperienceForLevel(int level)
 {
+	static double e = 2.71828182845904523536;
+
 	if (level < 0)
 		level = 0;
 	else if (level > Game::MAX_LEVEL)
 		level = Game::MAX_LEVEL;
 
-	if (level < 11)
-		return (level * level * 40) + (360 * level);
-	else if (level >= 11 && level <= 29)
-		return (int)ceil((-0.4 * level * level * level) + (40.4 * level * level) + (396 * level));
-	else
-		return (int)ceil(((65 * level * level) - (165 * level) - 6750) * .82);
-
-    //cout << "ExperienceForLevel(" << level << ") returning " << (int)pow((double)(level),2) * 300 << endl;
-    /*int temp = (int)(pow((double)level-1, 1.9) * 500);
-    return temp - (temp % 100);*/
+	return ceil(4.16667 * pow(level, 3) + 62.5 * pow(level, 2) + 458.333 * level - 525);
 }
 
 int Game::CalculateExperience(Character * ch, Character * victim)

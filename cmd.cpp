@@ -663,7 +663,7 @@ void cmd_class(Character * ch, string argument)
 void cmd_levels(Character * ch, string argument)
 {
     int prev = 0, next = 0;
-    for(int i = 1; i <= Game::MAX_LEVEL; i++)
+    for(int i = 2; i <= Game::MAX_LEVEL; i++)
     {
         next = Game::ExperienceForLevel(i);
         std::stringstream sstr;
