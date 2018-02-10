@@ -47,5 +47,5 @@ __int64 HighResTimer::ElapsedMicro()
 {
     QueryPerformanceCounter(&stop);
 
-    return (stop.QuadPart - start.QuadPart) / (frequency / 1000.0);
+    return (__int64)((stop.QuadPart - start.QuadPart) / (frequency / 1000.0));
 }

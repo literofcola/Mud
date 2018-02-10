@@ -153,7 +153,7 @@ StoreQueryResult mySQLQueue::Read(string sql)
 
     q << sql;
     //logfile.Log("mySQLQueue: Executing query: " + sql);
-    return q.store();
+	return q.store();
 }
 
 /* static unsigned __stdcall Thread(void * arg); <-- Class definition */
@@ -236,7 +236,7 @@ void mySQLQueue::Run()
                     LogFile::Log("error", "mySQLQueue::Error: Tried to convert \"" + er.data + "\" to a \""
 			             + er.type_name + "\".");
 	            } 
-				catch (const Exception & er)
+				catch (const std::exception & er)
 				{
 					LogFile::Log("error", string("mySQLQueue::Error: ") + er.what());
 				}

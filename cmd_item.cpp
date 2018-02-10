@@ -1,6 +1,6 @@
 #include "stdafx.h"
-#include "CListener.h"
-#include "CListenerManager.h"
+#include "CSubscriber.h"
+#include "CSubscriberManager.h"
 #include "CLogFile.h"
 #include "CmySQLQueue.h"
 #include "CHighResTimer.h"
@@ -442,8 +442,8 @@ void cmd_eat(Character * ch, string argument)
 		ch->Sit();
 		ch->player->RemoveItemInventory(eat);
 		ch->Send("You start eating " + eat->name + ".\n\r");
-		int totalheal = ceil((30 * ch->GetLevel()) + 50);
-		int healpersecond = ceil(totalheal / 30);
+		int totalheal = (int)ceil((30 * ch->GetLevel()) + 50);
+		int healpersecond = (int)ceil(totalheal / 30);
 		ch->AddSpellAffect(0, ch, sk->long_name, false, false, 10, 30, SpellAffect::AFFECT_NONE,
 			sk, "Restores " + Utilities::itos(healpersecond) + " health per second.");
 	}

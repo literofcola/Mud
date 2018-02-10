@@ -6,7 +6,7 @@ class User;
 class SpellAffect;
 class Reset;
 
-class Character : public Listener, public ListenerManager
+class Character : public Subscriber, public SubscriberManager
 {
 public:
     Character();
@@ -15,7 +15,7 @@ public:
     Character(const Character&);
     ~Character();
     void SetDefaults();
-    void Notify(ListenerManager *);
+    void Notify(SubscriberManager *);
 
     enum MessageType
     {
@@ -200,7 +200,8 @@ public:
     std::string GetName();
 	bool CheckThreatCombat();
 	std::string HisHer();
-	bool CancelCast();
+	bool CancelActiveDelay();
+	bool CancelCastOnHit();
 	std::string AggressionColor(Character * target);
     void EnterCombat(Character * victim);
     void ExitCombat();
@@ -242,6 +243,7 @@ public:
 	void SetComboPoints(int howmany);
 	void GenerateComboPoint(Character * target);
 	int SpendComboPoints(Character * target);
+	void ClearComboPointTarget();
     void ConsumeMana(int amount);
 	void ConsumeEnergy(int amount);
 	void ConsumeRage(int amount);

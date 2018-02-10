@@ -1,6 +1,6 @@
 #include "stdafx.h"
-#include "CListener.h"
-#include "CListenerManager.h"
+#include "CSubscriber.h"
+#include "CSubscriberManager.h"
 #include "CmySQLQueue.h"
 #include "CLogFile.h"
 #include "CClient.h"
@@ -35,9 +35,9 @@ void Lua_DefineFunctions(sol::state * lua)
 
 void Lua_DefineClasses(sol::state * lua)
 {
-		(*lua).new_usertype<Listener>("Listener");
+		(*lua).new_usertype<Subscriber>("Subscriber");
 
-		(*lua).new_usertype<ListenerManager>("ListenerManager");
+		(*lua).new_usertype<SubscriberManager>("SubscriberManager");
 
 		/*
 		(*lua).new_usertype<Server>("Server", 
@@ -58,7 +58,7 @@ void Lua_DefineClasses(sol::state * lua)
 			);
 
 		(*lua).new_usertype<Character>("Character",
-			//sol::base_classes, sol::bases<Listener, ListenerManager>(),
+			//sol::base_classes, sol::bases<Subscriber, SubscriberManager>(),
 			sol::constructors<Character(), Character(std::string, User*)>(),
 			"GetLevel",  &Character::GetLevel,
 			"SetLevel",  &Character::SetLevel,
@@ -112,7 +112,7 @@ void Lua_DefineClasses(sol::state * lua)
 			);
 
 		(*lua).new_usertype<SpellAffect>("SpellAffect",
-			//sol::base_classes, sol::bases<Listener>(),
+			//sol::base_classes, sol::bases<Subscriber>(),
 			sol::constructors<SpellAffect()>(),
 			"ApplyAura", (void(SpellAffect::*)(int, int)) &SpellAffect::ApplyAura,
 			"GetCasterName", &SpellAffect::GetCasterName,

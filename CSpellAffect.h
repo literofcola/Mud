@@ -1,7 +1,7 @@
 #ifndef CSPELLAFFECT_H
 #define CSPELLAFFECT_H
 
-class SpellAffect : public Listener
+class SpellAffect : public Subscriber
 {
 public:
     SpellAffect();
@@ -57,7 +57,7 @@ public:
     int GetDataInt(std::string tag);
     double GetDataDouble(std::string tag);
     std::string GetDataString(std::string tag);
-    void Notify(ListenerManager *);
+    void Notify(SubscriberManager *);
 
     void Save(std::string charname);
     static void Load(Character * ch);

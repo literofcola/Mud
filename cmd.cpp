@@ -1,6 +1,6 @@
 #include "stdafx.h"
-#include "CListener.h"
-#include "CListenerManager.h"
+#include "CSubscriber.h"
+#include "CSubscriberManager.h"
 #include "CLogFile.h"
 #include "CmySQLQueue.h"
 #include "CHighResTimer.h"
@@ -94,7 +94,7 @@ void cmd_attack(Character * ch, string argument)
 
 void cmd_cancel(Character * ch, string argument)
 {
-    if(ch && ch->CancelCast())
+    if(ch && ch->CancelActiveDelay())
     {
         ch->Send("Action Cancelled!\n\r");
     }
@@ -1172,7 +1172,7 @@ bool cmd_quit_Query(Character * ch, string argument)
 		//do this stuff on remove in the gameloop (to support user idle timeout quits)
         //ch->Message(ch->name + " has left the game.", Character::MSG_ROOM_NOTCHAR);
 
-        //If we have a target, that target has US in their listener list. Remove that by clearing our target first.
+        //If we have a target, that target has US in their subscriber list. Remove that by clearing our target first.
         //ch->ClearTarget(); 
 
         //ch->ChangeRooms(NULL);

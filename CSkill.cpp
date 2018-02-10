@@ -1,6 +1,6 @@
 #include "stdafx.h"
-#include "CListener.h"
-#include "CListenerManager.h"
+#include "CSubscriber.h"
+#include "CSubscriberManager.h"
 #include "CmySQLQueue.h"
 #include "CLogFile.h"
 #include "CClient.h"
@@ -79,7 +79,7 @@ void Skill::Save()
     skillsql += "(" + Utilities::itos(id) + ", '" + fixname + "', '" + Utilities::SQLFixQuotes(castScript) + "', ";
 	skillsql += Utilities::dtos(castTime, 2) + ",'";
 	
-	for (std::size_t i = 0; i < interruptFlags.size(); ++i)
+	for (int i = 0; i < (int)interruptFlags.size(); ++i)
 	{
 		if(interruptFlags[i])
 			skillsql += Utilities::itos(i) + ";";

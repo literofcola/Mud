@@ -1,6 +1,6 @@
 #include "stdafx.h"
-#include "CListener.h"
-#include "CListenerManager.h"
+#include "CSubscriber.h"
+#include "CSubscriberManager.h"
 #include "CmySQLQueue.h"
 #include "CLogFile.h"
 #include "CClient.h"
@@ -228,8 +228,7 @@ Character::~Character()
 
     if(reset)
     {
-        //LogFile::Log("status", "Removing listener reset ID " + Utilities::itos(reset->id) + " from character " + this->name);
-        this->RemoveListener(reset);
+        this->RemoveSubscriber(reset);
     }
 }
 
@@ -515,11 +514,14 @@ void Character::GeneratePrompt(double currentTime)
     //Target
 	if(GetTarget() != NULL)
 	{
+		int jsonvitals[5]; //level, health, mana, energy, rage as %'s
 		string targetPrompt = "";
 		//Combo points
 		if (comboPoints > 0 && GetTarget() == comboPointTarget)
 		{
 			targetPrompt += "|R(" + Utilities::itos(comboPoints) + ")|X";
+			json combos = { { "combo", comboPoints } };
+			SendGMCP("char.combo " + combos.dump());
 		}
 
 		string targetLevel = Game::LevelDifficultyColor(Game::LevelDifficulty(level, GetTarget()->level));
@@ -527,16 +529,19 @@ void Character::GeneratePrompt(double currentTime)
 			&& Game::LevelDifficulty(level, GetTarget()->level) == 5) //NPC >= 10 levels
         {
             targetLevel += "??";
+			jsonvitals[0] = 0;
         }
         else
         {
             targetLevel += Utilities::itos(GetTarget()->level);
+			jsonvitals[0] = GetTarget()->level;
         }
 
-        //TODO: Target name coloring based on pvp/attack status
 		targetPrompt += "|B<" + targetLevel + " ";
-        if(GetTarget() == this ||  Utilities::FlagIsSet(GetTarget()->flags, FLAG_FRIENDLY))
-            targetPrompt += "|G";
+		if (GetTarget() == this || Utilities::FlagIsSet(GetTarget()->flags, FLAG_FRIENDLY))
+			targetPrompt += "|G";
+		else if (GetTarget()->IsPlayer())
+			targetPrompt += "|C";
         else if(Utilities::FlagIsSet(GetTarget()->flags, FLAG_NEUTRAL))
             targetPrompt += "|Y";
         else
@@ -559,6 +564,7 @@ void Character::GeneratePrompt(double currentTime)
             statColor = "|R";
 
         targetPrompt += statColor + Utilities::itos(percent) + "|B%h ";
+		jsonvitals[1] = percent;
 
         //Mana
         if(GetTarget()->mana > 0 && GetTarget()->maxMana > 0)
@@ -576,6 +582,7 @@ void Character::GeneratePrompt(double currentTime)
             statColor = "|R";
 
         targetPrompt += statColor + Utilities::itos(percent) + "|B%m ";
+		jsonvitals[2] = percent;
 
 		prompt += targetPrompt;
 
@@ -585,6 +592,7 @@ void Character::GeneratePrompt(double currentTime)
 		else
 			percent = 0;
 		prompt += "|X" + Utilities::itos(percent) + "|B%e ";
+		jsonvitals[3] = percent;
 
 		//Rage
 		if (GetTarget()->GetRage() > 0 && GetTarget()->GetMaxRage() > 0)
@@ -592,6 +600,11 @@ void Character::GeneratePrompt(double currentTime)
 		else
 			percent = 0;
 		prompt += "|X" + Utilities::itos(percent) + "|B%r>|X";
+		jsonvitals[4] = percent;
+
+		json vitals = { { "name", GetTarget()->GetName() }, { "level", jsonvitals[0] }, { "hppercent", jsonvitals[1] }, { "mppercent", jsonvitals[2] },
+						{ "enpercent", jsonvitals[3] },{ "ragepercent", jsonvitals[4] } };
+		SendGMCP("target.vitals " + vitals.dump());
 	}
 
     //Target of target (changed to display name, level, health only)
@@ -612,6 +625,8 @@ void Character::GeneratePrompt(double currentTime)
 		string targetPrompt = "|B<" + targetLevel + " ";
         if(targettarget == this || Utilities::FlagIsSet(targettarget->flags, FLAG_FRIENDLY))
             targetPrompt += "|G";
+		else if (GetTarget()->IsPlayer())
+			targetPrompt += "|C";
         else if(Utilities::FlagIsSet(targettarget->flags, FLAG_NEUTRAL))
             targetPrompt += "|Y";
         else
@@ -806,7 +821,7 @@ void Character::Move(int direction)
 
     if(delay_active)
     {
-        delay_active = false;
+		CancelActiveDelay();
         Send("Action interrupted!\n\r");
     }
     
@@ -1345,10 +1360,9 @@ SpellAffect * Character::AddSpellAffect(int isDebuff, Character * caster, string
     sa->appliedTime = Game::currentTime;
     sa->caster = caster;
     sa->affectCategory = category;
-    //LogFile::Log("status", "Adding listener to " + sa->caster->name + " of SA " + sa->name);
     if(sa->caster)
     {
-        sa->caster->AddListener(sa);
+        sa->caster->AddSubscriber(sa);
         sa->casterName = caster->name;
     }
     sa->ticksRemaining = ticks;
@@ -1584,9 +1598,17 @@ void Character::SaveCooldowns()
 
 void Character::LoadCooldowns()
 {
-    StoreQueryResult cooldownres = Server::sqlQueue->Read("SELECT * FROM player_cooldowns WHERE player='" + name + "';");
-    if(cooldownres.empty())
-        return;
+	StoreQueryResult cooldownres;
+	try {
+		cooldownres = Server::sqlQueue->Read("SELECT * FROM player_cooldowns WHERE player='" + name + "';");
+		if (!cooldownres || cooldownres.empty())
+			return;
+	}
+	catch (std::exception e)
+	{
+		LogFile::Log("error", e.what());
+		return;
+	}
 
     Row row;
     StoreQueryResult::iterator i;
@@ -1899,7 +1921,7 @@ void Character::AutoAttack(Character * victim)
 
         if(attack_mh && lastAutoAttack_main + weaponSpeed_main <= Game::currentTime)
         {
-			damage_main += ceil(strength * Character::STRENGTH_DAMAGE_MODIFIER);
+			damage_main += (int)ceil(strength * Character::STRENGTH_DAMAGE_MODIFIER);
             if(victim->target == NULL) //Force a target on our victim
             {     
                 victim->SetTarget(this);
@@ -1916,7 +1938,7 @@ void Character::AutoAttack(Character * victim)
         }
         if(attack_oh && lastAutoAttack_off + weaponSpeed_off <= Game::currentTime)
         {
-			damage_off += ceil(strength * Character::STRENGTH_DAMAGE_MODIFIER);
+			damage_off += (int)ceil(strength * Character::STRENGTH_DAMAGE_MODIFIER);
             if(victim->target == NULL) //Force a target on our victim
             {     
                 victim->SetTarget(this);
@@ -1953,7 +1975,7 @@ void Character::OneHit(Character * victim, int damage)
         victim->UpdateThreat(this, damage);
         //Send("My threat on " + victim->name + " is " + Utilities::itos(victim->GetThreat(this)) + "\n\r");
     }
-	if (victim->CancelCast())
+	if (victim->CancelCastOnHit())
 		victim->Send("Action Interrupted!\n\r");
 
     victim->AdjustHealth(this, -damage);
@@ -2145,8 +2167,8 @@ void Character::GenerateRageOnAttack(int damage, double weapon_speed, bool mainh
 		hitfactor *= 2;
 	if (wascrit)
 		hitfactor *= 2;
-	int limit = (15 * damage) / conversionvalue;
-	int ragegen = ((15 * damage) / (4 * conversionvalue)) + ((hitfactor * weapon_speed) / 2);
+	int limit = (int)ceil((15 * damage) / conversionvalue);
+	int ragegen = (int)ceil(((15 * damage) / (4 * conversionvalue)) + ((hitfactor * weapon_speed) / 2));
 	if (ragegen > limit)
 		AdjustRage(this, limit);
 	else
@@ -2157,7 +2179,7 @@ void Character::GenerateRageOnTakeDamage(int damage)
 {
 	//Rage generation stuff, inspired by wow, for now
 	double conversionvalue = (.008 * level * level) + 4;
-	AdjustRage(this, (5 * damage) / (2 * conversionvalue));
+	AdjustRage(this, (int)ceil((5 * damage) / (2 * conversionvalue)));
 }
 
 int Character::GetComboPoints()
@@ -2198,14 +2220,16 @@ void Character::AdjustHealth(Character * source, int amount)
             source->meleeActive = false;
 			source->ClearTarget();
         }
-        if(delay_active)
-        {
-            delay_active = false;
-        }
+		source->RemoveThreat(this, false);
+		CancelActiveDelay();
+		ExitCombat();
+		RemoveAllSpellAffects();
+		ClearTarget();
+
         if(!IsNPC() && !source->IsNPC()) //player - player
         {
-            ExitCombat();
-            RemoveAllSpellAffects();
+            //ExitCombat();
+            //RemoveAllSpellAffects();
             //set flag for corpseified
             this->player->isCorpse = true;
             //SpellAffect * sa = AddSpellAffect(true, this, "player_is_corpse", true, false, 0, 0, 0, NULL);
@@ -2217,8 +2241,9 @@ void Character::AdjustHealth(Character * source, int amount)
         }
         else if(IsNPC() && !source->IsNPC()) //NPC killed by player
         {
-            ExitCombat();
-            ClearTarget();
+            //ExitCombat();
+			//RemoveAllSpellAffects();
+            //ClearTarget();
             ChangeRooms(NULL);
             int exp = Game::CalculateExperience(source, this);
             source->Send("|BYou have gained |Y" + Utilities::itos(exp) + "|B experience.|X\n\r");
@@ -2245,8 +2270,8 @@ void Character::AdjustHealth(Character * source, int amount)
         }
         else if(!IsNPC() && source->IsNPC()) //player killed by NPC
         {
-            ExitCombat();
-            RemoveAllSpellAffects();
+            //ExitCombat();
+            //RemoveAllSpellAffects();
             //set flag for corpseified
             //SpellAffect * sa = AddSpellAffect(true, this, "player_is_corpse", true, false, 0, 0, 0, NULL);
             this->player->isCorpse = true;
@@ -2257,8 +2282,8 @@ void Character::AdjustHealth(Character * source, int amount)
         }
         else if(IsNPC() && source->IsNPC()) //npc - npc
         {
-            ExitCombat();
-            ClearTarget();
+            //ExitCombat();
+            //ClearTarget();
             ChangeRooms(NULL);
             Game::GetGame()->RemoveCharacter(this);
         }
@@ -2572,10 +2597,12 @@ void Character::GenerateComboPoint(Character * target)
 	if (target != comboPointTarget)	//Changing our combo target
 	{
 		if (comboPointTarget != nullptr)	//If we had a previous combo target...
-			comboPointTarget->RemoveListener(this);
+		{
+			comboPointTarget->RemoveSubscriber(this);
+		}
 		comboPointTarget = target;
 		comboPoints = 1;
-		target->AddListener(this);
+		target->AddSubscriber(this);
 	}
 	else if(comboPoints < maxComboPoints)
 	{
@@ -2588,11 +2615,21 @@ int Character::SpendComboPoints(Character * target)
 	if (target == nullptr || comboPointTarget == nullptr || target != comboPointTarget || comboPoints <= 0)
 		return 0;
 
-	comboPointTarget->RemoveListener(this);
+	comboPointTarget->RemoveSubscriber(this);
 	comboPointTarget = nullptr;
 	int combos = comboPoints;
 	comboPoints = 0;
 	return combos;
+}
+
+void Character::ClearComboPointTarget()
+{
+	if (comboPointTarget == nullptr)
+		return;
+
+	comboPointTarget->RemoveSubscriber(this);
+	comboPointTarget = nullptr;
+	comboPoints = 0;
 }
 
 void Character::UpdateThreat(Character * ch, int value)
@@ -2606,8 +2643,8 @@ void Character::UpdateThreat(Character * ch, int value)
             return;
         }
     }
-    ch->AddListener(this);
-    Threat tt = {ch, value}; //TODO: are we storing a copy here?
+    ch->AddSubscriber(this);
+    Threat tt = {ch, value};
     threatList.push_front(tt);
 }
 
@@ -2637,7 +2674,7 @@ void Character::RemoveThreat(Character * ch, bool removeall)
         std::list<Threat>::iterator iter;
         for(iter = threatList.begin(); iter != threatList.end(); ++iter)
         {
-            (*iter).ch->RemoveListener(this);
+            (*iter).ch->RemoveSubscriber(this);
         }
         threatList.clear();
         return;
@@ -2648,7 +2685,7 @@ void Character::RemoveThreat(Character * ch, bool removeall)
     {
         if((*iter).ch == ch)
         {
-            (*iter).ch->RemoveListener(this);
+            (*iter).ch->RemoveSubscriber(this);
             threatList.erase(iter);
             return;
         }
@@ -2700,11 +2737,22 @@ std::string Character::HisHer()
     return (gender == 1 ? "his" : "her");
 }
 
-bool Character::CancelCast()
+bool Character::CancelActiveDelay()
+{
+	if (delay_active && delayData.charTarget && delayData.caster && delayData.charTarget != delayData.caster)
+	{
+		delayData.charTarget->RemoveSubscriber(delayData.caster);
+		delay_active = false;
+		return true;
+	}
+	return false;
+}
+
+bool Character::CancelCastOnHit()
 {
 	if(delay_active && delayData.sk->interruptFlags.test(Skill::Interrupt::INTERRUPT_HIT))
 	{
-		delay_active = false;
+		CancelActiveDelay();
 		return true;
 	}
 	return false;
@@ -3033,9 +3081,7 @@ void Character::SetTarget(Character * t)
     {
         ClearTarget();
     }
-    //LogFile::Log("status", "Adding " + name + " as a listener to " + t->name);
-    //LogFile::Log("status", "Setting " + name + " target = " + t->name);
-    t->AddListener(this);
+    t->AddSubscriber(this);
     target = t;
 }
 
@@ -3043,10 +3089,7 @@ void Character::ClearTarget()
 {
     if(target)
     {
-        //LogFile::Log("status", "Removing " + name + " as a listener from " + target->name);
-        //LogFile::Log("status", "Setting " + name + " target = NULL");
-        target->RemoveListener(this);
-        //RemoveListener(target);
+        target->RemoveSubscriber(this);
         target = NULL;
     }
 }
@@ -3056,32 +3099,22 @@ Character * Character::GetTarget()
     return target;
 }
 
-void Character::Notify(ListenerManager * lm)
+void Character::Notify(SubscriberManager * lm)
 {
-    //Character * thislistener = (Character *)lm;
-    //Send("The target is " + target->name + " and listenermanager is " + thislistener->name + "\n\r");
-    /*if(lm == target) //will this be the same address?
-    {
-        Send("yes\n\r");
-    }*/
-    //ListenerManager * test = new Character();
-    //Listener * test = new Character();
-
-    //with the new parameter we can check if the thing that just notified us is our target, 
+    //with the parameter we can check if the thing that just notified us is our target, 
     //  or is our spell cast target (delaydata.charTarget), or ...
     if(target && lm == target)
     {
-        //LogFile::Log("status", "Removing " + name + " as a listener from " + target->name);
-        //LogFile::Log("status", "Setting " + name + " target = NULL");
-        target->RemoveListener(this);
+		//ClearTarget();
+        target->RemoveSubscriber(this);
         target = NULL;
     }
 
     if(delayData.charTarget == lm)
     {
-        //LogFile::Log("status", "Removing delayData listener " + name + " from " + delayData.charTarget->name);
-        delayData.charTarget->RemoveListener(this);
+        delayData.charTarget->RemoveSubscriber(this);
         delayData.charTarget = NULL;
+		delay_active = false;
     }
 
     if(HasThreat((Character*)lm))
@@ -3091,12 +3124,10 @@ void Character::Notify(ListenerManager * lm)
 
 	if (comboPointTarget && lm == comboPointTarget)
 	{
-		comboPointTarget->RemoveListener(this);
+		comboPointTarget->RemoveSubscriber(this);
 		comboPointTarget = NULL;
 	}
 }
-
-//TODO function to print listeners on a target
 
 void Character::AddTrigger(Trigger & trig)
 {

@@ -1,6 +1,6 @@
 #include "stdafx.h"
-#include "CListener.h"
-#include "CListenerManager.h"
+#include "CSubscriber.h"
+#include "CSubscriberManager.h"
 #include "CmySQLQueue.h"
 #include "CLogFile.h"
 #include "CClient.h"
@@ -139,8 +139,8 @@ void Room::Save()
             resets.erase(r->id);
             if(r->npc)
             {
-                //LogFile::Log("status", "Removing listener reset id = " + Utilities::itos(r->id) + " from npc " + r->npc->name);
-                r->npc->RemoveListener(r);
+                //LogFile::Log("status", "Removing subscriber reset id = " + Utilities::itos(r->id) + " from npc " + r->npc->name);
+                r->npc->RemoveSubscriber(r);
             }
             delete r;
             r = NULL;

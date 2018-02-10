@@ -1,6 +1,6 @@
 #include "stdafx.h"
-#include "CListener.h"
-#include "CListenerManager.h"
+#include "CSubscriber.h"
+#include "CSubscriberManager.h"
 #include "CmySQLQueue.h"
 #include "CLogFile.h"
 #include "CHighResTimer.h"

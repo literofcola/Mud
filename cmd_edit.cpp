@@ -1,6 +1,6 @@
 #include "stdafx.h"
-#include "CListener.h"
-#include "CListenerManager.h"
+#include "CSubscriber.h"
+#include "CSubscriberManager.h"
 #include "CmySQLQueue.h"
 #include "CHighResTimer.h"
 #include "CHelp.h"
@@ -1281,7 +1281,7 @@ void skillEditCmd_show(Character * ch, string argument)
     ch->Send("id:        [" + Utilities::itos(pSkill->id) + "]\n\r");
     ch->Send("cast_time: [" + Utilities::dtos(pSkill->castTime, 2) + " seconds]\n\r");
 	ch->Send("interrupt_flags: [");
-	for (std::size_t i = 0; i < pSkill->interruptFlags.size(); ++i) 
+	for (int i = 0; i < (int)pSkill->interruptFlags.size(); ++i)
 	{
 		if(pSkill->interruptFlags[i])
 			ch->Send(Utilities::itos(i) + " ");

@@ -1,6 +1,6 @@
 #include "stdafx.h"
-#include "CListener.h"
-#include "CListenerManager.h"
+#include "CSubscriber.h"
+#include "CSubscriberManager.h"
 #include "CmySQLQueue.h"
 #include "CLogFile.h"
 #include "CClient.h"
@@ -216,6 +216,11 @@ void Server::DeInitialize()
 				user->character->SaveCooldowns();
 				user->character->Save();
 			}
+			user->character->ExitCombat();
+			user->character->ClearTarget();
+			//user->character->ChangeRooms(NULL);
+
+			user->character->NotifySubscribers();
             mygame->characters.remove(user->character);
         }
         delete user;

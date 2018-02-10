@@ -79,7 +79,7 @@ double GetTime()
 
 	_ftime64_s(&time);
 
-	return (time_t)time.time;
+	return (double)time.time;
 }
 
 /*

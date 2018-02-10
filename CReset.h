@@ -3,7 +3,7 @@
 
 class Character;
 
-class Reset : public Listener
+class Reset : public Subscriber
 {
 public:
     Reset();
@@ -21,7 +21,7 @@ public:
     double lastReset; //timestamp
     bool removeme;
 
-    void Notify(ListenerManager *);
+    void Notify(SubscriberManager *);
 private:
 };
 

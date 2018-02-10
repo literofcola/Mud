@@ -60,12 +60,6 @@
     <ClInclude Include="CItem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CListener.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CListenerManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="CLogFile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -97,6 +91,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CUser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CSubscriberManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CSubscriber.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -176,9 +176,6 @@
     <ClCompile Include="CItem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CListenerManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="CLogFile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -204,6 +201,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="cmd_track.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CSubscriberManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -1,6 +1,6 @@
 #include "stdafx.h"
-#include "CListener.h"
-#include "CListenerManager.h"
+#include "CSubscriber.h"
+#include "CSubscriberManager.h"
 #include "CmySQLQueue.h"
 #include "CLogFile.h"
 #include "CHighResTimer.h"
@@ -337,7 +337,7 @@ void Game::GameLoop(Server * server)
                 {
                     if(user->character)
                     {
-                        user->character->NotifyListeners();
+                        user->character->NotifySubscribers();
                         characters.remove(user->character);
                         //RemoveCharacter(user->character);
                     }
@@ -380,7 +380,7 @@ void Game::GameLoop(Server * server)
 				if(user->mccp)
 				{
 					memcpy(user->z_in, out.c_str(), out.length());
-					user->z_strm.avail_in = out.length();
+					user->z_strm.avail_in = (uInt)out.length();
 					user->z_strm.next_in = user->z_in;
 					user->z_strm.avail_out = user->Z_BUFSIZE;
 					user->z_strm.next_out = user->z_out;
@@ -418,7 +418,7 @@ void Game::GameLoop(Server * server)
 					user->character->ClearTarget();
 					user->character->ChangeRooms(NULL);
 
-                    user->character->NotifyListeners();
+                    user->character->NotifySubscribers();
                     characters.remove(user->character);
                 }
 				if(user->mccp)
@@ -560,7 +560,7 @@ void Game::WorldUpdate(Server * server)
         //Delay Update
         if(curr->delay_active && curr->delay <= currentTime)
         {
-            curr->delay_active = false;
+			curr->CancelActiveDelay(); //Delay callback function handles this
             (*curr->delayFunction)(curr->delayData);
         }
         //Combat update
@@ -877,8 +877,8 @@ void Game::WorldUpdate(Server * server)
                         newChar->ChangeRooms(currRoom);
                         newChar->Message("|W" + newChar->name + " has arrived.|X", Character::MSG_ROOM_NOTCHAR);
                         newChar->reset = currReset;
-                        //LogFile::Log("status", "Adding listener to " + newChar->name + " of reset id " + Utilities::itos(currReset->id));
-                        newChar->AddListener(currReset);
+                        //LogFile::Log("status", "Adding subscriber to " + newChar->name + " of reset id " + Utilities::itos(currReset->id));
+                        newChar->AddSubscriber(currReset);
                         currReset->npc = newChar;
                     }
                 }
@@ -1975,7 +1975,7 @@ Character * Game::NewCharacter(Character * copy)
 
 void Game::RemoveCharacter(Character * ch)
 {
-    ch->NotifyListeners();
+    ch->NotifySubscribers();
     ch->remove = true;
     //characters.remove(ch);
     //delete ch;
@@ -2286,7 +2286,7 @@ int Game::CalculateExperience(Character * ch, Character * victim)
 		double difference = ch->level - victim->level;
 		xp = xp * (1.0 - (difference / 7.0));		//lower level victim, less exp
 	}
-	return ceil(xp);
+	return (int)ceil(xp);
 }
 
 int Game::LevelDifficulty(int level1, int level2)
@@ -2614,7 +2614,7 @@ int Game::Search(string table_name, string field_name, int conditional_type, str
 			case 2:
 				if (SearchComparisonDouble(*(iter->second->doubleTable[field_name]), value, conditional_type))
 				{
-					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + Utilities::itos(*(iter->second->doubleTable[field_name])) + "\n\r";
+					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + Utilities::dtos(*(iter->second->doubleTable[field_name]), 2) + "\n\r";
 					++results_found;
 				}
 				break;
@@ -2669,7 +2669,7 @@ int Game::Search(string table_name, string field_name, int conditional_type, str
 			case 2:
 				if (SearchComparisonDouble(*(iter->second->doubleTable[field_name]), value, conditional_type))
 				{
-					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + Utilities::itos(*(iter->second->doubleTable[field_name])) + "\n\r";
+					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + Utilities::dtos(*(iter->second->doubleTable[field_name]), 2) + "\n\r";
 					++results_found;
 				}
 				break;
@@ -2724,7 +2724,7 @@ int Game::Search(string table_name, string field_name, int conditional_type, str
 			case 2:
 				if (SearchComparisonDouble(*(iter->second->doubleTable[field_name]), value, conditional_type))
 				{
-					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + Utilities::itos(*(iter->second->doubleTable[field_name])) + "\n\r";
+					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + Utilities::dtos(*(iter->second->doubleTable[field_name]), 2) + "\n\r";
 					++results_found;
 				}
 				break;
@@ -2779,7 +2779,7 @@ int Game::Search(string table_name, string field_name, int conditional_type, str
 			case 2:
 				if (SearchComparisonDouble(*(iter->second->doubleTable[field_name]), value, conditional_type))
 				{
-					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->long_name + ":  " + Utilities::itos(*(iter->second->doubleTable[field_name])) + "\n\r";
+					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->long_name + ":  " + Utilities::dtos(*(iter->second->doubleTable[field_name]), 2) + "\n\r";
 					++results_found;
 				}
 				break;

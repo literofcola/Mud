@@ -1,6 +1,6 @@
 #include "stdafx.h"
-#include "CListener.h"
-#include "CListenerManager.h"
+#include "CSubscriber.h"
+#include "CSubscriberManager.h"
 #include "CmySQLQueue.h"
 #include "CLogFile.h"
 #include "CHighResTimer.h"
@@ -49,13 +49,15 @@ void cmd_castCallback(Character::DelayData delayData)
         return;
     }
 
+	json casttime = { { "casttime", 0 } };
+	delayData.caster->SendGMCP("char.casttime " + casttime.dump());
+
     if(delayData.charTarget && delayData.charTarget != delayData.caster)
     {
-        //LogFile::Log("status", "Removing delayData listener " + delayData.caster->name + " from " + delayData.charTarget->name);
-        delayData.charTarget->RemoveListener(delayData.caster);
+        delayData.charTarget->RemoveSubscriber(delayData.caster);
     }
 
-    if(delayData.charTarget == NULL) //target will never be null from cmd_cast, only from Listener::Notify 
+    if(delayData.charTarget == NULL) //target will never be null from cmd_cast, only from Subscriber::Notify 
     {
         delayData.caster->Send("Your target is no longer here.\n\r");
         return;
@@ -270,6 +272,8 @@ void cmd_cast(Character * ch, string argument)
 	{
 		ch->Message("|W" + ch->name + " begins to cast " + spell->long_name + "...|X", Character::MSG_ROOM_NOTCHAR);
 		ch->Send("|WYou begin to cast " + spell->long_name + "...|X\n\r");
+		json casttime = { { "casttime", spell->castTime } };
+		ch->SendGMCP(casttime.dump());
 	}
  
     //Start global cooldown
@@ -281,8 +285,10 @@ void cmd_cast(Character * ch, string argument)
     if(arg_target == NULL)
         arg_target = ch;
     dd.charTarget = arg_target;
-    if(arg_target && ch != arg_target)
-        dd.charTarget->AddListener(dd.caster); //if our target is gone when spell finishes, we need to know about it
+	if (arg_target && ch != arg_target)
+	{
+		dd.charTarget->AddSubscriber(dd.caster); //if our target is gone when spell finishes, we need to know about it
+	}
     dd.sk = spell;
     ch->delayData = dd;
     ch->delay_active = true;

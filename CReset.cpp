@@ -1,6 +1,6 @@
 #include "stdafx.h"
-#include "CListener.h"
-#include "CListenerManager.h"
+#include "CSubscriber.h"
+#include "CSubscriberManager.h"
 #include "CmySQLQueue.h"
 #include "CLogFile.h"
 #include "CHighResTimer.h"
@@ -43,9 +43,12 @@ Reset::~Reset()
 }
 
 //Character/Object this reset refers to has been deleted
-void Reset::Notify(ListenerManager * lm)
+void Reset::Notify(SubscriberManager * lm)
 {
     //LogFile::Log("status", "Reset " + Utilities::itos(id) + " setting npc = NULL");
+	//cout << "RESET Subscriber " << this->id << " removed from manager " << npc->name;
+	//cout << " Count: " << subscribercount-- << endl;
+	npc->RemoveSubscriber(this);
     npc = NULL;
     lastReset = Game::currentTime;
 }

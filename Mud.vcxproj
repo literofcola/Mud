@@ -173,8 +173,8 @@
     <ClInclude Include="CHelp.h" />
     <ClInclude Include="CHighResTimer.h" />
     <ClInclude Include="CItem.h" />
-    <ClInclude Include="CListener.h" />
-    <ClInclude Include="CListenerManager.h" />
+    <ClInclude Include="CSubscriber.h" />
+    <ClInclude Include="CSubscriberManager.h" />
     <ClInclude Include="CLogFile.h" />
     <ClInclude Include="CmySQLQueue.h" />
     <ClInclude Include="CPlayer.h" />
@@ -203,7 +203,7 @@
     <ClCompile Include="CHelp.cpp" />
     <ClCompile Include="CHighResTimer.cpp" />
     <ClCompile Include="CItem.cpp" />
-    <ClCompile Include="CListenerManager.cpp" />
+    <ClCompile Include="CSubscriberManager.cpp" />
     <ClCompile Include="CLogFile.cpp" />
     <ClCompile Include="cmd.cpp" />
     <ClCompile Include="cmd_comm.cpp" />

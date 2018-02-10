@@ -1,6 +1,6 @@
 #include "stdafx.h"
-#include "CListener.h"
-#include "CListenerManager.h"
+#include "CSubscriber.h"
+#include "CSubscriberManager.h"
 #include "CmySQLQueue.h"
 #include "CLogFile.h"
 #include "CHighResTimer.h"
@@ -60,8 +60,7 @@ SpellAffect::~SpellAffect()
 {
     if(caster)
     {
-        //LogFile::Log("status", "Removing listener " + this->name + " from " + caster->name);
-        caster->RemoveListener(this);
+        caster->RemoveSubscriber(this);
     }
     auraAffects.clear();
 }
@@ -151,11 +150,11 @@ std::string SpellAffect::GetDataString(std::string tag)
     return affectDataString[tag];
 }
 
-void SpellAffect::Notify(ListenerManager * lm)
+void SpellAffect::Notify(SubscriberManager * lm)
 {
     //caster about to be deleted... player quit, npc killed etc. At least save the name
-    //LogFile::Log("status", "SA " + name + " setting casterName = " + caster->name);
     casterName = caster->name;
+	caster->RemoveSubscriber(this);
     caster = NULL;
 }
 
@@ -253,10 +252,10 @@ void SpellAffect::Load(Character * ch)
         while(first < (int)affect_data.length())
         {
             char data_type = affect_data[first];
-            second = affect_data.find(',', first+2);
+            second = (int)affect_data.find(',', first+2);
             string data_name = affect_data.substr(first+2, second - (first+2));
             first = second+1;
-            second = affect_data.find(';', first);
+            second = (int)affect_data.find(';', first);
             switch(data_type)
             {
                 case 'i':
@@ -284,10 +283,10 @@ void SpellAffect::Load(Character * ch)
         {
             int affectid;
             int modifier;
-            second = aurastring.find(',', first);
+            second = (int)aurastring.find(',', first);
             affectid = Utilities::atoi(aurastring.substr(first, second - first));
             first = second + 1;
-            second = aurastring.find(';', first);
+            second = (int)aurastring.find(';', first);
             modifier = Utilities::atoi(aurastring.substr(first, second - first));
             first = second + 1;
             sa->ApplyAura(affectid, modifier);
