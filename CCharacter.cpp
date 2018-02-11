@@ -616,14 +616,17 @@ void Character::GeneratePrompt(double currentTime)
 	if(GetTarget() != NULL && GetTarget()->GetTarget() != NULL)
 	{
         Character * targettarget = GetTarget()->GetTarget();
+		string gmcplevel = "";
 		string targetLevel = Game::LevelDifficultyColor(Game::LevelDifficulty(level, targettarget->level));
         if(player == NULL && Game::LevelDifficulty(level, targettarget->level) == 5) //NPC >= 10 levels
         {
             targetLevel += "??";
+			gmcplevel = "??";
         }
         else
         {
             targetLevel += Utilities::itos(targettarget->level);
+			gmcplevel = Utilities::itos(targettarget->level);
         }
 
         //TODO: Target name coloring based on pvp/attack status
@@ -673,6 +676,9 @@ void Character::GeneratePrompt(double currentTime)
         targetPrompt += statColor + Utilities::itos(percent) + "|B%mp ";
 		*/
 		prompt += targetPrompt;
+
+		json targettargetvitals = { { "name", targettarget->GetName() },{ "level", gmcplevel },{ "hppercent", percent } };
+		SendGMCP("targettarget.vitals " + targettargetvitals.dump());
 	}
     
     /*
@@ -696,13 +702,18 @@ void Character::GeneratePrompt(double currentTime)
 	}
     */
     
-	if(hasQuery)
+	
+	//We could block the entire function at the top, but then we lose a lot of GMCP data. We need to structure this differently
+	if (player && player->prompt) 
 	{
-		prompt += queryPrompt;
+		prompt += "\n\r";
+		Send(prompt);
 	}
-    
-    prompt += "\n\r";
-	Send(prompt);
+
+	if (hasQuery)
+	{
+		Send(queryPrompt);
+	}
 }
 
 Character * Character::GetCharacterRoom(string name)
@@ -902,6 +913,7 @@ void Character::Move(int direction)
         {
             (*iter)->EnterCombat(this);
             EnterCombat(*iter);
+			Send((*iter)->name + " begins attacking you!\n\r");
             (*iter)->AutoAttack(this);
         }
     }
@@ -2753,9 +2765,14 @@ std::string Character::HisHer()
 
 bool Character::CancelActiveDelay()
 {
-	if (delay_active && delayData.charTarget && delayData.caster && delayData.charTarget != delayData.caster)
+	if (delay_active)
 	{
-		delayData.charTarget->RemoveSubscriber(delayData.caster);
+		if (delayData.charTarget && delayData.caster && delayData.charTarget != delayData.caster)
+		{
+			delayData.charTarget->RemoveSubscriber(delayData.caster);
+		}
+		json casttime = { { "time", 0 } };
+		SendGMCP("char.casttime " + casttime.dump());
 		delay_active = false;
 		return true;
 	}
@@ -3103,8 +3120,15 @@ void Character::ClearTarget()
 {
     if(target)
     {
+		if (target->GetTarget())
+		{
+			json targettargetvitals = { { "name", "" },{ "level", 0 },{ "hppercent", 0 } };
+			SendGMCP("targettarget.vitals " + targettargetvitals.dump());
+		}
         target->RemoveSubscriber(this);
         target = NULL;
+		json vitals = { { "name", "" },{ "level", 0 },{ "hppercent", 0 },{ "mppercent", 0 }, { "enpercent", 0 },{ "ragepercent", 0 } };
+		SendGMCP("target.vitals " + vitals.dump());
     }
 }
 

@@ -108,8 +108,8 @@ class Command cmd_table[] =
     /*{ "alia",		cmd_alia,		POS_DEAD,		1,  LOG_NORMAL, 0 },
     { "alias",		cmd_alias,		POS_DEAD,		1,  LOG_NORMAL, 1 },
     { "chat", 		cmd_chat, 		POS_STANDING,	1,  LOG_NORMAL, 1 },
-    { "description",cmd_description,	POS_DEAD,		1,  LOG_NORMAL, 1 },
-    { "set",		cmd_set,			POS_DEAD,		1,	LOG_NORMAL, 1 },*/
+    { "description",cmd_description,	POS_DEAD,		1,  LOG_NORMAL, 1 },*/
+    { "set",		cmd_set,		1, 0, 1, 1, Character::POSITION_ANY },
     { "title",		cmd_title,		1, 0, 1, 1, Character::POSITION_ANY },
     /*{ "unalias",	cmd_unalias,		POS_DEAD,		1,  LOG_NORMAL, 1 },*/
 

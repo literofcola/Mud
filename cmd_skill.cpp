@@ -49,7 +49,7 @@ void cmd_castCallback(Character::DelayData delayData)
         return;
     }
 
-	json casttime = { { "casttime", 0 } };
+	json casttime = { { "time", 0 } };
 	delayData.caster->SendGMCP("char.casttime " + casttime.dump());
 
     if(delayData.charTarget && delayData.charTarget != delayData.caster)
@@ -272,8 +272,8 @@ void cmd_cast(Character * ch, string argument)
 	{
 		ch->Message("|W" + ch->name + " begins to cast " + spell->long_name + "...|X", Character::MSG_ROOM_NOTCHAR);
 		ch->Send("|WYou begin to cast " + spell->long_name + "...|X\n\r");
-		json casttime = { { "casttime", spell->castTime } };
-		ch->SendGMCP(casttime.dump());
+		json casttime = { { "time", spell->castTime } };
+		ch->SendGMCP("char.casttime " + casttime.dump());
 	}
  
     //Start global cooldown

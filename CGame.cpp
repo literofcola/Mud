@@ -1155,13 +1155,15 @@ void Game::LoginHandler(Server * server, User * user, string argument)
 				user->character->AddClassSkills();
 				//function-ize the default items
 				string classitems = user->character->player->currentClass->items;
-				int first = 0, last = 0;
+				int first = 0, last = 0, comma = 0;
 				while (first < (int)classitems.length())
 				{
 					last = (int)classitems.find(";", first);
 					if (last == std::string::npos)
 						break;
-					int id = Utilities::atoi(classitems.substr(first, last - first));
+					comma = (int)classitems.find(",", first);
+					int id = Utilities::atoi(classitems.substr(first, comma - first));
+					int count = Utilities::atoi(classitems.substr(comma+1, last - comma+1));
 					first = last + 1;
 					Item * itemIndex = GetItemIndex(id);
 					if (itemIndex == NULL)
@@ -1169,8 +1171,14 @@ void Game::LoginHandler(Server * server, User * user, string argument)
 						LogFile::Log("error", "Item " + Utilities::itos(id) + " does not exist.");
 						continue;
 					}
-					itemIndex = user->character->player->NewItemInventory(itemIndex);
-					user->character->player->EquipItemFromInventory(itemIndex, user->character->player->GetEquipLocation(itemIndex));
+					for (int i = 0; i < count; i++)
+					{
+						itemIndex = user->character->player->NewItemInventory(itemIndex);
+						if (itemIndex->equipLocation != Item::EquipLocation::EQUIP_NONE)
+						{
+							user->character->player->EquipItemFromInventory(itemIndex, user->character->player->GetEquipLocation(itemIndex));
+						}
+					}
 				}
 
 				user->Send("|YEnter character gender: 'M' / 'F' :|X ");

@@ -28,6 +28,7 @@ public:
     double hoursPlayed;
     bool isCorpse;
     bool isGhost;
+	bool prompt;
 
     //Inventory and equipment
     std::vector<Item *> equipped;   //TODO save id only... no "oldstat" items... if all we save is the id, effectively the same thing?

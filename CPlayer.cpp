@@ -39,6 +39,7 @@ Player::Player(User * user_)
     inventorySize = 0;
     maxInventorySize = 16;
     equipped.resize(Player::EQUIP_LAST, NULL);
+	prompt = true;
 }
 
 Player::~Player()

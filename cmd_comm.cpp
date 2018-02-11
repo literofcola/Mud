@@ -73,3 +73,21 @@ void cmd_yell(Character * ch, string argument)
 {
     ch->Send("cmd_yell\n\r");
 }
+
+void cmd_set(Character * ch, string argument)
+{
+	if (!ch || !ch->player)
+		return;
+
+	string arg;
+	Utilities::one_argument(argument, arg);
+
+	if (!Utilities::str_cmp(arg, "prompt"))
+	{
+		ch->player->prompt = !ch->player->prompt;
+		return;
+	}
+
+	ch->Send("\"set prompt\"\n\r");
+	return;
+}

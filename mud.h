@@ -35,6 +35,7 @@ void cmd_say(Character * ch, string argument);
 void cmd_tell(Character * ch, string argument);
 void cmd_reply(Character * ch, string argument);
 void cmd_yell(Character * ch, string argument);
+void cmd_set(Character * ch, string argument);
 
 //cmd_imm.cpp
 void cmd_advance(Character * ch, string argument);
