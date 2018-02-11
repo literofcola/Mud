@@ -498,7 +498,7 @@ void Game::WorldUpdate(Server * server)
         if(doTwoSecondTick)
         {
             //Stat regeneration
-            if(!curr->combat && curr->GetHealth() < curr->GetMaxHealth())
+            if(!curr->InCombat() && curr->GetHealth() < curr->GetMaxHealth())
             {
 				if (curr->IsNPC())
 					curr->SetHealth(curr->GetMaxHealth()); //NPC's heal immediately out of combat
@@ -515,7 +515,7 @@ void Game::WorldUpdate(Server * server)
 				curr->AdjustEnergy(curr, 20); //1 energy per .1 second regen
             }
 			//Rage decay, 1 per second
-			if (!curr->combat && curr->GetRage() > 0)
+			if (!curr->InCombat() && curr->GetRage() > 0)
 			{
 				curr->AdjustRage(curr, -2);
 			}
@@ -564,7 +564,7 @@ void Game::WorldUpdate(Server * server)
             (*curr->delayFunction)(curr->delayData);
         }
         //Combat update
-        if(curr->combat)
+        if(curr->InCombat())
         { //in addition to our list of aggressors will need to keep a list of chars whose aggro list we're on (for npc combat) (2/28/18: don't know what this means or why)
             if(!curr->GetTarget() || curr->GetTarget() == curr)
             {  //Turn off auto attack. cmd_target should take care of this, but just in case
@@ -2250,14 +2250,12 @@ Help * Game::CreateHelpAnyID(string name)
 //the total exp needed for any level
 int Game::ExperienceForLevel(int level)
 {
-	static double e = 2.71828182845904523536;
-
 	if (level < 0)
 		level = 0;
 	else if (level > Game::MAX_LEVEL)
 		level = Game::MAX_LEVEL;
 
-	return ceil(4.16667 * pow(level, 3) + 62.5 * pow(level, 2) + 458.333 * level - 525);
+	return (int)ceil(4.16667 * pow(level, 3) + 62.5 * pow(level, 2) + 458.333 * level - 525);
 }
 
 int Game::CalculateExperience(Character * ch, Character * victim)

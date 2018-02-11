@@ -520,8 +520,13 @@ void Character::GeneratePrompt(double currentTime)
 		if (comboPoints > 0 && GetTarget() == comboPointTarget)
 		{
 			targetPrompt += "|R(" + Utilities::itos(comboPoints) + ")|X";
-			json combos = { { "combo", comboPoints } };
-			SendGMCP("char.combo " + combos.dump());
+			json combos = { { "points", comboPoints } };
+			SendGMCP("target.combo " + combos.dump());
+		}
+		else if (GetTarget() != comboPointTarget)
+		{
+			json combos = { { "points", 0 } };
+			SendGMCP("target.combo " + combos.dump());
 		}
 
 		string targetLevel = Game::LevelDifficultyColor(Game::LevelDifficulty(level, GetTarget()->level));
@@ -1855,6 +1860,8 @@ void Character::EnterCombat(Character * victim)
 
     movementSpeed = Character::COMBAT_MOVE_SPEED;
     victim->movementSpeed = Character::COMBAT_MOVE_SPEED;
+	json combat = { { "combat", 1 } };
+	SendGMCP("char.vitals " + combat.dump());
 }
 
 void Character::ExitCombat()
@@ -1864,6 +1871,8 @@ void Character::ExitCombat()
     RemoveThreat(NULL, true);
     //RemoveSpellAffect(true, "combat_movement_speed");
     movementSpeed = Character::NORMAL_MOVE_SPEED;
+	json combat = { { "combat", 0 } };
+	SendGMCP("char.vitals " + combat.dump());
 }
 
 bool Character::InCombat()
@@ -2220,11 +2229,16 @@ void Character::AdjustHealth(Character * source, int amount)
             source->meleeActive = false;
 			source->ClearTarget();
         }
+		if (source->comboPointTarget == this)
+		{
+			source->ClearComboPointTarget();
+		}
 		source->RemoveThreat(this, false);
 		CancelActiveDelay();
 		ExitCombat();
 		RemoveAllSpellAffects();
 		ClearTarget();
+		ClearComboPointTarget();
 
         if(!IsNPC() && !source->IsNPC()) //player - player
         {

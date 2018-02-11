@@ -101,7 +101,6 @@ public:
 	int position; //standing, sitting... only used for eating/drinking right now?
 
     //Combat
-    bool combat;
     bool meleeActive;
     //Character * target; //private
     double lastAutoAttack_off; //Time stamp for melee swing timer
@@ -301,7 +300,7 @@ private:
 	int maxRage;
 	int comboPoints;
 	int maxComboPoints;
-	
+	bool combat;
 };
 
 #endif

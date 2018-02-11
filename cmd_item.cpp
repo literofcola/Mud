@@ -129,7 +129,7 @@ void cmd_remove(Character * ch, string argument)
     if(!ch || !ch->player)
         return;
 
-	if (ch->combat)
+	if (ch->InCombat())
 	{
 		ch->Send("You can't do that while in combat!\n\r");
 		return;
@@ -189,7 +189,7 @@ void cmd_wear(Character * ch, string argument)
     if(!ch || !ch->player)
         return;
 
-	if (ch->combat)
+	if (ch->InCombat())
 	{
 		ch->Send("You can't do that while in combat!\n\r");
 		return;

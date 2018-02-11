@@ -461,12 +461,13 @@ void cmd_scan(Character * ch, string argument)
 	Room * scan_room;
 	stringstream out;
 	int depth = 3;
-	string depthcolors[3] = { "|r", "|m", "|y" };
+	//string depthcolors[3] = { "|r", "|m", "|y" };
 	bool found = false;
+	string level = "";
 
 	for (int i = 0; i < Exit::DIR_LAST; i++)
 	{
-		out << setw(11) << Exit::exitNames[i] + ": ";
+		out << setw(11) << left << Exit::exitNames[i] + ": ";
 		scan_room = ch->room;
 		for(int j = 0; j < depth; j++)
 		{
@@ -481,11 +482,14 @@ void cmd_scan(Character * ch, string argument)
 			if(!scan_room->characters.empty())
 			{
 				found = true;
-				out << depthcolors[j] << "[" << Utilities::itos(j + 1) << "]: ";
+				out << /*depthcolors[j] <<*/ "|W[" << Utilities::itos(j + 1) << "]:|X ";
 				std::list<Character *>::iterator iter = scan_room->characters.begin();
 				while (iter != scan_room->characters.end())
 				{
-					out << ch->AggressionColor(*iter) << (*iter)->name;
+					level = "<" +
+						Game::LevelDifficultyColor(Game::LevelDifficulty(ch->level, (*iter)->level))
+						+ Utilities::itos((*iter)->level) + "|X>";
+					out << level << ch->AggressionColor(*iter) << (*iter)->name;
 					iter++;
 					if (iter != scan_room->characters.end())
 					{
@@ -544,7 +548,7 @@ void cmd_who(Character * ch, string argument)
 					sstr << "|B[" << myclass->color << myclass->name << " " << right << setw(3) << Utilities::itos(wplayer->GetClassLevel(myclass->id)) << "|B]";
 				}
 			}
-            sstr << left << ((*iter)->character->combat ? "|R<X>" : "") << ((*iter)->character->IsGhost() ? "|D<G>" : "");
+            sstr << left << ((*iter)->character->InCombat() ? "|R<X>" : "") << ((*iter)->character->IsGhost() ? "|D<G>" : "");
             sstr << "|X\n\r";
 
 		    ch->Send(sstr.str());
@@ -1131,7 +1135,7 @@ void cmd_quit(Character * ch, string argument)
         return;
     }
     //Do a few checks here, but just query the player with a quit-function callback.
-    if(ch->combat)
+    if(ch->InCombat())
     {
         ch->Send("You can't do that while in combat!\n\r");
         return;
@@ -1156,7 +1160,7 @@ bool cmd_quit_Query(Character * ch, string argument)
     ch->QueryClear();
     if(!Utilities::str_cmp(argument, "yes") || !Utilities::str_cmp(argument, "y"))
 	{
-        if(ch && ch->combat)
+        if(ch && ch->InCombat())
         {
             ch->Send("You can't do that while in combat!\n\r");
             return true;
