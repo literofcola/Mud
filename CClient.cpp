@@ -40,11 +40,7 @@ Client::Client(SOCKET s, std::string ipaddress) : socket_(s), ipaddress_(ipaddre
 
 Client::~Client()
 {
-	DeleteCriticalSection(&overlapped_cs);
-	DeleteCriticalSection(&command_cs);
-	DeleteCriticalSection(&disconnect_cs);
-	DeleteCriticalSection(&refcount_cs);
-
+	EnterCriticalSection(&overlapped_cs);
 	std::list<OVERLAPPEDEX *>::iterator iter = overlappedData.begin();
 	while(iter != overlappedData.end())
 	{
@@ -53,6 +49,13 @@ Client::~Client()
 		iter = overlappedData.erase(iter);
 	}
 	overlappedData.clear();
+	LeaveCriticalSection(&overlapped_cs);
+
+	DeleteCriticalSection(&overlapped_cs);
+	DeleteCriticalSection(&command_cs);
+	DeleteCriticalSection(&disconnect_cs);
+	DeleteCriticalSection(&refcount_cs);
+
 }
 
 std::string Client::GetIPAddress()

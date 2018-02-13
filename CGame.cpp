@@ -312,7 +312,7 @@ void Game::GameLoop(Server * server)
             }
 		}
 
-        //todo: we can probably accept new users while in the WorldUpdate
+        //we can probably accept new users while in the WorldUpdate
         LeaveCriticalSection(&userListCS); //Locks out the AcceptThread from adding a new user to the userlist
 		WorldUpdate(server);
         EnterCriticalSection(&userListCS); //Locks out the AcceptThread from adding a new user to the userlist
@@ -589,7 +589,7 @@ void Game::WorldUpdate(Server * server)
 			//Threat management, chasing/leashing (NPC's start chasing AFTER movementspeed delay)
             if(curr->IsNPC() && curr->GetTopThreat()) 
             {
-				if (!curr->movementQueue.empty()) //We have a movement pending
+				if (!curr->movementQueue.empty()) //We have a movement pending, see if we can move...
 				{
 					if(curr->CanMove()) //Move! (checks movespeed auras and movement speed timestamp)
 					{
@@ -936,12 +936,14 @@ void Game::LoginHandler(Server * server, User * user, string argument)
                 user->connectedState = User::CONN_GET_OLD_PASSWORD;
 			}
 			else if((tempUser = Game::GetGame()->GetUserByPCName(arg1)) != NULL 
-                    && tempUser->connectedState <= User::CONN_CONFIRM_NEW_PASSWORD) 
+                    && tempUser->connectedState >= User::CONN_GET_NEW_PASSWORD
+				    && tempUser->connectedState <= User::CONN_CONFIRM_CLASS)
 			{   //player exists, but hasnt finished creating
 				user->Send("A character is currently being created with that name.\n\r");
+				LogFile::Log("status", "Login attempt on creating character in progress : " + tempUser->character->name);
 				user->SetDisconnect();
 			}
-            else if(tempUser != NULL && tempUser->connectedState > User::CONN_CONFIRM_NEW_PASSWORD)
+            else if(tempUser != NULL && (tempUser->connectedState == User::CONN_PLAYING || tempUser->connectedState > User::CONN_CONFIRM_CLASS))
 			{   //player exists, but hasnt been saved yet
 				user->Send("Welcome Back " + arg1 + "!\r\nEnter Password: ");
                 user->connectedState = User::CONN_GET_OLD_PASSWORD;

@@ -2827,7 +2827,11 @@ double Character::GetMoveSpeed()
     int low = GetAuraModifier(SpellAffect::AURA_MOVE_SPEED, 5);
     int high = GetAuraModifier(SpellAffect::AURA_MOVE_SPEED, 4);
  
-    double newspeed = 100 + high + low;
+	double newspeed;
+	if (IsNPC())
+		newspeed = 110 + high + low;	//%110 base movement speed for NPCS
+	else
+		newspeed = 100 + high + low;
 
     if(newspeed <= 0) 
         return 0;

@@ -62,10 +62,15 @@ void cmd_castCallback(Character::DelayData delayData)
         delayData.caster->Send("Your target is no longer here.\n\r");
         return;
     }
-    if(delayData.charTarget != delayData.caster && delayData.caster->GetCharacterAdjacentRoom(delayData.charTarget) == NULL)
+	
+    if(delayData.charTarget != delayData.caster)
     {
-        delayData.caster->Send("Your target is no longer here.\n\r");
-        return;
+		Exit::Direction dir = FindDirection(delayData.caster, delayData.charTarget, 3);
+		if (dir == Exit::DIR_LAST) //Clear the target
+		{
+			delayData.caster->Send("Your target is no longer here.\n\r");
+			return;
+		}
     }
     
     if(delayData.charTarget == delayData.caster && (delayData.sk->targetType == Skill::TARGET_OTHER ||
