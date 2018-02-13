@@ -2251,6 +2251,7 @@ void Character::AdjustHealth(Character * source, int amount)
 		RemoveAllSpellAffects();
 		ClearTarget();
 		ClearComboPointTarget();
+		movementQueue.clear();
 
         if(!IsNPC() && !source->IsNPC()) //player - player
         {
