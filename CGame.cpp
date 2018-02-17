@@ -500,15 +500,15 @@ void Game::WorldUpdate(Server * server)
             //Stat regeneration
             if(!curr->InCombat() && curr->GetHealth() < curr->GetMaxHealth())
             {
-				if (curr->IsNPC())
-					curr->SetHealth(curr->GetMaxHealth()); //NPC's heal immediately out of combat
-				else
+				//if (curr->IsNPC())
+				//	curr->SetHealth(curr->GetMaxHealth()); //NPC's heal immediately out of combat
+				//else
 					curr->AdjustHealth(NULL, (int)ceil(curr->GetLevel()*0.5 + 2.5)); 
             }
 			if(curr->GetMana() < curr->GetMaxMana() && curr->lastSpellCast + 5.0  <= Game::currentTime)
             {
-                 //if more than 5 seconds since last cast, regen 10% of wisdom as mana
-			    curr->AdjustMana(curr, (int)ceil(curr->wisdom * 0.1));
+                 //if more than 5 seconds since last cast, regen 10% of spirit as mana
+			    curr->AdjustMana(curr, (int)ceil(curr->spirit * 0.1));
             }
 			if(curr->GetEnergy() < curr->GetMaxEnergy())
             {
@@ -666,6 +666,9 @@ void Game::WorldUpdate(Server * server)
                 if(curr->GetTopThreat() && curr->GetTopThreat() != curr->GetTarget())
                 {
                     curr->SetTarget(curr->GetTopThreat());
+					curr->GetTarget()->Send(curr->GetName() + " changes " + curr->HisHer() + " target and begins attacking you!\n\r");
+					curr->Message(curr->GetName() + " changes " + curr->HisHer() + " target and begins attacking " + curr->GetTarget()->GetName() + "!",
+						Character::MessageType::MSG_ROOM_NOTCHARVICT, curr->GetTarget());
                 }
             }
         }
@@ -1732,7 +1735,7 @@ void Game::LoadAreas(Server * server)
     for(iter = areares.begin(); iter != areares.end(); ++iter)
     {
         row = *iter;
-        Area * a = new Area(row["id"], (string)row["name"], /*row["pvp"],*/ row["level_range_low"], row["level_range_high"]);
+        Area * a = new Area(row["id"], (string)row["name"], row["pvp"], row["death_room"], row["level_range_low"], row["level_range_high"]);
         areas[a->GetID()] = a;
     }
 }
@@ -1858,6 +1861,7 @@ void Game::LoadNPCS(Server * server)
         loaded->strength = row["strength"];
         loaded->stamina = row["stamina"];
         loaded->wisdom = row["wisdom"];
+		loaded->spirit = row["spirit"];
 		loaded->SetHealth(row["health"]);
 		loaded->SetMaxHealth(row["health"]);
 		loaded->SetMana(row["mana"]);

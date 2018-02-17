@@ -323,6 +323,7 @@ const class Command npcEditCmd_table[] =
     { "strength",   npcEditCmd_strength, 0, 0, 1, 1 },
     { "stamina",   npcEditCmd_stamina, 0, 0, 1, 1 },
     { "wisdom",     npcEditCmd_wisdom, 0, 0, 1, 1 },
+	{ "spirit",     npcEditCmd_spirit, 0, 0, 1, 1 },
     { "health",     npcEditCmd_health, 0, 0, 1, 1 },
     { "mana",       npcEditCmd_mana, 0, 0, 1, 1 },
     { "attack_speed",npcEditCmd_attackSpeed, 0, 0, 1, 1 },
@@ -383,6 +384,7 @@ const class Command areaEditCmd_table[] =
     { "show",             areaEditCmd_show, 0, 0, 1, 1  },
     { "name",             areaEditCmd_name, 0, 0, 1, 1  },
     { "pvp",              areaEditCmd_pvp,0, 0, 1, 1  },
+	{ "death_room",       areaEditCmd_death_room,0, 0, 1, 1 },
     { "level_range_low",  areaEditCmd_levelRangeLow,  0, 0, 1, 1  },
     { "level_range_high", areaEditCmd_levelRangeHigh,  0, 0, 1, 1  },
     { "", 0,  0, 0, 1, 1 }

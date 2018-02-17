@@ -24,9 +24,11 @@ DROP TABLE IF EXISTS `areas`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `areas` (
   `id` int(11) NOT NULL,
-  `name` varchar(45) DEFAULT NULL,
-  `level_range_low` int(11) DEFAULT NULL,
-  `level_range_high` int(11) DEFAULT NULL,
+  `name` varchar(45) NOT NULL,
+  `pvp` int(11) NOT NULL,
+  `death_room` int(11) NOT NULL,
+  `level_range_low` int(11) NOT NULL,
+  `level_range_high` int(11) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -170,6 +172,7 @@ CREATE TABLE `npcs` (
   `strength` int(11) NOT NULL,
   `stamina` int(11) NOT NULL,
   `wisdom` int(11) NOT NULL,
+  `spirit` int(11) NOT NULL,
   `health` int(11) NOT NULL,
   `mana` int(11) NOT NULL,
   `energy` int(11) NOT NULL,
@@ -304,6 +307,7 @@ CREATE TABLE `players` (
   `strength` int(11) NOT NULL,
   `stamina` int(11) NOT NULL,
   `wisdom` int(11) NOT NULL,
+  `spirit` int(11) NOT NULL,
   `health` int(11) NOT NULL,
   `mana` int(11) NOT NULL,
   `class` int(11) NOT NULL,
@@ -450,4 +454,4 @@ CREATE TABLE `triggers` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-02-13  2:13:17
+-- Dump completed on 2018-02-17  9:21:27

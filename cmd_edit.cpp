@@ -1588,6 +1588,7 @@ void npcEditCmd_show(Character * ch, string argument)
     ch->Send("Strength:  [" + Utilities::itos(pChar->strength) + "]\n\r");
     ch->Send("Stamina:  [" + Utilities::itos(pChar->stamina) + "]\n\r");
     ch->Send("Wisdom:    [" + Utilities::itos(pChar->wisdom) + "]\n\r");
+	ch->Send("Spirit:    [" + Utilities::itos(pChar->spirit) + "]\n\r");
     ch->Send("Health:    [" + Utilities::itos(pChar->GetHealth()) + "]\n\r");
     ch->Send("Mana:      [" + Utilities::itos(pChar->GetMana()) + "]\n\r");
     ch->Send("Energy:    [" + Utilities::itos(pChar->GetEnergy()) + "]\n\r");
@@ -2002,6 +2003,28 @@ void npcEditCmd_wisdom(Character * ch, string argument)
     }
     pChar->changed = true;
     pChar->wisdom = wisdom;
+}
+
+void npcEditCmd_spirit(Character * ch, string argument)
+{
+	Character * pChar = (Character *)ch->editData;
+
+	string arg1;
+	argument = Utilities::one_argument(argument, arg1);
+
+	if (arg1.empty() || !Utilities::IsNumber(arg1))
+	{
+		ch->Send("spirit <#>\n\r");
+		return;
+	}
+	int spirit = Utilities::atoi(arg1);
+	if (spirit < 0)
+	{
+		ch->Send("Spirit must be >= 0.\n\r");
+		return;
+	}
+	pChar->changed = true;
+	pChar->spirit = spirit;
 }
 
 void npcEditCmd_health(Character * ch, string argument)
@@ -3355,12 +3378,71 @@ void areaEditCmd_pvp(Character * ch, string argument)
     ch->Send("pvp set.\n\r");
 }
 
+void areaEditCmd_death_room(Character * ch, string argument)
+{
+	Area * pArea = (Area *)ch->editData;
+
+	string arg1;
+	argument = Utilities::one_argument(argument, arg1);
+
+	if (!Utilities::IsNumber(arg1))
+	{
+		ch->Send("death_room: #\n\r");
+		return;
+	}
+	int death_room = Utilities::atoi(arg1);
+	if (death_room < 0)
+	{
+		ch->Send("death_room: # >= 0\n\r");
+		return;
+	}
+	pArea->death_room = death_room;
+	pArea->changed = true;
+	ch->Send("death_room set.\n\r");
+}
+
 void areaEditCmd_levelRangeLow(Character * ch, string argument)
 {
+	Area * pArea = (Area *)ch->editData;
 
+	string arg1;
+	argument = Utilities::one_argument(argument, arg1);
+
+	if (!Utilities::IsNumber(arg1))
+	{
+		ch->Send("level_range_low: 0 < # <= max_level\n\r");
+		return;
+	}
+	int level_range_low = Utilities::atoi(arg1);
+	if (level_range_low <= 0 || level_range_low > Game::MAX_LEVEL)
+	{
+		ch->Send("level_range_low: 0 < # <= max_level\n\r");
+		return;
+	}
+	pArea->level_range_low = level_range_low;
+	pArea->changed = true;
+	ch->Send("level_range_low set.\n\r");
 }
 
 void areaEditCmd_levelRangeHigh(Character * ch, string argument)
 {
+	Area * pArea = (Area *)ch->editData;
 
+	string arg1;
+	argument = Utilities::one_argument(argument, arg1);
+
+	if (!Utilities::IsNumber(arg1))
+	{
+		ch->Send("level_range_high: 0 < # <= max_level\n\r");
+		return;
+	}
+	int level_range_high = Utilities::atoi(arg1);
+	if (level_range_high <= 0 || level_range_high > Game::MAX_LEVEL)
+	{
+		ch->Send("level_range_high: 0 < # <= max_level\n\r");
+		return;
+	}
+	pArea->level_range_high = level_range_high;
+	pArea->changed = true;
+	ch->Send("level_range_high set.\n\r");
 }

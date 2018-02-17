@@ -258,6 +258,7 @@ void cmd_look(Character * ch, string argument)
             string fighting = ".";
 			string level = "";
 			string aggressionColor = "|G";
+			string tapped = "";
 
 		    if((*i)->player && (*i)->player->user && !(*i)->player->user->IsConnected())
 			    disconnected = "|Y[DISCONNECTED] |X";
@@ -279,8 +280,12 @@ void cmd_look(Character * ch, string argument)
                     fighting = ", fighting " + (*i)->GetTarget()->name + ".";
             }
 			aggressionColor = ch->AggressionColor((*i));
-
-		    ch->Send(disconnected + level + questicon + aggressionColor + (*i)->name + title + " is here" + fighting + "|X\n\r");
+			Character * tappedBy = (*i)->GetTap();
+			if (tappedBy)
+			{
+				tapped = " |D(tapped by " + tappedBy->GetName() + ")";
+			}
+		    ch->Send(disconnected + level + questicon + aggressionColor + (*i)->name + title + " is here" + fighting + tapped + "|X\n\r");
 	    }
 		ch->Send("\n\r");
 		cmd_scan(ch, "");
@@ -440,7 +445,7 @@ void cmd_score(Character * ch, string argument)
 	ch->Send("  Rage: " + Utilities::itos(ch->GetRage()) + "/" + Utilities::itos(ch->GetMaxRage()) + "\n\r");
     ch->Send("Agility: " + Utilities::itos(ch->agility) + " Intellect: " + Utilities::itos(ch->intellect)
         + " Strength: " + Utilities::itos(ch->strength) + " Stamina: " + Utilities::itos(ch->stamina) + " Wisdom: "
-        + Utilities::itos(ch->wisdom) + "\n\r");
+        + Utilities::itos(ch->wisdom) + " Spirit: " + Utilities::itos(ch->spirit) + "\n\r");
 	ch->Send("Attribute Points available: " + Utilities::itos(ch->player->statPoints) + "\n\r");
     ch->Send("Experience: " + Utilities::itos(ch->player->experience) + "\n\r");
     ch->Send("You have " + Utilities::itos(ch->player->experience) + " experience and need " 

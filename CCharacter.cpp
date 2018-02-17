@@ -108,6 +108,7 @@ Character::Character(const Character & copy)
     strength = copy.strength;
     stamina = copy.stamina;
     wisdom = copy.wisdom;
+	spirit = copy.spirit;
     health = maxHealth = copy.maxHealth;
     mana = maxMana = copy.maxMana;
 	energy = maxEnergy = copy.maxEnergy;
@@ -167,15 +168,14 @@ void Character::SetDefaults()
     target = NULL;
     level = 1;
     gender = 1;
-    agility = intellect = strength = stamina = wisdom = 5;
+    agility = intellect = strength = stamina = wisdom = spirit = 5;
 	energy = maxEnergy = 100;
 	rage = 0;
 	maxRage = 100;
 	comboPoints = 0;
 	maxComboPoints = 5;
     health = maxHealth = stamina * Character::HEALTH_FROM_STAMINA;
-	mana = maxMana = 100; //TODO mana is based on class level (add class->mana_per_level in db)
-    //mana = maxMana = intellect * Character::MANA_FROM_INTELLECT;
+    mana = maxMana = wisdom * Character::MANA_FROM_WISDOM;
     npcAttackSpeed = 2.0;
     npcDamageLow = npcDamageHigh = 1;
     delay_active = false;
@@ -206,6 +206,7 @@ void Character::SetDefaults()
     intTable["strength"] = &strength;
     intTable["stamina"] = &stamina;
     intTable["wisdom"] = &wisdom;
+	intTable["spirit"] = &spirit;
     intTable["health"] = &health;
     intTable["mana"] = &mana;
     doubleTable["attack_speed"] = &npcAttackSpeed;
@@ -369,7 +370,7 @@ void Character::ResetMaxStats()
 {
 	//todo: check equipment bonuses
 	SetMaxHealth(stamina * Character::HEALTH_FROM_STAMINA);
-	SetMaxMana(intellect * Character::MANA_FROM_INTELLECT); //todo: no more mana from intellect, go through our class levels to figure it out
+	SetMaxMana(wisdom * Character::MANA_FROM_WISDOM);
 	//todo: these might be higher based on skills or talents?
 	SetMaxEnergy(100);
 	SetMaxRage(100);
@@ -962,6 +963,7 @@ Character * Character::LoadPlayer(std::string name, User * user)
     loaded->strength = row["strength"];
     loaded->stamina = row["stamina"];
     loaded->wisdom = row["wisdom"];
+	loaded->spirit = row["spirit"];
     loaded->health = row["health"];
     loaded->mana = row["mana"];
 
@@ -1128,12 +1130,12 @@ void Character::Save()
         string fixtitle = Utilities::SQLFixQuotes(title);
 
         sql = "INSERT INTO players (name, password, immlevel, title, experience, room, level, gender, race, agility, intellect, strength, stamina, ";
-        sql += "wisdom, health, mana, class, recall, ghost, stat_points) values ('";
+        sql += "wisdom, spirit, health, mana, class, recall, ghost, stat_points) values ('";
         sql += name + "','" + password + "'," + Utilities::itos(player->immlevel);
         sql += ",'" + fixtitle + "'," + Utilities::itos(player->experience) + "," + Utilities::itos(room->id);
         sql += "," + Utilities::itos(level) + "," + Utilities::itos(gender) + "," + Utilities::itos(race) + ",";
         sql += Utilities::itos(agility) + "," + Utilities::itos(intellect) + "," + Utilities::itos(strength) + ",";
-        sql += Utilities::itos(stamina) + "," + Utilities::itos(wisdom) + ",";
+        sql += Utilities::itos(stamina) + "," + Utilities::itos(wisdom) + "," + Utilities::itos(spirit) + ",";
         sql += Utilities::itos(health) + "," + Utilities::itos(mana);
 		sql += "," + Utilities::itos(player->currentClass->id) + "," + Utilities::itos(player->recall) + ", ";
         if(IsGhost() || IsCorpse())
@@ -1144,7 +1146,7 @@ void Character::Save()
 
         sql += " ON DUPLICATE KEY UPDATE name=VALUES(name), password=VALUES(password), immlevel=VALUES(immlevel), title=VALUES(title), ";
         sql += "experience=VALUES(experience), room=VALUES(room), level=VALUES(level), gender=VALUES(gender), race=VALUES(race), agility=VALUES(agility), ";
-        sql += "intellect=VALUES(intellect), strength=VALUES(strength), stamina=VALUES(stamina), wisdom=VALUES(wisdom), ";
+        sql += "intellect=VALUES(intellect), strength=VALUES(strength), stamina=VALUES(stamina), wisdom=VALUES(wisdom), spirit=VALUES(spirit), ";
         sql += "health=VALUES(health), mana=VALUES(mana), ";
         sql += "class=VALUES(class), ";
         sql += "recall=VALUES(recall), ghost=VALUES(ghost), stat_points=VALUES(stat_points)";
@@ -1209,11 +1211,11 @@ void Character::Save()
         string fixtitle = Utilities::SQLFixQuotes(title);
 
         sql = "INSERT INTO npcs (id, name, keywords, level, gender, race, agility, intellect, strength, stamina, ";
-        sql += "wisdom, health, mana, energy, rage, title, attack_speed, damage_low, damage_high, flags, speechtext) values (";
+        sql += "wisdom, spirit, health, mana, energy, rage, title, attack_speed, damage_low, damage_high, flags, speechtext) values (";
         sql += Utilities::itos(id) + ", '";
         sql += name + "', '" + keywords + "', " + Utilities::itos(level) + "," + Utilities::itos(gender) + "," + Utilities::itos(race) + ",";
         sql += Utilities::itos(agility) + "," + Utilities::itos(intellect) + "," + Utilities::itos(strength) + ",";
-        sql += Utilities::itos(stamina) + "," + Utilities::itos(wisdom) + ",";
+        sql += Utilities::itos(stamina) + "," + Utilities::itos(wisdom) + "," + Utilities::itos(spirit) + ",";
         sql += Utilities::itos(health) + "," + Utilities::itos(mana) + "," + Utilities::itos(energy) + "," + Utilities::itos(rage);
         sql += ", '" + fixtitle + "', " + Utilities::dtos(npcAttackSpeed, 2) + ", " + Utilities::itos(npcDamageLow) + ", ";
         sql += Utilities::itos(npcDamageHigh) + ",'";
@@ -1865,10 +1867,10 @@ void Character::EnterCombat(Character * victim)
     if(victim->player)
         victim->player->lastCombatAction = Game::currentTime;
 
-	if (IsNPC() || victim->IsNPC())
+	/*if (IsNPC() || victim->IsNPC()) //Keep track of threat unless BOTH are players
 	{
-        victim->UpdateThreat(this, 0);
-    }
+        victim->UpdateThreat(this, 0); changed... don't add threat unless some actual damage is done. easier to track tapping
+    }*/
 
     movementSpeed = Character::COMBAT_MOVE_SPEED;
     victim->movementSpeed = Character::COMBAT_MOVE_SPEED;
@@ -1881,7 +1883,6 @@ void Character::ExitCombat()
     combat = false;
     meleeActive = false;
     RemoveThreat(NULL, true);
-    //RemoveSpellAffect(true, "combat_movement_speed");
     movementSpeed = Character::NORMAL_MOVE_SPEED;
 	json combat = { { "combat", 0 } };
 	SendGMCP("char.vitals " + combat.dump());
@@ -1986,18 +1987,24 @@ void Character::OneHit(Character * victim, int damage)
         //Victim is already toast
         return;
     }
-    //TODO fancy damage calculations, block miss hit crit, weapon damage
-    Send("|GYou hit " + victim->name + " for " + Utilities::itos(damage) + " damage.|X\n\r");
-    victim->Send("|Y" + name + " hits you for " + Utilities::itos(damage) + " damage.|X\n\r");
-    Message("|Y" + name + "'s attack hits " + victim->name + " for " + Utilities::itos(damage) + " damage.|X", Character::MSG_ROOM_NOTCHARVICT, victim);
-    
-    if(IsNPC() || victim->IsNPC())
+	
+    if(IsNPC() || victim->IsNPC()) //Keep track of threat unless BOTH are players
     {
-        victim->UpdateThreat(this, damage);
+        victim->UpdateThreat(this, damage, Threat::Type::THREAT_DAMAGE);
         //Send("My threat on " + victim->name + " is " + Utilities::itos(victim->GetThreat(this)) + "\n\r");
     }
 	if (victim->CancelCastOnHit())
 		victim->Send("Action Interrupted!\n\r");
+
+	string tapcolor = "|G";
+	if (!this->HasTap(victim))
+	{
+		tapcolor = "|D";
+	}
+	//TODO fancy damage calculations, block miss hit crit, weapon damage
+	Send(tapcolor + "You hit " + victim->name + " for " + Utilities::itos(damage) + " damage.|X\n\r");
+	victim->Send("|Y" + name + " hits you for " + Utilities::itos(damage) + " damage.|X\n\r");
+	Message("|G" + name + "'s attack hits " + victim->name + " for " + Utilities::itos(damage) + " damage.|X", Character::MSG_ROOM_NOTCHARVICT, victim);
 
     victim->AdjustHealth(this, -damage);
 }
@@ -2234,43 +2241,13 @@ void Character::AdjustHealth(Character * source, int amount)
 
     if(health == 0) //todo: functionize me. ROM = "ExtractChar"
     {
-        Message("|R" + name + " has been slain!|X", Character::MSG_ROOM_NOTCHAR, source);
-        Send("|RYou have been slain!|X\n\r");
-        if(source->target == this)
-        {
-            source->meleeActive = false;
-			source->ClearTarget();
-        }
-		if (source->comboPointTarget == this)
-		{
-			source->ClearComboPointTarget();
-		}
-		source->RemoveThreat(this, false);
-		CancelActiveDelay();
-		ExitCombat();
-		RemoveAllSpellAffects();
-		ClearTarget();
-		ClearComboPointTarget();
-		movementQueue.clear();
+		Message("|R" + name + " has been slain!|X", Character::MSG_ROOM_NOTCHAR, source);
+		Send("|RYou have been slain!|X\n\r");
 
-        if(!IsNPC() && !source->IsNPC()) //player - player
-        {
-            //ExitCombat();
-            //RemoveAllSpellAffects();
-            //set flag for corpseified
-            this->player->isCorpse = true;
-            //SpellAffect * sa = AddSpellAffect(true, this, "player_is_corpse", true, false, 0, 0, 0, NULL);
+		OnDeath(); //The source of damage shouldn't matter except where cases of "killing blow" matters (none so far?)
 
-            queryData = NULL;
-	        hasQuery = true;
-	        queryPrompt = "Release spirit? (y) ";
-	        queryFunction = releaseSpiritQuery;
-        }
-        else if(IsNPC() && !source->IsNPC()) //NPC killed by player
+        /*if(IsNPC() && !source->IsNPC()) //NPC killed by player
         {
-            //ExitCombat();
-			//RemoveAllSpellAffects();
-            //ClearTarget();
             ChangeRooms(NULL);
             int exp = Game::CalculateExperience(source, this);
             source->Send("|BYou have gained |Y" + Utilities::itos(exp) + "|B experience.|X\n\r");
@@ -2295,28 +2272,98 @@ void Character::AdjustHealth(Character * source, int amount)
             }
             Game::GetGame()->RemoveCharacter(this);
         }
-        else if(!IsNPC() && source->IsNPC()) //player killed by NPC
-        {
-            //ExitCombat();
-            //RemoveAllSpellAffects();
-            //set flag for corpseified
-            //SpellAffect * sa = AddSpellAffect(true, this, "player_is_corpse", true, false, 0, 0, 0, NULL);
-            this->player->isCorpse = true;
-            queryData = NULL;
-	        hasQuery = true;
-	        queryPrompt = "Release spirit? (y) ";
-	        queryFunction = releaseSpiritQuery;
-        }
         else if(IsNPC() && source->IsNPC()) //npc - npc
         {
-            //ExitCombat();
-            //ClearTarget();
             ChangeRooms(NULL);
             Game::GetGame()->RemoveCharacter(this);
-        }
+        }*/
     }
 }
 
+void Character::OnDeath()
+{
+	std::list<Character::Threat>::iterator threatiter;
+	for (threatiter = threatList.begin(); threatiter != threatList.end(); threatiter++)
+	{
+		Threat * threat = &(*threatiter);
+		if (!threat->ch) //if this is possible we have bigger problems
+			continue;
+
+		if (threat->ch->GetTarget() && threat->ch->GetTarget() == this)
+		{
+			threat->ch->meleeActive = false;
+			threat->ch->ClearTarget();
+		}
+		if (threat->ch->comboPointTarget && threat->ch->comboPointTarget == this)
+		{
+			threat->ch->ClearComboPointTarget();
+		}
+		threat->ch->RemoveThreat(this, false);
+	}
+	movementQueue.clear();
+	CancelActiveDelay();
+	RemoveAllSpellAffects();
+	ClearTarget();
+	ClearComboPointTarget();
+	
+
+	if (!IsNPC()) //player killed... doesn't matter by who, no rewards yet for doing so
+	{
+		//set flag for corpseified
+		this->player->isCorpse = true;
+		queryData = NULL;
+		hasQuery = true;
+		queryPrompt = "Release spirit? (y) ";
+		queryFunction = releaseSpiritQuery;
+	}
+	else if (IsNPC()) //NPC killed, figure out by who...
+	{
+		ChangeRooms(NULL);
+		//Who has the tap?
+		Character * tap = nullptr;
+		Character * highdamage = nullptr;
+		int damage = 0;
+		std::list<Threat>::iterator iter;
+		for (iter = threatList.begin(); iter != threatList.end(); ++iter)
+		{
+			if ((*iter).tapped)
+			{
+				tap = (*iter).ch;
+			}
+			if ((*iter).damage > damage)
+			{
+				damage = (*iter).damage;
+				highdamage = (*iter).ch;
+			}
+		}
+		if (highdamage == tap && !highdamage->IsNPC() && !tap->IsNPC())
+		{
+			//only give credit if the tap (todo: or his group) also has the highest damage, and it wasnt a NPC doing the killing
+			int exp = Game::CalculateExperience(tap, this);
+			tap->Send("|BYou have gained |Y" + Utilities::itos(exp) + "|B experience.|X\n\r");
+			tap->ApplyExperience(exp);
+			std::list<DropData>::iterator dropiter;
+			for (dropiter = drops.begin(); dropiter != drops.end(); ++dropiter)
+			{
+				if (Server::rand() % 100 <= (*dropiter).percent && (*dropiter).id.size() > 0)
+				{
+					int which = Server::rand() % ((int)(*dropiter).id.size());
+					Item * drop = Game::GetGame()->GetItemIndex((*dropiter).id[which]);
+					tap->Send("You receive loot: " + (string)Item::quality_strings[drop->quality] + drop->name + "|X.\n\r");
+					tap->Message(tap->name + " receives loot: " + Item::quality_strings[drop->quality] + drop->name + "|X.\n\r",
+						Character::MSG_ROOM_NOTCHAR);
+					tap->player->NewItemInventory(drop);
+				}
+			}
+			if (tap->player)
+			{
+				tap->player->QuestCompleteObjective(Quest::OBJECTIVE_KILLNPC, (void*)this);
+			}
+		}
+	}
+	ExitCombat();			//Removes our threat list
+	Game::GetGame()->RemoveCharacter(this);
+}
 
 //To be used in spell _cost function. Checks AURA_RESOURCE_COST
 bool Character::HasResource(int which, int amount)
@@ -2659,7 +2706,7 @@ void Character::ClearComboPointTarget()
 	comboPoints = 0;
 }
 
-void Character::UpdateThreat(Character * ch, int value)
+void Character::UpdateThreat(Character * ch, int value, int type)
 {
     std::list<Threat>::iterator iter;
     for(iter = threatList.begin(); iter != threatList.end(); ++iter)
@@ -2667,12 +2714,35 @@ void Character::UpdateThreat(Character * ch, int value)
         if((*iter).ch == ch)
         {
             (*iter).threat += value;
+			switch (type)
+			{
+				case Threat::Type::THREAT_DAMAGE:
+					(*iter).damage += value;
+					break;
+				case Threat::Type::THREAT_HEALING:
+					(*iter).healing += value;
+					break;
+			}
             return;
         }
     }
-    ch->AddSubscriber(this);
-    Threat tt = {ch, value};
-    threatList.push_front(tt);
+	ch->AddSubscriber(this);
+	Threat tt = { ch, value, 0, 0, false };
+	switch (type)
+	{
+	case Threat::Type::THREAT_DAMAGE:
+		tt.damage = value;
+		break;
+	case Threat::Type::THREAT_HEALING:
+		tt.healing = value;
+		break;
+	}
+	if (threatList.empty() && IsNPC())
+	{
+		//First character on the threat list, they get the tap
+		tt.tapped = true;
+	}
+	threatList.push_front(tt);
 }
 
 Character * Character::GetTopThreat()
@@ -2717,6 +2787,32 @@ void Character::RemoveThreat(Character * ch, bool removeall)
             return;
         }
     }
+}
+
+bool Character::HasTap(Character * target)
+{
+	std::list<Threat>::iterator iter;
+	for (iter = target->threatList.begin(); iter != target->threatList.end(); ++iter)
+	{
+		if (iter->ch == this && iter->tapped == true)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+Character * Character::GetTap()
+{
+	std::list<Threat>::iterator iter;
+	for (iter = threatList.begin(); iter != threatList.end(); ++iter)
+	{
+		if (iter->tapped == true)
+		{
+			return iter->ch;
+		}
+	}
+	return nullptr;
 }
 
 int Character::GetThreat(Character * ch)

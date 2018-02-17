@@ -108,21 +108,4 @@ void SubscriberManager::NotifySubscribers()
         ++iter;
         l->Notify(this);
     }
-
-    /*for(std::list<Subscriber*>::iterator iter = subscribers_.begin(); iter != subscribers_.end(); ++iter)
-    {
-        (*iter)->Notify();
-    }*/
-    /*std::list<Subscriber*>::iterator *///iter = subscribers_.begin();
-    /*while(iter != subscribers_.end())
-    {
-        if((*iter)->remove)
-        {
-            iter = subscribers_.erase(iter);
-        }
-        else
-        {
-            ++iter;
-        }
-    }*/
 }

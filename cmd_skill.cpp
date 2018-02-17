@@ -65,8 +65,8 @@ void cmd_castCallback(Character::DelayData delayData)
 	
     if(delayData.charTarget != delayData.caster)
     {
-		Exit::Direction dir = FindDirection(delayData.caster, delayData.charTarget, 3);
-		if (dir == Exit::DIR_LAST) //Clear the target
+		if (!delayData.caster->GetCharacterRoom(delayData.charTarget) 
+			&& FindDirection(delayData.caster, delayData.charTarget, 3) == Exit::DIR_LAST)
 		{
 			delayData.caster->Send("Your target is no longer here.\n\r");
 			return;
@@ -601,7 +601,7 @@ void cmd_train(Character * ch, string argument)
 
 	if (argument.empty())
 	{
-		ch->Send("Specify an attribute to increase: agility intellect strength stamina wisdom\n\r");
+		ch->Send("Specify an attribute to increase: agility intellect strength stamina wisdom spirit\n\r");
 		return;
 	}
 	if (ch->player->statPoints <= 0)
@@ -639,9 +639,15 @@ void cmd_train(Character * ch, string argument)
 		ch->wisdom++;
 		ch->Send("|WWisdom increased: " + Utilities::itos(ch->wisdom) + "|X\n\r");
 	}
+	else if (!Utilities::str_cmp(argument, "spirit"))
+	{
+		ch->player->statPoints--;
+		ch->spirit++;
+		ch->Send("|WSpirit increased: " + Utilities::itos(ch->spirit) + "|X\n\r");
+	}
 	else
 	{
-		ch->Send("Specify an attribute to increase: agility intellect strength stamina wisdom\n\r");
+		ch->Send("Specify an attribute to increase: agility intellect strength stamina wisdom spirit\n\r");
 		return;
 	}
 	ch->ResetMaxStats();

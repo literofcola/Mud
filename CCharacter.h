@@ -27,20 +27,20 @@ public:
     int gender;
 
     int agility;	//crit chance and avoidance
-    int intellect;  //spell power... mana pool based completely off class level
+    int intellect;  //spell power
     int strength;	//attack power
     int stamina;	//health
-    int wisdom;		//mana regen
+    int wisdom;		//mana
+	int spirit;		//mana regen
 
 	enum ResourceType
 	{
 		RESOURCE_HEALTH = 1, RESOURCE_MANA, RESOURCE_ENERGY, RESOURCE_RAGE, RESOURCE_COMBO
 	};
-	
     
 	Character * comboPointTarget;
     static const int HEALTH_FROM_STAMINA = 10;
-    static const int MANA_FROM_INTELLECT = 10; //todo: move intellect into class per level up!
+    static const int MANA_FROM_WISDOM = 10; //todo: move intellect into class per level up!
 	static constexpr double STRENGTH_DAMAGE_MODIFIER = 0.30;	//auto attack damage increased by 30% of strength
     std::string name;
     std::string title;
@@ -98,11 +98,10 @@ public:
 	{
 		POSITION_ANY, POSITION_SITTING, POSITION_STANDING
 	};
-	int position; //standing, sitting... only used for eating/drinking right now?
+	int position; //standing, sitting... only used for eating/drinking right now? (flying?)
 
     //Combat
     bool meleeActive;
-    //Character * target; //private
     double lastAutoAttack_off; //Time stamp for melee swing timer
     double lastAutoAttack_main;
     double npcAttackSpeed;
@@ -123,6 +122,10 @@ public:
     {
         Character * ch;
         int threat;
+		int damage;
+		int healing;
+		bool tapped; //This character has a valid "tap" on us
+		enum Type { THREAT_DAMAGE, THREAT_HEALING, THREAT_OTHER };
     };
     std::list<Threat> threatList;
 
@@ -197,7 +200,6 @@ public:
     int GetLevel();
 	Player * GetPlayer();
     std::string GetName();
-	bool CheckThreatCombat();
 	std::string HisHer();
 	bool CancelActiveDelay();
 	bool CancelCastOnHit();
@@ -206,10 +208,14 @@ public:
     void ExitCombat();
     bool InCombat();
     bool IsFighting(Character * target);
-    void UpdateThreat(Character * ch, int value);
+	bool CheckThreatCombat();
+    void UpdateThreat(Character * ch, int value, int type);
     int GetThreat(Character * ch);
     Character * GetTopThreat();
     bool HasThreat(Character * ch);
+	void RemoveThreat(Character * ch, bool removeall);
+	bool HasTap(Character * target);
+	Character * GetTap();
     void AutoAttack(Character * victim);
     void OneHit(Character * victim, int damage);
 	double GetMainhandWeaponSpeed();
@@ -247,13 +253,12 @@ public:
 	void ConsumeEnergy(int amount);
 	void ConsumeRage(int amount);
 	void AdjustHealth(Character * source, int amount);
+	void OnDeath();
     void AdjustMana(Character * source, int amount);
 	void AdjustEnergy(Character * source, int amount);
 	void AdjustRage(Character * source, int amount);
 	bool HasResource(int which, int amount);
-
     void ApplyExperience(int amount);
-    void RemoveThreat(Character * ch, bool removeall);
     SpellAffect * AddSpellAffect(int isDebuff, Character * caster, std::string name,
                         bool hidden, bool stackable, int ticks, double duration, int category, Skill * sk, std::string affect_description);
     SpellAffect * HasSpellAffect(std::string name);
@@ -286,7 +291,6 @@ public:
     bool IsGhost();
 	void AddClassSkills();
     
-
 private:
 
     Character * target;

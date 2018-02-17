@@ -24,9 +24,11 @@ DROP TABLE IF EXISTS `areas`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `areas` (
   `id` int(11) NOT NULL,
-  `name` varchar(45) DEFAULT NULL,
-  `level_range_low` int(11) DEFAULT NULL,
-  `level_range_high` int(11) DEFAULT NULL,
+  `name` varchar(45) NOT NULL,
+  `pvp` int(11) NOT NULL,
+  `death_room` int(11) NOT NULL,
+  `level_range_low` int(11) NOT NULL,
+  `level_range_high` int(11) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -37,7 +39,7 @@ CREATE TABLE `areas` (
 
 LOCK TABLES `areas` WRITE;
 /*!40000 ALTER TABLE `areas` DISABLE KEYS */;
-INSERT INTO `areas` VALUES (1,'Northshire',-842150451,-842150451),(2,'Elwynn Forest',-842150451,-842150451);
+INSERT INTO `areas` VALUES (1,'Northshire',0,0,1,240),(2,'Elwynn Forest',0,0,1,240);
 /*!40000 ALTER TABLE `areas` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -248,6 +250,7 @@ CREATE TABLE `npcs` (
   `strength` int(11) NOT NULL,
   `stamina` int(11) NOT NULL,
   `wisdom` int(11) NOT NULL,
+  `spirit` int(11) NOT NULL,
   `health` int(11) NOT NULL,
   `mana` int(11) NOT NULL,
   `energy` int(11) NOT NULL,
@@ -268,7 +271,7 @@ CREATE TABLE `npcs` (
 
 LOCK TABLES `npcs` WRITE;
 /*!40000 ALTER TABLE `npcs` DISABLE KEYS */;
-INSERT INTO `npcs` VALUES (1,'The Lurker Below','',240,1,0,200,200,200,200,200,5000,5000,0,0,'',2.5,100,200,'2;',''),(2,'Diseased Young Wolf','',1,1,0,5,0,5,4,0,50,0,0,0,'',2,2,3,'1;',''),(3,'Diseased Timber Wolf','',1,1,0,5,0,5,4,0,50,0,0,0,'',2,2,3,'1;',''),(4,'Marshal McBride','',20,1,1,10,10,10,10,10,1227,100,0,0,'',2,1,1,'0;','Hey, citizen! You look like a stout one. We guards are spread a little thin out here, and I could use your help...'),(5,'Eagan Peltskinner','',3,1,1,10,10,10,7,10,100,150,0,0,'',2,1,1,'0;',''),(6,'Deputy Willem','',18,1,1,10,10,10,41,10,100,150,0,0,'',2,1,1,'0;','Normally I\'d be out on the beat looking after the folk of Stormwind, but a lot of the Stormwind guards are fighting in the other lands. So here I am, deputized and offering bounties when I\'d rather be on patrol...'),(7,'Milly Osworth','',2,1,1,10,10,10,5,10,100,150,0,0,'',2,1,1,'0;',''),(8,'Kobold Vermin','',2,1,0,10,10,10,4,10,20,20,0,0,'',2,2,4,'1;',''),(9,'Kobold Worker','',3,1,0,10,10,10,5,10,25,20,0,0,'',1.75,2,5,'1;',''),(10,'Kobold Laborer','',5,1,0,10,10,10,5,10,25,20,0,0,'',1.75,2,5,'1;',''),(11,'Falkhaan Isenstrider','',10,1,1,10,10,10,19,10,100,150,0,0,'',2,1,1,'0;',''),(12,'Brother Neals','',50,1,1,100,290,100,276,200,100,150,0,0,'',2,1,1,'0;',''),(13,'Janos Hammerknuckle','',5,1,1,10,10,10,10,10,100,150,0,0,'Weaponsmith',2,1,1,'0;4;5;',''),(14,'Godric Rothgar','',5,1,1,10,10,10,10,10,100,150,0,0,'Armorer & Shieldcrafter',2,1,1,'0;4;5;',''),(15,'Brother Danil','',5,1,1,10,10,10,10,10,100,150,0,0,'General Supplies',2,1,1,'0;4;',''),(16,'Dermot Johns','',5,1,1,10,10,10,10,10,100,150,0,0,'Cloth & Leather Armor Merchant',2,1,1,'0;4;5;',''),(17,'Marshal Dughan','',1,1,0,10,10,10,10,10,50,100,100,0,'',2,1,1,'0;','Ach, it\'s hard enough keeping order around here without all these new troubles popping up! I hope you have good news, Sandrol...'),(18,'Garrick Padfoot','',5,1,0,10,10,10,10,10,101,100,100,0,'',2,12,14,'2;',''),(19,'Innkeeper Farley','',30,1,0,10,10,10,10,10,50,100,100,0,'',2,1,1,'0;','Welcome to my Inn, weary traveler. What can I do for you?'),(20,'Brother Paxton','',5,1,0,10,10,10,10,10,50,100,100,0,'',2,1,1,'0;',''),(21,'Brother Sammuel','',5,1,0,10,10,10,10,10,50,100,100,0,'',2,1,1,'0;',''),(22,'Defias Thug','',4,1,0,10,10,10,10,10,75,100,100,0,'',2,5,10,'2;',''),(23,'Defias Thug','',3,2,0,10,10,10,10,10,75,100,100,0,'',2,5,10,'2;','');
+INSERT INTO `npcs` VALUES (1,'The Lurker Below','',240,1,0,200,200,200,200,200,0,5000,5000,0,0,'',2.5,100,200,'2;',''),(2,'Diseased Young Wolf','',1,1,0,5,0,5,4,0,0,50,0,0,0,'',2,2,3,'1;',''),(3,'Diseased Timber Wolf','',1,1,0,5,0,5,4,0,0,50,0,0,0,'',2,2,3,'1;',''),(4,'Marshal McBride','',20,1,1,10,10,10,10,10,0,1227,100,0,0,'',2,1,1,'0;','Hey, citizen! You look like a stout one. We guards are spread a little thin out here, and I could use your help...'),(5,'Eagan Peltskinner','',3,1,1,10,10,10,7,10,0,100,150,0,0,'',2,1,1,'0;',''),(6,'Deputy Willem','',18,1,1,10,10,10,41,10,0,100,150,0,0,'',2,1,1,'0;','Normally I\'d be out on the beat looking after the folk of Stormwind, but a lot of the Stormwind guards are fighting in the other lands. So here I am, deputized and offering bounties when I\'d rather be on patrol...'),(7,'Milly Osworth','',2,1,1,10,10,10,5,10,0,100,150,0,0,'',2,1,1,'0;',''),(8,'Kobold Vermin','',2,1,0,10,10,10,4,10,0,20,20,0,0,'',2,2,4,'1;',''),(9,'Kobold Worker','',3,1,0,10,10,10,5,10,0,25,20,0,0,'',1.75,2,5,'1;',''),(10,'Kobold Laborer','',5,1,0,10,10,10,5,10,0,25,20,0,0,'',1.75,2,5,'1;',''),(11,'Falkhaan Isenstrider','',10,1,1,10,10,10,19,10,0,100,150,0,0,'',2,1,1,'0;',''),(12,'Brother Neals','',50,1,1,100,290,100,276,200,0,100,150,0,0,'',2,1,1,'0;',''),(13,'Janos Hammerknuckle','',5,1,1,10,10,10,10,10,0,100,150,0,0,'Weaponsmith',2,1,1,'0;4;5;',''),(14,'Godric Rothgar','',5,1,1,10,10,10,10,10,0,100,150,0,0,'Armorer & Shieldcrafter',2,1,1,'0;4;5;',''),(15,'Brother Danil','',5,1,1,10,10,10,10,10,0,100,150,0,0,'General Supplies',2,1,1,'0;4;',''),(16,'Dermot Johns','',5,1,1,10,10,10,10,10,0,100,150,0,0,'Cloth & Leather Armor Merchant',2,1,1,'0;4;5;',''),(17,'Marshal Dughan','',1,1,0,10,10,10,10,10,0,50,100,100,0,'',2,1,1,'0;','Ach, it\'s hard enough keeping order around here without all these new troubles popping up! I hope you have good news, Sandrol...'),(18,'Garrick Padfoot','',5,1,0,10,10,10,10,10,0,101,100,100,0,'',2,12,14,'2;',''),(19,'Innkeeper Farley','',30,1,0,10,10,10,10,10,0,50,100,100,0,'',2,1,1,'0;','Welcome to my Inn, weary traveler. What can I do for you?'),(20,'Brother Paxton','',5,1,0,10,10,10,10,10,0,50,100,100,0,'',2,1,1,'0;',''),(21,'Brother Sammuel','',5,1,0,10,10,10,10,10,0,50,100,100,0,'',2,1,1,'0;',''),(22,'Defias Thug','',4,1,0,10,10,10,10,10,0,75,100,100,0,'',2,5,10,'2;',''),(23,'Defias Thug','',3,2,0,10,10,10,10,10,0,75,100,100,0,'',2,5,10,'2;','');
 /*!40000 ALTER TABLE `npcs` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -317,7 +320,7 @@ CREATE TABLE `player_class_data` (
 
 LOCK TABLES `player_class_data` WRITE;
 /*!40000 ALTER TABLE `player_class_data` DISABLE KEYS */;
-INSERT INTO `player_class_data` VALUES ('Bob',1,40),('Bob',2,30),('Bob',3,81),('Bob',4,89),('Boris',1,59),('Boris',2,60),('Boris',3,60),('Boris',4,60),('Tash',1,2);
+INSERT INTO `player_class_data` VALUES ('Bob',1,40),('Bob',2,30),('Bob',3,81),('Bob',4,155),('Boris',1,59),('Boris',2,60),('Boris',3,60),('Boris',4,60),('Tash',1,2);
 /*!40000 ALTER TABLE `player_class_data` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -390,7 +393,7 @@ CREATE TABLE `player_inventory` (
 
 LOCK TABLES `player_inventory` WRITE;
 /*!40000 ALTER TABLE `player_inventory` DISABLE KEYS */;
-INSERT INTO `player_inventory` VALUES ('Bob',4,0),('Bob',5,0),('Bob',6,0),('Bob',3,0),('Bob',20,1),('Tash',4,0),('Tash',5,0),('Tash',6,0),('Tash',3,0),('Tash',19,1),('Tash',19,1),('Tash',19,1),('Tash',19,1),('Tash',19,1),('Boris',14,0),('Boris',21,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1);
+INSERT INTO `player_inventory` VALUES ('Tash',4,0),('Tash',5,0),('Tash',6,0),('Tash',3,0),('Tash',19,1),('Tash',19,1),('Tash',19,1),('Tash',19,1),('Tash',19,1),('Bob',4,0),('Bob',5,0),('Bob',6,0),('Bob',3,0),('Bob',20,1),('Boris',14,0),('Boris',21,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1);
 /*!40000 ALTER TABLE `player_inventory` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -449,6 +452,7 @@ CREATE TABLE `players` (
   `strength` int(11) NOT NULL,
   `stamina` int(11) NOT NULL,
   `wisdom` int(11) NOT NULL,
+  `spirit` int(11) NOT NULL,
   `health` int(11) NOT NULL,
   `mana` int(11) NOT NULL,
   `class` int(11) NOT NULL,
@@ -465,7 +469,7 @@ CREATE TABLE `players` (
 
 LOCK TABLES `players` WRITE;
 /*!40000 ALTER TABLE `players` DISABLE KEYS */;
-INSERT INTO `players` VALUES ('Bob','\r\Z',0,'',3032073,16,240,1,0,139,512,118,446,269,4254,5120,4,0,0,0),('Boris','\r\Z',10,'',61309521,2,240,1,7,249,110,488,727,207,7270,1100,2,2,0,4299),('Tash','FCU',0,'',1451,3,2,1,2,5,5,5,5,5,50,100,1,2,0,6);
+INSERT INTO `players` VALUES ('Bob','\r\Z',0,'',61309521,30,240,1,0,139,512,118,446,269,0,4460,5120,4,0,0,1860),('Boris','\r\Z',10,'',61309521,30,240,1,7,249,110,488,727,207,0,6654,1100,2,2,0,4299),('Tash','FCU',0,'',1451,3,2,1,2,5,5,5,5,5,0,50,100,1,2,0,6);
 /*!40000 ALTER TABLE `players` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -664,4 +668,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-02-13  2:13:18
+-- Dump completed on 2018-02-17  9:21:29
