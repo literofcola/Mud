@@ -512,8 +512,6 @@ void Player::MakeGhost()
 {
 	isCorpse = false;
 	isGhost = true;
-	//remove from current room
-	//move to area death_room
 }
 
 void Player::MakeAlive()
@@ -547,16 +545,14 @@ void Player::SetResurrectTime(int seconds)
 	deathTime = Game::currentTime - PLAYER_DEATH_TIME + seconds;
 }
 
-bool Player::CanResAtCorpse()
+//returns time left before res at corpse allowed, otherwise <= 0 if can res
+int Player::CanResAtCorpse()
 {
-	if (TimeSinceDeath() >= PLAYER_DEATH_TIME_RUNBACK)
-		return true;
-	return false;
+	return deathTime + PLAYER_DEATH_TIME_RUNBACK - Game::currentTime;
 }
 
-bool Player::CanRes()
+//returns time left before res allowed, otherwise <= 0 if can res
+int Player::CanRes()
 {
-	if (TimeSinceDeath() >= PLAYER_DEATH_TIME)
-		return true;
-	return false;
+	return deathTime + PLAYER_DEATH_TIME - Game::currentTime;
 }

@@ -455,6 +455,15 @@ void cmd_score(Character * ch, string argument)
     double movespeed = ch->GetMoveSpeed();
     ch->Send("Current movement speed: " + Utilities::dtos(ch->movementSpeed * movespeed, 2) + " rooms per second ("
         + Utilities::dtos(movespeed*100, 0) + "% of normal)\n\r");
+	if (!ch->IsAlive())
+	{
+		int res_at_graveyard = ch->player->CanRes();
+		int res_at_corpse = ch->player->CanResAtCorpse();
+		if(res_at_graveyard > 0)
+			ch->Send(Utilities::itos(res_at_graveyard) + " seconds before you can resurrect at the graveyard.\n\r");
+		if (res_at_corpse > 0)
+			ch->Send(Utilities::itos(res_at_corpse) + " seconds before you can resurrect near your corpse.\n\r");
+	}
 }
 
 void cmd_scan(Character * ch, string argument)
@@ -1209,6 +1218,19 @@ bool releaseSpiritQuery(Character * ch, string argument)
     {
         ch->player->MakeGhost();
         ch->QueryClear();
+		Area * this_area = Game::GetGame()->GetArea(ch->room->area);
+		if (!this_area)
+		{
+			LogFile::Log("error", "releaseSpiritQuery, bad ch->room->area");
+			return true;
+		}
+		Room * deathroom = Game::GetGame()->GetRoom(this_area->death_room);
+		if (!deathroom)
+		{
+			LogFile::Log("error", "releaseSpiritQuery, no area death_room");
+			return true;
+		}
+		ch->ChangeRooms(deathroom);
         return true;
     }
     return false;

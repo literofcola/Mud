@@ -2269,38 +2269,6 @@ void Character::AdjustHealth(Character * source, int amount)
 		Send("|RYou have been slain!|X\n\r");
 
 		OnDeath(); //The source of damage shouldn't matter except where cases of "killing blow" matters (none so far?)
-
-        /*if(IsNPC() && !source->IsNPC()) //NPC killed by player
-        {
-            ChangeRooms(NULL);
-            int exp = Game::CalculateExperience(source, this);
-            source->Send("|BYou have gained |Y" + Utilities::itos(exp) + "|B experience.|X\n\r");
-            source->ApplyExperience(exp);
-            //TODO apply experience to source. need to handle groups/who tapped npc
-            std::list<DropData>::iterator dropiter;
-            for(dropiter = drops.begin(); dropiter != drops.end(); ++dropiter)
-            {
-                if(Server::rand() % 100 <= (*dropiter).percent && (*dropiter).id.size() > 0)
-                {
-                    int which = Server::rand() % ((int)(*dropiter).id.size());
-                    Item * drop = Game::GetGame()->GetItemIndex((*dropiter).id[which]);
-                    source->Send("You receive loot: " + (string)Item::quality_strings[drop->quality] + drop->name + "|X.\n\r");
-                    source->Message(source->name + " receives loot: " + Item::quality_strings[drop->quality] + drop->name + "|X.\n\r",
-                                    Character::MSG_ROOM_NOTCHAR);
-                    source->player->NewItemInventory(drop);
-                }
-            }
-            if(source->player)
-            {
-                source->player->QuestCompleteObjective(Quest::OBJECTIVE_KILLNPC, (void*)this);
-            }
-            Game::GetGame()->RemoveCharacter(this);
-        }
-        else if(IsNPC() && source->IsNPC()) //npc - npc
-        {
-            ChangeRooms(NULL);
-            Game::GetGame()->RemoveCharacter(this);
-        }*/
     }
 }
 
@@ -2339,10 +2307,10 @@ void Character::OnDeath()
 	else if (IsNPC()) //NPC killed, figure out by who...
 	{
 		ChangeRooms(NULL);
-		//Who has the tap?
 		Character * tap = nullptr;
 		Character * highdamage = nullptr;
 		int damage = 0;
+		//find out who has the tap
 		std::list<Threat>::iterator iter;
 		for (iter = threatList.begin(); iter != threatList.end(); ++iter)
 		{
@@ -3204,6 +3172,13 @@ bool Character::IsGhost()
     if(player && player->IsGhost())
         return true;
     return false;
+}
+
+bool Character::IsAlive()
+{
+	if (player && !player->IsGhost() && !player->IsCorpse())
+		return true;
+	return false;
 }
 
 void Character::ApplyExperience(int amount)

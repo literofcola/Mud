@@ -4,9 +4,6 @@
 class Server;
 class User;
 
-#define PLAYER_DEATH_TIME 600
-#define PLAYER_DEATH_TIME_RUNBACK 120
-
 class Player
 {
 public:
@@ -19,6 +16,9 @@ public:
         EQUIP_WAIST, EQUIP_LEGS, EQUIP_FEET, EQUIP_FINGER1, EQUIP_FINGER2, EQUIP_TRINKET1, EQUIP_TRINKET2,
         EQUIP_OFFHAND, EQUIP_MAINHAND, EQUIP_LAST 
     };
+
+	const int PLAYER_DEATH_TIME = 600;
+	const int PLAYER_DEATH_TIME_RUNBACK = 120;
 
     std::string password;
     std::string pwtemp;
@@ -87,8 +87,8 @@ public:
 	bool IsAlive();
 	int TimeSinceDeath();
 	void SetResurrectTime(int seconds);
-	bool CanResAtCorpse();
-	bool CanRes();
+	int CanResAtCorpse();
+	int CanRes();
 
     User * user; //Talk about circular dependencies... bad design
 private:

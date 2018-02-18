@@ -288,6 +288,7 @@ public:
 	bool IsPlayer();
     bool IsCorpse();
     bool IsGhost();
+	bool IsAlive();
 	void AddClassSkills();
     
 private:

@@ -490,8 +490,9 @@ void Game::WorldUpdate(Server * server)
         }
         ++iter;
 
-        if(curr->IsCorpse() || curr->IsGhost())
+        if(!curr->IsNPC() && !curr->IsAlive())
         {
+			//TODO: See if we can resurrect
             continue;
         }
         //Tick, every 2 seconds
