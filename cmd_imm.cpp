@@ -85,7 +85,7 @@ void cmd_restore(Character * ch, string argument)
 			u->character->SetEnergy(u->character->GetMaxEnergy());
 			u->character->SetRage(u->character->GetMaxRage());
             if(u->character->player)
-                u->character->player->isGhost = false;
+                u->character->player->SetResurrectTime(0);
         }
     }
 }

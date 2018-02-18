@@ -119,22 +119,17 @@ void cmd_recall(Character * ch, string argument)
 		ch->Send("You cannot set your recall location here.\n\r");
 		return;
 	}
-
-	ch->queryData = new int(ch->room->id);
-	ch->hasQuery = true;
-	ch->queryPrompt = "Set recall location to: |W" + ch->room->name + "|X? (y/n) ";
-	ch->queryFunction = cmd_recall_Query;
+	ch->SetQuery("Set recall location to: |W" + ch->room->name + "|X? (y/n) ", ch->room, cmd_recall_Query);
 }
 
 bool cmd_recall_Query(Character * ch, string argument)
 {
 	if (!Utilities::str_cmp(argument, "yes") || !Utilities::str_cmp(argument, "y"))
 	{
-		ch->player->recall = *((int*)ch->queryData);
+		Room * recall = (Room*)ch->GetQueryData();
+		ch->player->recall = recall->id;
 		ch->Send("Recall location set.\n\r");
 	}
-	if (ch->queryData)
-		delete ch->queryData;
 	ch->QueryClear();
 	return true;
 }

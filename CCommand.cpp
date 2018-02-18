@@ -444,9 +444,9 @@ bool Command::Interpret(Character * ch, string argument)
     int cmd;
     bool found = false;
 
-	if(ch->hasQuery)
+	if(ch->HasQuery())
 	{
-		if((ch->queryFunction)(ch, argument))
+		if((ch->GetQueryFunc())(ch, argument))
 			return true;
 		//if the question wasn't answered, interpret normally
 	}

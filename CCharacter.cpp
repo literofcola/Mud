@@ -366,6 +366,29 @@ void Character::QueryClear()
 	hasQuery = false;
 }
 
+void Character::SetQuery(std::string prompt, void * data, bool(*func)(Character *, std::string))
+{
+	hasQuery = true;
+	queryFunction = func;
+	queryData = data;
+	queryPrompt = prompt;
+}
+
+void * Character::GetQueryData()
+{
+	return queryData;
+}
+
+bool Character::HasQuery()
+{
+	return hasQuery;
+}
+
+bool (*Character::GetQueryFunc())(Character *, std::string)
+{
+	return queryFunction;
+}
+
 void Character::ResetMaxStats()
 {
 	//todo: check equipment bonuses
@@ -976,7 +999,8 @@ Character * Character::LoadPlayer(std::string name, User * user)
     loaded->player->immlevel = row["immlevel"];
     loaded->player->experience = row["experience"];
 	loaded->player->recall = row["recall"];
-    loaded->player->isGhost = row["ghost"];
+	if(row["ghost"])
+		loaded->player->MakeGhost();
 	loaded->player->statPoints = row["stat_points"];
 
 	StoreQueryResult playerclassres = Server::sqlQueue->Read("SELECT * FROM player_class_data where player='" + loaded->name + "'");
@@ -2309,12 +2333,8 @@ void Character::OnDeath()
 
 	if (!IsNPC()) //player killed... doesn't matter by who, no rewards yet for doing so
 	{
-		//set flag for corpseified
-		this->player->isCorpse = true;
-		queryData = NULL;
-		hasQuery = true;
-		queryPrompt = "Release spirit? (y) ";
-		queryFunction = releaseSpiritQuery;
+		player->MakeCorpse();
+		SetQuery("Release spirit? (y) ", NULL, releaseSpiritQuery);
 	}
 	else if (IsNPC()) //NPC killed, figure out by who...
 	{
@@ -3174,14 +3194,14 @@ bool Character::ChangeRoomsID(int roomid)
 
 bool Character::IsCorpse()
 {
-    if(player && player->isCorpse)
+    if(player && player->IsCorpse())
         return true;
     return false;
 }
 
 bool Character::IsGhost()
 {
-    if(player && player->isGhost)
+    if(player && player->IsGhost())
         return true;
     return false;
 }

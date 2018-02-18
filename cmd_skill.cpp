@@ -391,11 +391,7 @@ void cmd_learn(Character * ch, string argument)
                         return;
                     }
                     ch->Send("Learning this skill will replace " + dupe->long_name + ".\n\r");
-
-                    ch->queryData = (*skilliter).second;
-	                ch->hasQuery = true;
-	                ch->queryPrompt = "Replace (" + dupe->long_name + ") with (" + (*skilliter).second->long_name + ")? (y/n) ";
-	                ch->queryFunction = cmd_learn_Query;
+					ch->SetQuery("Replace (" + dupe->long_name + ") with (" + (*skilliter).second->long_name + ")? (y/n) ", (*skilliter).second, cmd_learn_Query);
                 }
                 else
                 {
@@ -468,11 +464,7 @@ void cmd_learn(Character * ch, string argument)
                         return;
                     }
                     ch->Send("Learning this skill will replace " + dupe->long_name + ".\n\r");
-
-                    ch->queryData = (*classSkill).skill;
-	                ch->hasQuery = true;
-	                ch->queryPrompt = "Replace (" + dupe->long_name + ") with (" + (*classSkill).skill->long_name + ")? (y/n) ";
-	                ch->queryFunction = cmd_learn_Query;
+					ch->SetQuery("Replace (" + dupe->long_name + ") with (" + (*classSkill).skill->long_name + ")? (y/n) ", (*classSkill).skill, cmd_learn_Query);
                 }
                 else
                 {
@@ -494,7 +486,7 @@ bool cmd_learn_Query(Character * ch, string argument)
         return true;
     }
 
-    Skill * newskill = (Skill*)ch->queryData;
+    Skill * newskill = (Skill*)ch->GetQueryData();
     
     if(!Utilities::str_cmp(argument, "yes") || !Utilities::str_cmp(argument, "y"))
     {

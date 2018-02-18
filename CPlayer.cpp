@@ -500,3 +500,63 @@ void Player::SetClassLevel(int classid, int newlevel)
     }
     AddClass(classid, newlevel);
 }
+
+void Player::MakeCorpse()
+{
+	isCorpse = true;
+	isGhost = false;
+	deathTime = Utilities::GetTime();
+}
+
+void Player::MakeGhost()
+{
+	isCorpse = false;
+	isGhost = true;
+	//remove from current room
+	//move to area death_room
+}
+
+void Player::MakeAlive()
+{
+	isCorpse = false;
+	isGhost = false;
+}
+
+bool Player::IsCorpse()
+{
+	return isCorpse;
+}
+
+bool Player::IsGhost()
+{
+	return isGhost;
+}
+
+bool Player::IsAlive()
+{
+	return (!isCorpse && !isGhost);
+}
+
+int Player::TimeSinceDeath()
+{
+	return (int)(Game::currentTime - deathTime);
+}
+
+void Player::SetResurrectTime(int seconds)
+{
+	deathTime = Game::currentTime - PLAYER_DEATH_TIME + seconds;
+}
+
+bool Player::CanResAtCorpse()
+{
+	if (TimeSinceDeath() >= PLAYER_DEATH_TIME_RUNBACK)
+		return true;
+	return false;
+}
+
+bool Player::CanRes()
+{
+	if (TimeSinceDeath() >= PLAYER_DEATH_TIME)
+		return true;
+	return false;
+}

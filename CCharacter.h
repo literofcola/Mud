@@ -153,11 +153,6 @@ public:
     void AddTrigger(Trigger & trig);
     Trigger * GetTrigger(int id, int type = -1);
 
-    bool hasQuery;
-	bool (*queryFunction)(Character *, std::string);
-	void * queryData;
-    std::string queryPrompt;
-
 	//this should for sure be in user right...
     enum EditState
     {
@@ -175,6 +170,10 @@ public:
 	void ResetMaxStats();
     void GeneratePrompt(double currentTime);
     void QueryClear();
+	void SetQuery(std::string prompt, void * data, bool(*queryFunction)(Character *, std::string));
+	void * GetQueryData();
+	bool HasQuery();
+	bool(*GetQueryFunc())(Character *, std::string);
 	void SendBW(std::string str);
     void Send(std::string str);
 	void Send(char * str);
@@ -305,6 +304,12 @@ private:
 	int comboPoints;
 	int maxComboPoints;
 	bool combat;
+
+	bool hasQuery;
+	bool(*queryFunction)(Character *, std::string);
+	void * queryData;
+	std::string queryPrompt;
+
 };
 
 #endif

@@ -284,7 +284,7 @@ void cmd_drop(Character * ch, string argument)
     if(!ch || !ch->player)
         return;
 
-    if(ch->hasQuery)
+    if(ch->HasQuery())
     {
         ch->Send("Answer your current question first.\n\r");
         return;
@@ -340,56 +340,38 @@ void cmd_drop(Character * ch, string argument)
         ch->Send("You're not carrying that item.\n\r");
         return;
     }
-
-	ch->queryData = new string(arg1);
-	ch->hasQuery = true;
-	ch->queryPrompt = "Destroy " + item->name + "? (y/n) ";
-	ch->queryFunction = cmd_drop_Query;
-
+	item = Game::GetGame()->GetItemIndex(item->id); //pass the item index as the query data just incase the player inventory gets messed with
+	ch->SetQuery("Destroy " + item->name + "? (y/n) ", item, cmd_drop_Query);
 }
 
 bool cmd_drop_Query(Character * ch, string argument)
 {
     if(!ch || !ch->player)
     {
-        if(ch->queryData)
-            delete ch->queryData;
         ch->QueryClear();
         return true;
     }
     if(ch->delay_active)
     {
         ch->Send("You can't do that while casting.\n\r");
-        if(ch->queryData)
-            delete ch->queryData;
         ch->QueryClear();
         return true;
     }
 
     if(!Utilities::str_cmp(argument, "yes") || !Utilities::str_cmp(argument, "y"))
     {
-        string itemname = *((string*)ch->queryData);
-        if(ch->queryData)
-            delete ch->queryData;
+        Item * item = (Item*)ch->GetQueryData(); //the query data is the Item Index just in case it got deleted in the meantime
         ch->QueryClear();
-        Item * item;
-        if((item = ch->player->GetItemInventory(itemname)) == NULL)
+        if((item = ch->player->GetItemInventory(item->id)) == NULL)
         {
             ch->Send("You're not carrying that item.\n\r");
             return true;
         }
-
-        ch->player->RemoveItemInventory(itemname);
+        ch->player->RemoveItemInventory(item->id);
         return true;
     }
-    if(!Utilities::str_cmp(argument, "no") || !Utilities::str_cmp(argument, "n"))
-    {
-        if(ch->queryData)
-            delete ch->queryData;
-        ch->QueryClear();
-        return true;
-    }
-    return false;
+    ch->QueryClear();
+    return true;
 }
 
 void cmd_eat(Character * ch, string argument)

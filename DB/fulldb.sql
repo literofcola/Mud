@@ -393,7 +393,7 @@ CREATE TABLE `player_inventory` (
 
 LOCK TABLES `player_inventory` WRITE;
 /*!40000 ALTER TABLE `player_inventory` DISABLE KEYS */;
-INSERT INTO `player_inventory` VALUES ('Tash',4,0),('Tash',5,0),('Tash',6,0),('Tash',3,0),('Tash',19,1),('Tash',19,1),('Tash',19,1),('Tash',19,1),('Tash',19,1),('Bob',4,0),('Bob',5,0),('Bob',6,0),('Bob',3,0),('Bob',20,1),('Boris',14,0),('Boris',21,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1);
+INSERT INTO `player_inventory` VALUES ('Tash',4,0),('Tash',5,0),('Tash',6,0),('Tash',3,0),('Tash',19,1),('Tash',19,1),('Tash',19,1),('Tash',19,1),('Tash',19,1),('Bob',4,0),('Bob',5,0),('Bob',6,0),('Bob',3,0),('Bob',20,1),('Boris',14,0),('Boris',21,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1);
 /*!40000 ALTER TABLE `player_inventory` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -469,7 +469,7 @@ CREATE TABLE `players` (
 
 LOCK TABLES `players` WRITE;
 /*!40000 ALTER TABLE `players` DISABLE KEYS */;
-INSERT INTO `players` VALUES ('Bob','\r\Z',0,'',61309521,30,240,1,0,139,512,118,446,269,0,4460,5120,4,0,0,1860),('Boris','\r\Z',10,'',61309521,30,240,1,7,249,110,488,727,207,0,6654,1100,2,2,0,4299),('Tash','FCU',0,'',1451,3,2,1,2,5,5,5,5,5,0,50,100,1,2,0,6);
+INSERT INTO `players` VALUES ('Bob','\r\Z',0,'',61309521,30,240,1,0,139,512,118,446,269,0,4460,5120,4,0,0,1860),('Boris','\r\Z',10,'',61309521,30,240,1,7,249,110,488,727,207,59,7270,2070,2,2,0,4240),('Tash','FCU',0,'',1451,3,2,1,2,5,5,5,5,5,0,50,100,1,2,0,6);
 /*!40000 ALTER TABLE `players` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -668,4 +668,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-02-17  9:21:29
+-- Dump completed on 2018-02-17 21:58:58

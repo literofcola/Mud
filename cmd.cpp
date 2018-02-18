@@ -1134,7 +1134,7 @@ void cmd_quest(Character * ch, string argument)
 
 void cmd_quit(Character * ch, string argument)
 {
-    if(ch->hasQuery)
+    if(ch->HasQuery())
     {
         ch->Send("Answer your current question first.\n\r");
         return;
@@ -1150,14 +1150,13 @@ void cmd_quit(Character * ch, string argument)
         ch->Send("You can't do that while casting.\n\r");
         return;
     }
-	ch->queryData = NULL;
-	ch->hasQuery = true;
-	ch->queryPrompt = "Quit? (y/n) ";
+	
+	string qp = "Quit? (y/n) ";
 	if (ch->level == 1)
 	{
-		ch->queryPrompt += "|R(Level one characters will not be saved)|X: ";
+		qp += "|R(Level one characters will not be saved)|X: ";
 	}
-	ch->queryFunction = cmd_quit_Query;
+	ch->SetQuery(qp, NULL, cmd_quit_Query);
 }
 
 bool cmd_quit_Query(Character * ch, string argument)
@@ -1203,17 +1202,12 @@ bool releaseSpiritQuery(Character * ch, string argument)
 {
     if(!ch || !ch->player)
     { 
-        //ch->QueryClear();
         return true;
     }
 
     if(!Utilities::str_cmp(argument, "yes") || !Utilities::str_cmp(argument, "y"))
     {
-        //ch->RemoveAllSpellAffects();
-        //set dead flag
-        //SpellAffect * sa = ch->AddSpellAffect(true, ch, "player_is_ghost", true, false, 0, 0, 0, NULL);
-        ch->player->isCorpse = false;
-        ch->player->isGhost = true;
+        ch->player->MakeGhost();
         ch->QueryClear();
         return true;
     }

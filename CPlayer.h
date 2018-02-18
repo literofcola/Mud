@@ -4,6 +4,9 @@
 class Server;
 class User;
 
+#define PLAYER_DEATH_TIME 600
+#define PLAYER_DEATH_TIME_RUNBACK 120
+
 class Player
 {
 public:
@@ -26,8 +29,7 @@ public:
 	int recall; //ID of recall room
     double lastCombatAction; //Timestamp for pvp combat flag
     double hoursPlayed;
-    bool isCorpse;
-    bool isGhost;
+    
 	bool prompt;
 
     //Inventory and equipment
@@ -77,11 +79,23 @@ public:
     void AddClass(int id, int level);
     int GetClassLevel(int classid);
     void SetClassLevel(int classid, int newlevel);
+	void MakeCorpse();
+	void MakeGhost();
+	void MakeAlive();
+	bool IsCorpse();
+	bool IsGhost();
+	bool IsAlive();
+	int TimeSinceDeath();
+	void SetResurrectTime(int seconds);
+	bool CanResAtCorpse();
+	bool CanRes();
 
     User * user; //Talk about circular dependencies... bad design
 private:
 
-	
+	bool isCorpse;
+	bool isGhost;	 
+	double deathTime; //timestamp for res timer
 };
 
 #endif
