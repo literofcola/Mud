@@ -253,6 +253,8 @@ public:
 	void ConsumeRage(int amount);
 	void AdjustHealth(Character * source, int amount);
 	void OnDeath();
+	void MakeCorpse();
+	void RemoveCorpse();
     void AdjustMana(Character * source, int amount);
 	void AdjustEnergy(Character * source, int amount);
 	void AdjustRage(Character * source, int amount);
@@ -284,12 +286,18 @@ public:
     void RemoveSkill(std::string name);
     void SetCooldown(Skill * sk, std::string name, bool global, double length);
     double GetCooldownRemaining(Skill * sk);
+	void AddClassSkills();
+
     bool IsNPC();
 	bool IsPlayer();
-    bool IsCorpse();
-    bool IsGhost();
+
+	void SetCorpse();
+	void SetGhost();
+	void SetAlive();
+	bool IsCorpse();
+	bool IsGhost();
 	bool IsAlive();
-	void AddClassSkills();
+	int TimeSinceDeath();
     
 private:
 
@@ -310,6 +318,9 @@ private:
 	bool(*queryFunction)(Character *, std::string);
 	void * queryData;
 	std::string queryPrompt;
+
+	bool isCorpse;
+	double deathTime; //timestamp for res timer and npc corpse decay
 
 };
 

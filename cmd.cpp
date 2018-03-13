@@ -64,6 +64,11 @@ void cmd_attack(Character * ch, string argument)
             return;
         }
     }
+	if(!target->IsAlive())
+	{
+		ch->Send("That target is already dead!\n\r");
+		return;
+	}
     if(target == ch)
     {
         ch->Send("You can't attack yourself!\n\r");
@@ -204,91 +209,117 @@ void cmd_look(Character * ch, string argument)
         if(!inroom->description.empty())
 	        ch->Send("  " + inroom->description);
 
-        std::list<Character *>::iterator i;
-        for(i = inroom->characters.begin(); i != inroom->characters.end(); i++)
-        {
-            if(ch == (*i))
-                continue;
-
-            //Determine appropriate quest icon. Hierarchy |Y?, |Y!, |W?, |D!
-            //Search quests this npc ends
-            string questicon = "";
-            bool foundyellow = false; bool foundwhite = false;
-            if(ch->player && !(*i)->questEnd.empty())
-            {
-                std::vector<Quest *>::iterator questiter;
-                for(questiter = (*i)->questEnd.begin(); questiter != (*i)->questEnd.end(); ++questiter)
-                {
-                    if(ch->player->QuestObjectivesComplete(*questiter))
-                    {
-                        questicon = "|Y[?] ";
-                        foundyellow = true;
-                        break;
-                    }
-                    else if(ch->player->QuestActive(*questiter))
-                    {
-                        questicon = "|W[?] ";
-                        foundwhite = true;
-                    }
-                }
-            }
-            //Search quests this npc starts
-            if(!foundyellow && ch->player && !(*i)->questStart.empty())
-            {
-                std::vector<Quest *>::iterator questiter;
-                for(questiter = (*i)->questStart.begin(); questiter != (*i)->questStart.end(); ++questiter)
-                {
-                    if(ch->player->QuestEligible(*questiter))
-                    {
-                        //TODO: white ! for soon to be available quests
-                        if(!foundwhite && Quest::GetDifficulty(ch->level, (*questiter)->level) == 0)
-                        {
-                            questicon = "|Y[|D!|Y] ";
-                        }
-                        else
-                        {
-                            questicon = "|Y[!] ";
-                            break;
-                        }
-                    }
-                }
-            }
-		    string disconnected = "";
-            string title = "";
-            string fighting = ".";
-			string level = "";
-			string aggressionColor = "|G";
-			string tapped = "";
-
-		    if((*i)->player && (*i)->player->user && !(*i)->player->user->IsConnected())
-			    disconnected = "|Y[DISCONNECTED] |X";
-
-            if((*i)->player)
-                title = (*i)->title;
-            else if(!(*i)->title.empty())
-                title = " <" + (*i)->title + ">";
-
-			level += "<" + 
-				Game::LevelDifficultyColor(Game::LevelDifficulty(ch->level, (*i)->level))
-				+ Utilities::itos((*i)->level) + "|X> ";
-
-            if((*i)->InCombat())
-            {
-                if((*i)->IsFighting(ch))
-                    fighting = ", fighting YOU!";
-                else if((*i)->GetTarget() != NULL)
-                    fighting = ", fighting " + (*i)->GetTarget()->name + ".";
-            }
-			aggressionColor = ch->AggressionColor((*i));
-			Character * tappedBy = (*i)->GetTap();
-			if (tappedBy)
+		if (!ch->IsGhost() || (ch->IsGhost() && (inroom->id == ch->player->corpse_room || inroom->id == ch->player->graveyard_room)))
+		{
+			std::list<Item *>::iterator itemiter;
+			for (itemiter = inroom->items.begin(); itemiter != inroom->items.end(); itemiter++)
 			{
-				tapped = " |D(tapped by " + tappedBy->GetName() + ")";
+				ch->Send((*itemiter)->name + ".\n\r");
 			}
-		    ch->Send(disconnected + level + questicon + aggressionColor + (*i)->name + title + " is here" + fighting + tapped + "|X\n\r");
-	    }
-		ch->Send("\n\r");
-		cmd_scan(ch, "");
+
+			std::list<Character *>::iterator i;
+			for (i = inroom->characters.begin(); i != inroom->characters.end(); i++)
+			{
+				if (ch == (*i))
+					continue;
+
+				if (ch->player && !ch->player->IMMORTAL() && (*i)->IsGhost())
+				{
+					continue;
+				}
+
+				//Determine appropriate quest icon. Hierarchy |Y?, |Y!, |W?, |D!
+				//Search quests this npc ends
+				string questicon = "";
+				if ((*i)->IsNPC())
+				{
+					bool foundyellow = false; bool foundwhite = false;
+					if (ch->player && !(*i)->questEnd.empty())
+					{
+						std::vector<Quest *>::iterator questiter;
+						for (questiter = (*i)->questEnd.begin(); questiter != (*i)->questEnd.end(); ++questiter)
+						{
+							if (ch->player->QuestObjectivesComplete(*questiter))
+							{
+								questicon = "|Y[?] ";
+								foundyellow = true;
+								break;
+							}
+							else if (ch->player->QuestActive(*questiter))
+							{
+								questicon = "|W[?] ";
+								foundwhite = true;
+							}
+						}
+					}
+					//Search quests this npc starts
+					if (!foundyellow && ch->player && !(*i)->questStart.empty())
+					{
+						std::vector<Quest *>::iterator questiter;
+						for (questiter = (*i)->questStart.begin(); questiter != (*i)->questStart.end(); ++questiter)
+						{
+							if (ch->player->QuestEligible(*questiter))
+							{
+								//TODO: white ! for soon to be available quests
+								if (!foundwhite && Quest::GetDifficulty(ch->level, (*questiter)->level) == 0)
+								{
+									questicon = "|Y[|D!|Y] ";
+								}
+								else
+								{
+									questicon = "|Y[!] ";
+									break;
+								}
+							}
+						}
+					}
+				}
+				string disconnected = "";
+				string title = "";
+				string corpse = "";
+				string fighting = ".";
+				string level = "";
+				string aggressionColor = "|G";
+				string tapped = "";
+
+				if ((*i)->player && (*i)->player->user && !(*i)->player->user->IsConnected())
+					disconnected = "|Y[DISCONNECTED] |X";
+
+				if ((*i)->player)
+					title = (*i)->title;
+				else if (!(*i)->title.empty())
+					title = " <" + (*i)->title + ">";
+
+				level += "<" +
+					Game::LevelDifficultyColor(Game::LevelDifficulty(ch->level, (*i)->level))
+					+ Utilities::itos((*i)->level) + "|X> ";
+
+				if ((*i)->IsCorpse())
+				{
+					corpse = "|DThe corpse of ";
+				}
+				if (ch->player && ch->player->IMMORTAL() && (*i)->IsGhost())
+				{
+					corpse = "The ghost of ";
+				}
+				if ((*i)->InCombat())
+				{
+					if ((*i)->IsFighting(ch))
+						fighting = ", fighting YOU!";
+					else if ((*i)->GetTarget() != NULL)
+						fighting = ", fighting " + (*i)->GetTarget()->name + ".";
+				}
+				aggressionColor = ch->AggressionColor((*i));
+				Character * tappedBy = (*i)->GetTap();
+				if (tappedBy)
+				{
+					tapped = " |D(tapped by " + tappedBy->GetName() + ")";
+				}
+				ch->Send(disconnected + level + questicon + aggressionColor + corpse + (*i)->name + title + " is here" + fighting + tapped + "|X\n\r");
+			}
+			ch->Send("\n\r");
+			cmd_scan(ch, "");
+		}
     }
     else // "look argument" //TODO, look at things in the room with higher priority
     {
@@ -441,7 +472,7 @@ void cmd_score(Character * ch, string argument)
         ch->Send("Immortal Level: " + Utilities::itos(ch->player->immlevel) + "\n\r");
     ch->Send("Health: " + Utilities::itos(ch->GetHealth()) + "/" + Utilities::itos(ch->GetMaxHealth()));
     ch->Send("  Mana: " + Utilities::itos(ch->GetMana()) + "/" + Utilities::itos(ch->GetMaxMana()));
-    ch->Send("  Energy: " + Utilities::itos(ch->GetEnergy()) + "/" + Utilities::itos(ch->GetMaxEnergy()) + "\n\r");
+    ch->Send("  Energy: " + Utilities::itos(ch->GetEnergy()) + "/" + Utilities::itos(ch->GetMaxEnergy()));
 	ch->Send("  Rage: " + Utilities::itos(ch->GetRage()) + "/" + Utilities::itos(ch->GetMaxRage()) + "\n\r");
     ch->Send("Agility: " + Utilities::itos(ch->agility) + " Intellect: " + Utilities::itos(ch->intellect)
         + " Strength: " + Utilities::itos(ch->strength) + " Stamina: " + Utilities::itos(ch->stamina) + " Wisdom: "
@@ -457,8 +488,8 @@ void cmd_score(Character * ch, string argument)
         + Utilities::dtos(movespeed*100, 0) + "% of normal)\n\r");
 	if (!ch->IsAlive())
 	{
-		int res_at_graveyard = ch->player->CanRes();
-		int res_at_corpse = ch->player->CanResAtCorpse();
+		int res_at_graveyard = ch->player->death_timer - ch->TimeSinceDeath();
+		int res_at_corpse = ch->player->death_timer_runback - ch->TimeSinceDeath();
 		if(res_at_graveyard > 0)
 			ch->Send(Utilities::itos(res_at_graveyard) + " seconds before you can resurrect at the graveyard.\n\r");
 		if (res_at_corpse > 0)
@@ -469,6 +500,9 @@ void cmd_score(Character * ch, string argument)
 void cmd_scan(Character * ch, string argument)
 {
 	if (!ch || !ch->room)
+		return;
+
+	if (!ch->IsAlive())
 		return;
 
 	std::list<Character *>::iterator iter;
@@ -493,7 +527,7 @@ void cmd_scan(Character * ch, string argument)
 			{
 				break;
 			}
-			if(!scan_room->characters.empty())
+			if(scan_room->HasNonGhostCharacters())
 			{
 				found = true;
 				out << /*depthcolors[j] <<*/ "|W[" << Utilities::itos(j + 1) << "]:|X ";
@@ -1143,11 +1177,11 @@ void cmd_quest(Character * ch, string argument)
 
 void cmd_quit(Character * ch, string argument)
 {
-    if(ch->HasQuery())
+    /*if(ch->HasQuery())
     {
         ch->Send("Answer your current question first.\n\r");
         return;
-    }
+    }*/
     //Do a few checks here, but just query the player with a quit-function callback.
     if(ch->InCombat())
     {
@@ -1185,25 +1219,13 @@ bool cmd_quit_Query(Character * ch, string argument)
         }
 
 		ch->Send("Bye\n\r");
+		LogFile::Log("status", ch->name + " \"quit\"");
 
-		//do this stuff on remove in the gameloop (to support user idle timeout quits)
-        //ch->Message(ch->name + " has left the game.", Character::MSG_ROOM_NOTCHAR);
-
-        //If we have a target, that target has US in their subscriber list. Remove that by clearing our target first.
-        //ch->ClearTarget(); 
-
-        //ch->ChangeRooms(NULL);
-	   
         if(ch->player && ch->player->user)
         {
-            /*ch->SaveSpellAffects();
-            ch->SaveCooldowns();*/
-			//ch->player->user->Disconnect();
-			//ch->player->user->remove = true;
 			ch->player->user->SetDisconnect();
         }
 	}
-    //LogFile::Log("status", ch->name + " \"quit\"");
 	return true;
 }
 
@@ -1214,9 +1236,10 @@ bool releaseSpiritQuery(Character * ch, string argument)
         return true;
     }
 
-    if(!Utilities::str_cmp(argument, "yes") || !Utilities::str_cmp(argument, "y"))
+    if(!Utilities::str_cmp(argument, "release"))
     {
-        ch->player->MakeGhost();
+		ch->player->corpse_room = ch->room->id;
+		ch->SetGhost();
         ch->QueryClear();
 		Area * this_area = Game::GetGame()->GetArea(ch->room->area);
 		if (!this_area)
@@ -1224,14 +1247,57 @@ bool releaseSpiritQuery(Character * ch, string argument)
 			LogFile::Log("error", "releaseSpiritQuery, bad ch->room->area");
 			return true;
 		}
-		Room * deathroom = Game::GetGame()->GetRoom(this_area->death_room);
-		if (!deathroom)
+		Room * graveyard = Game::GetGame()->GetRoom(this_area->death_room);
+		if (!graveyard)
 		{
 			LogFile::Log("error", "releaseSpiritQuery, no area death_room");
 			return true;
 		}
-		ch->ChangeRooms(deathroom);
+		ch->Message("|W" + ch->name + "'s spirit separates from " + ch->HisHer() + " corpse, and disappates into nothingness.|X", Character::MessageType::MSG_ROOM_NOTCHAR);
+		ch->MakeCorpse();
+		ch->ChangeRooms(graveyard);
+		ch->player->graveyard_room = graveyard->id;
+		cmd_look(ch, "");
         return true;
     }
     return false;
+}
+
+bool acceptResQuery(Character * ch, string argument)
+{
+	if (!ch || !ch->player)
+	{
+		return true;
+	}
+	if (!Utilities::str_cmp(argument, "accept"))
+	{
+		ch->SetHealth(ch->GetMaxHealth() / 2);
+		ch->SetMana(ch->GetMaxMana() / 2);
+		ch->SetEnergy(ch->GetMaxEnergy());
+		ch->SetRage(0);
+
+		ch->RemoveCorpse();
+		
+		ch->Message("|W" + ch->name + " appears in a shimmering silver mist.|X", Character::MessageType::MSG_ROOM_NOTCHAR);
+		ch->SetAlive();
+		ch->QueryClear();
+		return true;
+	}
+	return false;
+}
+
+bool returnToGYQuery(Character * ch, string argument)
+{
+	if (!ch || !ch->player)
+	{
+		return true;
+	}
+	if (!Utilities::str_cmp(argument, "return"))
+	{
+		ch->ChangeRooms(Game::GetGame()->GetRoom(ch->player->graveyard_room));
+		ch->QueryClear();
+		cmd_look(ch, "");
+		return true;
+	}
+	return false;
 }

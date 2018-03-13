@@ -121,17 +121,17 @@ class Command cmd_table[] =
     { ".",			cmd_shout,		1, 0, 0, 1, Character::POSITION_ANY },
     /*{ ",",			cmd_emote,		POS_RESTING,	1,  LOG_NORMAL, 0 },
 	*/
-	{ "group",		cmd_group,		1, 0, 0, 0, Character::POSITION_ANY },
+	{ "group",		cmd_group,		1, 0, 0, 1, Character::POSITION_ANY },
 	/*
     { ";",		  	cmd_formtalk,	POS_DEAD,		1,  LOG_NORMAL, 0 },
     { "notify",		cmd_notify,		POS_DEAD,		1, 	LOG_NORMAL, 1 },
     { "note",		cmd_note,		POS_SLEEPING,	1,  LOG_NORMAL, 1 },
     { "pray",		cmd_pray,		POS_DEAD,		1,	LOG_NORMAL, 1 },*/
     { "reply",		cmd_reply,		1, 0, 1, 1, Character::POSITION_ANY },
-    { "say",		cmd_say,		1, 0, 0, 1, Character::POSITION_ANY },
-    { "'",		    cmd_say,		1, 0, 0, 1, Character::POSITION_ANY },
+    { "say",		cmd_say,		1, 0, 0, 0, Character::POSITION_ANY },
+    { "'",		    cmd_say,		1, 0, 0, 0, Character::POSITION_ANY },
     { "shout",		cmd_shout,		1, 0, 0, 1, Character::POSITION_ANY },
-    { "yell",		cmd_yell,		1, 0, 0, 1, Character::POSITION_ANY },
+    { "yell",		cmd_yell,		1, 0, 0, 0, Character::POSITION_ANY },
 
     /*
      * Object manipulation commands.

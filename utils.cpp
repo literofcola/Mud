@@ -413,7 +413,8 @@ bool FlagSet(std::vector<int> & flags, const int flag)
 bool FlagUnSet(std::vector<int> & flags, const int flag)
 {
     std::vector<int>::iterator iter;
-    for(iter = flags.begin(); iter != flags.end(); ++iter)
+	//todo: there's almost certainly a more efficient way to do this but do we really care
+    for(iter = flags.begin(); iter != flags.end(); ++iter) 
     {
         if((*iter) == flag)
         {

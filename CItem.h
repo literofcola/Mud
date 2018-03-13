@@ -32,17 +32,17 @@ public:
         TYPE_WEAPON_AXE, TYPE_WEAPON_POLEARM, TYPE_WEAPON_STAFF, TYPE_CONTAINER, TYPE_FOOD, TYPE_CONSUMABLE, TYPE_MISC, TYPE_LAST
     };
 
-    /*std::vector<int> flags; //a vector of constants to indicate flag is set
+    std::vector<int> flags; //a vector of constants to indicate flag is set
     enum Flags
     {
-        FLAG_FRIENDLY,FLAG_NEUTRAL,FLAG_AGGRESSIVE,FLAG_QUEST,FLAG_TRAIN,FLAG_GUILD
+        FLAG_ROOMONLY
     };
     struct flag_type
     {
         int flag;
         std::string flag_name;
     };
-    static flag_type flag_table[];*/
+    static flag_type flag_table[];
 
     int id;
     std::string name;
@@ -55,7 +55,7 @@ public:
               //for weapon: sword dagger mace axe polearm staff, 
               //for equip_none: container food("eat/drink") consumable("use")
 	int useSkillID;	//for spell affect management for "use" and "eat/drink"
-    int quest;     //will drop for all members of a party with appropriate quest only
+    int quest;     //will drop for all members of a party with appropriate quest only. or, only lootable from the room by people with the quest
     int quality;
 	int unique;
 	int armor;

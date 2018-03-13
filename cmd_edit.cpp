@@ -3331,6 +3331,7 @@ void areaEditCmd_show(Character * ch, string argument)
 	ch->Send("pvp:              [" + Utilities::itos(pArea->pvp) + "]\n\r");
     ch->Send("level_range_low:  [" + Utilities::itos(pArea->level_range_low) + "]\n\r");
     ch->Send("level_range_high: [" + Utilities::itos(pArea->level_range_high) + "]\n\r");
+	ch->Send("death_room:       [" + Utilities::itos(pArea->death_room) + "]\n\r");
 }
 
 void areaEditCmd_name(Character * ch, string argument)

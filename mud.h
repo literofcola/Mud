@@ -28,6 +28,8 @@ void cmd_quest(Character * ch, string argument);
 void cmd_quit(Character * ch, string argument);
 bool cmd_quit_Query(Character * ch, string argument);
 bool releaseSpiritQuery(Character * ch, string argument);
+bool acceptResQuery(Character * ch, string argument);
+bool returnToGYQuery(Character * ch, string argument);
 
 //cmd_comm.cpp
 void cmd_shout(Character * ch, string argument);

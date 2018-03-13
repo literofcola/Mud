@@ -124,6 +124,7 @@ Character::Character(const Character & copy)
     movementSpeed = NORMAL_MOVE_SPEED;
 	position = copy.position;
     lastMoveTime = 0;
+	isCorpse = false;
     changed = false;
 
     std::map<std::string, Skill *>::const_iterator skilliter;
@@ -299,7 +300,8 @@ void Character::Message(const string & txt, MessageType msg_type, Character * vi
 			std::list<Character *>::iterator iter;
 			for(iter = room->characters.begin(); iter != room->characters.end(); iter++)
 			{
-                (*iter)->Send(txt + "\n\r");
+				if(!(*iter)->IsGhost())
+					(*iter)->Send(txt + "\n\r");
 			    //mob trigger on msg here
 			}
 			break;
@@ -312,7 +314,7 @@ void Character::Message(const string & txt, MessageType msg_type, Character * vi
 			std::list<Character *>::iterator iter;
 			for(iter = room->characters.begin(); iter != room->characters.end(); iter++)
 			{
-                if((*iter) != this)
+                if((*iter) != this && !(*iter)->IsGhost())
                     (*iter)->Send(txt + "\n\r");
 			    //mob trigger on msg here
 			}
@@ -326,7 +328,7 @@ void Character::Message(const string & txt, MessageType msg_type, Character * vi
 			std::list<Character *>::iterator iter;
 			for(iter = room->characters.begin(); iter != room->characters.end(); iter++)
 			{
-                if((*iter) != vict)
+                if((*iter) != vict && !(*iter)->IsGhost())
                     (*iter)->Send(txt + "\n\r");
 			    //mob trigger on msg here
 			}
@@ -340,7 +342,7 @@ void Character::Message(const string & txt, MessageType msg_type, Character * vi
 			std::list<Character *>::iterator iter;
 			for(iter = room->characters.begin(); iter != room->characters.end(); iter++)
 			{
-                if((*iter) != vict && (*iter) != this)
+                if((*iter) != vict && (*iter) != this && !(*iter)->IsGhost())
                     (*iter)->Send(txt + "\n\r");
 			    //mob trigger on msg here
 			}
@@ -540,6 +542,7 @@ void Character::GeneratePrompt(double currentTime)
 	{
 		int jsonvitals[5]; //level, health, mana, energy, rage as %'s
 		string targetPrompt = "";
+
 		//Combo points
 		if (comboPoints > 0 && GetTarget() == comboPointTarget)
 		{
@@ -552,87 +555,96 @@ void Character::GeneratePrompt(double currentTime)
 			json combos = { { "points", 0 } };
 			SendGMCP("target.combo " + combos.dump());
 		}
-
+		
 		string targetLevel = Game::LevelDifficultyColor(Game::LevelDifficulty(level, GetTarget()->level));
-        if(GetTarget()->IsNPC() && !Utilities::FlagIsSet(target->flags, Character::FLAG_FRIENDLY)
+		if (GetTarget()->IsNPC() && !Utilities::FlagIsSet(GetTarget()->flags, Character::FLAG_FRIENDLY)
 			&& Game::LevelDifficulty(level, GetTarget()->level) == 5) //NPC >= 10 levels
-        {
-            targetLevel += "??";
+		{
+			targetLevel += "??";
 			jsonvitals[0] = 0;
-        }
-        else
-        {
-            targetLevel += Utilities::itos(GetTarget()->level);
+		}
+		else
+		{
+			targetLevel += Utilities::itos(GetTarget()->level);
 			jsonvitals[0] = GetTarget()->level;
-        }
+		}
 
 		targetPrompt += "|B<" + targetLevel + " ";
 		if (GetTarget() == this || Utilities::FlagIsSet(GetTarget()->flags, FLAG_FRIENDLY))
 			targetPrompt += "|G";
 		else if (GetTarget()->IsPlayer())
 			targetPrompt += "|C";
-        else if(Utilities::FlagIsSet(GetTarget()->flags, FLAG_NEUTRAL))
-            targetPrompt += "|Y";
-        else
-            targetPrompt += "|R";
-        targetPrompt += GetTarget()->name + "|X ";
+		else if (Utilities::FlagIsSet(GetTarget()->flags, FLAG_NEUTRAL))
+			targetPrompt += "|Y";
+		else
+			targetPrompt += "|R";
+		targetPrompt += GetTarget()->name + "|X ";
 
-        //Health
-        if(GetTarget()->health > 0 && GetTarget()->maxHealth > 0)
-            percent = (GetTarget()->health * 100)/GetTarget()->maxHealth;
-        else
-            percent = 0;
+		if (!GetTarget()->IsCorpse())
+		{
+			//Health
+			if (GetTarget()->health > 0 && GetTarget()->maxHealth > 0)
+				percent = (GetTarget()->health * 100) / GetTarget()->maxHealth;
+			else
+				percent = 0;
 
-        if(percent >= 75 || GetTarget()->maxHealth == 0)
-            statColor = "|x";
-        else if(percent >= 50)
-            statColor = "|G";
-        else if(percent >= 25)
-            statColor = "|Y";
-        else
-            statColor = "|R";
+			if (percent >= 75 || GetTarget()->maxHealth == 0)
+				statColor = "|x";
+			else if (percent >= 50)
+				statColor = "|G";
+			else if (percent >= 25)
+				statColor = "|Y";
+			else
+				statColor = "|R";
 
-        targetPrompt += statColor + Utilities::itos(percent) + "|B%h ";
-		jsonvitals[1] = percent;
+			targetPrompt += statColor + Utilities::itos(percent) + "|B%h ";
+			jsonvitals[1] = percent;
 
-        //Mana
-        if(GetTarget()->mana > 0 && GetTarget()->maxMana > 0)
-            percent = (GetTarget()->mana * 100)/GetTarget()->maxMana;
-        else
-            percent = 0;
+			//Mana
+			if (GetTarget()->mana > 0 && GetTarget()->maxMana > 0)
+				percent = (GetTarget()->mana * 100) / GetTarget()->maxMana;
+			else
+				percent = 0;
 
-        if(percent >= 75 || GetTarget()->maxMana == 0)
-            statColor = "|x";
-        else if(percent >= 50)
-            statColor = "|G";
-        else if(percent >= 25)
-            statColor = "|Y";
-        else
-            statColor = "|R";
+			if (percent >= 75 || GetTarget()->maxMana == 0)
+				statColor = "|x";
+			else if (percent >= 50)
+				statColor = "|G";
+			else if (percent >= 25)
+				statColor = "|Y";
+			else
+				statColor = "|R";
 
-        targetPrompt += statColor + Utilities::itos(percent) + "|B%m ";
-		jsonvitals[2] = percent;
+			targetPrompt += statColor + Utilities::itos(percent) + "|B%m ";
+			jsonvitals[2] = percent;
 
+			//Energy
+			if (GetTarget()->GetEnergy() > 0 && GetTarget()->maxEnergy > 0)
+				percent = (GetTarget()->GetEnergy() * 100) / GetTarget()->maxEnergy;
+			else
+				percent = 0;
+			targetPrompt += "|X" + Utilities::itos(percent) + "|B%e ";
+			jsonvitals[3] = percent;
+
+			//Rage
+			if (GetTarget()->GetRage() > 0 && GetTarget()->GetMaxRage() > 0)
+				percent = (GetTarget()->GetRage() * 100) / GetTarget()->GetMaxRage();
+			else
+				percent = 0;
+			targetPrompt += "|X" + Utilities::itos(percent) + "|B%r>|X";
+			jsonvitals[4] = percent;
+		}
+		else
+		{
+			targetPrompt += "Corpse|B>|X";
+			jsonvitals[1] = 0;
+			jsonvitals[2] = 0;
+			jsonvitals[3] = 0;
+			jsonvitals[4] = 0;
+		}
 		prompt += targetPrompt;
-
-		//Energy
-		if (GetTarget()->GetEnergy() > 0 && GetTarget()->maxEnergy > 0)
-			percent = (GetTarget()->GetEnergy() * 100) / GetTarget()->maxEnergy;
-		else
-			percent = 0;
-		prompt += "|X" + Utilities::itos(percent) + "|B%e ";
-		jsonvitals[3] = percent;
-
-		//Rage
-		if (GetTarget()->GetRage() > 0 && GetTarget()->GetMaxRage() > 0)
-			percent = (GetTarget()->GetRage() * 100) / GetTarget()->GetMaxRage();
-		else
-			percent = 0;
-		prompt += "|X" + Utilities::itos(percent) + "|B%r>|X";
-		jsonvitals[4] = percent;
-
-		json vitals = { { "name", GetTarget()->GetName() }, { "level", jsonvitals[0] }, { "hppercent", jsonvitals[1] }, { "mppercent", jsonvitals[2] },
-						{ "enpercent", jsonvitals[3] },{ "ragepercent", jsonvitals[4] } };
+		json vitals = { { "name", GetTarget()->GetName() },{ "level", jsonvitals[0] },{ "hppercent", jsonvitals[1] },{ "mppercent", jsonvitals[2] },
+		{ "enpercent", jsonvitals[3] },{ "ragepercent", jsonvitals[4] } };
 		SendGMCP("target.vitals " + vitals.dump());
 	}
 
@@ -657,7 +669,7 @@ void Character::GeneratePrompt(double currentTime)
 		string targetPrompt = "|B<" + targetLevel + " ";
         if(targettarget == this || Utilities::FlagIsSet(targettarget->flags, FLAG_FRIENDLY))
             targetPrompt += "|G";
-		else if (GetTarget()->IsPlayer())
+		else if (targettarget->IsPlayer())
 			targetPrompt += "|C";
         else if(Utilities::FlagIsSet(targettarget->flags, FLAG_NEUTRAL))
             targetPrompt += "|Y";
@@ -727,7 +739,7 @@ void Character::GeneratePrompt(double currentTime)
     */
     
 	
-	//We could block the entire function at the top, but then we lose a lot of GMCP data. We need to structure this differently
+	//todo: We could block the entire function at the top, but then we lose a lot of GMCP data. We need to structure this differently
 	if (player && player->prompt) 
 	{
 		prompt += "\n\r";
@@ -736,7 +748,7 @@ void Character::GeneratePrompt(double currentTime)
 
 	if (hasQuery)
 	{
-		Send(queryPrompt);
+		Send(queryPrompt + "\n\r");
 	}
 }
 
@@ -904,7 +916,10 @@ void Character::Move(int direction)
 		return;
 	}
 
-    Message(name + " leaves " + Exit::exitNames[direction] + ".", MSG_ROOM_NOTCHAR);
+	if (IsAlive())
+	{
+		Message(name + " leaves " + Exit::exitNames[direction] + ".", MSG_ROOM_NOTCHAR);
+	}
 	toroom = room->exits[direction]->to;
 
 	//need to search the TerrainExit list
@@ -926,21 +941,27 @@ void Character::Move(int direction)
 	//}
 
     //TODO: move the checks for movement triggers here
-    Message(name + " has arrived from " + ((direction != Exit::DIR_UP && direction != Exit::DIR_DOWN) ? "the " : "") + Exit::reverseExitNames[direction] + ".", MSG_ROOM_NOTCHAR);
+	if (IsAlive())
+	{
+		Message(name + " has arrived from " + ((direction != Exit::DIR_UP && direction != Exit::DIR_DOWN) ? "the " : "") + Exit::reverseExitNames[direction] + ".", MSG_ROOM_NOTCHAR);
+	}
 
     cmd_look(this, "");
 
     //check npc aggro
-    for(std::list<Character*>::iterator iter = room->characters.begin(); iter != room->characters.end(); ++iter)
-    {
-        if((*iter)->IsNPC() && Utilities::FlagIsSet((*iter)->flags, Character::FLAG_AGGRESSIVE) && !(*iter)->InCombat() && player && !player->IMMORTAL())
-        {
-            (*iter)->EnterCombat(this);
-            EnterCombat(*iter);
-			Send((*iter)->name + " begins attacking you!\n\r");
-            (*iter)->AutoAttack(this);
-        }
-    }
+	if (IsAlive())
+	{
+		for (std::list<Character*>::iterator iter = room->characters.begin(); iter != room->characters.end(); ++iter)
+		{
+			if ((*iter)->IsNPC() && Utilities::FlagIsSet((*iter)->flags, Character::FLAG_AGGRESSIVE) && !(*iter)->InCombat() && player && !player->IMMORTAL())
+			{
+				(*iter)->EnterCombat(this);
+				EnterCombat(*iter);
+				Send((*iter)->name + " begins attacking you!\n\r");
+				(*iter)->AutoAttack(this);
+			}
+		}
+	}
 }
 
 void Character::Sit()
@@ -999,8 +1020,13 @@ Character * Character::LoadPlayer(std::string name, User * user)
     loaded->player->immlevel = row["immlevel"];
     loaded->player->experience = row["experience"];
 	loaded->player->recall = row["recall"];
-	if(row["ghost"])
-		loaded->player->MakeGhost();
+	if (row["ghost"])
+	{
+		loaded->SetGhost();
+		loaded->player->corpse_room = row["corpse_room"];
+		loaded->player->graveyard_room = row["room"];
+		loaded->deathTime = row["ghost"];
+	}
 	loaded->player->statPoints = row["stat_points"];
 
 	StoreQueryResult playerclassres = Server::sqlQueue->Read("SELECT * FROM player_class_data where player='" + loaded->name + "'");
@@ -1154,7 +1180,7 @@ void Character::Save()
         string fixtitle = Utilities::SQLFixQuotes(title);
 
         sql = "INSERT INTO players (name, password, immlevel, title, experience, room, level, gender, race, agility, intellect, strength, stamina, ";
-        sql += "wisdom, spirit, health, mana, class, recall, ghost, stat_points) values ('";
+        sql += "wisdom, spirit, health, mana, class, recall, ghost, corpse_room, stat_points) values ('";
         sql += name + "','" + password + "'," + Utilities::itos(player->immlevel);
         sql += ",'" + fixtitle + "'," + Utilities::itos(player->experience) + "," + Utilities::itos(room->id);
         sql += "," + Utilities::itos(level) + "," + Utilities::itos(gender) + "," + Utilities::itos(race) + ",";
@@ -1162,10 +1188,14 @@ void Character::Save()
         sql += Utilities::itos(stamina) + "," + Utilities::itos(wisdom) + "," + Utilities::itos(spirit) + ",";
         sql += Utilities::itos(health) + "," + Utilities::itos(mana);
 		sql += "," + Utilities::itos(player->currentClass->id) + "," + Utilities::itos(player->recall) + ", ";
-        if(IsGhost() || IsCorpse())
-            sql += "1,";
-        else
-            sql += "0,";
+		if (IsGhost() || IsCorpse())
+		{
+			sql += Utilities::dtos(deathTime, 0) + "," + Utilities::itos(player->corpse_room) + ",";
+		}
+		else
+		{
+			sql += "0,0,";
+		}
 		sql += Utilities::itos(player->statPoints) + ")";
 
         sql += " ON DUPLICATE KEY UPDATE name=VALUES(name), password=VALUES(password), immlevel=VALUES(immlevel), title=VALUES(title), ";
@@ -1173,7 +1203,7 @@ void Character::Save()
         sql += "intellect=VALUES(intellect), strength=VALUES(strength), stamina=VALUES(stamina), wisdom=VALUES(wisdom), spirit=VALUES(spirit), ";
         sql += "health=VALUES(health), mana=VALUES(mana), ";
         sql += "class=VALUES(class), ";
-        sql += "recall=VALUES(recall), ghost=VALUES(ghost), stat_points=VALUES(stat_points)";
+        sql += "recall=VALUES(recall), ghost=VALUES(ghost), corpse_room=VALUES(corpse_room),stat_points=VALUES(stat_points)";
 
 		//player_completed_quests
 		std::set<int>::iterator questiter;
@@ -1872,6 +1902,12 @@ int Character::GetSmallestAuraModifier(int affect)
 
 void Character::EnterCombat(Character * victim)
 {
+	if (!IsAlive() || !victim->IsAlive())
+	{
+		LogFile::Log("error", "EnterCombat called on !IsAlive ch or vict");
+		return;
+	}
+
     if(target == NULL || target == victim)
     {
         SetTarget(victim);
@@ -1891,10 +1927,10 @@ void Character::EnterCombat(Character * victim)
     if(victim->player)
         victim->player->lastCombatAction = Game::currentTime;
 
-	/*if (IsNPC() || victim->IsNPC()) //Keep track of threat unless BOTH are players
+	if (IsNPC() || victim->IsNPC()) //Keep track of threat unless BOTH are players
 	{
-        victim->UpdateThreat(this, 0); changed... don't add threat unless some actual damage is done. easier to track tapping
-    }*/
+        victim->UpdateThreat(this, 0, Character::Threat::THREAT_DAMAGE); 
+    }
 
     movementSpeed = Character::COMBAT_MOVE_SPEED;
     victim->movementSpeed = Character::COMBAT_MOVE_SPEED;
@@ -1950,6 +1986,10 @@ void Character::AutoAttack(Character * victim)
             damage = (Server::rand() % (npcDamageHigh - npcDamageLow)) + npcDamageLow;
 		if (victim->player)
 			victim->GenerateRageOnTakeDamage(damage);
+
+		victim->Send("|Y" + name + " hits you for " + Utilities::itos(damage) + " damage.|X\n\r");
+		Message("|G" + name + "'s attack hits " + victim->name + " for " + Utilities::itos(damage) + " damage.|X", Character::MSG_ROOM_NOTCHARVICT, victim);
+
         OneHit(victim, damage); //TODO fancy damage calculations, block miss hit crit 
         //victim may be invalid here if it was killed!
     }
@@ -1979,6 +2019,16 @@ void Character::AutoAttack(Character * victim)
                 victim->player->lastCombatAction = Game::currentTime;
             lastAutoAttack_main = Game::currentTime;
 			GenerateRageOnAttack(damage_main, weaponSpeed_main, true, false);
+
+			string tapcolor = "|G";
+			if (victim->GetTap() != nullptr && !this->HasTap(victim))
+			{
+				tapcolor = "|D";
+			}
+			Send(tapcolor + "You hit " + victim->name + " for " + Utilities::itos(damage_main) + " damage.|X\n\r");
+			victim->Send("|Y" + name + " hits you for " + Utilities::itos(damage_main) + " damage.|X\n\r");
+			Message("|G" + name + "'s attack hits " + victim->name + " for " + Utilities::itos(damage_main) + " damage.|X", Character::MSG_ROOM_NOTCHARVICT, victim);
+
             OneHit(victim, damage_main); //TODO fancy damage calculations, block miss hit crit 
             //victim may be invalid if it was killed!
         }
@@ -1996,6 +2046,16 @@ void Character::AutoAttack(Character * victim)
                 victim->player->lastCombatAction = Game::currentTime;
             lastAutoAttack_off = Game::currentTime;
 			GenerateRageOnAttack(damage_off, weaponSpeed_off, false, false);
+
+			string tapcolor = "|G";
+			if (victim->GetTap() != nullptr && !this->HasTap(victim))
+			{
+				tapcolor = "|D";
+			}
+			Send(tapcolor + "You hit " + victim->name + " for " + Utilities::itos(damage_off) + " damage.|X\n\r");
+			victim->Send("|Y" + name + " hits you for " + Utilities::itos(damage_off) + " damage.|X\n\r");
+			Message("|G" + name + "'s attack hits " + victim->name + " for " + Utilities::itos(damage_off) + " damage.|X", Character::MSG_ROOM_NOTCHARVICT, victim);
+
             OneHit(victim, damage_off); //TODO fancy damage calculations, block miss hit crit 
             //victim may be invalid if it was killed!
         }
@@ -2011,7 +2071,7 @@ void Character::OneHit(Character * victim, int damage)
         //Victim is already toast
         return;
     }
-	
+
     if(IsNPC() || victim->IsNPC()) //Keep track of threat unless BOTH are players
     {
         victim->UpdateThreat(this, damage, Threat::Type::THREAT_DAMAGE);
@@ -2020,18 +2080,31 @@ void Character::OneHit(Character * victim, int damage)
 	if (victim->CancelCastOnHit())
 		victim->Send("Action Interrupted!\n\r");
 
-	string tapcolor = "|G";
-	if (!this->HasTap(victim))
-	{
-		tapcolor = "|D";
-	}
-	//TODO fancy damage calculations, block miss hit crit, weapon damage
-	Send(tapcolor + "You hit " + victim->name + " for " + Utilities::itos(damage) + " damage.|X\n\r");
-	victim->Send("|Y" + name + " hits you for " + Utilities::itos(damage) + " damage.|X\n\r");
-	Message("|G" + name + "'s attack hits " + victim->name + " for " + Utilities::itos(damage) + " damage.|X", Character::MSG_ROOM_NOTCHARVICT, victim);
-
     victim->AdjustHealth(this, -damage);
 }
+/*
+//todo: handle heals with threat considered: any heal that actually heals, go through OUR threat list and add threat to everyone
+void Character::OneHeal(Character * victim, int heal)
+{
+	if (victim == NULL)
+		return;
+	if (victim->remove)
+	{
+		//Victim is already toast
+		return;
+	}
+
+	if (IsNPC() || victim->IsNPC()) //Keep track of threat unless BOTH are players
+	{
+		victim->UpdateThreat(this, damage, Threat::Type::THREAT_DAMAGE);
+		//Send("My threat on " + victim->name + " is " + Utilities::itos(victim->GetThreat(this)) + "\n\r");
+	}
+	if (victim->CancelCastOnHit())
+		victim->Send("Action Interrupted!\n\r");
+
+	victim->AdjustHealth(this, -damage);
+}
+*/
 
 double Character::GetMainhandWeaponSpeed()
 {
@@ -2241,6 +2314,11 @@ int Character::GetComboPoints()
 
 void Character::AdjustHealth(Character * source, int amount)
 {
+	if (!IsAlive())
+	{
+		LogFile::Log("error", "AdjustHealth() called on !IsAlive() character");
+		return;
+	}
     if(source == NULL)
     {
         //a possibility
@@ -2263,7 +2341,7 @@ void Character::AdjustHealth(Character * source, int amount)
 		SendGMCP("char.vitals " + vitals.dump());
 	}
 
-    if(health == 0) //todo: functionize me. ROM = "ExtractChar"
+    if(health == 0) 
     {
 		Message("|R" + name + " has been slain!|X", Character::MSG_ROOM_NOTCHAR, source);
 		Send("|RYou have been slain!|X\n\r");
@@ -2284,7 +2362,7 @@ void Character::OnDeath()
 		if (threat->ch->GetTarget() && threat->ch->GetTarget() == this)
 		{
 			threat->ch->meleeActive = false;
-			threat->ch->ClearTarget();
+			//threat->ch->ClearTarget();
 		}
 		if (threat->ch->comboPointTarget && threat->ch->comboPointTarget == this)
 		{
@@ -2298,15 +2376,14 @@ void Character::OnDeath()
 	ClearTarget();
 	ClearComboPointTarget();
 	
-
 	if (!IsNPC()) //player killed... doesn't matter by who, no rewards yet for doing so
 	{
-		player->MakeCorpse();
-		SetQuery("Release spirit? (y) ", NULL, releaseSpiritQuery);
+		ExitCombat();			//Removes our threat list
+		SetQuery("Release spirit? ('release') ", NULL, releaseSpiritQuery);
 	}
 	else if (IsNPC()) //NPC killed, figure out by who...
 	{
-		ChangeRooms(NULL);
+		//ChangeRooms(NULL);
 		Character * tap = nullptr;
 		Character * highdamage = nullptr;
 		int damage = 0;
@@ -2318,12 +2395,23 @@ void Character::OnDeath()
 			{
 				tap = (*iter).ch;
 			}
-			if ((*iter).damage > damage)
+			if ((*iter).damage >= damage)
 			{
 				damage = (*iter).damage;
 				highdamage = (*iter).ch;
 			}
 		}
+		if (!highdamage)
+		{
+			LogFile::Log("error", "OnDeath(): npc killed with null highdamage");
+			return;
+		}
+		if (!tap)
+		{
+			LogFile::Log("error", "OnDeath(): npc killed with null tap");
+			tap = highdamage;
+		}
+		
 		if (highdamage == tap && !highdamage->IsNPC() && !tap->IsNPC())
 		{
 			//only give credit if the tap (todo: or his group) also has the highest damage, and it wasnt a NPC doing the killing
@@ -2348,9 +2436,55 @@ void Character::OnDeath()
 				tap->player->QuestCompleteObjective(Quest::OBJECTIVE_KILLNPC, (void*)this);
 			}
 		}
+		ExitCombat();			//Removes our threat list
 	}
-	ExitCombat();			//Removes our threat list
-	Game::GetGame()->RemoveCharacter(this);
+	SetCorpse();
+}
+
+
+void Character::MakeCorpse()
+{
+	if (!player)
+		return;
+
+	Item * thecorpse = new Item("The corpse of " + name, 0);
+	thecorpse->keywords = "corpse " + name;
+	Utilities::FlagSet(thecorpse->flags, Item::FLAG_ROOMONLY);
+	room->items.push_back(thecorpse);
+}
+
+void Character::RemoveCorpse()
+{
+	if (!player)
+		return;
+
+	if (player->corpse_room == 0)
+	{
+		LogFile::Log("error", "Character::RemoveCorpse() with bad player->corpse_room");
+		return;
+	}
+
+	Room * corpseroom = Game::GetGame()->GetRoom(player->corpse_room);
+
+	std::list<Item *>::iterator itemiter;
+	for (itemiter = corpseroom->items.begin(); itemiter != corpseroom->items.end(); itemiter++)
+	{
+		if ((*itemiter)->keywords.find(name) != std::string::npos)
+		{
+			corpseroom->items.erase(itemiter);
+
+			if (room && room == corpseroom)
+			{
+				Message(name + "'s corpse crumbles into dust.", Character::MessageType::MSG_ROOM_NOTCHAR);
+			}
+			else
+			{
+				corpseroom->Message(name + "'s corpse crumbles into dust.");
+			}
+
+			break;
+		}
+	}
 }
 
 //To be used in spell _cost function. Checks AURA_RESOURCE_COST
@@ -2656,6 +2790,12 @@ void Character::GenerateComboPoint(Character * target)
 	if (target == nullptr)
 		return;
 
+	if (!target->IsAlive())
+	{
+		LogFile::Log("error", "GenerateComboPoint on !IsAlive target");
+		return;
+	}
+
 	if (target != comboPointTarget)	//Changing our combo target
 	{
 		if (comboPointTarget != nullptr)	//If we had a previous combo target...
@@ -2705,6 +2845,11 @@ void Character::UpdateThreat(Character * ch, int value, int type)
 			switch (type)
 			{
 				case Threat::Type::THREAT_DAMAGE:
+					if (IsNPC() && GetTap() == nullptr && value > 0)
+					{
+						//No one has the tap yet and THREAT_DAMAGE > 0, they get the tap
+						(*iter).tapped = true;
+					}
 					(*iter).damage += value;
 					break;
 				case Threat::Type::THREAT_HEALING:
@@ -2725,9 +2870,9 @@ void Character::UpdateThreat(Character * ch, int value, int type)
 		tt.healing = value;
 		break;
 	}
-	if (threatList.empty() && IsNPC())
+	if (IsNPC() && GetTap() == nullptr && value > 0 && type == Threat::Type::THREAT_DAMAGE)
 	{
-		//First character on the threat list, they get the tap
+		//No one has the tap yet and THREAT_DAMAGE > 0, they get the tap
 		tt.tapped = true;
 	}
 	threatList.push_front(tt);
@@ -3160,25 +3305,58 @@ bool Character::ChangeRoomsID(int roomid)
     return ChangeRooms(NULL);
 }
 
+bool Character::IsAlive()
+{
+	if (IsNPC() && !IsCorpse())
+		return true;
+	if (!IsNPC() && !IsCorpse() && !player->IsGhost())
+		return true;
+	return false;
+}
+
+void Character::SetCorpse()
+{
+	isCorpse = true;
+	if (!IsNPC())
+	{
+		player->UnsetGhost();
+		player->death_timer = Player::DEFAULT_DEATH_TIME;
+		player->death_timer_runback = Player::DEFAULT_DEATH_TIME_RUNBACK;
+	}
+
+	deathTime = Utilities::GetTime();
+}
+
+void Character::SetGhost()
+{
+	if (IsNPC())
+		return;
+	player->SetGhost();
+	isCorpse = false;
+}
+
+void Character::SetAlive()
+{
+	isCorpse = false;
+	if(!IsNPC())
+		player->UnsetGhost();
+}
+
 bool Character::IsCorpse()
 {
-    if(player && player->IsCorpse())
-        return true;
-    return false;
+	return isCorpse;
 }
 
 bool Character::IsGhost()
 {
-    if(player && player->IsGhost())
-        return true;
-    return false;
+	if (IsNPC())
+		return false;
+	return player->IsGhost();
 }
 
-bool Character::IsAlive()
+int Character::TimeSinceDeath()
 {
-	if (player && !player->IsGhost() && !player->IsCorpse())
-		return true;
-	return false;
+	return (int)(Game::currentTime - deathTime);
 }
 
 void Character::ApplyExperience(int amount)

@@ -20,6 +20,7 @@ public:
     Exit * exits[Exit::DIR_LAST];
     std::map<int, Reset *> resets;
     std::map<int, Trigger> triggers;
+	std::list<Item *> items;
 
     //For search  Store a reference to all searchable class data by type
     std::map<std::string, std::string*> stringTable;
@@ -50,6 +51,8 @@ public:
     Reset * GetReset(int id);
     void AddTrigger(Trigger & trig);
     Trigger * GetTrigger(int startid, int type = -1);
+	void Message(const std::string & text);
+	bool HasNonGhostCharacters();
 
     bool operator<(const Room& r)const{return id<r.id;}
 

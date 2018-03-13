@@ -17,8 +17,12 @@ public:
         EQUIP_OFFHAND, EQUIP_MAINHAND, EQUIP_LAST 
     };
 
-	const int PLAYER_DEATH_TIME = 600;
-	const int PLAYER_DEATH_TIME_RUNBACK = 120;
+	static const int DEFAULT_DEATH_TIME = 600;
+	static const int DEFAULT_DEATH_TIME_RUNBACK = 120;
+	int death_timer;
+	int death_timer_runback;
+	int graveyard_room; //graveyard room ID copied from the area death_room. prevent graveyard hopping to other areas
+	int corpse_room; //room our corpse is in
 
     std::string password;
     std::string pwtemp;
@@ -79,23 +83,17 @@ public:
     void AddClass(int id, int level);
     int GetClassLevel(int classid);
     void SetClassLevel(int classid, int newlevel);
-	void MakeCorpse();
-	void MakeGhost();
-	void MakeAlive();
-	bool IsCorpse();
+	void SetGhost();
+	void UnsetGhost();
 	bool IsGhost();
-	bool IsAlive();
-	int TimeSinceDeath();
 	void SetResurrectTime(int seconds);
-	int CanResAtCorpse();
-	int CanRes();
+	bool CanResAtCorpse(int time_since_death);
+	bool CanRes(int time_since_death);
 
     User * user; //Talk about circular dependencies... bad design
 private:
 
-	bool isCorpse;
-	bool isGhost;	 
-	double deathTime; //timestamp for res timer
+	bool isGhost;
 };
 
 #endif

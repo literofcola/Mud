@@ -264,3 +264,26 @@ Trigger * Room::GetTrigger(int id, int type)
     }
     return NULL;
 }
+
+void Room::Message(const std::string & text)
+{
+	std::list<Character *>::iterator iter;
+	for (iter = characters.begin(); iter != characters.end(); iter++)
+	{
+		(*iter)->Send(text + "\n\r");
+	}
+}
+
+bool Room::HasNonGhostCharacters()
+{
+	if (characters.empty())
+		return false;
+
+	std::list<Character *>::iterator iter;
+	for (iter = characters.begin(); iter != characters.end(); iter++)
+	{
+		if (!(*iter)->IsGhost())
+			return true;
+	}
+	return false;
+}

@@ -33,7 +33,6 @@ Player::Player(User * user_)
 	statPoints = 0;
 	recall = 0;
     isGhost = false;
-    isCorpse = false;
     user = user_;
     lastCombatAction = 0;
     inventorySize = 0;
@@ -501,28 +500,14 @@ void Player::SetClassLevel(int classid, int newlevel)
     AddClass(classid, newlevel);
 }
 
-void Player::MakeCorpse()
+void Player::SetGhost()
 {
-	isCorpse = true;
-	isGhost = false;
-	deathTime = Utilities::GetTime();
-}
-
-void Player::MakeGhost()
-{
-	isCorpse = false;
 	isGhost = true;
 }
 
-void Player::MakeAlive()
+void Player::UnsetGhost()
 {
-	isCorpse = false;
 	isGhost = false;
-}
-
-bool Player::IsCorpse()
-{
-	return isCorpse;
 }
 
 bool Player::IsGhost()
@@ -530,29 +515,18 @@ bool Player::IsGhost()
 	return isGhost;
 }
 
-bool Player::IsAlive()
-{
-	return (!isCorpse && !isGhost);
-}
-
-int Player::TimeSinceDeath()
-{
-	return (int)(Game::currentTime - deathTime);
-}
-
 void Player::SetResurrectTime(int seconds)
 {
-	deathTime = Game::currentTime - PLAYER_DEATH_TIME + seconds;
+	death_timer = seconds;
+	death_timer_runback = seconds;
 }
 
-//returns time left before res at corpse allowed, otherwise <= 0 if can res
-int Player::CanResAtCorpse()
+bool Player::CanResAtCorpse(int time_since_death)
 {
-	return deathTime + PLAYER_DEATH_TIME_RUNBACK - Game::currentTime;
+	return time_since_death >= death_timer_runback;
 }
 
-//returns time left before res allowed, otherwise <= 0 if can res
-int Player::CanRes()
+bool Player::CanRes(int time_since_death)
 {
-	return deathTime + PLAYER_DEATH_TIME - Game::currentTime;
+	return time_since_death >= death_timer;
 }

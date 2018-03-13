@@ -210,17 +210,18 @@ void Server::DeInitialize()
         //Save user/player
         if(user->character)
         {
+			user->character->ExitCombat();
+			user->character->ClearTarget();
+			if (!user->character->IsAlive())
+				user->character->ChangeRooms(Game::GetGame()->GetRoom(user->character->player->graveyard_room));
+			user->character->NotifySubscribers();
+
             //if(user->connectedState == User::CONN_PLAYING && user->character->level > 1) //don't save fresh characters
 			{
 				user->character->SaveSpellAffects();
 				user->character->SaveCooldowns();
 				user->character->Save();
 			}
-			user->character->ExitCombat();
-			user->character->ClearTarget();
-			//user->character->ChangeRooms(NULL);
-
-			user->character->NotifySubscribers();
             mygame->characters.remove(user->character);
         }
         delete user;

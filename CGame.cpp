@@ -406,14 +406,16 @@ void Game::GameLoop(Server * server)
                 //LogFile::Log("status", "removing user via remove flag in gameloop");
                 if(user->character)
                 {
+					if (!user->character->IsAlive())
+						user->character->ChangeRooms(Game::GetGame()->GetRoom(user->character->player->graveyard_room));
 					if (user->connectedState == User::CONN_PLAYING && user->character->level > 1) //don't save fresh characters
 					{
 						user->character->SaveSpellAffects();
 						user->character->SaveCooldowns();
 						user->character->Save();
 					}
-
-					user->character->Message(user->character->name + " has left the game.", Character::MSG_ROOM_NOTCHAR);
+					if (!user->character->IsGhost())
+						user->character->Message(user->character->name + " has left the game.", Character::MSG_ROOM_NOTCHAR);
 					user->character->ExitCombat();
 					user->character->ClearTarget();
 					user->character->ChangeRooms(NULL);
@@ -490,31 +492,70 @@ void Game::WorldUpdate(Server * server)
         }
         ++iter;
 
-        if(!curr->IsNPC() && !curr->IsAlive())
+        if(!curr->IsAlive())
         {
-			//TODO: See if we can resurrect
+			//todo: release spirit timer
+			if (!curr->IsNPC() && curr->IsGhost())
+			{
+				//I came up with the probably absurd logic here at 5am. I feel like it could be a lot cleaner
+				//if we have a query and its 'acceptres' and we don't meet criteria, clear it
+				if (curr->HasQuery() && curr->GetQueryFunc() == acceptResQuery
+					&& ((!curr->player->CanRes(curr->TimeSinceDeath()) || curr->room->id != curr->player->graveyard_room)
+					&&  (!curr->player->CanResAtCorpse(curr->TimeSinceDeath()) || curr->room->id != curr->player->corpse_room)))
+				{
+					curr->QueryClear();
+				}
+				//if we have a query and its 'returnToGYQuery' and we don't meet criteria, clear it
+				if (curr->HasQuery() && curr->GetQueryFunc() == returnToGYQuery
+					&& (curr->room->id == curr->player->graveyard_room)
+					|| (curr->room->id == curr->player->corpse_room && curr->player->CanResAtCorpse(curr->TimeSinceDeath())))
+				{
+					curr->QueryClear();
+				}
+
+				if(!curr->HasQuery()
+			      &&((curr->player->CanRes(curr->TimeSinceDeath()) && curr->room->id == curr->player->graveyard_room)
+				  ||(curr->player->CanResAtCorpse(curr->TimeSinceDeath()) && curr->room->id == curr->player->corpse_room)))
+				{
+					curr->SetQuery("Resurrect now? ('accept') ", NULL, acceptResQuery);
+				}
+				else if (!curr->HasQuery() && curr->room->id != curr->player->graveyard_room)
+				{
+					curr->SetQuery("Return to Graveyard? ('return') ", NULL, returnToGYQuery);
+				}
+			}
+			if(curr->IsNPC())
+			{
+				//Check NPC corpse despawn time
+				if (curr->TimeSinceDeath() >= 120) //todo: variable duration per NPC
+				{
+					curr->Message(curr->name + "'s corpse crumbles into dust.", Character::MessageType::MSG_ROOM_NOTCHAR);
+					RemoveCharacter(curr);
+					curr->ChangeRooms(NULL);
+				}
+			}
             continue;
         }
         //Tick, every 2 seconds
         if(doTwoSecondTick)
         {
-            //Stat regeneration
-            if(!curr->InCombat() && curr->GetHealth() < curr->GetMaxHealth())
-            {
-				//if (curr->IsNPC())
-				//	curr->SetHealth(curr->GetMaxHealth()); //NPC's heal immediately out of combat
-				//else
-					curr->AdjustHealth(NULL, (int)ceil(curr->GetLevel()*0.5 + 2.5)); 
-            }
-			if(curr->GetMana() < curr->GetMaxMana() && curr->lastSpellCast + 5.0  <= Game::currentTime)
-            {
-                 //if more than 5 seconds since last cast, regen 10% of spirit as mana
-			    curr->AdjustMana(curr, (int)ceil(curr->spirit * 0.1));
-            }
-			if(curr->GetEnergy() < curr->GetMaxEnergy())
-            {
+			//Stat regeneration
+			if (!curr->InCombat() && curr->GetHealth() < curr->GetMaxHealth())
+			{
+				if (curr->IsNPC())
+					curr->SetHealth(curr->GetMaxHealth()); //NPC's heal immediately out of combat
+				else
+					curr->AdjustHealth(NULL, (int)ceil(curr->GetLevel()*0.5 + 2.5));
+			}
+			if (curr->GetMana() < curr->GetMaxMana() && curr->lastSpellCast + 5.0 <= Game::currentTime)
+			{
+				//if more than 5 seconds since last cast, regen 10% of spirit as mana
+				curr->AdjustMana(curr, (int)ceil(curr->spirit * 0.1));
+			}
+			if (curr->GetEnergy() < curr->GetMaxEnergy())
+			{
 				curr->AdjustEnergy(curr, 20); //1 energy per .1 second regen
-            }
+			}
 			//Rage decay, 1 per second
 			if (!curr->InCombat() && curr->GetRage() > 0)
 			{
@@ -556,6 +597,22 @@ void Game::WorldUpdate(Server * server)
 		            LogFile::Log("error", "call_function unhandled exception ENTER_PC ENTER_NPC");
 	            }
             }
+			//check npc aggro
+			if (curr->IsNPC() && curr->room && !curr->InCombat() && Utilities::FlagIsSet(curr->flags, Character::FLAG_AGGRESSIVE))
+			{
+				for (std::list<Character*>::iterator aggroiter = curr->room->characters.begin(); aggroiter != curr->room->characters.end(); ++aggroiter)
+				{
+					//todo: decide who to attack in the room based off something else than being first on the list. level at least
+					if (!(*aggroiter)->IsNPC() && !(*aggroiter)->player->IMMORTAL())
+					{
+						curr->EnterCombat((*aggroiter));
+						(*aggroiter)->EnterCombat(curr);
+						(*aggroiter)->Send(curr->name + " begins attacking you!\n\r");
+						curr->AutoAttack((*aggroiter));
+						break;
+					}
+				}
+			}
         }
         
         //Delay Update
@@ -566,7 +623,12 @@ void Game::WorldUpdate(Server * server)
         }
         //Combat update
         if(curr->InCombat())
-        { //in addition to our list of aggressors will need to keep a list of chars whose aggro list we're on (for npc combat) (2/28/18: don't know what this means or why)
+        {
+			if (curr->IsNPC() && curr->GetTarget() && !curr->GetTarget()->IsAlive())
+			{
+				curr->ClearTarget();
+			}
+
             if(!curr->GetTarget() || curr->GetTarget() == curr)
             {  //Turn off auto attack. cmd_target should take care of this, but just in case
                 curr->meleeActive = false;
@@ -581,14 +643,18 @@ void Game::WorldUpdate(Server * server)
                 curr->AutoAttack(curr->GetTarget());
             }
 
-			//Players exit combat after 5 seconds of no activity AND (TODO) when we have no npcs on our threat list
+			//Players exit combat after 5 seconds of no activity AND when we have no npcs on our threat list
             if(curr->player && curr->player->lastCombatAction + 5 <= currentTime && !curr->CheckThreatCombat())
             {   
                 curr->ExitCombat();
             }
 
 			//Threat management, chasing/leashing (NPC's start chasing AFTER movementspeed delay)
-            if(curr->IsNPC() && curr->GetTopThreat()) 
+			if (curr->IsNPC() && !curr->GetTopThreat()) //We're a NPC in combat but have noone on our threat list. We must have killed them. Leave combat!
+			{
+				curr->ExitCombat();
+			}
+            else if(curr->IsNPC() && curr->GetTopThreat())
             {
 				if (!curr->movementQueue.empty()) //We have a movement pending, see if we can move...
 				{
@@ -1365,7 +1431,8 @@ void Game::LoginHandler(Server * server, User * user, string argument)
                 user->connectedState = User::CONN_PLAYING;
                 user->character->LoadSpellAffects();
                 user->character->LoadCooldowns();
-                user->character->Message(user->character->name + " has entered the game.", Character::MSG_ROOM_NOTCHAR);				
+                if(!user->character->IsGhost())
+					user->character->Message(user->character->name + " has entered the game.", Character::MSG_ROOM_NOTCHAR);				
                 cmd_look(user->character, "");
                 break;
             }
