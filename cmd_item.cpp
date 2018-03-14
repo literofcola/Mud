@@ -277,6 +277,11 @@ void cmd_wear(Character * ch, string argument)
     }
     ch->player->EquipItemFromInventory(wear, equiploc);
     ch->Send("You wear " + wear->name + ".\n\r");
+
+	if (removed)
+	{
+		ch->Send(Utilities::SideBySideString(Utilities::SideBySideString(removed->FormatItemInfo(), wear->FormatItemInfo()), removed->FormatItemInfo()));
+	}
 }
 
 void cmd_drop(Character * ch, string argument)

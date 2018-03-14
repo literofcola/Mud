@@ -26,6 +26,8 @@ namespace Utilities
 	bool str_prefix(const std::string & astr, const std::string & bstr);
     bool str_str(const std::string & astr, const std::string & bstr);
     std::string GetLastErrorAsString();
+	std::string SideBySideString(std::string left, std::string right);
+	int StringLengthWithoutColor(std::string str);
 
     /*
 	int UMIN(int a, int b);

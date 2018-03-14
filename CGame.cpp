@@ -1708,11 +1708,19 @@ void Game::LoadQuests(Server * server)
 
 		StoreQueryResult objectiveres = server->sqlQueue->Read("select * from quest_objectives where quest=" + Utilities::itos(q->id));
 		StoreQueryResult::iterator j;
-		for (j = objectiveres.begin(); j != objectiveres.end(); j++)
+		for (j = objectiveres.begin(); j != objectiveres.end(); ++j)
 		{
 			row = *j;
 			q->AddObjective(row["type"], row["count"], row["id"], (string)row["description"]);
 		}
+
+		StoreQueryResult itemres = server->sqlQueue->Read("select * from quest_item_rewards where quest=" + Utilities::itos(q->id));
+		for (j = itemres.begin(); j != itemres.end(); ++j)
+		{
+			row = *j;
+			q->itemRewards.push_back(row["item"]);
+		}
+
 		quests.insert(std::pair<int, Quest *>(q->id, q));
     }
 }

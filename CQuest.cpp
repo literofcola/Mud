@@ -219,6 +219,7 @@ void Quest::Save()
 
     Server::sqlQueue->Write(sql);
 
+	Server::sqlQueue->Write("DELETE FROM quest_objectives where quest=" + Utilities::itos(id));
 	std::vector<QuestObjective>::iterator iter;
 	for(iter = objectives.begin(); iter != objectives.end(); ++iter)
 	{
@@ -237,6 +238,18 @@ void Quest::Save()
 		objectivesql += " ON DUPLICATE KEY UPDATE quest=VALUES(quest), type=VALUES(type), id=VALUES(id), count=VALUES(count), description=VALUES(description)";
 
 		Server::sqlQueue->Write(objectivesql);
+	}
+
+	Server::sqlQueue->Write("DELETE FROM quest_item_rewards where quest=" + Utilities::itos(id));
+	std::vector<int>::iterator itemiter;
+	for (itemiter = itemRewards.begin(); itemiter != itemRewards.end(); ++itemiter)
+	{
+		string itemsql = "INSERT INTO quest_item_rewards (quest, item) values (";
+		itemsql += Utilities::itos(id) + ", " + Utilities::itos((*itemiter)) + ")";
+
+		itemsql += " ON DUPLICATE KEY UPDATE quest=VALUES(quest), item=VALUES(item)";
+
+		Server::sqlQueue->Write(itemsql);
 	}
 
     changed = false;

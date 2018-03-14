@@ -352,6 +352,7 @@ const class Command questEditCmd_table[] =
     { "end",            questEditCmd_end, 0, 0, 1, 1 },
     { "exp_reward",     questEditCmd_expreward, 0, 0, 1, 1 },
     { "money_reward",   questEditCmd_moneyreward, 0, 0, 1, 1 },
+	{ "item_reward",    questEditCmd_itemreward, 0, 0, 1, 1 },
     { "shareable",      questEditCmd_shareable, 0, 0, 1, 1 },
     { "",               0, 0, 0, 1, 1 }
 };

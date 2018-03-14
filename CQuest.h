@@ -23,7 +23,7 @@ public:
     int levelRequirement;
     Character * start;
     Character * end;
-    //std::vector<Item *> itemRewards;
+    std::vector<int> itemRewards;
     int experienceReward;
     int moneyReward;
     //int reputationReward; ??

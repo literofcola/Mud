@@ -334,59 +334,7 @@ void cmd_look(Character * ch, string argument)
             ch->Send("You don't see that here.\n\r");
             return;
         }
-        ch->Send(Item::quality_strings[inspect->quality] + inspect->name + "|X\n\r");
-        if(inspect->binds != Item::BIND_NONE)
-        {
-            ch->Send((string)Item::bind_strings[inspect->binds] + "\n\r");
-        }
-        if(inspect->quest)
-        {
-            ch->Send("Quest Item\n\r");
-        }
-        if(inspect->unique)
-        {
-            ch->Send("Unique\n\r");
-        }  
-
-        if(inspect->equipLocation != Item::EQUIP_NONE)
-        {
-            ch->Send(Item::equip_strings[inspect->equipLocation]);
-            if(inspect->type != Item::TYPE_MISC)
-            {
-                ch->Send("     " + (string)Item::type_strings[inspect->type] + "\n\r");
-            }
-            else
-            {
-                ch->Send("\n\r");
-            }
-        }
-        else if(inspect->equipLocation == Item::EQUIP_NONE && inspect->type != Item::TYPE_MISC)
-        {
-            ch->Send((string)Item::type_strings[inspect->type] + "\n\r");
-        }
-        
-        if(inspect->armor > 0)
-        {
-            ch->Send("Armor " + Utilities::itos(inspect->armor) + "\n\r");
-        }
-        if(inspect->damageHigh > 0 && inspect->speed > 0)
-        {
-            ch->Send(Utilities::itos(inspect->damageLow) + " - " + Utilities::itos(inspect->damageHigh) + " Damage");
-            ch->Send("    Speed " + Utilities::dtos(inspect->speed, 2) + "\n\r");  
-            double dps = ((inspect->damageLow + inspect->damageHigh) / 2.0) / inspect->speed;
-            ch->Send("(" + Utilities::dtos(dps, 2) + " damage per second)\n\r");
-        }
-
-        if(inspect->durability)
-        {
-            ch->Send("Durability " + Utilities::itos(inspect->durability) + "\n\r");
-        }
-        if(inspect->charLevel > 0)
-            ch->Send("Requires Level " + Utilities::itos(inspect->charLevel) + "\n\r");
-        if(inspect->itemLevel > 0)
-            ch->Send("Item Level " + Utilities::itos(inspect->itemLevel) + "\n\r");
-        if(inspect->value > 0)
-            ch->Send("Sell Price: " + Utilities::itos(inspect->value) + "\n\r");
+		ch->Send(inspect->FormatItemInfo());
     }
 }
 
@@ -924,6 +872,18 @@ void cmd_quest(Character * ch, string argument)
                     ch->Send(q->shortDescription + "\n\r\n\r");
                     ch->Send("You will receive |Y" + Utilities::itos(q->experienceReward) + " experience|X and |Y" 
                                + Utilities::itos(q->moneyReward) + " gold|X.\n\r");
+
+					if (!q->itemRewards.empty())
+					{
+						ch->Send("You can choose one of these awards:\n\r");
+						string combinedRewards;
+						for (auto itemiter = std::begin(q->itemRewards); itemiter != std::end(q->itemRewards); ++itemiter)
+						{
+							string itemreward = Game::GetGame()->GetItemIndex(*itemiter)->FormatItemInfo();
+							combinedRewards = Utilities::SideBySideString(combinedRewards, itemreward);
+						}
+						ch->Send(combinedRewards);
+					}
                     return;
                 }
                 ctr++;

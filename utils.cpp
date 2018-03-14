@@ -447,4 +447,81 @@ std::string GetLastErrorAsString()
     return message;
 }
 
+std::string SideBySideString(std::string left, std::string right)
+{
+	if (left.empty())
+		return right;
+	if (right.empty())
+		return left;
+
+	int longestline = 0;
+	std::string sidebyside;
+
+	//Find the longest line in the left string for possible padding later
+	int first = 0;
+	int last = left.find("\n\r");
+	while (last != std::string::npos)
+	{
+		int len = StringLengthWithoutColor(left.substr(first, last - first));
+		if (len > longestline)
+			longestline = len;
+		first = last + 1;
+		last = left.find("\n\r", last + 1);
+	}
+	longestline++;
+
+	int first_L, first_R, last_L, last_R;
+	first_L = first_R = 0; 
+	last_L = left.find("\n\r");
+	last_R = right.find("\n\r");
+	while (last_L != std::string::npos || last_R != std::string::npos)
+	{
+		if (last_L == std::string::npos)
+		{
+			sidebyside.append(longestline, ' ');
+		}
+		else
+		{
+			int len = StringLengthWithoutColor(left.substr(first_L, last_L - first_L));
+			sidebyside += left.substr(first_L, last_L - first_L);
+			if (len < longestline)
+			{
+				sidebyside.append(longestline - len, ' ');
+			}
+			first_L = last_L + 2;
+			last_L = left.find("\n\r", last_L + 1);
+		}
+
+		if (last_R == std::string::npos)
+		{
+			sidebyside += "\n\r";
+		}
+		else
+		{
+			sidebyside += right.substr(first_R, last_R + 2 - first_R);
+			first_R = last_R + 2;
+			last_R = right.find("\n\r", last_R + 1);
+		}
+	}
+
+	return sidebyside;
+}
+
+int StringLengthWithoutColor(std::string str)
+{
+	int len = 0;
+	for (int i = 0; i < str.length(); ++i)
+	{
+		if (str[i] == '|')
+		{
+			++i;
+		}
+		else
+		{
+			++len;
+		}
+	}
+	return len;
+}
+
 } //namespace Utilities

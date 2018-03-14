@@ -296,6 +296,7 @@ CREATE TABLE `player_active_quests` (
 
 LOCK TABLES `player_active_quests` WRITE;
 /*!40000 ALTER TABLE `player_active_quests` DISABLE KEYS */;
+INSERT INTO `player_active_quests` VALUES ('Boris',1,'0'),('Boris',5,'0');
 /*!40000 ALTER TABLE `player_active_quests` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -320,7 +321,7 @@ CREATE TABLE `player_class_data` (
 
 LOCK TABLES `player_class_data` WRITE;
 /*!40000 ALTER TABLE `player_class_data` DISABLE KEYS */;
-INSERT INTO `player_class_data` VALUES ('Bob',1,40),('Bob',2,30),('Bob',3,81),('Bob',4,155),('Bobo',3,2),('Boris',1,59),('Boris',2,60),('Boris',3,60),('Boris',4,60),('Tash',1,2);
+INSERT INTO `player_class_data` VALUES ('Bob',1,40),('Bob',2,30),('Bob',3,81),('Bob',4,155),('Boris',1,59),('Boris',2,60),('Boris',3,60),('Boris',4,60),('Tash',1,2);
 /*!40000 ALTER TABLE `player_class_data` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -344,7 +345,7 @@ CREATE TABLE `player_completed_quests` (
 
 LOCK TABLES `player_completed_quests` WRITE;
 /*!40000 ALTER TABLE `player_completed_quests` DISABLE KEYS */;
-INSERT INTO `player_completed_quests` VALUES ('Tash',1),('Tash',6);
+INSERT INTO `player_completed_quests` VALUES ('Boris',6),('Boris',8),('Tash',1),('Tash',6);
 /*!40000 ALTER TABLE `player_completed_quests` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -393,7 +394,7 @@ CREATE TABLE `player_inventory` (
 
 LOCK TABLES `player_inventory` WRITE;
 /*!40000 ALTER TABLE `player_inventory` DISABLE KEYS */;
-INSERT INTO `player_inventory` VALUES ('Tash',4,0),('Tash',5,0),('Tash',6,0),('Tash',3,0),('Tash',19,1),('Tash',19,1),('Tash',19,1),('Tash',19,1),('Tash',19,1),('Bobo',8,0),('Bobo',9,0),('Bobo',7,0),('Bobo',10,0),('Bobo',19,1),('Bobo',19,1),('Bobo',19,1),('Bobo',19,1),('Bobo',19,1),('Bobo',19,1),('Bobo',19,1),('Bobo',19,1),('Bobo',19,1),('Bobo',19,1),('Bob',4,0),('Bob',5,0),('Bob',6,0),('Bob',3,0),('Bob',20,1),('Bob',20,1),('Boris',14,0),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1);
+INSERT INTO `player_inventory` VALUES ('Tash',4,0),('Tash',5,0),('Tash',6,0),('Tash',3,0),('Tash',19,1),('Tash',19,1),('Tash',19,1),('Tash',19,1),('Tash',19,1),('Bob',4,0),('Bob',5,0),('Bob',6,0),('Bob',3,0),('Bob',20,1),('Bob',20,1),('Boris',8,0),('Boris',1,0),('Boris',1,0),('Boris',3,0),('Boris',10,1),('Boris',12,1),('Boris',17,1),('Boris',1,1),('Boris',14,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',4,1);
 /*!40000 ALTER TABLE `player_inventory` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -470,8 +471,32 @@ CREATE TABLE `players` (
 
 LOCK TABLES `players` WRITE;
 /*!40000 ALTER TABLE `players` DISABLE KEYS */;
-INSERT INTO `players` VALUES ('Bob','\r\Z',0,'',61309521,64,240,1,0,139,512,118,446,269,102,4460,2690,4,0,0,0,1758),('Bobo','\r\Z',0,'',675,65,2,1,0,5,5,5,5,5,5,50,50,3,2,0,0,6),('Boris','\r\Z',10,'',61309521,65,240,1,7,249,110,488,727,207,59,7270,2070,2,2,0,0,4240),('Tash','FCU',0,'',1451,3,2,1,2,5,5,5,5,5,0,50,100,1,2,0,0,6);
+INSERT INTO `players` VALUES ('Bob','\r\Z',0,'',61309521,64,240,1,0,139,512,118,446,269,102,4460,2690,4,0,0,0,1758),('Boris','\r\Z',10,'',61309521,6,240,1,7,249,110,488,727,207,59,7270,2070,2,2,0,0,4240),('Tash','FCU',0,'',1451,3,2,1,2,5,5,5,5,5,0,50,100,1,2,0,0,6);
 /*!40000 ALTER TABLE `players` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `quest_item_rewards`
+--
+
+DROP TABLE IF EXISTS `quest_item_rewards`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `quest_item_rewards` (
+  `quest` int(11) NOT NULL,
+  `item` int(11) NOT NULL,
+  PRIMARY KEY (`quest`,`item`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `quest_item_rewards`
+--
+
+LOCK TABLES `quest_item_rewards` WRITE;
+/*!40000 ALTER TABLE `quest_item_rewards` DISABLE KEYS */;
+INSERT INTO `quest_item_rewards` VALUES (4,1),(4,2),(4,3);
+/*!40000 ALTER TABLE `quest_item_rewards` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -510,20 +535,20 @@ DROP TABLE IF EXISTS `quests`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `quests` (
   `id` int(11) NOT NULL,
-  `name` varchar(100) DEFAULT NULL,
-  `short_description` text,
-  `long_description` text,
-  `progress_message` text,
-  `completion_message` text,
-  `level` int(11) DEFAULT NULL,
-  `quest_requirement` int(11) DEFAULT NULL,
-  `start` int(11) DEFAULT NULL,
-  `end` int(11) DEFAULT NULL,
-  `exp_reward` int(11) DEFAULT NULL,
-  `money_reward` int(11) DEFAULT NULL,
-  `shareable` int(11) DEFAULT NULL,
-  `level_requirement` int(11) DEFAULT NULL,
-  `quest_restriction` int(11) DEFAULT NULL,
+  `name` varchar(100) NOT NULL,
+  `short_description` text NOT NULL,
+  `long_description` text NOT NULL,
+  `progress_message` text NOT NULL,
+  `completion_message` text NOT NULL,
+  `level` int(11) NOT NULL,
+  `quest_requirement` int(11) NOT NULL,
+  `start` int(11) NOT NULL,
+  `end` int(11) NOT NULL,
+  `exp_reward` int(11) NOT NULL,
+  `money_reward` int(11) NOT NULL,
+  `shareable` int(11) NOT NULL,
+  `level_requirement` int(11) NOT NULL,
+  `quest_restriction` int(11) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -669,4 +694,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-03-13  4:14:09
+-- Dump completed on 2018-03-14  5:44:10

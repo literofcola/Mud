@@ -66,6 +66,8 @@ public:
 	int value;
     std::list<Item *> contents; //TODO
 
+	std::string FormatItemInfo();
+
     //For search  Store a reference to all searchable class data by type
     std::map<std::string, std::string*> stringTable;
     std::map<std::string, int*> intTable;

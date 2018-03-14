@@ -320,6 +320,20 @@ CREATE TABLE `players` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `quest_item_rewards`
+--
+
+DROP TABLE IF EXISTS `quest_item_rewards`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `quest_item_rewards` (
+  `quest` int(11) NOT NULL,
+  `item` int(11) NOT NULL,
+  PRIMARY KEY (`quest`,`item`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `quest_objectives`
 --
 
@@ -345,20 +359,20 @@ DROP TABLE IF EXISTS `quests`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `quests` (
   `id` int(11) NOT NULL,
-  `name` varchar(100) DEFAULT NULL,
-  `short_description` text,
-  `long_description` text,
-  `progress_message` text,
-  `completion_message` text,
-  `level` int(11) DEFAULT NULL,
-  `quest_requirement` int(11) DEFAULT NULL,
-  `start` int(11) DEFAULT NULL,
-  `end` int(11) DEFAULT NULL,
-  `exp_reward` int(11) DEFAULT NULL,
-  `money_reward` int(11) DEFAULT NULL,
-  `shareable` int(11) DEFAULT NULL,
-  `level_requirement` int(11) DEFAULT NULL,
-  `quest_restriction` int(11) DEFAULT NULL,
+  `name` varchar(100) NOT NULL,
+  `short_description` text NOT NULL,
+  `long_description` text NOT NULL,
+  `progress_message` text NOT NULL,
+  `completion_message` text NOT NULL,
+  `level` int(11) NOT NULL,
+  `quest_requirement` int(11) NOT NULL,
+  `start` int(11) NOT NULL,
+  `end` int(11) NOT NULL,
+  `exp_reward` int(11) NOT NULL,
+  `money_reward` int(11) NOT NULL,
+  `shareable` int(11) NOT NULL,
+  `level_requirement` int(11) NOT NULL,
+  `quest_restriction` int(11) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -455,4 +469,4 @@ CREATE TABLE `triggers` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-03-13  4:14:08
+-- Dump completed on 2018-03-14  5:44:08

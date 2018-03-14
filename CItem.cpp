@@ -145,6 +145,68 @@ Item::~Item()
 
 }
 
+std::string Item::FormatItemInfo()
+{
+	std::string itemstring;
+
+	itemstring = (Item::quality_strings[quality] + name + "|X\n\r");
+
+	if (binds != Item::BIND_NONE)
+	{
+		itemstring += ((string)Item::bind_strings[binds] + "\n\r");
+	}
+	if (quest)
+	{
+		itemstring += "Quest Item\n\r";
+	}
+	if (unique)
+	{
+		itemstring += "Unique\n\r";
+	}
+
+	if (equipLocation != Item::EQUIP_NONE)
+	{
+		itemstring += Item::equip_strings[equipLocation];
+		if (type != Item::TYPE_MISC)
+		{
+			itemstring += "     " + (string)Item::type_strings[type] + "\n\r";
+		}
+		else
+		{
+			itemstring += "\n\r";
+		}
+	}
+	else if (equipLocation == Item::EQUIP_NONE && type != Item::TYPE_MISC)
+	{
+		itemstring += (string)Item::type_strings[type] + "\n\r";
+	}
+
+	if (armor > 0)
+	{
+		itemstring += "Armor " + Utilities::itos(armor) + "\n\r";
+	}
+	if (damageHigh > 0 && speed > 0)
+	{
+		itemstring += Utilities::itos(damageLow) + " - " + Utilities::itos(damageHigh) + " Damage";
+		itemstring += "    Speed " + Utilities::dtos(speed, 2) + "\n\r";
+		double dps = ((damageLow + damageHigh) / 2.0) / speed;
+		itemstring += "(" + Utilities::dtos(dps, 2) + " damage per second)\n\r";
+	}
+
+	if (durability)
+	{
+		itemstring += "Durability " + Utilities::itos(durability) + "\n\r";
+	}
+	if (charLevel > 0)
+		itemstring += "Requires Level " + Utilities::itos(charLevel) + "\n\r";
+	if (itemLevel > 0)
+		itemstring += "Item Level " + Utilities::itos(itemLevel) + "\n\r";
+	if (value > 0)
+		itemstring += "Sell Price: " + Utilities::itos(value) + "\n\r";
+
+	return itemstring;
+}
+
 void Item::Save()
 {
     if(!changed)

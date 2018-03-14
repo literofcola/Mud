@@ -2714,6 +2714,13 @@ void questEditCmd_show(Character * ch, string argument)
     ch->Send("end id:       [" + (pQuest->end == NULL ? "none" : Utilities::itos(pQuest->end->id)) + "]\n\r");
     ch->Send("exp_reward:   [" + Utilities::itos(pQuest->experienceReward) + "]\n\r");
     ch->Send("money_reward: [" + Utilities::itos(pQuest->moneyReward) + "]\n\r");
+	std::string itemrewards = "item_reward:  [";
+	for (auto itemiter = std::begin(pQuest->itemRewards); itemiter != std::end(pQuest->itemRewards); ++itemiter)
+	{
+		itemrewards += Utilities::itos(*itemiter) + " ";
+	}
+	itemrewards += "]\n\r";
+	ch->Send(itemrewards);
     ch->Send("shareable:    [" + Utilities::itos(pQuest->shareable) + "]\n\r");
 
     /*
@@ -3160,6 +3167,43 @@ void questEditCmd_moneyreward(Character * ch, string argument)
     pQuest->moneyReward = money;
     pQuest->changed = true;
     ch->Send("money_reward set.\n\r");
+}
+
+void questEditCmd_itemreward(Character * ch, string argument)
+{
+	Quest * pQuest = (Quest *)ch->editData;
+
+	string arg1;
+	argument = Utilities::one_argument(argument, arg1);
+
+	if (!Utilities::IsNumber(arg1))
+	{
+		ch->Send("item_reward <#>\n\r");
+		return;
+	}
+	int itemid = Utilities::atoi(arg1);
+	if (itemid <= 0)
+	{
+		ch->Send("itemid must be > 0\n\r");
+		return;
+	}
+	std::vector<int>::iterator iter = std::find(pQuest->itemRewards.begin(), pQuest->itemRewards.end(), itemid);
+	if (iter != pQuest->itemRewards.end())
+	{
+		pQuest->itemRewards.erase(iter);
+		pQuest->changed = true;
+		ch->Send("Item reward removed\n\r");
+		return;
+	}
+	Item * reward = Game::GetGame()->GetItemIndex(itemid);
+	if (!reward)
+	{
+		ch->Send("Item with that ID does not exist.\n\r");
+		return;
+	}
+	pQuest->itemRewards.push_back(itemid);
+	pQuest->changed = true;
+	ch->Send("Item reward added\n\r");
 }
 
 void questEditCmd_shareable(Character * ch, string argument)
