@@ -30,6 +30,7 @@ bool cmd_quit_Query(Character * ch, string argument);
 bool releaseSpiritQuery(Character * ch, string argument);
 bool acceptResQuery(Character * ch, string argument);
 bool returnToGYQuery(Character * ch, string argument);
+bool questCompleteQuery(Character * ch, string argument);
 
 //cmd_comm.cpp
 void cmd_shout(Character * ch, string argument);
@@ -154,6 +155,7 @@ void npcEditCmd_trigger(Character * ch, string argument);
 void npcEditCmd_skill(Character * ch, string argument);
 void itemEditCmd_show(Character * ch, string argument);
 void itemEditCmd_name(Character * ch, string argument);
+void itemEditCmd_keywords(Character * ch, string argument);
 void itemEditCmd_item_level(Character * ch, string argument);
 void itemEditCmd_char_level(Character * ch, string argument);
 void itemEditCmd_quality(Character * ch, string argument);

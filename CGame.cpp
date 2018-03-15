@@ -618,7 +618,7 @@ void Game::WorldUpdate(Server * server)
         //Delay Update
         if(curr->delay_active && curr->delay <= currentTime)
         {
-			curr->CancelActiveDelay(); //Delay callback function handles this
+			//curr->CancelActiveDelay(); //Delay callback function handles this
             (*curr->delayFunction)(curr->delayData);
         }
         //Combat update

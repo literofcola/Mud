@@ -2358,6 +2358,21 @@ void itemEditCmd_name(Character * ch, string argument)
     ch->Send("name set.\n\r");
 }
 
+void itemEditCmd_keywords(Character * ch, string argument)
+{
+	Item * pItem = (Item *)ch->editData;
+
+	if (argument.empty())
+	{
+		ch->Send("Set keywords to what?\n\r");
+		return;
+	}
+
+	pItem->keywords = argument;
+	pItem->changed = true;
+	ch->Send("keywords set.\n\r");
+}
+
 void itemEditCmd_item_level(Character * ch, string argument)
 {
     Item * pItem = (Item *)ch->editData;

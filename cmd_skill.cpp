@@ -31,8 +31,6 @@ extern "C"
 #include "lauxlib.h"
 }
 
-//#include "luabind/luabind.hpp"
-
 using namespace std;
 
 void cmd_castCallback(Character::DelayData delayData)
@@ -42,6 +40,7 @@ void cmd_castCallback(Character::DelayData delayData)
         LogFile::Log("error", "cmd_castCallback: NULL caster");
         return;
     }
+	delayData.caster->delay_active = false;
 
     if(!delayData.sk)
     {
@@ -55,6 +54,7 @@ void cmd_castCallback(Character::DelayData delayData)
     if(delayData.charTarget && delayData.charTarget != delayData.caster)
     {
         delayData.charTarget->RemoveSubscriber(delayData.caster);
+		//cout << "cmd_castCallback REMOVE" << endl;
     }
 
     if(delayData.charTarget == NULL) //target will never be null from cmd_cast, only from Subscriber::Notify 
@@ -293,6 +293,7 @@ void cmd_cast(Character * ch, string argument)
 	if (arg_target && ch != arg_target)
 	{
 		dd.charTarget->AddSubscriber(dd.caster); //if our target is gone when spell finishes, we need to know about it
+		//cout << "cmd_cast ADD:" << endl;
 	}
     dd.sk = spell;
     ch->delayData = dd;

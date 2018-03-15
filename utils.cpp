@@ -458,8 +458,8 @@ std::string SideBySideString(std::string left, std::string right)
 	std::string sidebyside;
 
 	//Find the longest line in the left string for possible padding later
-	int first = 0;
-	int last = left.find("\n\r");
+	size_t first = 0;
+	size_t last = left.find("\n\r");
 	while (last != std::string::npos)
 	{
 		int len = StringLengthWithoutColor(left.substr(first, last - first));
@@ -470,7 +470,7 @@ std::string SideBySideString(std::string left, std::string right)
 	}
 	longestline++;
 
-	int first_L, first_R, last_L, last_R;
+	size_t first_L, first_R, last_L, last_R;
 	first_L = first_R = 0; 
 	last_L = left.find("\n\r");
 	last_R = right.find("\n\r");

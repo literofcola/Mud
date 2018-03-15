@@ -181,7 +181,7 @@ public:
 	void SendGMCP(char * str);
     void Message(const std::string & txt, MessageType msg_type, Character * vict = NULL);
     Character * GetCharacterRoom(std::string name);
-    Character * GetCharacterAdjacentRoom(std::string name);
+    Character * GetCharacterAdjacentRoom(std::string name, std::string direction);
     Character * GetCharacterRoom(Character * target);
     Character * GetCharacterAdjacentRoom(Character * target);
     void SetTarget(Character * t);

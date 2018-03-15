@@ -270,6 +270,7 @@ const class Command itemEditCmd_table[] =
 {
 	{ "show",		    itemEditCmd_show, 0, 0, 1, 1 },
     { "name",		    itemEditCmd_name, 0, 0, 1, 1 },
+	{ "keywords",		itemEditCmd_keywords, 0, 0, 1, 1 },
     { "item_level",		itemEditCmd_item_level, 0, 0, 1, 1 },
     { "char_level",		itemEditCmd_char_level, 0, 0, 1, 1 },
     { "quality",		itemEditCmd_quality, 0, 0, 1, 1 },

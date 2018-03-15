@@ -277,11 +277,6 @@ void cmd_wear(Character * ch, string argument)
     }
     ch->player->EquipItemFromInventory(wear, equiploc);
     ch->Send("You wear " + wear->name + ".\n\r");
-
-	if (removed)
-	{
-		ch->Send(Utilities::SideBySideString(Utilities::SideBySideString(removed->FormatItemInfo(), wear->FormatItemInfo()), removed->FormatItemInfo()));
-	}
 }
 
 void cmd_drop(Character * ch, string argument)
@@ -345,7 +340,7 @@ void cmd_drop(Character * ch, string argument)
         ch->Send("You're not carrying that item.\n\r");
         return;
     }
-	item = Game::GetGame()->GetItemIndex(item->id); //pass the item index as the query data just incase the player inventory gets messed with
+	item = Game::GetGame()->GetItemIndex(item->id);
 	ch->SetQuery("Destroy " + item->name + "? (y/n) ", item, cmd_drop_Query);
 }
 

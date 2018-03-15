@@ -52,7 +52,7 @@ public:
     void AddTrigger(Trigger & trig);
     Trigger * GetTrigger(int startid, int type = -1);
 	void Message(const std::string & text);
-	bool HasNonGhostCharacters();
+	bool HasLivingCharacters();
 
     bool operator<(const Room& r)const{return id<r.id;}
 

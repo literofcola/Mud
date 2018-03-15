@@ -352,10 +352,12 @@ void cmd_target(Character * ch, string argument)
 	}
 
 	string arg1;
+	string direction;
     argument = Utilities::one_argument(argument, arg1);
+	argument = Utilities::one_argument(argument, direction);
 
 	Character *vch;
-	if((vch = ch->GetCharacterAdjacentRoom(arg1)) != NULL ||
+	if((vch = ch->GetCharacterAdjacentRoom(arg1, direction)) != NULL ||
         (ch->player && ch->player->IMMORTAL() 
          && (vch = Game::GetGame()->GetPlayerWorld(ch, arg1)) != NULL))
 	{
@@ -475,7 +477,7 @@ void cmd_scan(Character * ch, string argument)
 			{
 				break;
 			}
-			if(scan_room->HasNonGhostCharacters())
+			if(scan_room->HasLivingCharacters())
 			{
 				found = true;
 				out << /*depthcolors[j] <<*/ "|W[" << Utilities::itos(j + 1) << "]:|X ";
@@ -870,12 +872,14 @@ void cmd_quest(Character * ch, string argument)
                                + Utilities::itos(q->level) + ")|X\n\r\n\r");
                     ch->Send(q->longDescription + "\n\r\n\r");
                     ch->Send(q->shortDescription + "\n\r\n\r");
-                    ch->Send("You will receive |Y" + Utilities::itos(q->experienceReward) + " experience|X and |Y" 
-                               + Utilities::itos(q->moneyReward) + " gold|X.\n\r");
+					ch->Send("You will receive |Y" + Utilities::itos(q->experienceReward) + " experience|X");
+					if (q->moneyReward > 0)
+						ch->Send(" and |Y" + Utilities::itos(q->moneyReward) + " gold|X");
+					ch->Send("\n\r");
 
 					if (!q->itemRewards.empty())
 					{
-						ch->Send("You can choose one of these awards:\n\r");
+						ch->Send("You will be able to choose one of these rewards:\n\r");
 						string combinedRewards;
 						for (auto itemiter = std::begin(q->itemRewards); itemiter != std::end(q->itemRewards); ++itemiter)
 						{
@@ -1040,49 +1044,69 @@ void cmd_quest(Character * ch, string argument)
             return;
         }
 
-        //Remove items from inventory for OBJECTIVE_ITEM
-        std::vector<Quest::QuestObjective>::iterator iter;
-        for(iter = complete->objectives.begin(); iter != complete->objectives.end(); ++iter)
-        {
-            if((*iter).type == Quest::OBJECTIVE_ITEM)
-            {
-                int found = 0;
-                std::list<Item*>::iterator inviter;
-                for(inviter = ch->player->inventory.begin(); inviter != ch->player->inventory.end();)
-                {
-                    if((*inviter)->id == ((Item*)((*iter).objective))->id)
-                    {
-                        if(found < (*iter).count)
-                        {
-                            //remove from inventory
-                            inviter = ch->player->inventory.erase(inviter);
-                            ch->player->inventorySize--;
-                        }
-                        else
-                        {
-                            break;
-                        }
-                        found++;
-                    }
-                    else
-                    {
-                         ++inviter;
-                    }
-                }
-            }
-        }
 
-        qiter = ch->player->questLog.begin() + qnum - 1;
-        std::vector< std::vector<int> >::iterator objiter = ch->player->questObjectives.begin() + qnum - 1;
-        ch->player->questLog.erase(qiter);
-        ch->player->questObjectives.erase(objiter);
-        ch->player->completedQuests.insert(complete->id);
+		if (!complete->itemRewards.empty())
+		{
+			string rewardQueryString = "Choose your reward: (";
+			string combinedRewards;
+			int ctr = 1;
+			for (auto itemiter = std::begin(complete->itemRewards); itemiter != std::end(complete->itemRewards); ++itemiter)
+			{
+				rewardQueryString += Utilities::itos(ctr++);
+				if (ctr <= complete->itemRewards.size())
+					rewardQueryString += ", ";
+				string itemreward = Game::GetGame()->GetItemIndex(*itemiter)->FormatItemInfo();
+				combinedRewards = Utilities::SideBySideString(combinedRewards, itemreward);
+			}
+			rewardQueryString += "): ";
+			ch->Send(combinedRewards);
+			ch->SetQuery(rewardQueryString, (void*)qnum, questCompleteQuery); //Yes I'm casting an int to void*. Investigated templates, but...
+		}
+		else
+		{
+			//Remove items from inventory for OBJECTIVE_ITEM
+			std::vector<Quest::QuestObjective>::iterator iter;
+			for (iter = complete->objectives.begin(); iter != complete->objectives.end(); ++iter)
+			{
+				if ((*iter).type == Quest::OBJECTIVE_ITEM)
+				{
+					int found = 0;
+					std::list<Item*>::iterator inviter;
+					for (inviter = ch->player->inventory.begin(); inviter != ch->player->inventory.end();)
+					{
+						if ((*inviter)->id == ((Item*)((*iter).objective))->id)
+						{
+							if (found < (*iter).count)
+							{
+								//remove from inventory
+								inviter = ch->player->inventory.erase(inviter);
+								ch->player->inventorySize--;
+							}
+							else
+							{
+								break;
+							}
+							found++;
+						}
+						else
+						{
+							++inviter;
+						}
+					}
+				}
+			}
 
-        ch->Send(complete->name + " completed!\n\r");
-        ch->Send(complete->completionMessage + "\n\r");
-        //todo, rewards
-        ch->Send("|BYou have gained |Y" + Utilities::itos(complete->experienceReward) + "|B experience.|X\n\r");
-        ch->ApplyExperience(complete->experienceReward);
+			qiter = ch->player->questLog.begin() + qnum - 1;
+			std::vector< std::vector<int> >::iterator objiter = ch->player->questObjectives.begin() + qnum - 1;
+			ch->player->questLog.erase(qiter);
+			ch->player->questObjectives.erase(objiter);
+			ch->player->completedQuests.insert(complete->id);
+
+			ch->Send(complete->name + " completed!\n\r");
+			ch->Send(complete->completionMessage + "\n\r");
+			ch->Send("|BYou have gained |Y" + Utilities::itos(complete->experienceReward) + "|B experience.|X\n\r");
+			ch->ApplyExperience(complete->experienceReward);
+		}
         return;
     }
     else if(!Utilities::str_cmp(arg1, "progress"))
@@ -1108,8 +1132,6 @@ void cmd_quest(Character * ch, string argument)
                    + progress->name + " (" + Utilities::itos(progress->level) + ")|X\n\r");
         ch->Send(progress->longDescription + "\n\r\n\r");
         ch->Send(progress->shortDescription + "\n\r\n\r");
-        ch->Send("You will receive |Y" + Utilities::itos(progress->experienceReward) + " experience|X and |Y" 
-                   + Utilities::itos(progress->moneyReward) + " gold|X.\n\r");
 
         std::vector<Quest::QuestObjective>::iterator objiter;
         int i = 0;
@@ -1126,6 +1148,23 @@ void cmd_quest(Character * ch, string argument)
                 ch->Send("|G" + (*objiter).description + " (" + Utilities::itos(currentCount) + "/" + Utilities::itos((*objiter).count) + ")|X\n\r");
             }
         }
+
+		ch->Send("You will receive |Y" + Utilities::itos(progress->experienceReward) + " experience|X");
+		if (progress->moneyReward > 0)
+			ch->Send(" and |Y" + Utilities::itos(progress->moneyReward) + " gold|X");
+		ch->Send("\n\r");
+
+		if (!progress->itemRewards.empty())
+		{
+			ch->Send("You will be able to choose one of these rewards:\n\r");
+			string combinedRewards;
+			for (auto itemiter = std::begin(progress->itemRewards); itemiter != std::end(progress->itemRewards); ++itemiter)
+			{
+				string itemreward = Game::GetGame()->GetItemIndex(*itemiter)->FormatItemInfo();
+				combinedRewards = Utilities::SideBySideString(combinedRewards, itemreward);
+			}
+			ch->Send(combinedRewards);
+		}
         return;
     }
     else if(!Utilities::str_cmp(arg1, "share"))
@@ -1133,6 +1172,80 @@ void cmd_quest(Character * ch, string argument)
         return;
     }
     ch->Send("Quest: log, list, info #, accept #, drop #, complete #, progress #, share #\n\r");
+}
+
+
+bool questCompleteQuery(Character * ch, string argument)
+{
+	int qnum = (int)ch->GetQueryData();
+	Quest * quest = ch->player->questLog[qnum - 1];
+	ch->QueryClear();
+
+	string arg1;
+	Utilities::one_argument(argument, arg1);
+	if (!Utilities::IsNumber(arg1))
+	{
+		ch->Send("Invalid choice, quest not completed.\n\r");
+		return true;
+	}
+	int choice = Utilities::atoi(arg1);
+	if (choice <= 0 || choice > quest->itemRewards.size())
+	{
+		ch->Send("Invalid choice, quest not completed.\n\r");
+		return true;
+	}
+
+	//Remove items from inventory for OBJECTIVE_ITEM
+	std::vector<Quest::QuestObjective>::iterator iter;
+	for (iter = quest->objectives.begin(); iter != quest->objectives.end(); ++iter)
+	{
+		if ((*iter).type == Quest::OBJECTIVE_ITEM)
+		{
+			int found = 0;
+			std::list<Item*>::iterator inviter;
+			for (inviter = ch->player->inventory.begin(); inviter != ch->player->inventory.end();)
+			{
+				if ((*inviter)->id == ((Item*)((*iter).objective))->id)
+				{
+					if (found < (*iter).count)
+					{
+						//remove from inventory
+						inviter = ch->player->inventory.erase(inviter);
+						ch->player->inventorySize--;
+					}
+					else
+					{
+						break;
+					}
+					found++;
+				}
+				else
+				{
+					++inviter;
+				}
+			}
+		}
+	}
+
+	std::vector<Quest*>::iterator qiter = ch->player->questLog.begin() + qnum - 1;
+	std::vector< std::vector<int> >::iterator objiter = ch->player->questObjectives.begin() + qnum - 1;
+	ch->player->questLog.erase(qiter);
+	ch->player->questObjectives.erase(objiter);
+	ch->player->completedQuests.insert(quest->id);
+
+	ch->Send(quest->name + " completed!\n\r");
+	ch->Send(quest->completionMessage + "\n\r");
+
+	Item * myreward = Game::GetGame()->GetItemIndex(quest->itemRewards[choice - 1]);
+	if(myreward)
+	{
+		ch->Send("|WYou receive item: " + myreward->name + "|X\n\r");
+		ch->player->NewItemInventory(myreward);
+	}
+
+	ch->Send("|BYou have gained |Y" + Utilities::itos(quest->experienceReward) + "|B experience.|X\n\r");
+	ch->ApplyExperience(quest->experienceReward);
+	return true;
 }
 
 void cmd_quit(Character * ch, string argument)

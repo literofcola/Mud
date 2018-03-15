@@ -274,7 +274,7 @@ void Room::Message(const std::string & text)
 	}
 }
 
-bool Room::HasNonGhostCharacters()
+bool Room::HasLivingCharacters()
 {
 	if (characters.empty())
 		return false;
@@ -282,7 +282,7 @@ bool Room::HasNonGhostCharacters()
 	std::list<Character *>::iterator iter;
 	for (iter = characters.begin(); iter != characters.end(); iter++)
 	{
-		if (!(*iter)->IsGhost())
+		if ((*iter)->IsAlive())
 			return true;
 	}
 	return false;

@@ -61,6 +61,7 @@ SpellAffect::~SpellAffect()
     if(caster)
     {
         caster->RemoveSubscriber(this);
+		//cout << "~SpellAffect REMOVE" << endl;
     }
     auraAffects.clear();
 }

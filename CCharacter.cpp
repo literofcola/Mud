@@ -228,10 +228,10 @@ Character::~Character()
     cooldowns.clear();
     triggers.clear();
 
-    if(reset)
+    /*if(reset)
     {
         this->RemoveSubscriber(reset);
-    }
+    }*/
 }
 
 void Character::SendBW(std::string str)
@@ -774,11 +774,11 @@ Character * Character::GetCharacterRoom(string name)
     return NULL;
 }
 
-//Find a character in this room or any adjacent room
-Character * Character::GetCharacterAdjacentRoom(string name)
+//Find a character in this room or any adjacent room. takes an optional direction argument
+Character * Character::GetCharacterAdjacentRoom(string name, string direction)
 {
     if(name.empty())
-        return NULL;
+        return nullptr;
 
     int count = 0;
 	string tempname = name;
@@ -787,7 +787,34 @@ Character * Character::GetCharacterAdjacentRoom(string name)
     if(!Utilities::str_cmp(tempname, "self") || !Utilities::str_cmp(tempname, "me"))
 		return this;
 
-    std::list<Character *>::iterator iter;
+	int exitNum = -1;
+	if (!direction.empty())
+	{
+		for (int i = 0; i < Exit::DIR_LAST; ++i)
+		{
+			if (!Utilities::str_cmp(direction, Exit::exitNames[i]))
+			{
+				exitNum = i;
+				break;
+			}
+		}
+	}
+	std::list<Character *>::iterator iter;
+	if (exitNum != -1)
+	{
+		if (room->exits[exitNum] && room->exits[exitNum]->to)
+		{
+			for (iter = room->exits[exitNum]->to->characters.begin(); iter != room->exits[exitNum]->to->characters.end(); ++iter)
+			{
+				if (!Utilities::IsName(tempname, (*iter)->name))
+					continue;
+				if (++count == number)
+					return (*iter);
+			}
+		}
+		return nullptr;
+	}
+
     for(iter = room->characters.begin(); iter != room->characters.end(); ++iter)
     {
         if(!Utilities::IsName(tempname, (*iter)->name))
@@ -808,7 +835,7 @@ Character * Character::GetCharacterAdjacentRoom(string name)
             }
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 Character * Character::GetCharacterRoom(Character * target)
@@ -1436,6 +1463,7 @@ SpellAffect * Character::AddSpellAffect(int isDebuff, Character * caster, string
     if(sa->caster)
     {
         sa->caster->AddSubscriber(sa);
+		//cout << "AddSpellAffect ADD" << endl;
         sa->casterName = caster->name;
     }
     sa->ticksRemaining = ticks;
@@ -1930,12 +1958,14 @@ void Character::EnterCombat(Character * victim)
 	if (IsNPC() || victim->IsNPC()) //Keep track of threat unless BOTH are players
 	{
         victim->UpdateThreat(this, 0, Character::Threat::THREAT_DAMAGE); 
+		UpdateThreat(victim, 0, Character::Threat::THREAT_DAMAGE);
     }
 
     movementSpeed = Character::COMBAT_MOVE_SPEED;
     victim->movementSpeed = Character::COMBAT_MOVE_SPEED;
 	json combat = { { "combat", 1 } };
 	SendGMCP("char.vitals " + combat.dump());
+	victim->SendGMCP("char.vitals " + combat.dump());
 }
 
 void Character::ExitCombat()
@@ -2343,7 +2373,8 @@ void Character::AdjustHealth(Character * source, int amount)
 
     if(health == 0) 
     {
-		Message("|R" + name + " has been slain!|X", Character::MSG_ROOM_NOTCHAR, source);
+		Message("|R" + name + " has been slain!|X", Character::MSG_ROOM_NOTCHARVICT, source);
+		source->Send("|R" + name + " has been slain!|X\n\r");
 		Send("|RYou have been slain!|X\n\r");
 
 		OnDeath(); //The source of damage shouldn't matter except where cases of "killing blow" matters (none so far?)
@@ -2860,6 +2891,7 @@ void Character::UpdateThreat(Character * ch, int value, int type)
         }
     }
 	ch->AddSubscriber(this);
+	//cout << "UpdateThreat ADD" << endl;
 	Threat tt = { ch, value, 0, 0, false };
 	switch (type)
 	{
@@ -2905,6 +2937,7 @@ void Character::RemoveThreat(Character * ch, bool removeall)
         for(iter = threatList.begin(); iter != threatList.end(); ++iter)
         {
             (*iter).ch->RemoveSubscriber(this);
+			//cout << "RemoveThreat REMOVE" << endl;
         }
         threatList.clear();
         return;
@@ -2916,6 +2949,7 @@ void Character::RemoveThreat(Character * ch, bool removeall)
         if((*iter).ch == ch)
         {
             (*iter).ch->RemoveSubscriber(this);
+			//cout << "RemoveThreat REMOVE" << endl;
             threatList.erase(iter);
             return;
         }
@@ -3387,6 +3421,7 @@ void Character::SetTarget(Character * t)
         ClearTarget();
     }
     t->AddSubscriber(this);
+	//cout << "SetTarget ADD" << endl;
     target = t;
 }
 
@@ -3400,6 +3435,7 @@ void Character::ClearTarget()
 			SendGMCP("targettarget.vitals " + targettargetvitals.dump());
 		}
         target->RemoveSubscriber(this);
+		//cout << "ClearTarget REMOVE" << endl;
         target = NULL;
 		json vitals = { { "name", "" },{ "level", 0 },{ "hppercent", 0 },{ "mppercent", 0 }, { "enpercent", 0 },{ "ragepercent", 0 } };
 		SendGMCP("target.vitals " + vitals.dump());
@@ -3419,12 +3455,14 @@ void Character::Notify(SubscriberManager * lm)
     {
 		//ClearTarget();
         target->RemoveSubscriber(this);
+		//cout << "Character::Notify target REMOVE" << endl;
         target = NULL;
     }
 
-    if(delayData.charTarget == lm)
+    if(delay_active && delayData.charTarget == lm)
     {
         delayData.charTarget->RemoveSubscriber(this);
+		//cout << "Character::Notify delaydata REMOVE" << endl;
         delayData.charTarget = NULL;
 		delay_active = false;
     }
