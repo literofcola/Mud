@@ -1,29 +1,4 @@
 #include "stdafx.h"
-#include "CSubscriber.h"
-#include "CSubscriberManager.h"
-#include "CLogFile.h"
-#include "CmySQLQueue.h"
-#include "CHighResTimer.h"
-#include "CHelp.h"
-#include "CTrigger.h"
-#include "CClient.h"
-#include "CItem.h"
-#include "CSkill.h"
-#include "CClass.h"
-#include "CExit.h"
-#include "CReset.h"
-#include "CArea.h"
-#include "CRoom.h"
-#include "CQuest.h"
-#include "CPlayer.h"
-#include "CCharacter.h"
-#include "CSpellAffect.h"
-#include "CUser.h"
-#include "CGame.h"
-#include "CServer.h"
-#include "CCommand.h"
-#include "utils.h"
-#include "mud.h"
 
 using namespace std;
 
@@ -484,10 +459,20 @@ void cmd_scan(Character * ch, string argument)
 				std::list<Character *>::iterator iter = scan_room->characters.begin();
 				while (iter != scan_room->characters.end())
 				{
-					level = "<" +
-						Game::LevelDifficultyColor(Game::LevelDifficulty(ch->level, (*iter)->level))
-						+ Utilities::itos((*iter)->level) + "|X>";
-					out << level << ch->AggressionColor(*iter) << (*iter)->name;
+					if (j == 0) //depth
+					{
+						level = "<" +
+							Game::LevelDifficultyColor(Game::LevelDifficulty(ch->level, (*iter)->level))
+							+ Utilities::itos((*iter)->level) + "|X>";
+						out << level << ch->AggressionColor(*iter) << (*iter)->name;
+					}
+					else
+					{
+						level = "<" +
+							Game::LevelDifficultyLightColor(Game::LevelDifficulty(ch->level, (*iter)->level))
+							+ Utilities::itos((*iter)->level) + "|X>";
+						out << level << ch->AggressionLightColor(*iter) << (*iter)->name;
+					}
 					iter++;
 					if (iter != scan_room->characters.end())
 					{
@@ -585,9 +570,127 @@ void cmd_title(Character * ch, string argument)
 	}
 }
 
+//TODO: pasted this from old Mudv2, needs work
 void cmd_group(Character * ch, string argument)
 {
-    ch->Send("cmd_group\n\r");
+	if (!ch || ch->IsNPC())
+		return;
+
+	string arg1;
+	string arg2;
+	Character * vch;
+
+	argument = Utilities::one_argument(argument, arg1);
+	argument = Utilities::one_argument(argument, arg2);
+
+	if (!Utilities::str_cmp(arg1, "invite"))
+	{
+		if (arg2.empty())
+		{
+			ch->Send("Invite who?\n\r");
+			return;
+		}
+		int slot = -1;
+		if (ch->group)
+			slot = ch->group->GetNextFreeSlot();
+		if (ch->group && ((!ch->group->israid && slot >= 4) || slot == -1))
+		{
+			ch->Send("Your group is full.\n\r");
+			return;
+		}
+		if ((vch = Game::GetGame()->GetCharacterByPCName(arg2)) != NULL)
+		{
+			if (vch == ch)
+			{
+				ch->Send("You can't invite yourself.\n\r");
+				return;
+			}
+			if (vch->group)
+			{
+				ch->Send("That player already has a group.\n\r");
+				return;
+			}
+			if (vch->HasQuery())
+			{
+				ch->Send("That player is busy.\n\r");
+				return;
+			}
+			ch->Send("You invite " + vch->name + " to join your group.\n\r");
+			vch->SetQuery(ch->name + " has invited you to join " + ch->HisHer() + " group ('accept'/'decline') ", (void*)ch, cmd_groupQuery);
+			vch->Send("\n\r");
+		}
+		else
+		{
+			ch->Send("Player not found.\n\r");
+			return;
+		}
+		return;
+	}
+	if (!Utilities::str_cmp(arg1, "remove"))
+	{
+		return;
+	}
+	if (!Utilities::str_cmp(arg1, "raid"))
+	{
+		if (!Utilities::str_cmp(arg2, "set"))
+		{
+		}
+		else if (!Utilities::str_cmp(arg2, "unset"))
+		{
+		}
+		return;
+	}
+	ch->Send("group invite <player>\n\r");
+	ch->Send("group remove <player>\n\r");
+	ch->Send("group raid set/unset\n\r");
+	ch->Send("group leader <player>\n\r");
+	ch->Send("group promote <player>\n\r");
+	ch->Send("group demote <player>\n\r");
+	ch->Send("group move <player> <group #>\n\r");
+}
+
+//TODO: pasted this from old Mudv2, needs work
+bool cmd_groupQuery(Character *ch, string argument)
+{
+	Character * vch = (Character *)ch->GetQueryData();
+
+	if (!Utilities::str_cmp(argument, "accept"))
+	{
+		if (vch->group == NULL) //start a new group
+		{
+			vch->group = new Group(vch);
+			ch->group = vch->group;
+			vch->group->members[1] = ch;
+			vch->group->count++;
+			vch->Send(ch->name + " has joined your group.\n\r");
+			ch->Send("You have joined " + vch->name + "'s group.\n\r");
+		}
+		else //joining an existing group
+		{
+			int slot = vch->group->GetNextFreeSlot();
+			if ((!vch->group->israid && slot >= Group::MAX_GROUP_SIZE) || slot == -1)
+			{
+				ch->Send("That group is full.\n\r");
+			}
+			else
+			{
+				ch->group = vch->group;
+				vch->group->members[slot] = ch;
+				vch->group->count++;
+				vch->Send(ch->name + " has joined your group.\n\r");
+				ch->Send("You have joined " + vch->name + "'s group.\n\r");
+			}
+		}
+		ch->QueryClear();
+		return true;
+	}
+	else if (!Utilities::str_cmp(argument, "decline"))
+	{
+		vch->Send(ch->name + " declines your group invitation.\n\r");
+		ch->QueryClear();
+		return true;
+	}
+	return false;
 }
 
 void cmd_class(Character * ch, string argument)

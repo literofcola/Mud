@@ -31,6 +31,7 @@ bool releaseSpiritQuery(Character * ch, string argument);
 bool acceptResQuery(Character * ch, string argument);
 bool returnToGYQuery(Character * ch, string argument);
 bool questCompleteQuery(Character * ch, string argument);
+bool cmd_groupQuery(Character *ch, string argument);
 
 //cmd_comm.cpp
 void cmd_shout(Character * ch, string argument);

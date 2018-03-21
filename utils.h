@@ -1,3 +1,6 @@
+#ifndef UTILS_H
+#define UTILS_H
+
 namespace Utilities
 {
     std::string itos(const int & i);
@@ -114,3 +117,5 @@ namespace Utilities
     #define C_B_WHITE	"\033[1;37m"
 
 }
+
+#endif

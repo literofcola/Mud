@@ -170,6 +170,7 @@
     <ClInclude Include="CCommand.h" />
     <ClInclude Include="CExit.h" />
     <ClInclude Include="CGame.h" />
+    <ClInclude Include="CGroup.h" />
     <ClInclude Include="CHelp.h" />
     <ClInclude Include="CHighResTimer.h" />
     <ClInclude Include="CItem.h" />
@@ -200,6 +201,7 @@
     <ClCompile Include="CCommand.cpp" />
     <ClCompile Include="CExit.cpp" />
     <ClCompile Include="CGame.cpp" />
+    <ClCompile Include="CGroup.cpp" />
     <ClCompile Include="CHelp.cpp" />
     <ClCompile Include="CHighResTimer.cpp" />
     <ClCompile Include="CItem.cpp" />

@@ -1,28 +1,5 @@
 #include "stdafx.h"
-#include "CSubscriber.h"
-#include "CSubscriberManager.h"
-#include "CmySQLQueue.h"
-#include "CLogFile.h"
-#include "CClient.h"
-#include "CHighResTimer.h"
-#include "CHelp.h"
-#include "CTrigger.h"
-#include "CItem.h"
-#include "CSkill.h"
-#include "CClass.h"
-#include "CExit.h"
-#include "CReset.h"
-#include "CArea.h"
-#include "CRoom.h"
-#include "CQuest.h"
-#include "CPlayer.h"
-#include "CUser.h"
-#include "CGame.h"
-#include "CServer.h"
-#include "CCharacter.h"
-#include "CSpellAffect.h"
-#include "utils.h"
-#include "mud.h"
+
 
 extern "C" 
 {
@@ -3070,6 +3047,26 @@ std::string Character::AggressionColor(Character * target)
 	else// if (Utilities::FlagIsSet(target->flags, Character::Flags::FLAG_AGGRESSIVE))
 	{
 		return "|R";
+	}
+}
+
+std::string Character::AggressionLightColor(Character * target)
+{
+	if (!target->IsNPC())
+	{
+		return "|c";
+	}
+	else if (Utilities::FlagIsSet(target->flags, Character::Flags::FLAG_FRIENDLY))
+	{
+		return "|g";
+	}
+	else if (Utilities::FlagIsSet(target->flags, Character::Flags::FLAG_NEUTRAL))
+	{
+		return "|y";
+	}
+	else// if (Utilities::FlagIsSet(target->flags, Character::Flags::FLAG_AGGRESSIVE))
+	{
+		return "|r";
 	}
 }
 

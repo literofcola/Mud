@@ -1,27 +1,5 @@
 #include "stdafx.h"
-#include "CSubscriber.h"
-#include "CSubscriberManager.h"
-#include "CmySQLQueue.h"
-#include "CLogFile.h"
-#include "CClient.h"
-#include "CHighResTimer.h"
-#include "CHelp.h"
-#include "CTrigger.h"
-#include "CItem.h"
-#include "CSkill.h"
-#include "CClass.h"
-#include "CExit.h"
-#include "CReset.h"
-#include "CArea.h"
-#include "CRoom.h"
-#include "CQuest.h"
-#include "CPlayer.h"
-#include "CCharacter.h"
-#include "CSpellAffect.h"
-#include "CUser.h"
-#include "CGame.h"
-#include "CServer.h"
-#include "utils.h"
+
 
 //Defines from telnet protocol we need for MXP, MCCP, etc
 const std::string Server::IAC = "\xFF";
@@ -148,7 +126,7 @@ bool Server::Initialize()
 	ServerAddress.sin_addr.s_addr = INADDR_ANY;
 	ServerAddress.sin_port = htons(nPort);   
 
-	if(SOCKET_ERROR == bind(ListenSocket, (struct sockaddr *) &ServerAddress, sizeof(ServerAddress)))
+	if(SOCKET_ERROR == ::bind(ListenSocket, (struct sockaddr *) &ServerAddress, sizeof(ServerAddress)))
 	{
 		LogFile::Log("error", "Error occurred in bind()");
 		closesocket(ListenSocket);

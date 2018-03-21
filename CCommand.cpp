@@ -121,7 +121,7 @@ class Command cmd_table[] =
     { ".",			cmd_shout,		1, 0, 0, 1, Character::POSITION_ANY },
     /*{ ",",			cmd_emote,		POS_RESTING,	1,  LOG_NORMAL, 0 },
 	*/
-	{ "group",		cmd_group,		1, 0, 0, 1, Character::POSITION_ANY },
+	{ "group",		cmd_group,		1, 0, 1, 1, Character::POSITION_ANY },
 	/*
     { ";",		  	cmd_formtalk,	POS_DEAD,		1,  LOG_NORMAL, 0 },
     { "notify",		cmd_notify,		POS_DEAD,		1, 	LOG_NORMAL, 1 },

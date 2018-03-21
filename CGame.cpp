@@ -618,7 +618,6 @@ void Game::WorldUpdate(Server * server)
         //Delay Update
         if(curr->delay_active && curr->delay <= currentTime)
         {
-			//curr->CancelActiveDelay(); //Delay callback function handles this
             (*curr->delayFunction)(curr->delayData);
         }
         //Combat update
@@ -730,7 +729,8 @@ void Game::WorldUpdate(Server * server)
 					}
                 }
 				//New top threat, change target
-                if(curr->GetTopThreat() && curr->GetTopThreat() != curr->GetTarget())
+				Character * topthreat = curr->GetTopThreat();
+                if(topthreat && topthreat != curr->GetTarget() && (curr->GetThreat(curr->GetTarget()) + curr->GetThreat(curr->GetTarget()) * .1) < curr->GetThreat(topthreat))
                 {
                     curr->SetTarget(curr->GetTopThreat());
 					curr->GetTarget()->Send(curr->GetName() + " changes " + curr->HisHer() + " target and begins attacking you!\n\r");
@@ -2401,6 +2401,25 @@ std::string Game::LevelDifficultyColor(int leveldifficulty)
 	case 4:
 	case 5:
 		return "|R";
+	}
+	return "";
+}
+
+std::string Game::LevelDifficultyLightColor(int leveldifficulty)
+{
+	switch (leveldifficulty)
+	{
+	case 0:
+		return "|d";
+	case 1:
+		return "|g";
+	case 2:
+		return "|y";
+	case 3:
+		return "|m";
+	case 4:
+	case 5:
+		return "|r";
 	}
 	return "";
 }

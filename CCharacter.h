@@ -45,6 +45,7 @@ public:
     std::string name;
     std::string title;
     Room * room;
+	Group * group;
     Player * player;
 
     int race; //index into Character::race_table
@@ -203,6 +204,7 @@ public:
 	bool CancelActiveDelay();
 	bool CancelCastOnHit();
 	std::string AggressionColor(Character * target);
+	std::string AggressionLightColor(Character * target);
     void EnterCombat(Character * victim);
     void ExitCombat();
     bool InCombat();
