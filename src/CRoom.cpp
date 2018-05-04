@@ -287,3 +287,10 @@ bool Room::HasLivingCharacters()
 	}
 	return false;
 }
+
+bool Room::HasCharacters()
+{
+	if (characters.empty())
+		return false;
+	return true;
+}

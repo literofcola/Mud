@@ -53,6 +53,7 @@ public:
     Trigger * GetTrigger(int startid, int type = -1);
 	void Message(const std::string & text);
 	bool HasLivingCharacters();
+	bool HasCharacters();
 
     bool operator<(const Room& r)const{return id<r.id;}
 
