@@ -312,7 +312,7 @@ CREATE TABLE `players` (
   `mana` int(11) NOT NULL,
   `class` int(11) NOT NULL,
   `recall` int(11) NOT NULL,
-  `ghost` tinyint(4) NOT NULL,
+  `ghost` double NOT NULL,
   `corpse_room` int(11) NOT NULL,
   `stat_points` int(11) NOT NULL,
   PRIMARY KEY (`name`)
@@ -469,4 +469,4 @@ CREATE TABLE `triggers` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-07-02 23:12:48
+-- Dump completed on 2018-07-03  2:20:29

@@ -528,11 +528,21 @@ void cmd_who(Character * ch, string argument)
 			sstr << " |B" << right << ((*iter)->character->gender == 1 ? "M" : "F");
 			//race
 			sstr << " |B" << left << setw(8) << Character::race_table[(*iter)->character->race].name << " ";
+			//in combat & ghost
+			sstr << left << ((*iter)->character->InCombat() ? "|R<X>" : "   ") << ((*iter)->character->IsGhost() ? "|D<G>" : "   ");
+			//area
+			if ((*iter)->character->room)
+			{
+				Area * a = Game::GetGame()->GetArea((*iter)->character->room->area);
+				if (a)
+					sstr << " |B[|C" << a->name << "|B]";
+			}
 			//classes
-			if (wplayer->IMMORTAL())
+			/*if (wplayer->IMMORTAL())
 			{
 				sstr << "|B[|WImmortal|B]";
-			}
+			}*/
+			/*
 			else
 			{
 				for (classiter = Game::GetGame()->classes.begin(); classiter != Game::GetGame()->classes.end(); classiter++)
@@ -540,8 +550,8 @@ void cmd_who(Character * ch, string argument)
 					myclass = (*classiter).second;
 					sstr << "|B[" << myclass->color << myclass->name << " " << right << setw(3) << Utilities::itos(wplayer->GetClassLevel(myclass->id)) << "|B]";
 				}
-			}
-            sstr << left << ((*iter)->character->InCombat() ? "|R<X>" : "") << ((*iter)->character->IsGhost() ? "|D<G>" : "");
+			}*/
+            
             sstr << "|X\n\r";
 
 		    ch->Send(sstr.str());

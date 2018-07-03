@@ -1030,6 +1030,8 @@ Character * Character::LoadPlayer(std::string name, User * user)
 		loaded->player->corpse_room = row["corpse_room"];
 		loaded->player->graveyard_room = row["room"];
 		loaded->deathTime = row["ghost"];
+		loaded->player->death_timer = Player::DEFAULT_DEATH_TIME;
+		loaded->player->death_timer_runback = Player::DEFAULT_DEATH_TIME_RUNBACK;
 	}
 	loaded->player->statPoints = row["stat_points"];
 

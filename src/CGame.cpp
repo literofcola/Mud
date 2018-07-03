@@ -652,6 +652,23 @@ void Game::WorldUpdate(Server * server)
 			if (curr->IsNPC() && !curr->GetTopThreat()) //We're a NPC in combat but have noone on our threat list. We must have killed them. Leave combat!
 			{
 				curr->ExitCombat();
+				curr->ClearTarget();
+				//See if we need to leash
+				std::pair<Room *, int> path;
+				while (!curr->leashPath.empty() && curr->room != curr->leashOrigin)
+				{
+					path = curr->leashPath.back();
+					curr->leashPath.pop_back();
+
+					//Fake enter/leave messages. We can't use ->Move() since that tests for valid exits
+					//  among other things (think leashing back through 1 way exits)
+					curr->Message(curr->name + " leaves " + Exit::exitNames[Exit::exitOpposite[path.second]] + ".", Character::MSG_ROOM_NOTCHAR);
+					curr->ChangeRooms(path.first);
+					curr->Message(curr->name + " has arrived from "
+						+ ((path.second != Exit::DIR_UP && path.second != Exit::DIR_DOWN) ? "the " : "")
+						+ Exit::reverseExitNames[Exit::exitOpposite[path.second]] + ".", Character::MSG_ROOM_NOTCHAR);
+				}
+
 			}
             else if(curr->IsNPC() && curr->GetTopThreat())
             {

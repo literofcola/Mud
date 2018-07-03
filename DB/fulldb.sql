@@ -394,7 +394,7 @@ CREATE TABLE `player_inventory` (
 
 LOCK TABLES `player_inventory` WRITE;
 /*!40000 ALTER TABLE `player_inventory` DISABLE KEYS */;
-INSERT INTO `player_inventory` VALUES ('Tash',4,0),('Tash',5,0),('Tash',6,0),('Tash',3,0),('Tash',19,1),('Tash',19,1),('Tash',19,1),('Tash',19,1),('Tash',19,1),('Bob',4,0),('Bob',5,0),('Bob',6,0),('Bob',3,0),('Bob',20,1),('Bob',20,1),('Bob',21,1),('Bob',21,1),('Bob',21,1),('Bob',21,1),('Bob',21,1),('Bobo',8,0),('Bobo',9,0),('Bobo',7,0),('Bobo',10,0),('Bobo',19,1),('Bobo',19,1),('Bobo',19,1),('Bobo',19,1),('Bobo',19,1),('Bobo',19,1),('Bobo',19,1),('Bobo',19,1),('Bobo',19,1),('Bobo',19,1),('Boris',8,0),('Boris',27,0),('Boris',26,0),('Boris',1,0),('Boris',1,0),('Boris',3,0),('Boris',27,1),('Boris',10,1),('Boris',12,1),('Boris',17,1),('Boris',1,1),('Boris',14,1),('Boris',4,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',21,1);
+INSERT INTO `player_inventory` VALUES ('Tash',4,0),('Tash',5,0),('Tash',6,0),('Tash',3,0),('Tash',19,1),('Tash',19,1),('Tash',19,1),('Tash',19,1),('Tash',19,1),('Bob',4,0),('Bob',5,0),('Bob',6,0),('Bob',3,0),('Bob',20,1),('Bob',20,1),('Bob',21,1),('Bob',21,1),('Bob',21,1),('Bob',21,1),('Bob',21,1),('Bobo',8,0),('Bobo',9,0),('Bobo',7,0),('Bobo',10,0),('Bobo',19,1),('Bobo',19,1),('Bobo',19,1),('Bobo',19,1),('Bobo',19,1),('Bobo',19,1),('Bobo',19,1),('Bobo',19,1),('Bobo',19,1),('Boris',8,0),('Boris',27,0),('Boris',26,0),('Boris',1,0),('Boris',1,0),('Boris',3,0),('Boris',27,1),('Boris',10,1),('Boris',12,1),('Boris',17,1),('Boris',1,1),('Boris',14,1),('Boris',4,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',21,1);
 /*!40000 ALTER TABLE `player_inventory` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -458,7 +458,7 @@ CREATE TABLE `players` (
   `mana` int(11) NOT NULL,
   `class` int(11) NOT NULL,
   `recall` int(11) NOT NULL,
-  `ghost` tinyint(4) NOT NULL,
+  `ghost` double NOT NULL,
   `corpse_room` int(11) NOT NULL,
   `stat_points` int(11) NOT NULL,
   PRIMARY KEY (`name`)
@@ -471,7 +471,7 @@ CREATE TABLE `players` (
 
 LOCK TABLES `players` WRITE;
 /*!40000 ALTER TABLE `players` DISABLE KEYS */;
-INSERT INTO `players` VALUES ('Bob','\r\Z',0,'',61309521,19,240,1,0,139,512,118,446,269,102,4460,2690,4,0,0,0,1758),('Bobo','\r\Z',0,'',675,19,2,1,0,5,5,5,5,5,5,50,50,3,2,0,0,6),('Boris','\r\Z',10,'',61309521,63,240,1,7,249,110,488,727,207,59,7270,2070,2,2,0,0,4240),('Tash','FCU',0,'',1451,3,2,1,2,5,5,5,5,5,0,50,100,1,2,0,0,6);
+INSERT INTO `players` VALUES ('Bob','\r\Z',0,'',61309521,19,240,1,0,139,512,118,446,269,102,4460,2690,4,0,0,0,1758),('Bobo','\r\Z',0,'',675,8,2,1,0,5,5,5,5,10,6,50,100,3,2,0,0,0),('Boris','\r\Z',10,'',61309521,90,240,1,7,249,110,488,727,207,59,7270,2070,2,2,0,0,4240),('Tash','FCU',0,'',1451,3,2,1,2,5,5,5,5,5,0,50,100,1,2,0,0,6);
 /*!40000 ALTER TABLE `players` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -694,4 +694,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-07-02 23:12:52
+-- Dump completed on 2018-07-03  2:20:52
