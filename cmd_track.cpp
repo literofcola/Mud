@@ -37,6 +37,8 @@ extern "C"
 using namespace std;
 
 Exit::Direction FindDirection(Character * ch, Character * target, int depth);
+Exit::Direction FindDirection(Room * start, Room * end, int depth);
+int FindDistance(Room * start, Room * end, int maxSearchDist);
 
 void cmd_track(Character * ch, string argument)
 {
@@ -82,82 +84,156 @@ void cmd_track(Character * ch, string argument)
     ch->Send("You sense a trail " + Exit::exitNames[dir] + " from here.\n\r");
 }
 
+Exit::Direction FindDirection(Room * start, Room * end, int depth)
+{
+	//Depth limited breadth first search
+
+	if(!start || !end)
+		return Exit::DIR_LAST;
+
+	static std::map<int, Room *> visited; //Mark a node as visited with its parent Room so we can backtrack
+	static std::deque<Room *> searchQ;
+	Exit::Direction retval = Exit::DIR_LAST;
+	int currentDepth = 0;
+
+	if (start->id == end->id)
+	{
+		return Exit::DIR_LAST;
+	}
+
+	searchQ.push_back(start);
+	visited[start->id] = NULL;
+	searchQ.push_back(NULL); //NULL as depth marker
+	currentDepth++;
+
+	while (/*!searchQ.empty()*/1) //searchQ will always have a room or NULL
+	{
+		Room * searchme = searchQ.front();
+		searchQ.pop_front();
+
+		if (searchme == NULL) //depth marker
+		{
+			if (searchQ.empty()) //if all the queue has is NULL, we couldn't find it
+				break;
+
+			searchQ.push_back(NULL);
+			currentDepth++;
+			if (currentDepth > depth)
+			{
+				//ch->Send("depth limit exceeded " + Utilities::itos(currentDepth) + "\n\r");
+				break;
+			}
+			continue;
+		}
+
+		if (end == searchme)
+		{
+			//find "searchme" in "visited" and trace the path back to our room
+			std::map<int, Room *>::iterator iter = visited.find(searchme->id);
+			while (iter->second->id != start->id)
+			{
+				iter = visited.find(iter->second->id);
+			}
+			for (int i = 0; i < Exit::DIR_LAST; i++)
+			{
+				if (start->exits[i] && start->exits[i]->to->id == iter->first)
+				{
+					retval = (Exit::Direction)i;
+				}
+			}
+			visited.clear();
+			searchQ.clear();
+			return retval;
+		}
+		for (int i = 0; i < Exit::DIR_LAST; i++)
+		{
+			if (searchme->exits[i] && searchme->exits[i]->to)
+			{
+				if (visited.find(searchme->exits[i]->to->id) == visited.end())
+				{
+					//ch->Send("searching room " + Utilities::itos(searchme->exits[i]->to->id) + "\n\r");
+					visited[searchme->exits[i]->to->id] = searchme;
+					searchQ.push_back(searchme->exits[i]->to);
+				}
+			}
+		}
+	}
+
+	visited.clear();
+	searchQ.clear();
+	return Exit::DIR_LAST;
+}
+
 Exit::Direction FindDirection(Character * ch, Character * target, int depth)
 {
-    //Depth limited breadth first search
+	if (!ch->room || !target->room)
+		return Exit::DIR_LAST;
 
-    if(!ch || !target || !ch->room || !target->room)
-        return Exit::DIR_LAST;
+	return FindDirection(ch->room, target->room, depth);
+}
 
-    static std::map<int, Room *> visited; //Mark a node as visited with its parent Room so we can backtrack
-    static std::deque<Room *> searchQ;
-    Exit::Direction retval = Exit::DIR_LAST;
-    int currentDepth = 0;
+int FindDistance(Room * start, Room * end, int maxSearchDist)
+{
+	//Depth limited breadth first search
+	if (!start || !end)
+		return -1;
 
-    if(ch->room->id == target->room->id)
-    {
-        return Exit::DIR_LAST;
-    }
+	static std::map<int, Room *> visited; //Mark a node as visited with its parent Room so we can backtrack
+	static std::deque<Room *> searchQ;
+	Exit::Direction retval = Exit::DIR_LAST;
+	int currentDepth = 0;
 
-    searchQ.push_back(ch->room);
-    visited[ch->room->id] = NULL;
-    searchQ.push_back(NULL); //NULL as depth marker
-    currentDepth++;
+	if (start->id == end->id)
+	{
+		return 0;
+	}
 
-    while(/*!searchQ.empty()*/1) //searchQ will always have a room or NULL
-    {
-        Room * searchme = searchQ.front();
-        searchQ.pop_front();
-        
-        if(searchme == NULL) //depth marker
-        {
-            if(searchQ.empty()) //if all the queue has is NULL, we couldn't find it
-                break;
+	searchQ.push_back(start);
+	visited[start->id] = NULL;
+	searchQ.push_back(NULL); //NULL as depth marker
+	currentDepth++;
 
-            searchQ.push_back(NULL);
-            currentDepth++;
-            if(currentDepth > depth)
-            {
-                //ch->Send("depth limit exceeded " + Utilities::itos(currentDepth) + "\n\r");
-                break;
-            }
-            continue;
-        }
+	while (/*!searchQ.empty()*/1) //searchQ will always have a room or NULL
+	{
+		Room * searchme = searchQ.front();
+		searchQ.pop_front();
 
-        if(target->room == searchme)
-        {
-            //find "searchme" in "visited" and trace the path back to our room
-            std::map<int, Room *>::iterator iter = visited.find(searchme->id);
-            while(iter->second->id != ch->room->id)
-            {
-                iter = visited.find(iter->second->id);
-            }
-            for(int i = 0; i < Exit::DIR_LAST; i++)
-            {
-                if(ch->room->exits[i] && ch->room->exits[i]->to->id == iter->first)
-                {
-                    retval = (Exit::Direction)i;
-                }
-            }
-            visited.clear();
-            searchQ.clear();
-            return retval;
-        }
-        for(int i = 0; i < Exit::DIR_LAST; i++)
-        {
-            if(searchme->exits[i] && searchme->exits[i]->to)
-            {
-                if(visited.find(searchme->exits[i]->to->id) == visited.end())
-                {
-                    //ch->Send("searching room " + Utilities::itos(searchme->exits[i]->to->id) + "\n\r");
-                    visited[searchme->exits[i]->to->id] = searchme;
-                    searchQ.push_back(searchme->exits[i]->to);
-                }
-            }
-        }
-    }
+		if (searchme == NULL) //depth marker
+		{
+			if (searchQ.empty()) //if all the queue has is NULL, we couldn't find it
+				break;
 
-    visited.clear();
-    searchQ.clear();
-    return Exit::DIR_LAST;
+			searchQ.push_back(NULL);
+			currentDepth++;
+			if (currentDepth > maxSearchDist)
+			{
+				//ch->Send("depth limit exceeded " + Utilities::itos(currentDepth) + "\n\r");
+				break;
+			}
+			continue;
+		}
+
+		if (end == searchme)
+		{   //Found it, we just want the distance not the path
+			visited.clear();
+			searchQ.clear();
+			return currentDepth;
+		}
+		for (int i = 0; i < Exit::DIR_LAST; i++)
+		{
+			if (searchme->exits[i] && searchme->exits[i]->to)
+			{
+				if (visited.find(searchme->exits[i]->to->id) == visited.end())
+				{
+					//ch->Send("searching room " + Utilities::itos(searchme->exits[i]->to->id) + "\n\r");
+					visited[searchme->exits[i]->to->id] = searchme;
+					searchQ.push_back(searchme->exits[i]->to);
+				}
+			}
+		}
+	}
+
+	visited.clear();
+	searchQ.clear();
+	return -1;
 }

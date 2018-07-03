@@ -603,7 +603,7 @@ void Game::WorldUpdate(Server * server)
 				for (std::list<Character*>::iterator aggroiter = curr->room->characters.begin(); aggroiter != curr->room->characters.end(); ++aggroiter)
 				{
 					//todo: decide who to attack in the room based off something else than being first on the list. level at least
-					if (!(*aggroiter)->IsNPC() && !(*aggroiter)->player->IMMORTAL())
+					if (!(*aggroiter)->IsNPC() && (*aggroiter)->IsAlive() && !(*aggroiter)->player->IMMORTAL())
 					{
 						curr->EnterCombat((*aggroiter));
 						(*aggroiter)->EnterCombat(curr);
@@ -679,7 +679,7 @@ void Game::WorldUpdate(Server * server)
 							std::pair<Room *, int> path;
 							curr->ExitCombat();
 							curr->ClearTarget();
-							while (!curr->leashPath.empty())
+							while (!curr->leashPath.empty() && curr->room != curr->leashOrigin)
 							{
 								path = curr->leashPath.back();
 								curr->leashPath.pop_back();
@@ -701,12 +701,14 @@ void Game::WorldUpdate(Server * server)
 					int leashdist = Reset::RESET_LEASH_DEFAULT;
 					if (curr->reset && curr->reset->leashDistance != 0)
 						leashdist = curr->reset->leashDistance;
-					if (curr->leashPath.size() >= leashdist) //Leash!
+
+					int npcDistance = FindDistance(curr->leashOrigin, curr->GetTopThreat()->room, leashdist);
+					if (npcDistance == -1) //Farther from our origin than leashdist, Leash!
 					{
 						curr->ExitCombat();
 						curr->ClearTarget();
 						std::pair<Room *, int> path;
-						while (!curr->leashPath.empty())
+						while (!curr->leashPath.empty() && curr->room != curr->leashOrigin)
 						{
 							path = curr->leashPath.back();
 							curr->leashPath.pop_back();
@@ -933,7 +935,7 @@ void Game::WorldUpdate(Server * server)
                 Reset * currReset = (*resetiter).second;
                 if(currReset->lastReset + currReset->interval <= Game::currentTime && !currReset->removeme)
                 {
-                    if(currReset->type == 1 && currReset->npc == NULL) //npc reset and npc no longer exists
+                    if(currReset->type == 1 && currReset->npc == NULL) //npc reset type and npc no longer exists
                     {
                         currReset->lastReset = Game::currentTime;
                         //load it
@@ -944,6 +946,7 @@ void Game::WorldUpdate(Server * server)
                             continue;
                         }
                         Character * newChar = Game::GetGame()->NewCharacter(charIndex);
+						newChar->leashOrigin = currRoom;
                         newChar->ChangeRooms(currRoom);
                         newChar->Message("|W" + newChar->name + " has arrived.|X", Character::MSG_ROOM_NOTCHAR);
                         newChar->reset = currReset;
@@ -1610,6 +1613,7 @@ void Game::LoadResets(Server * server)
         reset->wanderDistance = row["wander_dist"];
         reset->npc = NULL;
         reset->npcID = row["target_id"];
+		reset->inroom = r;
         /*switch(reset->type)
         {
         case 1:

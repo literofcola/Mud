@@ -96,6 +96,8 @@ void cmd_train(Character * ch, string argument);
 //cmd_track.cpp
 void cmd_track(Character * ch, string argument);
 Exit::Direction FindDirection(Character * ch, Character * target, int depth);
+Exit::Direction FindDirection(Room * start, Room * end, int depth);
+int FindDistance(Room * start, Room * end, int maxSearchDist);
 
 //cmd_edit.cpp
 void cmd_edit(Character * ch, string argument);

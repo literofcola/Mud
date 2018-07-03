@@ -13,6 +13,7 @@ public:
     int type; //npc, item
     int npcID;
     Character * npc;
+	Room * inroom;
     int interval; //WorldUpdate only checks resets every 30 seconds
     int wanderDistance;
     int leashDistance;

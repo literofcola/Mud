@@ -287,3 +287,17 @@ bool Room::HasLivingCharacters()
 	}
 	return false;
 }
+
+bool Room::HasNonGhostCharacters()
+{
+	if (characters.empty())
+		return false;
+
+	std::list<Character *>::iterator iter;
+	for (iter = characters.begin(); iter != characters.end(); iter++)
+	{
+		if ((*iter)->IsAlive() || (*iter)->IsCorpse())
+			return true;
+	}
+	return false;
+}

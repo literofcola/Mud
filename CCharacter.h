@@ -118,6 +118,7 @@ public:
     std::list<LeashData> leashData;
     std::map<int, Exit*> wanderPath;
     std::list<std::pair<Room *, int>> leashPath;
+	Room * leashOrigin;
 
     struct Threat
     {

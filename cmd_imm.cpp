@@ -150,6 +150,7 @@ void cmd_load(Character * ch, string argument)
             return;
         }
         Character * newChar = Game::GetGame()->NewCharacter(charIndex);
+		newChar->leashOrigin = ch->room;
         newChar->ChangeRooms(ch->room);
     }
     else if(!Utilities::str_cmp(arg1, "item"))

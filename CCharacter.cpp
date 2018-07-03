@@ -957,7 +957,7 @@ void Character::Move(int direction)
 	{
 		for (std::list<Character*>::iterator iter = room->characters.begin(); iter != room->characters.end(); ++iter)
 		{
-			if ((*iter)->IsNPC() && Utilities::FlagIsSet((*iter)->flags, Character::FLAG_AGGRESSIVE) && !(*iter)->InCombat() && player && !player->IMMORTAL())
+			if ((*iter)->IsAlive() && (*iter)->IsNPC() && Utilities::FlagIsSet((*iter)->flags, Character::FLAG_AGGRESSIVE) && !(*iter)->InCombat() && player && !player->IMMORTAL())
 			{
 				(*iter)->EnterCombat(this);
 				EnterCombat(*iter);
@@ -3036,6 +3036,10 @@ std::string Character::AggressionColor(Character * target)
 	{
 		return "|C";
 	}
+	else if (!target->IsAlive())
+	{
+		return "|D";
+	}
 	else if (Utilities::FlagIsSet(target->flags, Character::Flags::FLAG_FRIENDLY))
 	{
 		return "|G";
@@ -3055,6 +3059,10 @@ std::string Character::AggressionLightColor(Character * target)
 	if (!target->IsNPC())
 	{
 		return "|c";
+	}
+	else if (!target->IsAlive())
+	{
+		return "|D";
 	}
 	else if (Utilities::FlagIsSet(target->flags, Character::Flags::FLAG_FRIENDLY))
 	{

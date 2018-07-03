@@ -452,8 +452,12 @@ void cmd_scan(Character * ch, string argument)
 			{
 				break;
 			}
-			if(scan_room->HasLivingCharacters())
+			if(scan_room->HasNonGhostCharacters())
 			{
+				if (found == true)
+				{
+					out << setw(13) << left << "\n\r";
+				}
 				found = true;
 				out << /*depthcolors[j] <<*/ "|W[" << Utilities::itos(j + 1) << "]:|X ";
 				std::list<Character *>::iterator iter = scan_room->characters.begin();
@@ -464,14 +468,24 @@ void cmd_scan(Character * ch, string argument)
 						level = "<" +
 							Game::LevelDifficultyColor(Game::LevelDifficulty(ch->level, (*iter)->level))
 							+ Utilities::itos((*iter)->level) + "|X>";
-						out << level << ch->AggressionColor(*iter) << (*iter)->name;
+						out << level << ch->AggressionColor(*iter);
+						if ((*iter)->IsCorpse())
+						{
+							out << "corpse of ";
+						}
+						out << (*iter)->name;
 					}
 					else
 					{
 						level = "<" +
 							Game::LevelDifficultyLightColor(Game::LevelDifficulty(ch->level, (*iter)->level))
 							+ Utilities::itos((*iter)->level) + "|X>";
-						out << level << ch->AggressionLightColor(*iter) << (*iter)->name;
+						out << level << ch->AggressionLightColor(*iter);
+						if ((*iter)->IsCorpse())
+						{
+							out << "corpse of ";
+						}
+						out << (*iter)->name;
 					}
 					iter++;
 					if (iter != scan_room->characters.end())
@@ -1434,6 +1448,13 @@ bool releaseSpiritQuery(Character * ch, string argument)
 		ch->ChangeRooms(graveyard);
 		ch->player->graveyard_room = graveyard->id;
 		cmd_look(ch, "");
+
+		int res_at_graveyard = ch->player->death_timer - ch->TimeSinceDeath();
+		int res_at_corpse = ch->player->death_timer_runback - ch->TimeSinceDeath();
+		if (res_at_graveyard > 0)
+			ch->Send("|W" + Utilities::itos(res_at_graveyard) + " seconds before you can resurrect at the graveyard.\n\r");
+		if (res_at_corpse > 0)
+			ch->Send("|W" + Utilities::itos(res_at_corpse) + " seconds before you can resurrect near your corpse.\n\r");
         return true;
     }
     return false;

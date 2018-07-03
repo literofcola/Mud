@@ -50,7 +50,8 @@ void Lua_DefineClasses(sol::state * lua)
 		*/
 
 		(*lua).new_usertype<Game>("Game",
-			"GetGame", &Game::GetGame
+			"GetGame", &Game::GetGame,
+			"GetSkill", (Skill *(Game::*)(int)) &Game::GetSkill
 			);
 
 		(*lua).new_usertype<User>("User",
