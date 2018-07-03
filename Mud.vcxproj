@@ -99,11 +99,13 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp14</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\Mud\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalOptions>ws2_32.lib lua53_d.lib libmysqld.lib mysqlpp_d.lib zlibwapi.lib %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalLibraryDirectories>C:\Mud\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -115,11 +117,13 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp14</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\Mud\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalOptions>ws2_32.lib lua53_d.lib libmysqld.lib mysqlpp_d.lib zlibwapi.lib %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalLibraryDirectories>C:\Mud\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -133,6 +137,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp14</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\Mud\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -140,6 +145,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalOptions>ws2_32.lib lua53.lib libmysql.lib mysqlpp.lib  zlibwapi.lib %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalLibraryDirectories>C:\Mud\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -153,6 +159,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp14</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\Mud\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -160,84 +167,86 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalOptions>ws2_32.lib lua53.lib libmysql.lib mysqlpp.lib  zlibwapi.lib %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalLibraryDirectories>C:\Mud\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="CArea.h" />
-    <ClInclude Include="CCharacter.h" />
-    <ClInclude Include="CClass.h" />
-    <ClInclude Include="CClient.h" />
-    <ClInclude Include="CCommand.h" />
-    <ClInclude Include="CExit.h" />
-    <ClInclude Include="CGame.h" />
-    <ClInclude Include="CGroup.h" />
-    <ClInclude Include="CHelp.h" />
-    <ClInclude Include="CHighResTimer.h" />
-    <ClInclude Include="CItem.h" />
-    <ClInclude Include="CSubscriber.h" />
-    <ClInclude Include="CSubscriberManager.h" />
-    <ClInclude Include="CLogFile.h" />
-    <ClInclude Include="CmySQLQueue.h" />
-    <ClInclude Include="CPlayer.h" />
-    <ClInclude Include="CQuest.h" />
-    <ClInclude Include="CReset.h" />
-    <ClInclude Include="CRoom.h" />
-    <ClInclude Include="CServer.h" />
-    <ClInclude Include="CSkill.h" />
-    <ClInclude Include="CSpellAffect.h" />
-    <ClInclude Include="CTrigger.h" />
-    <ClInclude Include="CUser.h" />
-    <ClInclude Include="mud.h" />
-    <ClInclude Include="stdafx.h" />
-    <ClInclude Include="targetver.h" />
-    <ClInclude Include="telnet.h" />
-    <ClInclude Include="utils.h" />
+    <None Include="lua_constants.lua" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CArea.cpp" />
-    <ClCompile Include="CCharacter.cpp" />
-    <ClCompile Include="CClass.cpp" />
-    <ClCompile Include="CClient.cpp" />
-    <ClCompile Include="CCommand.cpp" />
-    <ClCompile Include="CExit.cpp" />
-    <ClCompile Include="CGame.cpp" />
-    <ClCompile Include="CGroup.cpp" />
-    <ClCompile Include="CHelp.cpp" />
-    <ClCompile Include="CHighResTimer.cpp" />
-    <ClCompile Include="CItem.cpp" />
-    <ClCompile Include="CSubscriberManager.cpp" />
-    <ClCompile Include="CLogFile.cpp" />
-    <ClCompile Include="cmd.cpp" />
-    <ClCompile Include="cmd_comm.cpp" />
-    <ClCompile Include="cmd_edit.cpp" />
-    <ClCompile Include="cmd_imm.cpp" />
-    <ClCompile Include="cmd_item.cpp" />
-    <ClCompile Include="cmd_move.cpp" />
-    <ClCompile Include="cmd_skill.cpp" />
-    <ClCompile Include="cmd_track.cpp" />
-    <ClCompile Include="CmySQLQueue.cpp" />
-    <ClCompile Include="CPlayer.cpp" />
-    <ClCompile Include="CQuest.cpp" />
-    <ClCompile Include="CReset.cpp" />
-    <ClCompile Include="CRoom.cpp" />
-    <ClCompile Include="CServer.cpp" />
-    <ClCompile Include="CSkill.cpp" />
-    <ClCompile Include="CSpellAffect.cpp" />
-    <ClCompile Include="CTrigger.cpp" />
-    <ClCompile Include="CUser.cpp" />
-    <ClCompile Include="lua_binds.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="stdafx.cpp">
+    <ClInclude Include="src\CArea.h" />
+    <ClInclude Include="src\CCharacter.h" />
+    <ClInclude Include="src\CClass.h" />
+    <ClInclude Include="src\CClient.h" />
+    <ClInclude Include="src\CCommand.h" />
+    <ClInclude Include="src\CExit.h" />
+    <ClInclude Include="src\CGame.h" />
+    <ClInclude Include="src\CGroup.h" />
+    <ClInclude Include="src\CHelp.h" />
+    <ClInclude Include="src\CHighResTimer.h" />
+    <ClInclude Include="src\CItem.h" />
+    <ClInclude Include="src\CLogFile.h" />
+    <ClInclude Include="src\CmySQLQueue.h" />
+    <ClInclude Include="src\CPlayer.h" />
+    <ClInclude Include="src\CQuest.h" />
+    <ClInclude Include="src\CReset.h" />
+    <ClInclude Include="src\CRoom.h" />
+    <ClInclude Include="src\CServer.h" />
+    <ClInclude Include="src\CSkill.h" />
+    <ClInclude Include="src\CSpellAffect.h" />
+    <ClInclude Include="src\CSubscriber.h" />
+    <ClInclude Include="src\CSubscriberManager.h" />
+    <ClInclude Include="src\CTrigger.h" />
+    <ClInclude Include="src\CUser.h" />
+    <ClInclude Include="src\json.hpp" />
+    <ClInclude Include="src\mud.h" />
+    <ClInclude Include="src\stdafx.h" />
+    <ClInclude Include="src\targetver.h" />
+    <ClInclude Include="src\telnet.h" />
+    <ClInclude Include="src\utils.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\CArea.cpp" />
+    <ClCompile Include="src\CCharacter.cpp" />
+    <ClCompile Include="src\CClass.cpp" />
+    <ClCompile Include="src\CClient.cpp" />
+    <ClCompile Include="src\CCommand.cpp" />
+    <ClCompile Include="src\CExit.cpp" />
+    <ClCompile Include="src\CGame.cpp" />
+    <ClCompile Include="src\CGroup.cpp" />
+    <ClCompile Include="src\CHelp.cpp" />
+    <ClCompile Include="src\CHighResTimer.cpp" />
+    <ClCompile Include="src\CItem.cpp" />
+    <ClCompile Include="src\CLogFile.cpp" />
+    <ClCompile Include="src\cmd.cpp" />
+    <ClCompile Include="src\cmd_comm.cpp" />
+    <ClCompile Include="src\cmd_edit.cpp" />
+    <ClCompile Include="src\cmd_imm.cpp" />
+    <ClCompile Include="src\cmd_item.cpp" />
+    <ClCompile Include="src\cmd_move.cpp" />
+    <ClCompile Include="src\cmd_skill.cpp" />
+    <ClCompile Include="src\cmd_track.cpp" />
+    <ClCompile Include="src\CmySQLQueue.cpp" />
+    <ClCompile Include="src\CPlayer.cpp" />
+    <ClCompile Include="src\CQuest.cpp" />
+    <ClCompile Include="src\CReset.cpp" />
+    <ClCompile Include="src\CRoom.cpp" />
+    <ClCompile Include="src\CServer.cpp" />
+    <ClCompile Include="src\CSkill.cpp" />
+    <ClCompile Include="src\CSpellAffect.cpp" />
+    <ClCompile Include="src\CSubscriberManager.cpp" />
+    <ClCompile Include="src\CTrigger.cpp" />
+    <ClCompile Include="src\CUser.cpp" />
+    <ClCompile Include="src\lua_binds.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="string.cpp" />
-    <ClCompile Include="utils.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="lua_constants.lua" />
+    <ClCompile Include="src\string.cpp" />
+    <ClCompile Include="src\utils.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

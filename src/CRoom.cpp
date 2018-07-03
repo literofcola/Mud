@@ -301,3 +301,10 @@ bool Room::HasNonGhostCharacters()
 	}
 	return false;
 }
+
+bool Room::HasCharacters()
+{
+	if (characters.empty())
+		return false;
+	return true;
+}

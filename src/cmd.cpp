@@ -437,6 +437,7 @@ void cmd_scan(Character * ch, string argument)
 	//string depthcolors[3] = { "|r", "|m", "|y" };
 	bool found = false;
 	string level = "";
+	string corpse = "";
 
 	for (int i = 0; i < Exit::DIR_LAST; i++)
 	{
@@ -463,29 +464,24 @@ void cmd_scan(Character * ch, string argument)
 				std::list<Character *>::iterator iter = scan_room->characters.begin();
 				while (iter != scan_room->characters.end())
 				{
+					if (!(*iter)->IsAlive())
+						corpse = "corpse of ";
+					else
+						corpse = "";
+
 					if (j == 0) //depth
 					{
 						level = "<" +
 							Game::LevelDifficultyColor(Game::LevelDifficulty(ch->level, (*iter)->level))
 							+ Utilities::itos((*iter)->level) + "|X>";
-						out << level << ch->AggressionColor(*iter);
-						if ((*iter)->IsCorpse())
-						{
-							out << "corpse of ";
-						}
-						out << (*iter)->name;
+						out << level << ch->AggressionColor(*iter) << corpse << (*iter)->name;
 					}
 					else
 					{
 						level = "<" +
 							Game::LevelDifficultyLightColor(Game::LevelDifficulty(ch->level, (*iter)->level))
 							+ Utilities::itos((*iter)->level) + "|X>";
-						out << level << ch->AggressionLightColor(*iter);
-						if ((*iter)->IsCorpse())
-						{
-							out << "corpse of ";
-						}
-						out << (*iter)->name;
+						out << level << ch->AggressionLightColor(*iter) << corpse << (*iter)->name;
 					}
 					iter++;
 					if (iter != scan_room->characters.end())

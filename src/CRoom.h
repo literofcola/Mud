@@ -54,6 +54,7 @@ public:
 	void Message(const std::string & text);
 	bool HasLivingCharacters();
 	bool HasNonGhostCharacters();
+	bool HasCharacters();
 
     bool operator<(const Room& r)const{return id<r.id;}
 
