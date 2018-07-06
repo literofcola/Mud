@@ -505,61 +505,125 @@ void cmd_scan(Character * ch, string argument)
 
 void cmd_who(Character * ch, string argument)
 {
-    ch->Send("|YPlayers online: |X\n\r");
-    ch->Send("|B`-------------------------------------------------------------------------------'|X\n\r");
-    int found = 0;
-    Player * wplayer;
-    std::list<User *>::iterator iter;
-	std::map<int, Class *>::iterator classiter;
-	Class * myclass = nullptr;
-	std::stringstream sstr;
-    for(iter = Game::GetGame()->users.begin(); iter != Game::GetGame()->users.end(); ++iter)
-    {
-        if((*iter)->IsConnected() && (*iter)->connectedState == User::CONN_PLAYING && (*iter)->character && (*iter)->character->player)
-	    {
-		    wplayer = (*iter)->character->player;
-			sstr.str("");
-			sstr.clear();
-			//name
-            sstr << " " << left << setw(12) << (*iter)->character->name;
-			//total level
-            sstr << " |B[|W" << right << setw(3) << (wplayer->IMMORTAL() ? wplayer->immlevel : (*iter)->character->level) << "|B]";
-			//gender
-			sstr << " |B" << right << ((*iter)->character->gender == 1 ? "M" : "F");
-			//race
-			sstr << " |B" << left << setw(8) << Character::race_table[(*iter)->character->race].name << " ";
-			//in combat & ghost
-			sstr << left << ((*iter)->character->InCombat() ? "|R<X>" : "   ") << ((*iter)->character->IsGhost() ? "|D<G>" : "   ");
-			//area
-			if ((*iter)->character->room)
-			{
-				Area * a = Game::GetGame()->GetArea((*iter)->character->room->area);
-				if (a)
-					sstr << " |B[|C" << a->name << "|B]";
-			}
-			//classes
-			/*if (wplayer->IMMORTAL())
-			{
-				sstr << "|B[|WImmortal|B]";
-			}*/
-			/*
-			else
-			{
-				for (classiter = Game::GetGame()->classes.begin(); classiter != Game::GetGame()->classes.end(); classiter++)
-				{
-					myclass = (*classiter).second;
-					sstr << "|B[" << myclass->color << myclass->name << " " << right << setw(3) << Utilities::itos(wplayer->GetClassLevel(myclass->id)) << "|B]";
-				}
-			}*/
-            
-            sstr << "|X\n\r";
+	string arg1;
+	argument = Utilities::one_argument(argument, arg1);
 
-		    ch->Send(sstr.str());
-		    found++;
-	    }
-    }
-    ch->Send("|B`-------------------------------------------------------------------------------'|X\n\r");
-    ch->Send(Utilities::itos(found) + " players found.\n\r");
+	if (arg1.empty()) //"who" with no arguments
+	{
+		ch->Send("|YPlayers online: |X\n\r");
+		ch->Send("|B`-------------------------------------------------------------------------------'|X\n\r");
+		int found = 0;
+		Player * wplayer;
+		std::list<User *>::iterator iter;
+		std::map<int, Class *>::iterator classiter;
+		Class * myclass = nullptr;
+		std::stringstream sstr;
+		for (iter = Game::GetGame()->users.begin(); iter != Game::GetGame()->users.end(); ++iter)
+		{
+			if ((*iter)->IsConnected() && (*iter)->connectedState == User::CONN_PLAYING && (*iter)->character && (*iter)->character->player)
+			{
+				wplayer = (*iter)->character->player;
+				sstr.str("");
+				sstr.clear();
+				//name
+				sstr << " " << left << setw(12) << (*iter)->character->name;
+				//total level
+				sstr << " |B[" << right;
+				if (wplayer->IMMORTAL())
+				{
+					sstr << "|Y" << setw(3) << wplayer->immlevel;
+
+				}
+				else
+				{
+					sstr << "|W" << setw(3) << (*iter)->character->level;
+				}
+				sstr << "|B]";
+				//gender
+				sstr << " |B" << right << ((*iter)->character->gender == 1 ? "M" : "F");
+				//race
+				sstr << " |B" << left << setw(8) << Character::race_table[(*iter)->character->race].name << " ";
+				//in combat & ghost
+				sstr << left << ((*iter)->character->InCombat() ? "|R<X>" : "   ") << ((*iter)->character->IsGhost() ? "|D<G>" : "   ");
+				//area
+				if ((*iter)->character->room)
+				{
+					Area * a = Game::GetGame()->GetArea((*iter)->character->room->area);
+					if (a)
+						sstr << " |B[|C" << a->name << "|B]";
+				}
+				sstr << "|X\n\r";
+
+				ch->Send(sstr.str());
+				found++;
+			}
+		}
+		ch->Send("|B`-------------------------------------------------------------------------------'|X\n\r");
+		ch->Send(Utilities::itos(found) + " players found.\n\r");
+	}
+	else //"who" with argument. For now just look up by character name
+	{
+		Player * wplayer;
+		std::list<User *>::iterator iter;
+		std::map<int, Class *>::iterator classiter;
+		Class * myclass = nullptr;
+		std::stringstream sstr;
+		for (iter = Game::GetGame()->users.begin(); iter != Game::GetGame()->users.end(); ++iter)
+		{
+			if ((*iter)->IsConnected() && (*iter)->connectedState == User::CONN_PLAYING && (*iter)->character 
+				&& (*iter)->character->player && !Utilities::str_cmp((*iter)->character->name, arg1))
+			{ 
+				wplayer = (*iter)->character->player;
+				ch->Send("|B`-------------------------------------------------------------------------------'|X\n\r");
+				sstr.str("");
+				sstr.clear();
+				//name
+				sstr << " " << left << setw(12) << (*iter)->character->name;
+				//total level
+				sstr << " |B[" << right;
+				if (wplayer->IMMORTAL())
+				{
+					sstr << "|Y" << setw(3) << wplayer->immlevel;
+
+				}
+				else
+				{
+					sstr << "|W" << setw(3) << (*iter)->character->level;
+				}
+				sstr << "|B]";
+				//gender
+				sstr << " |B" << right << ((*iter)->character->gender == 1 ? "M" : "F");
+				//race
+				sstr << " |B" << left << setw(8) << Character::race_table[(*iter)->character->race].name << " ";
+				//in combat & ghost
+				sstr << left << ((*iter)->character->InCombat() ? "|R<X>" : "   ") << ((*iter)->character->IsGhost() ? "|D<G>" : "   ");
+				//area
+				if ((*iter)->character->room)
+				{
+					Area * a = Game::GetGame()->GetArea((*iter)->character->room->area);
+					if (a)
+						sstr << " |B[|C" << a->name << "|B]";
+				}
+				//classes
+				sstr << "\n\r              ";
+				if (wplayer->IMMORTAL())
+				{
+					sstr << "|B[|WImmortal|B]";
+				}
+				else
+				{
+					for (classiter = Game::GetGame()->classes.begin(); classiter != Game::GetGame()->classes.end(); classiter++)
+					{
+						myclass = (*classiter).second;
+						sstr << "|B[" << myclass->color << myclass->name << " " << right << setw(3) << Utilities::itos(wplayer->GetClassLevel(myclass->id)) << "|B]";
+					}
+				}
+				sstr << "|X\n\r";
+				ch->Send(sstr.str());
+				ch->Send("|B`-------------------------------------------------------------------------------'|X\n\r");
+			}
+		}
+	}
 }
 
 void cmd_title(Character * ch, string argument)
@@ -1002,7 +1066,7 @@ void cmd_quest(Character * ch, string argument)
 
 					if (!q->itemRewards.empty())
 					{
-						ch->Send("You will be able to choose one of these rewards:\n\r");
+						ch->Send("|YYou will be able to choose one of these rewards:|X\n\r");
 						string combinedRewards;
 						for (auto itemiter = std::begin(q->itemRewards); itemiter != std::end(q->itemRewards); ++itemiter)
 						{
@@ -1279,7 +1343,7 @@ void cmd_quest(Character * ch, string argument)
 
 		if (!progress->itemRewards.empty())
 		{
-			ch->Send("You will be able to choose one of these rewards:\n\r");
+			ch->Send("|YYou will be able to choose one of these rewards:|X\n\r");
 			string combinedRewards;
 			for (auto itemiter = std::begin(progress->itemRewards); itemiter != std::end(progress->itemRewards); ++itemiter)
 			{

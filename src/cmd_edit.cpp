@@ -1589,9 +1589,9 @@ void npcEditCmd_show(Character * ch, string argument)
     ch->Send("Stamina:  [" + Utilities::itos(pChar->stamina) + "]\n\r");
     ch->Send("Wisdom:    [" + Utilities::itos(pChar->wisdom) + "]\n\r");
 	ch->Send("Spirit:    [" + Utilities::itos(pChar->spirit) + "]\n\r");
-    ch->Send("Health:    [" + Utilities::itos(pChar->GetHealth()) + "]\n\r");
-    ch->Send("Mana:      [" + Utilities::itos(pChar->GetMana()) + "]\n\r");
-    ch->Send("Energy:    [" + Utilities::itos(pChar->GetEnergy()) + "]\n\r");
+    ch->Send("Health:    [" + Utilities::itos(pChar->GetMaxHealth()) + "]\n\r");
+    ch->Send("Mana:      [" + Utilities::itos(pChar->GetMaxMana()) + "]\n\r");
+    ch->Send("Energy:    [" + Utilities::itos(pChar->GetMaxEnergy()) + "]\n\r");
     ch->Send("attack_speed: [" + Utilities::dtos(pChar->npcAttackSpeed, 2) + "]\n\r");
     ch->Send("damage_low:   [" + Utilities::itos(pChar->npcDamageLow) + "]\n\r");
     ch->Send("damage_high:  [" + Utilities::itos(pChar->npcDamageHigh) + "]\n\r");

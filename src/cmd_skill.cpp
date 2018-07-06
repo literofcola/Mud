@@ -315,7 +315,7 @@ void cmd_skills(Character * ch, string argument)
 		skill_string << " |MCast time:|G " << setw(5) << Utilities::dtos((*iter).second->castTime, 2);
 		skill_string << " |MCooldown:|G " << setw(7) << Utilities::dtos((*iter).second->cooldown, 2);
 		skill_string << " |MCost: |G" << iter->second->costDescription;
-		skill_string << "\n\r  |Y-- " << (*iter).second->description << "\n\r";
+		skill_string << "\n\r  |Y-- " << (*iter).second->description << "|X\n\r";
 		ch->Send(skill_string.str());
 		skill_string.str("");
     }
