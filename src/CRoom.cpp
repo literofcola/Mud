@@ -147,16 +147,9 @@ void Room::Save()
         }
         else
         {
-            int target_id;
-            switch(r->type)
-            {
-                case 1: 
-                    target_id = r->npcID;
-                    break;
-            }
             string resetsql = "INSERT INTO resets (room_id, id, type, target_id, wander_dist, leash_dist, resets.interval) values ";
             resetsql += "(" + Utilities::itos(id) + ", " + Utilities::itos(r->id) + ", " + Utilities::itos(r->type) + ", ";
-            resetsql += Utilities::itos(target_id) + ", " + Utilities::itos(r->wanderDistance) + ", ";
+            resetsql += Utilities::itos(r->targetID) + ", " + Utilities::itos(r->wanderDistance) + ", ";
             resetsql += Utilities::itos(r->leashDistance) + ", " + Utilities::itos(r->interval) + ")";
             resetsql += " ON DUPLICATE KEY UPDATE room_id=VALUES(room_id), id=VALUES(id), type=VALUES(type), target_id=VALUES(target_id), ";
             resetsql += "wander_dist=VALUES(wander_dist), leash_dist=VALUES(leash_dist), resets.interval=VALUES(resets.interval)";
@@ -307,4 +300,27 @@ bool Room::HasCharacters()
 	if (characters.empty())
 		return false;
 	return true;
+}
+
+bool Room::HasItem(Item * i)
+{
+	if (items.empty())
+		return false;
+	for (auto iter = items.begin(); iter != items.end(); iter++)
+	{
+		if ((*iter)->id == i->id)
+			return true;
+	}
+	return false;
+}
+bool Room::HasItem(int id)
+{
+	if (items.empty())
+		return false;
+	for (auto iter = items.begin(); iter != items.end(); iter++)
+	{
+		if ((*iter)->id == id)
+			return true;
+	}
+	return false;
 }

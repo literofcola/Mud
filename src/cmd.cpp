@@ -186,10 +186,9 @@ void cmd_look(Character * ch, string argument)
 
 		if (!ch->IsGhost() || (ch->IsGhost() && (inroom->id == ch->player->corpse_room || inroom->id == ch->player->graveyard_room)))
 		{
-			std::list<Item *>::iterator itemiter;
-			for (itemiter = inroom->items.begin(); itemiter != inroom->items.end(); itemiter++)
+			for (auto itemiter = inroom->items.begin(); itemiter != inroom->items.end(); itemiter++)
 			{
-				ch->Send((*itemiter)->name + ".\n\r");
+				ch->Send((*itemiter)->name + "\n\r");
 			}
 
 			std::list<Character *>::iterator i;

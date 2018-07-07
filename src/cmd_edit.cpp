@@ -457,7 +457,7 @@ void roomEditCmd_show(Character * ch, string argument)
     for(std::map<int, Reset*>::iterator iter = pRoom->resets.begin(); iter != pRoom->resets.end(); iter++)
     {
         Reset * r = (*iter).second;
-        ch->Send(Utilities::itos(r->id) + ". " + (r->type == 1 ? "NPC " + Utilities::itos(r->npcID) : "") 
+        ch->Send(Utilities::itos(r->id) + ". " + (r->type == 1 ? "NPC " + Utilities::itos(r->targetID) : "ITEM " + Utilities::itos(r->targetID))
             + ", interval: " + Utilities::itos(r->interval) + ", wander_distance: " + Utilities::itos(r->wanderDistance)
             + ", leash_distance: " + Utilities::itos(r->leashDistance) + " " + (r->removeme ? "|RX|X" : "") + "\n\r");
     }
@@ -586,7 +586,7 @@ void roomEditCmd_reset(Character * ch, string argument)
             return;
         }
 
-        if(!Utilities::str_cmp(arg2, "type"))
+        /*if(!Utilities::str_cmp(arg2, "type"))
         {
             if(!Utilities::str_cmp(arg3, "npc"))
             {
@@ -607,8 +607,8 @@ void roomEditCmd_reset(Character * ch, string argument)
                 ch->Send("reset <#> type npc||obj\n\r");
                 return;
             }
-        }
-        else if(!Utilities::str_cmp(arg2, "target_id"))
+        }*/
+        if(!Utilities::str_cmp(arg2, "target_id"))
         {
             if(Utilities::IsNumber(arg3))
             {
@@ -618,7 +618,7 @@ void roomEditCmd_reset(Character * ch, string argument)
                     Character * newindex = Game::GetGame()->GetCharacterIndex(newid);
                     if(newindex != NULL)
                     {
-                        r->npcID = newid;
+                        r->targetID = newid;
                         pRoom->changed = true;
                         return;
                     }
@@ -630,7 +630,22 @@ void roomEditCmd_reset(Character * ch, string argument)
                 }
                 else if(r->type == 2) //obj
                 {
-
+					int newid = Utilities::atoi(arg3);
+					if (r->type == 2) //obj
+					{
+						Item * newindex = Game::GetGame()->GetItemIndex(newid);
+						if (newindex != NULL)
+						{
+							r->targetID = newid;
+							pRoom->changed = true;
+							return;
+						}
+						else
+						{
+							ch->Send("Item with that id does not exist.\n\r");
+							return;
+						}
+					}
                 }
             }
             else
@@ -710,30 +725,26 @@ void roomEditCmd_reset(Character * ch, string argument)
                     ch->Send("NPC with that id does not exist.\n\r");
                     return;
                 }
-                Reset * new_reset = new Reset();
-                new_reset->type = 1;
-                new_reset->npcID = id;
+                Reset * new_reset = new Reset(pRoom, 1, id);
                 pRoom->AddReset(new_reset);
                 ch->Send("Added reset #" + Utilities::itos(new_reset->id) + "\n\r");
             }
         }
-		else if (!Utilities::str_cmp(arg2, "obj")) //TODO
+		else if (!Utilities::str_cmp(arg2, "obj"))
 		{
-			/*if (Utilities::IsNumber(arg3))
+			if (Utilities::IsNumber(arg3))
 			{
 				int id = Utilities::atoi(arg3);
-				Character * npc = Game::GetGame()->GetCharacterIndex(id);
-				if (npc == NULL)
+				Item * item = Game::GetGame()->GetItemIndex(id);
+				if (item == NULL)
 				{
-					ch->Send("NPC with that id does not exist.\n\r");
+					ch->Send("Item with that id does not exist.\n\r");
 					return;
 				}
-				Reset * new_reset = new Reset();
-				new_reset->type = 1;
-				new_reset->npcID = id;
+				Reset * new_reset = new Reset(pRoom, 2, id);
 				pRoom->AddReset(new_reset);
 				ch->Send("Added reset #" + Utilities::itos(new_reset->id) + "\n\r");
-			}*/
+			}
 		}
     }
     else if(!Utilities::str_cmp(arg1, "delete"))
@@ -765,7 +776,7 @@ void roomEditCmd_reset(Character * ch, string argument)
     {
         ch->Send("Syntax: reset add npc||obj id\n\r");
         ch->Send("        reset delete id\n\r");
-        ch->Send("        reset <#> type||target_id||interval||wander_distance||leash_distance\n\r");
+        ch->Send("        reset <#> target_id||interval||wander_distance||leash_distance\n\r");
     }
 }
 

@@ -34,7 +34,24 @@ Reset::Reset()
     wanderDistance = 0;
     leashDistance = 0;
     lastReset = 0;
+	count = 1;
     removeme = false;
+}
+
+Reset::Reset(Room * r_, int type_, int targetid_)
+{
+	inroom = r_;
+	type = type_;
+	targetID = targetid_;
+
+	id = 0;
+	npc = NULL;
+	interval = 30;
+	wanderDistance = 0;
+	leashDistance = 0;
+	lastReset = 0;
+	count = 1;
+	removeme = false;
 }
 
 Reset::~Reset()

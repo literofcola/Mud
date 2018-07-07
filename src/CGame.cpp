@@ -956,7 +956,7 @@ void Game::WorldUpdate(Server * server)
                     {
                         currReset->lastReset = Game::currentTime;
                         //load it
-                        Character * charIndex = Game::GetGame()->GetCharacterIndex(currReset->npcID);
+                        Character * charIndex = Game::GetGame()->GetCharacterIndex(currReset->targetID);
                         if(charIndex == NULL)
                         {
                             LogFile::Log("error", "Reset " + Utilities::itos(currReset->id) + " in room " + Utilities::itos(currRoom->id) + ": npc does not exist.");
@@ -971,6 +971,19 @@ void Game::WorldUpdate(Server * server)
                         newChar->AddSubscriber(currReset);
                         currReset->npc = newChar;
                     }
+					else if (currReset->type == 2 && !currReset->inroom->HasItem(currReset->targetID))
+					{
+						currReset->lastReset = Game::currentTime;
+						//load it
+						Item * itemindex = Game::GetGame()->GetItemIndex(currReset->targetID);
+						if (itemindex == NULL)
+						{
+							LogFile::Log("error", "Reset " + Utilities::itos(currReset->id) + " in room " + Utilities::itos(currRoom->id) + ": item " + Utilities::itos(currReset->targetID) + " does not exist.");
+							continue;
+						}
+						Item * newitem = new Item(*itemindex);
+						currReset->inroom->items.push_back(newitem);
+					}
                 }
             }
         }
@@ -1629,14 +1642,8 @@ void Game::LoadResets(Server * server)
         reset->type = row["type"];
         reset->wanderDistance = row["wander_dist"];
         reset->npc = NULL;
-        reset->npcID = row["target_id"];
+        reset->targetID = row["target_id"];
 		reset->inroom = r;
-        /*switch(reset->type)
-        {
-        case 1:
-            reset->npc = GetCharacterIndex(row["target_id"]);
-            break;
-        }*/
         r->resets[reset->id] = reset;
     }
 }
