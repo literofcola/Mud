@@ -982,9 +982,14 @@ void Character::Stand()
 	if (position == Position::POSITION_STANDING)
 		return;
 
-	if (RemoveSpellAffectsByAura(false, SpellAffect::Auras::AURA_EATING)) //true if we removed a spell affect
+	bool removed = false;
+	while (RemoveSpellAffectsByAura(false, SpellAffect::Auras::AURA_EATING)) //true if we removed a spell affect
 	{
-		Send("You stop eating.\n\r");
+		removed = true;
+	}
+	if (removed)
+	{
+		Send("You stop eating or drinking.\n\r");
 	}
 
 	Send("You stand up.\n\r");
@@ -1215,7 +1220,7 @@ void Character::Save()
 		std::set<int>::iterator questiter;
 		for (questiter = player->completedQuests.begin(); questiter != player->completedQuests.end(); ++questiter)
 		{
-			string qcsql = "INSERT INTO player_completed_quests (player, quest) values ";
+			string qcsql = "INSERT IGNORE INTO player_completed_quests (player, quest) values ";
 			qcsql += "('" + name + "', " + Utilities::itos(*questiter) + ")";
 			Server::sqlQueue->Write(qcsql);
 		}
@@ -1225,12 +1230,15 @@ void Character::Save()
 		for (int i = 0; i < (int)player->questLog.size(); i++)
 		{
 			string qasql = "INSERT INTO player_active_quests (player, quest, objectives) values ('" + name + "',";
-			qasql += Utilities::itos(player->questLog[i]->id);
-			for (int j = 0; j < (int)player->questObjectives[i].size(); j++)
+			qasql += Utilities::itos(player->questLog[i]->id) + ",'";
+			for (int j = 0; j < (int)player->questObjectives[i].size();)
 			{
-				qasql += "," + Utilities::itos(player->questObjectives[i][j]);
+				qasql += Utilities::itos(player->questObjectives[i][j]);
+				j++;
+				if (j < (int)player->questObjectives[i].size())
+					qasql += ",";
 			}
-			qasql += ")";
+			qasql += "')";
 			Server::sqlQueue->Write(qasql);
 		}
 
@@ -1276,7 +1284,7 @@ void Character::Save()
         sql += name + "', '" + keywords + "', " + Utilities::itos(level) + "," + Utilities::itos(gender) + "," + Utilities::itos(race) + ",";
         sql += Utilities::itos(agility) + "," + Utilities::itos(intellect) + "," + Utilities::itos(strength) + ",";
         sql += Utilities::itos(stamina) + "," + Utilities::itos(wisdom) + "," + Utilities::itos(spirit) + ",";
-        sql += Utilities::itos(health) + "," + Utilities::itos(mana) + "," + Utilities::itos(energy) + "," + Utilities::itos(rage);
+        sql += Utilities::itos(maxHealth) + "," + Utilities::itos(maxMana) + "," + Utilities::itos(maxEnergy) + "," + Utilities::itos(maxRage);
         sql += ", '" + fixtitle + "', " + Utilities::dtos(npcAttackSpeed, 2) + ", " + Utilities::itos(npcDamageLow) + ", ";
         sql += Utilities::itos(npcDamageHigh) + ",'";
 
@@ -1373,7 +1381,7 @@ void Character::SetLevel(int newlevel)
 		std::list<Class::SkillData>::iterator newskills;
 		for (newskills = player->currentClass->classSkills.begin(); newskills != player->currentClass->classSkills.end(); newskills++)
 		{
-			if (newskills->level == newlevel) //Found a new skill to add
+			if (newskills->level == player->GetClassLevel(player->currentClass->id) && !HasSkill(newskills->skill)) //Found a new skill to add
 			{
 				AddSkill(newskills->skill);
 				Send("|WYou have learned the skill \"" + newskills->skill->long_name + "\"|X\n\r");
@@ -1384,6 +1392,9 @@ void Character::SetLevel(int newlevel)
 	health = maxHealth;
 	mana = maxMana;
 	energy = maxEnergy;
+	json vitals = { { "hp", health },{ "hpmax", maxHealth },{ "mp", mana },{ "mpmax", maxMana },
+	{ "en", energy },{ "enmax", maxEnergy } };
+	SendGMCP("char.vitals " + vitals.dump());
 }
 
 int Character::GetLevel()

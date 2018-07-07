@@ -1629,7 +1629,7 @@ void npcEditCmd_show(Character * ch, string argument)
     int ctr = 1;
     for(dropiter = pChar->drops.begin(); dropiter != pChar->drops.end(); ++dropiter)
     {
-        ch->Send(Utilities::itos(ctr) + ". " + Utilities::itos((*dropiter).percent) + "%: ");
+        ch->Send(Utilities::itos(ctr++) + ". " + Utilities::itos((*dropiter).percent) + "%: ");
         for(int i = 0; i < (int)(*dropiter).id.size(); i++)
         {
             ch->Send(Utilities::itos((*dropiter).id[i]) + " ");

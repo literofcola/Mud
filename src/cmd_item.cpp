@@ -31,20 +31,50 @@ void cmd_inventory(Character * ch, string argument)
     if(ch == NULL || ch->player == NULL)
         return;
 
-    int total = 0;
-    std::list<Item*>::iterator iter;
-    for(iter = ch->player->inventory.begin(); iter != ch->player->inventory.end(); ++iter)
-    {
-        total++;
-        ch->Send(Item::quality_strings[(*iter)->quality] + (*iter)->name + "|X\n\r");
-    }
-    if(total == 0)
-        ch->Send("Your inventory is empty.\n\r");
+	ch->Send("You are carrying:\n\r");
 
-    if(total != ch->player->inventorySize)
+	std::list<std::pair<Item *, int>> coalesced;
+	//copy the actual inventory to the coalesced list
+	std::list<Item*>::iterator iter;
+	for (iter = ch->player->inventory.begin(); iter != ch->player->inventory.end(); ++iter)
+	{
+		coalesced.push_back(std::make_pair((*iter), 1));
+	}
+	//traverse the copy and delete duplicates while incrementing count
+	for (auto i = coalesced.begin(); i != coalesced.end(); i++)
+	{
+		for (auto j = std::next(i, 1); j != coalesced.end();)
+		{
+			if (i->first->id == j->first->id) //found an item match
+			{
+				i->second++;
+				j = coalesced.erase(j);
+			}
+			else
+			{
+				j++;
+			}
+		}
+	}
+	//print the coalesced list
+	int total = 0;
+	for (auto i = coalesced.begin(); i != coalesced.end(); i++)
+	{
+		if (i->second > 1)
+			ch->Send("|M(" + Utilities::itos(i->second) + ") ");
+		else
+			ch->Send("    ");
+		ch->Send(Item::quality_strings[i->first->quality] + i->first->name + "|X\n\r");
+		total++;
+	}
+
+    if(total == 0)
+        ch->Send("     Nothing.\n\r");
+
+    /*if(total != ch->player->inventorySize)
     {
         LogFile::Log("error", "cmd_inventory, total != user->character->inventorySize");
-    }
+    }*/
     ch->Send(Utilities::itos(total) + "/" + Utilities::itos(ch->player->maxInventorySize) + " items\n\r");
 }
 
@@ -421,12 +451,29 @@ void cmd_eat(Character * ch, string argument)
 			LogFile::Log("error", "Item \"" + eat->name + "\": cmd_eat bad skillid");
 			return;
 		}
+
+
 		ch->Sit();
 		ch->player->RemoveItemInventory(eat);
 		ch->Send("You start eating " + eat->name + ".\n\r");
-		int totalheal = (int)ceil((30 * ch->GetLevel()) + 50);
-		int healpersecond = (int)ceil(totalheal / 30);
-		ch->AddSpellAffect(0, ch, sk->long_name, false, false, 10, 30, SpellAffect::AFFECT_NONE,
-			sk, "Restores " + Utilities::itos(healpersecond) + " health per second.");
+
+		string func = sk->function_name + "_cast";
+		try
+		{
+			sol::function lua_cast_func = Server::lua[func.c_str()];
+			lua_cast_func(ch, ch, sk);
+		}
+		catch (const sol::error& e)
+		{
+			LogFile::Log("error", e.what());
+		}
+		catch (const std::exception& e)
+		{
+			LogFile::Log("error", e.what());
+		}
+		catch (...)
+		{
+			LogFile::Log("error", "lua unhandled exception cmd_eat _cast");
+		}
 	}
 }

@@ -416,9 +416,9 @@ void cmd_score(Character * ch, string argument)
 		int res_at_graveyard = ch->player->death_timer - ch->TimeSinceDeath();
 		int res_at_corpse = ch->player->death_timer_runback - ch->TimeSinceDeath();
 		if(res_at_graveyard > 0)
-			ch->Send(Utilities::itos(res_at_graveyard) + " seconds before you can resurrect at the graveyard.\n\r");
+			ch->Send("|W" + Utilities::itos(res_at_graveyard) + " seconds before you can resurrect at the graveyard.\n\r");
 		if (res_at_corpse > 0)
-			ch->Send(Utilities::itos(res_at_corpse) + " seconds before you can resurrect near your corpse.\n\r");
+			ch->Send("|W" + Utilities::itos(res_at_corpse) + " seconds before you can resurrect near your corpse.\n\r");
 	}
 }
 
@@ -969,8 +969,27 @@ void cmd_quest(Character * ch, string argument)
             {
                 complete = " |G(Complete)";
             }
-            ch->Send(Utilities::itos(ctr++) + ". " + Quest::GetDifficultyColor(ch->level, q->level) 
-                       + q->name + " (" + Utilities::itos(q->level) + ")" + complete + "|X\n\r");
+            
+			//print current objective progress
+			string objectives = "";
+			std::vector<Quest::QuestObjective>::iterator objiter;
+			int i = 0;
+			for (objiter = q->objectives.begin(); objiter != q->objectives.end(); ++objiter)
+			{
+				int currentCount = ch->player->questObjectives[ctr - 1][i++];
+				//type count objective description
+				if (currentCount < (*objiter).count)
+				{
+					objectives += "|y" + (*objiter).description + " (" + Utilities::itos(currentCount) + "/" + Utilities::itos((*objiter).count) + ")";
+				}
+				else
+				{
+					objectives += "|g" + (*objiter).description + " (" + Utilities::itos(currentCount) + "/" + Utilities::itos((*objiter).count) + ")";
+				}
+			}
+			ch->Send(Utilities::itos(ctr) + ". " + Quest::GetDifficultyColor(ch->level, q->level)
+				+ q->name + " " + complete + " |X[" + objectives + "|X]\n\r");
+			++ctr;
         }
         return;
     }
