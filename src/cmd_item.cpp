@@ -404,6 +404,41 @@ bool cmd_drop_Query(Character * ch, string argument)
     return true;
 }
 
+void cmd_take(Character * ch, string argument)
+{
+	if (!ch || !ch->player || !ch->room)
+		return;
+
+	if (ch->delay_active)
+	{
+		ch->Send("You can't do that while casting.\n\r");
+		return;
+	}
+	if (argument.empty())
+	{
+		ch->Send("Take what?\n\r");
+		return;
+	}
+
+	string arg1;
+	argument = Utilities::one_argument(argument, arg1);
+
+	Item * i = ch->GetItemRoom(arg1);
+
+	if (i == nullptr)
+	{
+		ch->Send("You don't see that here.\n\r");
+		return;
+	}
+	//i = ch->room->RemoveItem(i);
+	//ch->additeminventory(i);
+}
+
+void cmd_drink(Character * ch, string argument)
+{
+
+}
+
 void cmd_eat(Character * ch, string argument)
 {
 	if (!ch || !ch->player)

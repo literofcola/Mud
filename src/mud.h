@@ -64,6 +64,8 @@ void cmd_wear(Character * ch, string argument);
 void cmd_drop(Character * ch, string argument);
 bool cmd_drop_Query(Character * ch, string argument);
 void cmd_eat(Character * ch, string argument);
+void cmd_drink(Character * ch, string argument);
+void cmd_take(Character * ch, string argument);
 
 //cmd_move.cpp
 void cmd_north(Character * ch, string argument);

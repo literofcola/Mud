@@ -324,3 +324,8 @@ bool Room::HasItem(int id)
 	}
 	return false;
 }
+
+Item * Room::RemoveItem(Item * i)
+{
+	return nullptr;
+}

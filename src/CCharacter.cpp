@@ -751,6 +751,26 @@ Character * Character::GetCharacterRoom(string name)
     return NULL;
 }
 
+Item * Character::GetItemRoom(string name)
+{
+	if (name.empty())
+		return NULL;
+
+	int count = 0;
+	string tempname = name;
+	int number = Utilities::number_argument(tempname);
+
+	std::list<Item *>::iterator iter;
+	for (iter = room->items.begin(); iter != room->items.end(); ++iter)
+	{
+		if (!Utilities::IsName(tempname, (*iter)->name))
+			continue;
+		if (++count == number)
+			return (*iter);
+	}
+	return NULL;
+}
+
 //Find a character in this room or any adjacent room. takes an optional direction argument
 Character * Character::GetCharacterAdjacentRoom(string name, string direction)
 {

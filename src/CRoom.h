@@ -57,6 +57,7 @@ public:
 	bool HasCharacters();
 	bool HasItem(Item * i);
 	bool HasItem(int id);
+	Item * RemoveItem(Item * i);
 
     bool operator<(const Room& r)const{return id<r.id;}
 

@@ -54,16 +54,14 @@ class Command cmd_table[] =
 	{ "cast",		cmd_cast,		1, 0, 0, 0, Character::POSITION_STANDING },
     { "cancel",     cmd_cancel,     1, 0, 0, 0, Character::POSITION_ANY },
     /*{ "auction",    cmd_auction,	POS_RESTING,	1 },
-    { "channels",   cmd_channels,	POS_DEAD,       1,		LOG_NORMAL, 1 },
-    { "challenge",	cmd_challenge,	POS_STANDING,   25,		LOG_NORMAL, 1 },*/
+    { "channels",   cmd_channels,	POS_DEAD,       1,		LOG_NORMAL, 1 },*/
     { "goto",       cmd_goto,		-1, 0, 1, 1, Character::POSITION_ANY },
     { "inventory",	cmd_inventory,	1, 0, 1, 1, Character::POSITION_ANY },
     { "attack",     cmd_attack,     1, 0, 0, 0, Character::POSITION_STANDING },
     { "kill",		cmd_attack,		1, 0, 0, 0, Character::POSITION_STANDING },
     { "look",		cmd_look,		1, 0, 1, 1, Character::POSITION_ANY },
     /*{ "gt",		cmd_clantalk,	POS_DEAD,		1,		LOG_NORMAL, 1 },
-    { "guild",		cmd_clan,		POS_DEAD,		1,		LOG_NORMAL, 1 },
-    { "order",		cmd_order,		POS_RESTING,	1,		LOG_NORMAL, 1 },*/
+    { "guild",		cmd_clan,		POS_DEAD,		1,		LOG_NORMAL, 1 },*/
     { "learn",      cmd_learn,	    -1, 0, 0, 0, Character::POSITION_ANY },
 	{ "rest",		cmd_sit,		1, 0, 0, 1, Character::POSITION_ANY },
     { "sit",		cmd_sit,		1, 0, 0, 1, Character::POSITION_ANY },
@@ -136,12 +134,15 @@ class Command cmd_table[] =
     /*
      * Object manipulation commands.
      */
-    /*{ "drink",	cmd_drink,		POS_RESTING,	1,  LOG_NORMAL, 1 },*/
+	{ "drink",		cmd_drink,		1, 0, 0, 0, Character::POSITION_ANY },
     { "drop",		cmd_drop,		1, 0, 0, 0, Character::POSITION_ANY },
     { "eat",		cmd_eat,		1, 0, 0, 0, Character::POSITION_ANY },
     { "hold",		cmd_wear,		1, 0, 0, 0, Character::POSITION_ANY },
     { "remove",		cmd_remove,		1, 0, 0, 0, Character::POSITION_ANY },
     { "wear",		cmd_wear,		1, 0, 0, 0, Character::POSITION_ANY },
+	{ "get",		cmd_take,		1, 0, 0, 0, Character::POSITION_ANY },
+	{ "take",		cmd_take,		1, 0, 0, 0, Character::POSITION_ANY },
+	{ "gather",		cmd_take,		1, 0, 0, 0, Character::POSITION_ANY },
 
     /*
      * Miscellaneous commands.
