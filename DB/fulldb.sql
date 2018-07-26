@@ -155,6 +155,7 @@ CREATE TABLE `items` (
   `id` int(11) NOT NULL,
   `name` varchar(100) NOT NULL,
   `keywords` tinytext NOT NULL,
+  `inroom_name` varchar(100) NOT NULL,
   `item_level` int(11) NOT NULL,
   `char_level` int(11) NOT NULL,
   `equip_location` int(11) NOT NULL,
@@ -180,7 +181,7 @@ CREATE TABLE `items` (
 
 LOCK TABLES `items` WRITE;
 /*!40000 ALTER TABLE `items` DISABLE KEYS */;
-INSERT INTO `items` VALUES (1,'The One Ring','one ring',15,10,11,2,2,13,0,0,0,0,0,0,0,140,0.0),(2,'Test Item of Power','test item power',5,2,1,4,1,0,0,0,100,100,1,0,0,1000,0.0),(3,'Worn Greatsword','',1,1,16,1,0,4,0,0,0,25,0,2,3,4,2.4),(4,'Recruit\'s Vest','',1,1,5,1,0,0,0,0,3,55,0,0,0,2,0.0),(5,'Recruit\'s Pants','',1,1,9,1,0,0,0,0,3,40,0,0,0,2,0.0),(6,'Recruit\'s Boots','',1,1,10,1,0,0,0,0,2,25,0,0,0,1,0.0),(7,'Apprentice\'s Boots','',1,1,10,1,0,0,0,0,2,25,0,0,0,2,0.0),(8,'Apprentice\'s Robe','',1,1,5,1,0,0,0,0,3,55,0,0,0,2,0.0),(9,'Apprentice\'s Pants','',1,1,9,1,0,0,0,0,3,40,0,0,0,2,0.0),(10,'Bent Staff','',1,1,16,1,0,9,0,0,0,25,0,2,3,4,2.3),(11,'Footpad\'s Pants','',1,1,9,1,0,0,0,0,2,40,0,0,0,2,0.0),(12,'Footpad\'s Vest','',1,1,5,1,0,0,0,0,3,55,0,0,0,2,0.0),(13,'Footpad\'s Shoes','',1,1,10,1,0,0,0,0,3,25,0,0,0,1,0.0),(14,'Worn Shortsword','worn shortsword sword',1,1,14,1,0,4,0,0,0,20,0,1,3,3,1.9),(15,'Neophyte\'s Pants','',1,1,9,1,0,0,0,0,3,40,0,0,0,2,0.0),(16,'Neophyte\'s Boots','',1,1,10,1,0,0,0,0,2,25,0,0,0,2,0.0),(17,'Neophyte\'s Robe','',1,1,5,1,0,0,0,0,3,55,0,0,0,2,0.0),(18,'Refreshing Spring Water','',1,1,0,1,0,11,38,0,0,0,0,0,0,1,0.0),(19,'Shiny Red Apple','',1,1,0,1,0,11,37,0,0,0,0,0,0,1,0.0),(20,'Tough Wolf Meat','',1,0,0,1,0,13,0,1,0,0,0,0,0,0,0.0),(21,'Red Burlap Bandana','',1,0,0,1,0,13,0,1,0,0,0,0,0,0,0.0),(22,'Milly\'s Harvest','',1,0,0,1,0,13,0,1,0,0,0,0,0,0,0.0),(23,'Grape Manifest','',1,1,0,1,1,13,0,1,0,0,1,0,0,0,0.0),(24,'Marshal McBride\'s Documents','',1,1,0,1,1,13,0,1,0,0,1,0,0,0,0.0),(25,'Garrick\'s Head','',1,1,0,1,1,13,0,1,0,0,1,0,0,0,0.0),(26,'Soft Fur-lined Shoes','soft fur-lined shoes',5,1,10,1,1,0,0,0,7,20,0,0,0,7,0.0),(27,'Wolfskin Bracers','wolfskin bracers',5,1,6,1,1,0,0,0,7,16,0,0,0,6,0.0);
+INSERT INTO `items` VALUES (1,'The One Ring','one ring','',15,10,11,2,2,13,0,0,0,0,0,0,0,140,0.0),(2,'Test Item of Power','test item power','',5,2,1,4,1,0,0,0,100,100,1,0,0,1000,0.0),(3,'Worn Greatsword','','',1,1,16,1,0,4,0,0,0,25,0,2,3,4,2.4),(4,'Recruit\'s Vest','','',1,1,5,1,0,0,0,0,3,55,0,0,0,2,0.0),(5,'Recruit\'s Pants','','',1,1,9,1,0,0,0,0,3,40,0,0,0,2,0.0),(6,'Recruit\'s Boots','','',1,1,10,1,0,0,0,0,2,25,0,0,0,1,0.0),(7,'Apprentice\'s Boots','','',1,1,10,1,0,0,0,0,2,25,0,0,0,2,0.0),(8,'Apprentice\'s Robe','','',1,1,5,1,0,0,0,0,3,55,0,0,0,2,0.0),(9,'Apprentice\'s Pants','','',1,1,9,1,0,0,0,0,3,40,0,0,0,2,0.0),(10,'Bent Staff','','',1,1,16,1,0,9,0,0,0,25,0,2,3,4,2.3),(11,'Footpad\'s Pants','','',1,1,9,1,0,0,0,0,2,40,0,0,0,2,0.0),(12,'Footpad\'s Vest','','',1,1,5,1,0,0,0,0,3,55,0,0,0,2,0.0),(13,'Footpad\'s Shoes','','',1,1,10,1,0,0,0,0,3,25,0,0,0,1,0.0),(14,'Worn Shortsword','worn shortsword sword','',1,1,14,1,0,4,0,0,0,20,0,1,3,3,1.9),(15,'Neophyte\'s Pants','','',1,1,9,1,0,0,0,0,3,40,0,0,0,2,0.0),(16,'Neophyte\'s Boots','','',1,1,10,1,0,0,0,0,2,25,0,0,0,2,0.0),(17,'Neophyte\'s Robe','','',1,1,5,1,0,0,0,0,3,55,0,0,0,2,0.0),(18,'Refreshing Spring Water','','',1,1,0,1,0,11,38,0,0,0,0,0,0,1,0.0),(19,'Shiny Red Apple','','',1,1,0,1,0,11,37,0,0,0,0,0,0,1,0.0),(20,'Tough Wolf Meat','','',1,0,0,1,0,13,0,1,0,0,0,0,0,0,0.0),(21,'Red Burlap Bandana','','',1,0,0,1,0,13,0,1,0,0,0,0,0,0,0.0),(22,'Milly\'s Harvest','milly harvest grapes bucket','A large bucket of grapes is here.',1,0,0,1,0,13,0,1,0,0,0,0,0,0,0.0),(23,'Grape Manifest','','',1,1,0,1,1,13,0,1,0,0,1,0,0,0,0.0),(24,'Marshal McBride\'s Documents','','',1,1,0,1,1,13,0,1,0,0,1,0,0,0,0.0),(25,'Garrick\'s Head','','',1,1,0,1,1,13,0,1,0,0,1,0,0,0,0.0),(26,'Soft Fur-lined Shoes','soft fur-lined shoes','',5,1,10,1,1,0,0,0,7,20,0,0,0,7,0.0),(27,'Wolfskin Bracers','wolfskin bracers','',5,1,6,2,1,0,0,0,7,16,0,0,0,6,0.0);
 /*!40000 ALTER TABLE `items` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -296,6 +297,7 @@ CREATE TABLE `player_active_quests` (
 
 LOCK TABLES `player_active_quests` WRITE;
 /*!40000 ALTER TABLE `player_active_quests` DISABLE KEYS */;
+INSERT INTO `player_active_quests` VALUES ('Boris',1,'0'),('Boris',5,'5');
 /*!40000 ALTER TABLE `player_active_quests` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -344,7 +346,7 @@ CREATE TABLE `player_completed_quests` (
 
 LOCK TABLES `player_completed_quests` WRITE;
 /*!40000 ALTER TABLE `player_completed_quests` DISABLE KEYS */;
-INSERT INTO `player_completed_quests` VALUES ('Tash',1),('Tash',6);
+INSERT INTO `player_completed_quests` VALUES ('Boris',4),('Boris',6),('Boris',8),('Tash',1),('Tash',6);
 /*!40000 ALTER TABLE `player_completed_quests` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -393,7 +395,7 @@ CREATE TABLE `player_inventory` (
 
 LOCK TABLES `player_inventory` WRITE;
 /*!40000 ALTER TABLE `player_inventory` DISABLE KEYS */;
-INSERT INTO `player_inventory` VALUES ('Tash',4,0),('Tash',5,0),('Tash',6,0),('Tash',3,0),('Tash',19,1),('Tash',19,1),('Tash',19,1),('Tash',19,1),('Tash',19,1),('Bob',4,0),('Bob',5,0),('Bob',6,0),('Bob',3,0),('Bob',20,1),('Bob',20,1),('Bob',21,1),('Bob',21,1),('Bob',21,1),('Bob',21,1),('Bob',21,1),('Bobo',14,1),('Bobo',13,1),('Bobo',11,1),('Bobo',12,1),('Bobo',19,1),('Bobo',19,1),('Bobo',19,1),('Bobo',19,1),('Bobo',19,1),('Bobo',19,1),('Bobo',18,1),('Bobo',18,1),('Boris',3,1),('Boris',1,1),('Boris',1,1),('Boris',26,1),('Boris',27,1),('Boris',8,1),('Boris',27,1),('Boris',10,1),('Boris',12,1),('Boris',17,1),('Boris',1,1),('Boris',14,1),('Boris',4,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',20,1),('Boris',21,1);
+INSERT INTO `player_inventory` VALUES ('Tash',4,0),('Tash',5,0),('Tash',6,0),('Tash',3,0),('Tash',19,1),('Tash',19,1),('Tash',19,1),('Tash',19,1),('Tash',19,1),('Bobo',14,1),('Bobo',13,1),('Bobo',11,1),('Bobo',12,1),('Bobo',19,1),('Bobo',19,1),('Bobo',19,1),('Bobo',19,1),('Bobo',19,1),('Bobo',19,1),('Bobo',18,1),('Bobo',18,1),('Bob',4,0),('Bob',5,0),('Bob',6,0),('Bob',3,0),('Bob',22,1),('Bob',22,1),('Bob',22,1),('Bob',20,1),('Bob',20,1),('Bob',21,1),('Bob',21,1),('Bob',21,1),('Bob',21,1),('Bob',21,1),('Bob',21,1),('Bob',21,1),('Bob',21,1),('Boris',8,0),('Boris',27,0),('Boris',26,0),('Boris',1,0),('Boris',1,0),('Boris',3,0),('Boris',22,1),('Boris',22,1),('Boris',22,1),('Boris',10,1),('Boris',12,1),('Boris',17,1),('Boris',1,1),('Boris',14,1),('Boris',4,1),('Boris',21,1),('Boris',21,1),('Boris',27,1),('Boris',21,1),('Boris',21,1),('Boris',2,1),('Boris',21,1);
 /*!40000 ALTER TABLE `player_inventory` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -470,7 +472,7 @@ CREATE TABLE `players` (
 
 LOCK TABLES `players` WRITE;
 /*!40000 ALTER TABLE `players` DISABLE KEYS */;
-INSERT INTO `players` VALUES ('Bob','\r\Z',0,'',61309521,2,240,1,0,139,512,118,446,269,102,4460,2690,4,0,0,0,1758),('Bobo','\r\Z',0,'',675,2,2,1,0,5,5,5,5,5,5,50,50,2,2,0,0,6),('Boris','\r\Z',10,'',61309521,88,240,1,7,249,110,488,727,207,59,7270,2070,2,2,0,0,4240),('Tash','FCU',0,'',1451,3,2,1,2,5,5,5,5,5,0,50,100,1,2,0,0,6);
+INSERT INTO `players` VALUES ('Bob','\r\Z',0,'',61309521,89,240,1,0,139,512,118,446,269,102,4460,2690,4,0,0,0,1758),('Bobo','\r\Z',0,'',675,2,2,1,0,5,5,5,5,5,5,50,50,2,2,0,0,6),('Boris','\r\Z',10,'',61309521,2,240,1,7,249,110,488,727,207,59,7270,2070,2,2,0,0,4240),('Tash','FCU',0,'',1451,3,2,1,2,5,5,5,5,5,0,50,100,1,2,0,0,6);
 /*!40000 ALTER TABLE `players` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -494,7 +496,7 @@ CREATE TABLE `quest_item_rewards` (
 
 LOCK TABLES `quest_item_rewards` WRITE;
 /*!40000 ALTER TABLE `quest_item_rewards` DISABLE KEYS */;
-INSERT INTO `quest_item_rewards` VALUES (4,26),(4,27);
+INSERT INTO `quest_item_rewards` VALUES (4,2),(4,26),(4,27);
 /*!40000 ALTER TABLE `quest_item_rewards` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -693,4 +695,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-07-07 15:16:08
+-- Dump completed on 2018-07-25 21:53:43

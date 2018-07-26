@@ -82,6 +82,7 @@ Item::Item(const Item & copy)
     id = copy.id;
     name = copy.name;
 	keywords = copy.keywords;
+	inroom_name = copy.inroom_name;
     itemLevel = copy.itemLevel;
     charLevel = copy.charLevel;
     quality = copy.quality;
@@ -103,6 +104,7 @@ void Item::SetDefaults()
 {
     id = 0;
 	keywords.clear();
+	inroom_name.clear();
     itemLevel = 0;
     charLevel = 0;
     equipLocation = Item::EQUIP_NONE;
@@ -124,6 +126,7 @@ void Item::SetDefaults()
     intTable["id"] = &id;
     stringTable["name"] = &name;
 	stringTable["keywords"] = &keywords;
+	stringTable["inroom_name"] = &inroom_name;
     intTable["itemLevel"] = &itemLevel;
     intTable["charLevel"] = &charLevel;
 	intTable["binds"] = &binds;
@@ -212,16 +215,16 @@ void Item::Save()
     if(!changed)
         return;
 
-    string sql = "INSERT INTO items (items.id, items.name, items.keywords, items.item_level, items.char_level, items.equip_location, items.quality,";
+    string sql = "INSERT INTO items (items.id, items.name, items.keywords, items.inroom_name, items.item_level, items.char_level, items.equip_location, items.quality,";
     sql += " items.binds, items.type, items.skill_id, items.quest, items.armor, items.durability, items.unique, items.damage_low, items.damage_high, items.value, items.speed) values (";
-    sql += Utilities::itos(id) + ", '" + Utilities::SQLFixQuotes(name) + "', '" + Utilities::SQLFixQuotes(keywords) + "', " + Utilities::itos(itemLevel);
+    sql += Utilities::itos(id) + ", '" + Utilities::SQLFixQuotes(name) + "', '" + Utilities::SQLFixQuotes(keywords) + "', '" + Utilities::SQLFixQuotes(inroom_name) + "', " + Utilities::itos(itemLevel);
     sql += ", " + Utilities::itos(charLevel) + ", " + Utilities::itos(equipLocation);
     sql += ", " + Utilities::itos(quality) + ", " + Utilities::itos(binds) + ", " + Utilities::itos(type) + ", " + Utilities::itos(useSkillID) + ", " + (quest ? "1" : "0");
     sql += ", " + Utilities::itos(armor) + ", " + Utilities::itos(durability) + ", " + (unique ? "1" : "0");
     sql += ", " + Utilities::itos(damageLow) + ", " + Utilities::itos(damageHigh) + ", " + Utilities::itos(value);
     sql += ", " + Utilities::dtos(speed, 1) + ")";
 
-    sql += " ON DUPLICATE KEY UPDATE items.id=VALUES(items.id), items.name=VALUES(items.name), items.keywords=VALUES(items.keywords),items.item_level=VALUES(items.item_level), ";
+    sql += " ON DUPLICATE KEY UPDATE items.id=VALUES(items.id), items.name=VALUES(items.name), items.keywords=VALUES(items.keywords),items.inroom_name=VALUES(items.inroom_name),items.item_level=VALUES(items.item_level), ";
     sql += "items.char_level=VALUES(items.char_level), items.equip_location=VALUES(items.equip_location), items.quality=VALUES(items.quality), ";
     sql += "items.binds=VALUES(items.binds), items.type=VALUES(items.type), items.skill_id=VALUES(items.skill_id),items.quest=VALUES(items.quest), items.armor=VALUES(items.armor), ";
     sql += "items.durability=VALUES(items.durability), items.unique=VALUES(items.unique), items.damage_low=VALUES(items.damage_low), ";

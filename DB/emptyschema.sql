@@ -106,6 +106,7 @@ CREATE TABLE `items` (
   `id` int(11) NOT NULL,
   `name` varchar(100) NOT NULL,
   `keywords` tinytext NOT NULL,
+  `inroom_name` varchar(100) NOT NULL,
   `item_level` int(11) NOT NULL,
   `char_level` int(11) NOT NULL,
   `equip_location` int(11) NOT NULL,
@@ -469,4 +470,4 @@ CREATE TABLE `triggers` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-07-07 15:16:06
+-- Dump completed on 2018-07-25 21:53:39

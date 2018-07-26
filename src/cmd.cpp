@@ -188,7 +188,10 @@ void cmd_look(Character * ch, string argument)
 		{
 			for (auto itemiter = inroom->items.begin(); itemiter != inroom->items.end(); itemiter++)
 			{
-				ch->Send((*itemiter)->name + "\n\r");
+				if(!(*itemiter)->inroom_name.empty())
+					ch->Send((*itemiter)->inroom_name + "\n\r");
+				else
+					ch->Send((*itemiter)->name + "\n\r");
 			}
 
 			std::list<Character *>::iterator i;
@@ -1444,7 +1447,7 @@ bool questCompleteQuery(Character * ch, string argument)
 	Item * myreward = Game::GetGame()->GetItemIndex(quest->itemRewards[choice - 1]);
 	if(myreward)
 	{
-		ch->Send("|WYou receive item: " + myreward->name + "|X\n\r");
+		ch->Send("|WYou receive loot: " + string(Item::quality_strings[myreward->quality]) + myreward->name + "|X\n\r");
 		ch->player->NewItemInventory(myreward);
 	}
 

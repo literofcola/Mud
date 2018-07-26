@@ -411,7 +411,7 @@ void cmd_take(Character * ch, string argument)
 
 	if (ch->delay_active)
 	{
-		ch->Send("You can't do that while casting.\n\r");
+		ch->Send("Another action is in progress!\n\r");
 		return;
 	}
 	if (argument.empty())
@@ -430,8 +430,55 @@ void cmd_take(Character * ch, string argument)
 		ch->Send("You don't see that here.\n\r");
 		return;
 	}
-	//i = ch->room->RemoveItem(i);
-	//ch->additeminventory(i);
+
+	json casttime = { { "time", 2.5 } };
+	ch->SendGMCP("char.casttime " + casttime.dump());
+
+	ch->Send("You begin taking " + i->name + "...\n\r");
+
+	ch->delay = (Game::GetGame()->currentTime + 2.5);
+	Character::DelayData dd;
+	dd.caster = ch;
+	dd.itemTarget = i;
+	dd.itemTarget->AddSubscriber(dd.caster); //if the item is gone when delay finishes, we need to know about it
+	dd.sk = nullptr;
+	ch->delayData = dd;
+	ch->delay_active = true;
+	ch->delayFunction = cmd_takeCallback;
+}
+
+void cmd_takeCallback(Character::DelayData delayData)
+{
+	if (!delayData.caster)
+	{
+		LogFile::Log("error", "cmd_takeCallback: NULL caster");
+		return;
+	}
+	delayData.caster->delay_active = false;
+
+	json casttime = { { "time", 0 } };
+	delayData.caster->SendGMCP("char.casttime " + casttime.dump());
+
+	if (delayData.itemTarget == NULL) //target will never be null from cmd_take, only from Subscriber::Notify 
+	{
+		delayData.caster->Send("That item is no longer here.\n\r");
+		return;
+	}
+
+	delayData.itemTarget->RemoveSubscriber(delayData.caster);
+	delayData.itemTarget->NotifySubscribers();
+
+	if (!delayData.caster->IsItemInRoom(delayData.itemTarget))
+	{
+		delayData.caster->Send("That item is no longer here.\n\r");
+		return;
+	}
+
+	delayData.caster->room->RemoveItem(delayData.itemTarget);
+	if(delayData.caster->player)
+		delayData.caster->player->AddItemInventory(delayData.itemTarget);
+	delayData.caster->Send("You take " + delayData.itemTarget->name + "\n\r");
+	delayData.caster->Message(delayData.caster->name + " takes " + delayData.itemTarget->name, Character::MSG_ROOM_NOTCHAR);
 }
 
 void cmd_drink(Character * ch, string argument)

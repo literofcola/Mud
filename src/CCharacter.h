@@ -137,7 +137,7 @@ public:
         Character * caster;
         Skill * sk;
         Character * charTarget;
-        //Object * objTarget;
+        Item * itemTarget;
     };
     double delay;
     DelayData delayData;
@@ -184,6 +184,7 @@ public:
     void Message(const std::string & txt, MessageType msg_type, Character * vict = NULL);
     Character * GetCharacterRoom(std::string name);
 	Item * GetItemRoom(std::string name);
+	bool IsItemInRoom(Item * i);
     Character * GetCharacterAdjacentRoom(std::string name, std::string direction);
     Character * GetCharacterRoom(Character * target);
     Character * GetCharacterAdjacentRoom(Character * target);

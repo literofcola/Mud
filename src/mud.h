@@ -66,6 +66,7 @@ bool cmd_drop_Query(Character * ch, string argument);
 void cmd_eat(Character * ch, string argument);
 void cmd_drink(Character * ch, string argument);
 void cmd_take(Character * ch, string argument);
+void cmd_takeCallback(Character::DelayData delayData);
 
 //cmd_move.cpp
 void cmd_north(Character * ch, string argument);
@@ -161,6 +162,7 @@ void npcEditCmd_skill(Character * ch, string argument);
 void itemEditCmd_show(Character * ch, string argument);
 void itemEditCmd_name(Character * ch, string argument);
 void itemEditCmd_keywords(Character * ch, string argument);
+void itemEditCmd_inroom_name(Character * ch, string argument);
 void itemEditCmd_item_level(Character * ch, string argument);
 void itemEditCmd_char_level(Character * ch, string argument);
 void itemEditCmd_quality(Character * ch, string argument);

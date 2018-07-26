@@ -1768,6 +1768,7 @@ void Game::LoadItems(Server * server)
         i->id = row["id"];
         i->name = (string)row["name"];
 		i->keywords = (string)row["keywords"];
+		i->inroom_name = (string)row["inroom_name"];
         i->charLevel = row["char_level"];
         i->quality = row["quality"];
         i->itemLevel = row["item_level"];

@@ -3,7 +3,7 @@
 
 class Server;
 
-class Item
+class Item : public SubscriberManager
 {
 public:
     Item();
@@ -47,6 +47,7 @@ public:
     int id;
     std::string name;
 	std::string keywords;
+	std::string inroom_name;
     int itemLevel;
     int charLevel;
 	int binds;

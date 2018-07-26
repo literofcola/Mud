@@ -763,12 +763,26 @@ Item * Character::GetItemRoom(string name)
 	std::list<Item *>::iterator iter;
 	for (iter = room->items.begin(); iter != room->items.end(); ++iter)
 	{
-		if (!Utilities::IsName(tempname, (*iter)->name))
+		if (!Utilities::IsName(tempname, (*iter)->name) && !Utilities::IsName(tempname, (*iter)->keywords))
 			continue;
 		if (++count == number)
 			return (*iter);
 	}
 	return NULL;
+}
+
+bool Character::IsItemInRoom(Item * i)
+{
+	if (i == nullptr)
+		return false;
+
+	std::list<Item *>::iterator iter;
+	for (iter = room->items.begin(); iter != room->items.end(); ++iter)
+	{
+		if ((*iter) == i)
+			return true;
+	}
+	return false;
 }
 
 //Find a character in this room or any adjacent room. takes an optional direction argument
@@ -2047,7 +2061,7 @@ void Character::AutoAttack(Character * victim)
 
         if(attack_mh && lastAutoAttack_main + weaponSpeed_main <= Game::currentTime)
         {
-			damage_main += (int)ceil(strength * Character::STRENGTH_DAMAGE_MODIFIER);
+			//damage_main += (int)ceil(strength * Character::STRENGTH_DAMAGE_MODIFIER);
             if(victim->target == NULL) //Force a target on our victim
             {     
                 victim->SetTarget(this);
@@ -2074,7 +2088,7 @@ void Character::AutoAttack(Character * victim)
         }
         if(attack_oh && lastAutoAttack_off + weaponSpeed_off <= Game::currentTime)
         {
-			damage_off += (int)ceil(strength * Character::STRENGTH_DAMAGE_MODIFIER);
+			//damage_off += (int)ceil(strength * Character::STRENGTH_DAMAGE_MODIFIER);
             if(victim->target == NULL) //Force a target on our victim
             {     
                 victim->SetTarget(this);
@@ -3524,6 +3538,13 @@ void Character::Notify(SubscriberManager * lm)
 	{
 		comboPointTarget->RemoveSubscriber(this);
 		comboPointTarget = NULL;
+	}
+
+	if (delay_active && delayData.itemTarget == lm)
+	{
+		delayData.itemTarget->RemoveSubscriber(this);
+		delayData.itemTarget = nullptr;
+		delay_active = false;
 	}
 }
 

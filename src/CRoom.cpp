@@ -325,7 +325,15 @@ bool Room::HasItem(int id)
 	return false;
 }
 
-Item * Room::RemoveItem(Item * i)
+bool Room::RemoveItem(Item * i)
 {
-	return nullptr;
+	for (auto iter = items.begin(); iter != items.end(); iter++)
+	{
+		if ((*iter) == i)
+		{
+			items.erase(iter);
+			return true;
+		}
+	}
+	return false;
 }

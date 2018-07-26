@@ -2334,6 +2334,7 @@ void itemEditCmd_show(Character * ch, string argument)
 
 	ch->Send("Name:           [" + pItem->name + "]\n\r");
 	ch->Send("Keywords:       [" + pItem->keywords + "]\n\r");
+	ch->Send("inroom_name:    [" + pItem->inroom_name + "]\n\r");
     ch->Send("ID:             [" + Utilities::itos(pItem->id) + "]\n\r");
     ch->Send("char_level:     [" + Utilities::itos(pItem->charLevel) + "]\n\r");
     ch->Send("item_level:     [" + Utilities::itos(pItem->itemLevel) + "]\n\r");
@@ -2382,6 +2383,21 @@ void itemEditCmd_keywords(Character * ch, string argument)
 	pItem->keywords = argument;
 	pItem->changed = true;
 	ch->Send("keywords set.\n\r");
+}
+
+void itemEditCmd_inroom_name(Character * ch, string argument)
+{
+	Item * pItem = (Item *)ch->editData;
+
+	if (argument.empty())
+	{
+		ch->Send("Set inroom_name to what?\n\r");
+		return;
+	}
+
+	pItem->inroom_name = argument;
+	pItem->changed = true;
+	ch->Send("inroom_name set.\n\r");
 }
 
 void itemEditCmd_item_level(Character * ch, string argument)
