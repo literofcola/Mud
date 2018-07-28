@@ -3069,7 +3069,7 @@ bool Character::CancelActiveDelay()
 
 bool Character::CancelCastOnHit()
 {
-	if(delay_active && delayData.sk->interruptFlags.test(Skill::Interrupt::INTERRUPT_HIT))
+	if(delay_active && (!delayData.sk || delayData.sk->interruptFlags.test(Skill::Interrupt::INTERRUPT_HIT)))
 	{
 		CancelActiveDelay();
 		return true;

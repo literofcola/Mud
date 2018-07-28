@@ -545,12 +545,12 @@ void Game::WorldUpdate(Server * server)
 				if (curr->IsNPC())
 					curr->SetHealth(curr->GetMaxHealth()); //NPC's heal immediately out of combat
 				else
-					curr->AdjustHealth(NULL, (int)ceil(curr->GetLevel()*0.5 + 2.5));
+					curr->AdjustHealth(NULL, (int)ceil(curr->GetLevel()*0.5 + 5));
 			}
 			if (curr->GetMana() < curr->GetMaxMana() && curr->lastSpellCast + 5.0 <= Game::currentTime)
 			{
 				//if more than 5 seconds since last cast, regen 10% of spirit as mana
-				curr->AdjustMana(curr, (int)ceil(curr->spirit * 0.1) + 5);
+				curr->AdjustMana(curr, (int)ceil(curr->spirit * 0.1) + 10);
 			}
 			if (curr->GetEnergy() < curr->GetMaxEnergy())
 			{

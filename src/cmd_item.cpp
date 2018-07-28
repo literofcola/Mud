@@ -440,6 +440,7 @@ void cmd_take(Character * ch, string argument)
 	Character::DelayData dd;
 	dd.caster = ch;
 	dd.itemTarget = i;
+	dd.charTarget = nullptr;
 	dd.itemTarget->AddSubscriber(dd.caster); //if the item is gone when delay finishes, we need to know about it
 	dd.sk = nullptr;
 	ch->delayData = dd;
