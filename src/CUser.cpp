@@ -78,8 +78,17 @@ void User::Send(string str)
     {
         if(str[i] == '|')
         {
-            string colorcode = Utilities::ColorString(str[i+1]);
-            str.replace(i, 2, colorcode);
+			if ((int)str.length() > (i + 3) && Utilities::IsNumber(str.substr(i + 1, 3)))
+			{
+				// \033[38; 2; <r>; <g>; <b>m nope!
+				string colorcode = "\033[38;5;" + str.substr(i + 1, 3) + "m";
+				str.replace(i, 4, colorcode);
+			}
+			else if ((int)str.length() >= (i + 1))
+			{
+				string colorcode = Utilities::ColorString(str[i + 1]);
+				str.replace(i, 2, colorcode);
+			}
         }
     }
     if(str.length() >= NETWORK_BUFFER_SIZE)

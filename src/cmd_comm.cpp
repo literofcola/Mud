@@ -55,6 +55,16 @@ void cmd_say(Character * ch, string argument)
 		ch->Send("Say what?\n\r");
 		return;
     }
+	if (argument == "color_test")
+	{
+		string twofiftysix = "THIS STRING IS 256 CHARACTERS xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+		string colored;
+		for (int i = 0; i < 256; i++)
+		{
+			colored += "\033[38;5;" + Utilities::itos(i) + "m" + twofiftysix[i];
+		}
+		ch->Send(colored + "\n\r");
+	}
     ch->Message("|C" + ch->name + " says, '" + argument + "|C'|X", Character::MSG_ROOM_NOTCHAR);
     ch->Send("|CYou say, '" + argument + "|X|C'|X\n\r");
 }

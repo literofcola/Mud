@@ -56,7 +56,6 @@ public:
 	void UpdateIPList(std::string address);
 	bool CheckTempBanList(std::string address);
 	std::string EncryptDecrypt(std::string toEncrypt);
-	//todo: why is this a Player:: function, should be server if anything
 	std::string SQLSelectPassword(std::string name);
 
 	SOCKET ListenSocket;
