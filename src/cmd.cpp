@@ -184,6 +184,9 @@ void cmd_look(Character * ch, string argument)
         if(!inroom->description.empty())
 	        ch->Send("  " + inroom->description);
 
+		cmd_scan(ch, "");
+		ch->Send("\n\r");
+
 		if (!ch->IsGhost() || (ch->IsGhost() && (inroom->id == ch->player->corpse_room || inroom->id == ch->player->graveyard_room)))
 		{
 			for (auto itemiter = inroom->items.begin(); itemiter != inroom->items.end(); itemiter++)
@@ -294,8 +297,7 @@ void cmd_look(Character * ch, string argument)
 				}
 				ch->Send(disconnected + level + questicon + aggressionColor + corpse + (*i)->name + title + " is here" + fighting + tapped + "|X\n\r");
 			}
-			ch->Send("\n\r");
-			cmd_scan(ch, "");
+			ch->Send("\n\r");	
 		}
     }
     else // "look argument" //TODO, look at things in the room with higher priority
@@ -436,7 +438,8 @@ void cmd_scan(Character * ch, string argument)
 	Room * scan_room;
 	stringstream out;
 	int depth = 3;
-	//string depthcolors[3] = { "|r", "|m", "|y" };
+	string depthcolors[3] = { "|R", "|Y", "|G" };
+	string depthstring[3] = { "||  ", "|||| ", "||||||" };
 	bool found = false;
 	string level = "";
 	string corpse = "";
@@ -462,7 +465,7 @@ void cmd_scan(Character * ch, string argument)
 					out << setw(13) << left << "\n\r";
 				}
 				found = true;
-				out << /*depthcolors[j] <<*/ "|W[" << Utilities::itos(j + 1) << "]:|X ";
+				out << "|W[" << depthcolors[j] << depthstring[j] << "|W]:|X ";
 				std::list<Character *>::iterator iter = scan_room->characters.begin();
 				while (iter != scan_room->characters.end())
 				{
