@@ -15,14 +15,20 @@ public:
 
 	Character * members[Group::MAX_RAID_SIZE];
 	Character * leader;
-	int count;
 	bool israid;
 
 	int GetNextFreeSlot();
-	int FindCharacterSlot(Character *ch);
-	int FindFirstInSubgroup(Character *ch);
+	int FindCharacterSlot(Character *ch);  //??
+	int FindFirstInSubgroup(Character *ch); //??
 	bool IsEmptySubgroup(Character *ch);
-	void Remove(Character *ch);
+	bool Add(Character * ch);
+	bool Remove(Character *ch);
+	bool IsGroupLeader(Character * ch);
+	Character * FindByName(std::string name);
+	int GetMemberCount() { return count; };
+
+private:
+	int count;
 };
 
 #endif //CGROUP_H

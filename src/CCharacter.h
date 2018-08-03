@@ -19,7 +19,7 @@ public:
 
     enum MessageType
     {
-        MSG_CHAR, MSG_CHAR_VICT, MSG_ROOM, MSG_ROOM_NOTCHAR, MSG_ROOM_NOTVICT, MSG_ROOM_NOTCHARVICT
+        MSG_CHAR, MSG_CHAR_VICT, MSG_ROOM, MSG_ROOM_NOTCHAR, MSG_ROOM_NOTVICT, MSG_ROOM_NOTCHARVICT, MSG_GROUP, MSG_GROUP_NOTCHAR
     };
 
     int id;
@@ -292,6 +292,7 @@ public:
     void SetCooldown(Skill * sk, std::string name, bool global, double length);
     double GetCooldownRemaining(Skill * sk);
 	void AddClassSkills();
+	bool HasGroup();
 
     bool IsNPC();
 	bool IsPlayer();

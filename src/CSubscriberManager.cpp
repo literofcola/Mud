@@ -113,7 +113,8 @@ void SubscriberManager::NotifySubscribers()
 {
 	//If we're a Character about to notify our subscribers, we need to make sure we're not subscribed to anyone else either
 	//Clear target, combopointtarget, delaydata, and threat
-	//TODO: really this should all be done before every call to NotifySubscribers as a CCharacter class function, not in CSubManager
+	//TODO: really this should all be done before every call to NotifySubscribers as a CCharacter 
+	//	class function, not in CSubManager. Also to avoid this hacky? dynamic_cast type check
 	Character * submanager_as_char;
 	if (submanager_as_char = dynamic_cast<Character*>(this))
 	{

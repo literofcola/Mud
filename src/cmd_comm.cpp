@@ -65,8 +65,8 @@ void cmd_say(Character * ch, string argument)
 		}
 		ch->Send(colored + "\n\r");
 	}
-    ch->Message("|C" + ch->name + " says, '" + argument + "|C'|X", Character::MSG_ROOM_NOTCHAR);
-    ch->Send("|CYou say, '" + argument + "|X|C'|X\n\r");
+    ch->Message("|W" + ch->name + " says, '" + argument + "|W'|X", Character::MSG_ROOM_NOTCHAR);
+    ch->Send("|WYou say, '" + argument + "|X|W'|X\n\r");
 }
 
 void cmd_tell(Character * ch, string argument)

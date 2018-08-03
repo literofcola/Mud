@@ -326,6 +326,34 @@ void Character::Message(const string & txt, MessageType msg_type, Character * vi
             break;
         }
 
+		case MSG_GROUP:
+		{
+			if (!group)
+				return;
+			for (int i = 0; i < Group::MAX_RAID_SIZE; i++)
+			{
+				if (group->members[i] != nullptr)
+				{
+					group->members[i]->Send(txt + "\n\r");
+				}
+			}
+			break;
+		}
+
+		case MSG_GROUP_NOTCHAR:
+		{
+			if (!group)
+				return;
+			for (int i = 0; i < Group::MAX_RAID_SIZE; i++)
+			{
+				if (group->members[i] != nullptr && group->members[i] != this)
+				{
+					group->members[i]->Send(txt + "\n\r");
+				}
+			}
+			break;
+		}
+
 		//case MSG_AREA: all characters in area (including mobs)?
 		//	break;
 
@@ -3546,6 +3574,11 @@ void Character::Notify(SubscriberManager * lm)
 		delayData.itemTarget = nullptr;
 		delay_active = false;
 	}
+
+	if (hasQuery && queryData == lm) //We have a query pending where the 'data' payload is the Character being deleted (group invite)
+	{
+		QueryClear();
+	}
 }
 
 void Character::AddTrigger(Trigger & trig)
@@ -3611,4 +3644,11 @@ void Character::AddClassSkills()
 			}
 		}
 	}
+}
+
+bool Character::HasGroup()
+{
+	if (group != nullptr)
+		return true;
+	return false;
 }

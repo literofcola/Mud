@@ -659,7 +659,6 @@ void cmd_title(Character * ch, string argument)
 	}
 }
 
-//TODO: pasted this from old Mudv2, needs work
 void cmd_group(Character * ch, string argument)
 {
 	if (!ch || ch->IsNPC())
@@ -670,19 +669,25 @@ void cmd_group(Character * ch, string argument)
 	Character * vch;
 
 	argument = Utilities::one_argument(argument, arg1);
-	argument = Utilities::one_argument(argument, arg2);
-
+	
 	if (!Utilities::str_cmp(arg1, "invite"))
 	{
+		argument = Utilities::one_argument(argument, arg2);
+
+		if (ch->HasGroup() && !ch->group->IsGroupLeader(ch))
+		{
+			ch->Send("Only the group leader can invite players.\n\r");
+			return;
+		}
 		if (arg2.empty())
 		{
 			ch->Send("Invite who?\n\r");
 			return;
 		}
 		int slot = -1;
-		if (ch->group)
+		if (ch->HasGroup())
 			slot = ch->group->GetNextFreeSlot();
-		if (ch->group && ((!ch->group->israid && slot >= 4) || slot == -1))
+		if (ch->HasGroup() && slot == -1)
 		{
 			ch->Send("Your group is full.\n\r");
 			return;
@@ -694,7 +699,7 @@ void cmd_group(Character * ch, string argument)
 				ch->Send("You can't invite yourself.\n\r");
 				return;
 			}
-			if (vch->group)
+			if (vch->HasGroup())
 			{
 				ch->Send("That player already has a group.\n\r");
 				return;
@@ -706,6 +711,7 @@ void cmd_group(Character * ch, string argument)
 			}
 			ch->Send("You invite " + vch->name + " to join your group.\n\r");
 			vch->SetQuery(ch->name + " has invited you to join " + ch->HisHer() + " group ('accept'/'decline') ", (void*)ch, cmd_groupQuery);
+			ch->AddSubscriber(vch); //If the person asking us to join disappears before we answer it's a problem
 			vch->Send("\n\r");
 		}
 		else
@@ -717,6 +723,44 @@ void cmd_group(Character * ch, string argument)
 	}
 	if (!Utilities::str_cmp(arg1, "remove"))
 	{
+		argument = Utilities::one_argument(argument, arg2);
+
+		if (!ch->HasGroup())
+		{
+			ch->Send("You aren't in a group.\n\r");
+			return;
+		}
+		if (!ch->group->IsGroupLeader(ch))
+		{
+			ch->Send("Only the group leader can remove players.\n\r");
+			return;
+		}
+		if (arg2.empty())
+		{
+			ch->Send("Who would you like to remove from your group?\n\r");
+			return;
+		}
+		Character * remove_me = ch->group->FindByName(arg2);
+		if (remove_me == nullptr)
+		{
+			ch->Send("A player with that name is not in your group.\n\r");
+			return;
+		}
+		if (remove_me == ch)
+		{
+			ch->Send("You cannot remove yourself from the group. Use \"group leave\".\n\r");
+			return;
+		}
+		remove_me->Send("You have been removed from the group.\n\r");
+		ch->group->Remove(remove_me);
+		ch->Message(remove_me->name + " has been removed from the group.", Character::MSG_GROUP);
+
+		if (ch->group->GetMemberCount() <= 1)
+		{
+			ch->Send("Your group has been disbanded.\n\r");
+			delete ch->group;
+			ch->group = nullptr;
+		}
 		return;
 	}
 	if (!Utilities::str_cmp(arg1, "raid"))
@@ -729,28 +773,81 @@ void cmd_group(Character * ch, string argument)
 		}
 		return;
 	}
+	if (!Utilities::str_cmp(arg1, "talk"))
+	{
+		if (!ch->HasGroup())
+		{
+			ch->Send("You aren't in a group.\n\r");
+			return;
+		}
+		if (argument.empty())
+		{
+			ch->Send("What would you like to say?\n\r");
+			return;
+		}
+		ch->Send("|CYou say to the group: '" + argument + "|C'|X\n\r");
+		ch->Message("|C" + ch->name + " says to the group, '" + argument + "|C'|X", Character::MSG_GROUP_NOTCHAR);
+		return;
+	}
+	if (!Utilities::str_cmp(arg1, "show"))
+	{
+		if (!ch->HasGroup())
+		{
+			ch->Send("You aren't in a group.\n\r");
+			return;
+		}
+		int group_size = Group::MAX_GROUP_SIZE;
+		if (ch->group->israid)
+			group_size = Group::MAX_RAID_SIZE;
+		string group_format;
+		for (int i = 0; i < group_size; i++)
+		{
+			if (ch->group->members[i] != nullptr)
+			{
+				group_format += ch->group->members[i]->name;
+				if (ch->group->members[i] == ch->group->leader)
+				{
+					group_format += "|Y*|X";
+				}
+				group_format += "\n\r";
+			}
+			else
+			{
+				group_format += "Empty\n\r";
+			}
+		}
+		ch->Send(group_format);
+		return;
+	}
 	ch->Send("group invite <player>\n\r");
-	ch->Send("group remove <player>\n\r");
-	ch->Send("group raid set/unset\n\r");
-	ch->Send("group leader <player>\n\r");
-	ch->Send("group promote <player>\n\r");
-	ch->Send("group demote <player>\n\r");
-	ch->Send("group move <player> <group #>\n\r");
+	ch->Send("group show\n\r");
+	//ch->Send("group remove <player>\n\r");
+	//ch->Send("group raid set/unset\n\r");
+	//ch->Send("group leader <player>\n\r");
+	//ch->Send("group promote <player>\n\r");
+	//ch->Send("group demote <player>\n\r");
+	//ch->Send("group move <player> <group #>\n\r");
 }
 
-//TODO: pasted this from old Mudv2, needs work
 bool cmd_groupQuery(Character *ch, string argument)
 {
 	Character * vch = (Character *)ch->GetQueryData();
 
 	if (!Utilities::str_cmp(argument, "accept"))
 	{
-		if (vch->group == NULL) //start a new group
+		vch->RemoveSubscriber(ch);
+		ch->QueryClear();
+
+		if (ch->HasGroup())
+		{
+			ch->Send("You already have your own group.\n\r");
+			return true;
+		}
+
+		if (!vch->HasGroup()) //start a new group
 		{
 			vch->group = new Group(vch);
-			ch->group = vch->group;
-			vch->group->members[1] = ch;
-			vch->group->count++;
+			vch->group->Add(ch);
 			vch->Send(ch->name + " has joined your group.\n\r");
 			ch->Send("You have joined " + vch->name + "'s group.\n\r");
 		}
@@ -763,20 +860,20 @@ bool cmd_groupQuery(Character *ch, string argument)
 			}
 			else
 			{
-				ch->group = vch->group;
-				vch->group->members[slot] = ch;
-				vch->group->count++;
-				vch->Send(ch->name + " has joined your group.\n\r");
-				ch->Send("You have joined " + vch->name + "'s group.\n\r");
+				if (vch->group->Add(ch))
+				{
+					vch->Send(ch->name + " has joined your group.\n\r");
+					ch->Send("You have joined " + vch->name + "'s group.\n\r");
+				}
 			}
 		}
-		ch->QueryClear();
 		return true;
 	}
 	else if (!Utilities::str_cmp(argument, "decline"))
 	{
 		vch->Send(ch->name + " declines your group invitation.\n\r");
 		ch->QueryClear();
+		vch->RemoveSubscriber(ch);
 		return true;
 	}
 	return false;

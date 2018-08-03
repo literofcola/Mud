@@ -21,9 +21,13 @@ Group::~Group()
 
 int Group::GetNextFreeSlot()
 {
-	for (int i = 0; i < MAX_RAID_SIZE; i++)
+	int group_size = MAX_GROUP_SIZE;
+	if (israid)
+		group_size = MAX_RAID_SIZE;
+
+	for (int i = 0; i < group_size; i++)
 	{
-		if (members[i] == NULL)
+		if (members[i] == nullptr)
 			return i;
 	}
 	return -1;
@@ -71,9 +75,44 @@ bool Group::IsEmptySubgroup(Character *ch)
 	return true;
 }
 
-void Group::Remove(Character *ch)
+bool Group::Add(Character * ch)
 {
-	members[FindCharacterSlot(ch)] = NULL;
+	int empty_slot = GetNextFreeSlot();
+	if (empty_slot == -1)
+		return false;
+	members[empty_slot] = ch;
+	ch->group = this;
+	count++;
+	return true;
+}
+
+bool Group::Remove(Character *ch)
+{
+	int char_slot = FindCharacterSlot(ch);
+	if (char_slot == -1)
+		return false;
+	members[char_slot] = nullptr;
+	ch->group = nullptr;
 	count--;
+	return true;
+}
+
+bool Group::IsGroupLeader(Character * ch)
+{
+	if (ch != nullptr && leader != nullptr && ch == leader)
+		return true;
+	return false;
+}
+
+Character * Group::FindByName(std::string name)
+{
+	for (int i = 0; i < Group::MAX_RAID_SIZE; i++)
+	{
+		if (members[i] != nullptr && !Utilities::str_cmp(members[i]->name, name))
+		{
+			return members[i];
+		}
+	}
+	return nullptr;
 }
 
