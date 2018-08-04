@@ -821,7 +821,7 @@ void cmd_group(Character * ch, string argument)
 	}
 	ch->Send("group invite <player>\n\r");
 	ch->Send("group show\n\r");
-	//ch->Send("group remove <player>\n\r");
+	ch->Send("group remove <player>\n\r");
 	//ch->Send("group raid set/unset\n\r");
 	//ch->Send("group leader <player>\n\r");
 	//ch->Send("group promote <player>\n\r");
