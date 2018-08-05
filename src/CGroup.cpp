@@ -2,7 +2,6 @@
 
 using namespace std;
 
-//TODO: pasted this from old Mudv2, needs work
 Group::Group(Character * l)
 {
 	israid = false;

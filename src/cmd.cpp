@@ -763,14 +763,96 @@ void cmd_group(Character * ch, string argument)
 		}
 		return;
 	}
+	if (!Utilities::str_cmp(arg1, "leave"))
+	{
+		if (!ch->HasGroup())
+		{
+			ch->Send("You aren't in a group.\n\r");
+			return;
+		}
+		ch->Message(ch->name + " has left the group.", Character::MSG_GROUP_NOTCHAR);
+		ch->Send("You have left the group.\n\r");
+		if (ch->group->GetMemberCount() <= 2)
+		{
+			ch->Message("Your group has been disbanded.", Character::MSG_GROUP_NOTCHAR);
+			for (int i = 0; i < Group::MAX_RAID_SIZE; i++)
+			{
+				if (ch->group->members[i] != nullptr && ch->group->members[i] != ch)
+				{
+					ch->group->members[i]->group = nullptr;
+				}
+			}
+			delete ch->group;
+			ch->group = nullptr;
+		}
+		else
+		{
+			if (ch->group->IsGroupLeader(ch))
+			{
+				for (int i = 0; i < Group::MAX_RAID_SIZE; i++)
+				{
+					if (ch->group->members[i] != ch && ch->group->members[i] != nullptr)
+					{
+						ch->group->leader = ch->group->members[i];
+						ch->group->leader->Message(ch->group->leader->name + " is now the group leader.", Character::MSG_GROUP_NOTCHAR);
+						ch->group->leader->Send("You are now the group leader.\n\r");
+						break;
+					}
+				}
+			}
+			ch->group->Remove(ch);
+		}
+		return;
+	}
 	if (!Utilities::str_cmp(arg1, "raid"))
 	{
-		if (!Utilities::str_cmp(arg2, "set"))
+		if (!ch->HasGroup())
 		{
+			ch->Send("You aren't in a group.\n\r");
+			return;
 		}
-		else if (!Utilities::str_cmp(arg2, "unset"))
+		if (!ch->group->IsGroupLeader(ch))
 		{
+			ch->Send("You aren't the group leader.\n\r");
+			return;
 		}
+		ch->group->israid = true;
+		ch->Message("You have joined a raid group.", Character::MSG_GROUP);
+		return;
+	}
+	if (!Utilities::str_cmp(arg1, "leader"))
+	{
+		if (!ch->HasGroup())
+		{
+			ch->Send("You aren't in a group.\n\r");
+			return;
+		}
+		if (!ch->group->IsGroupLeader(ch))
+		{
+			ch->Send("You aren't the group leader.\n\r");
+			return;
+		}
+		argument = Utilities::one_argument(argument, arg2);
+
+		if (arg2.empty())
+		{
+			ch->Send("Who would you like to make the new group leader?\n\r");
+			return;
+		}
+		Character * new_leader = ch->group->FindByName(arg2);
+		if (new_leader == nullptr)
+		{
+			ch->Send("A player with that name is not in your group.\n\r");
+			return;
+		}
+		if (new_leader == ch)
+		{
+			ch->Send("You are already the group leader.\n\r");
+			return;
+		}
+		ch->group->leader = new_leader;
+		new_leader->Message(new_leader->name + " is now the group leader.", Character::MSG_GROUP_NOTCHAR);
+		new_leader->Send("You are now the group leader.\n\r");
 		return;
 	}
 	if (!Utilities::str_cmp(arg1, "talk"))
@@ -796,36 +878,65 @@ void cmd_group(Character * ch, string argument)
 			ch->Send("You aren't in a group.\n\r");
 			return;
 		}
-		int group_size = Group::MAX_GROUP_SIZE;
-		if (ch->group->israid)
-			group_size = Group::MAX_RAID_SIZE;
-		string group_format;
-		for (int i = 0; i < group_size; i++)
+		stringstream group_format;
+
+		//Display non-raid group
+		if (!ch->group->israid)
 		{
-			if (ch->group->members[i] != nullptr)
+			group_format << "Your group (" << ch->group->GetMemberCount() << "/" << Group::MAX_GROUP_SIZE << "):\n\r";
+			for (int i = 0; i < Group::MAX_GROUP_SIZE; i++)
 			{
-				group_format += ch->group->members[i]->name;
-				if (ch->group->members[i] == ch->group->leader)
+				if (ch->group->members[i] != nullptr)
 				{
-					group_format += "|Y*|X";
+					group_format << ch->group->members[i]->name;
+					if (ch->group->members[i] == ch->group->leader)
+					{
+						group_format << "|Y*|X";
+					}
+					group_format << "\n\r";
 				}
-				group_format += "\n\r";
-			}
-			else
-			{
-				group_format += "Empty\n\r";
 			}
 		}
-		ch->Send(group_format);
+		//Display raid group
+		else
+		{
+			group_format << "Your raid group (" << ch->group->GetMemberCount() << "/" << Group::MAX_RAID_SIZE << "):\n\r";
+			for (int format_loop = 0; format_loop < (Group::MAX_RAID_SIZE / Group::MAX_GROUP_SIZE) / 2; format_loop++)
+			{
+				group_format << "  Group " << (format_loop * 2) + 1 << "                   ";
+				group_format << "Group " << (format_loop * 2) + 2 << "\n\r";
+				for (int i = 0; i < Group::MAX_GROUP_SIZE; i++)
+				{
+					for (int j = 0; j < 2; j++)
+					{
+						Character * current_member = ch->group->members[i + (format_loop * 8) + (j * 4)];
+						if (current_member != nullptr)
+						{
+							current_member->InCombat() ? group_format << "|R(X)|X" : group_format << "   ";
+							current_member == ch->group->leader ? group_format << "|Y*|X" : group_format << " ";
+
+							group_format << "|C" << left << setw(12) << current_member->name;
+						}
+						else
+						{
+							group_format << "Empty         ";
+						}
+					}
+					group_format << "\n\r";
+				}
+				group_format << "\n\r";
+			}
+		}
+		ch->Send(group_format.str());
 		return;
 	}
 	ch->Send("group invite <player>\n\r");
 	ch->Send("group show\n\r");
 	ch->Send("group remove <player>\n\r");
-	//ch->Send("group raid set/unset\n\r");
+	ch->Send("group leave\n\r");
+	ch->Send("group talk <message>\n\r");
+	//ch->Send("group raid\n\r");
 	//ch->Send("group leader <player>\n\r");
-	//ch->Send("group promote <player>\n\r");
-	//ch->Send("group demote <player>\n\r");
 	//ch->Send("group move <player> <group #>\n\r");
 }
 
