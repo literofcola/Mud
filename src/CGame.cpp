@@ -229,7 +229,7 @@ void Game::GameLoop(Server * server)
 
 			if(user->HasCommandReady())
 			{
-				user->lastInput = Game::currentTime; //idle timeout
+				user->lastInput = Game::currentTime; //idle timeout reset
                 string command = user->commandQueue.front();
 
                 //Check for telnet IAC response for MXP and MCCP
@@ -245,8 +245,6 @@ void Game::GameLoop(Server * server)
 						//Send immediately (only really necessary for MCCP)
 						server->deliver(user->GetClient(), Server::MXP_START);
 						server->deliver(user->GetClient(), MXP_LOCKLOCKED);
-                        //user->Send(MXP_START);
-                        //user->Send(MXP_LOCKLOCKED);
                         user->mxp = true;
                     }
 					else if(iac_response == Server::GMCP_DO)
@@ -270,7 +268,6 @@ void Game::GameLoop(Server * server)
 						}
 						//Send immediately
 						server->deliver(user->GetClient(), Server::MCCP_START);
-						//user->Send(MCCP_START);
 						user->mccp = true;
 					}
 
@@ -1408,6 +1405,7 @@ void Game::LoginHandler(Server * server, User * user, string argument)
 				Server::sqlQueue->Write("delete from player_cooldowns where player='" + user->character->name + "';");
 				Server::sqlQueue->Write("delete from player_active_quests where player='" + user->character->name + "';");
 				Server::sqlQueue->Write("delete from player_inventory where player='" + user->character->name + "';");
+				Server::sqlQueue->Write("delete from player_alias where player='" + user->character->name + "';");
 				user->SetDisconnect();
             }
             else

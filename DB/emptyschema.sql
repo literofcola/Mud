@@ -204,6 +204,21 @@ CREATE TABLE `player_active_quests` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `player_alias`
+--
+
+DROP TABLE IF EXISTS `player_alias`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `player_alias` (
+  `player` varchar(12) NOT NULL,
+  `word` varchar(25) NOT NULL,
+  `substitution` varchar(512) NOT NULL,
+  PRIMARY KEY (`player`,`word`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `player_class_data`
 --
 
@@ -470,4 +485,4 @@ CREATE TABLE `triggers` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-08-01 20:44:49
+-- Dump completed on 2018-08-06 13:27:29

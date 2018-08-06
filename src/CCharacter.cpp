@@ -1210,37 +1210,16 @@ Character * Character::LoadPlayer(std::string name, User * user)
 			i++;
 		}
 	}
-	/*
-    string activequests = (string)row["active_quests"];
-    first=0; last=0;
-    int i = 0;
-    while(first < (int)activequests.length())
-    {
-        last = (int)activequests.find(";", first);
-        int firstcomma = (int)activequests.find(",", first);
-        int id = Utilities::atoi(activequests.substr(first, firstcomma - first));
-        Quest * q;
-        if((q = Game::GetGame()->GetQuest(id)) != NULL)
-        {
-            loaded->player->questLog.push_back(q);
-            std::vector<int> playerObjectives;
-            loaded->player->questObjectives.push_back(playerObjectives);
 
-            int count;
-            for(int lastcomma = (int)activequests.find(",", firstcomma+1); lastcomma != std::string::npos && lastcomma < last; lastcomma = (int)activequests.find(",", firstcomma))
-            {
-                count = Utilities::atoi(activequests.substr(firstcomma+1, lastcomma - firstcomma+1));
-                loaded->player->questObjectives[i].push_back(count);
-                firstcomma = lastcomma+1;
-            }
-            //search for a ';' to grab the last objective
-            count = Utilities::atoi(activequests.substr(firstcomma+1, activequests.find(";", firstcomma) - firstcomma+1));
-            loaded->player->questObjectives[i].push_back(count);
-        }
-        i++;
-        first = last + 1;
-    }
-	*/
+	StoreQueryResult playeraliasres = Server::sqlQueue->Read("SELECT * FROM player_alias where player='" + loaded->name + "'");
+	for (iter = playeraliasres.begin(); iter != playeraliasres.end(); ++iter)
+	{
+		Row aliasrow = *iter;
+		string word = (string)aliasrow["word"];
+		string substitution = (string)aliasrow["substitution"];
+		loaded->player->alias[word] = substitution;
+	}
+	
     return loaded;
 }
 
@@ -1315,7 +1294,6 @@ void Character::Save()
 				Server::sqlQueue->Write(equippedsql);
 			}
 		}
-
 		std::list<Item *>::iterator inviter;
 		for (inviter = player->inventory.begin(); inviter != player->inventory.end(); ++inviter)
 		{
@@ -1332,6 +1310,15 @@ void Character::Save()
 			string classsql = "INSERT INTO player_class_data (player, class, level) values ('" + name + "',";
 			classsql += Utilities::itos((*classiter).id) + "," + Utilities::itos((*classiter).level) + ")";
 			Server::sqlQueue->Write(classsql);
+		}
+
+		//player aliases
+		Server::sqlQueue->Write("DELETE FROM player_alias where player='" + name + "'");
+		for (auto aliasiter = player->alias.begin(); aliasiter != player->alias.end(); ++aliasiter)
+		{
+			string aliassql = "INSERT INTO player_alias (player, word, substitution) values ('" + name + "','";
+			aliassql += Utilities::SQLFixQuotes(aliasiter->first) + "','" + Utilities::SQLFixQuotes(aliasiter->second) + "')";
+			Server::sqlQueue->Write(aliassql);
 		}
 
         player->saved = (int)Game::GetGame()->currentTime;

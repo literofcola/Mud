@@ -1800,3 +1800,101 @@ bool returnToGYQuery(Character * ch, string argument)
 	}
 	return false;
 }
+
+void cmd_alias(Character * ch, string argument)
+{
+	if (ch->IsNPC())
+		return;
+
+	string new_alias;
+	argument = Utilities::one_argument(argument, new_alias);
+
+	if (new_alias.empty())
+	{
+		if (ch->player->alias.empty())
+		{
+			ch->Send("You have no aliases.\n\r");
+			ch->Send("Use: alias <word>\n\r     alias <word> <substitution>\n\r");
+		}
+		else
+		{
+			ch->Send("Existing aliases:\n\r");
+			for (auto iter = ch->player->alias.begin(); iter != ch->player->alias.end(); iter++)
+			{
+				ch->Send("'" + iter->first + "' : '" + iter->second + "'\n\r");
+			}
+		}
+		return;
+	}
+
+	if (!Utilities::str_cmp(new_alias, "alias") || !Utilities::str_cmp(new_alias, "unalias"))
+	{
+		ch->Send("That word is reserved.\n\r");
+		return;
+	}
+
+	auto alias_iter = ch->player->alias.find(new_alias);
+	if (alias_iter != ch->player->alias.end())
+	{
+		if (!argument.empty())
+		{
+			ch->Send("That alias already exists.\n\r");
+		}
+		ch->Send(new_alias + ": " + alias_iter->second + "\n\r");
+		return;
+	}
+	if (argument.empty())
+	{
+		ch->Send("Alias '" + new_alias + "' to what?\n\r");
+		return;
+	}
+	if (argument.length() > MAX_COMMAND_LENGTH)
+	{
+		ch->Send("That alias substitution is too long. Maximum length is " + Utilities::itos(MAX_COMMAND_LENGTH) + " characters.\n\r");
+		return;
+	}
+	if (new_alias.length() > 25)
+	{
+		ch->Send("That alias keyword is too long. Maximum length is 25 characters.\n\r");
+		return;
+	}
+	ch->player->alias[new_alias] = argument;
+	ch->Send("Alias created: '" + new_alias + "': " + argument + "\n\r");
+}
+
+void cmd_unalias(Character * ch, string argument)
+{
+	if (ch->IsNPC())
+		return;
+
+	if (ch->player->alias.empty())
+	{
+		ch->Send("You have no aliases.\n\r");
+		ch->Send("Use: unalias <word>\n\r");
+		return;
+	}
+
+	string remove_alias;
+	argument = Utilities::one_argument(argument, remove_alias);
+
+	if (remove_alias.empty())
+	{
+		ch->Send("Use: unalias <word>\n\r");
+		ch->Send("Existing aliases:\n\r");
+		for (auto iter = ch->player->alias.begin(); iter != ch->player->alias.end(); iter++)
+		{
+			ch->Send("'" + iter->first + "' : '" + iter->second + "'\n\r");
+		}
+		return;
+	}
+
+	auto iter = ch->player->alias.find(remove_alias);
+	if (iter == ch->player->alias.end())
+	{
+		ch->Send("You don't have an alias with that name.\n\r");
+		return;
+	}
+
+	ch->player->alias.erase(remove_alias);
+	ch->Send("Alias '" + remove_alias + "' deleted.\n\r");
+}

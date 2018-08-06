@@ -103,13 +103,12 @@ class Command cmd_table[] =
     /*
      * Configuration commands.
      */
-    /*{ "alia",		cmd_alia,		POS_DEAD,		1,  LOG_NORMAL, 0 },
-    { "alias",		cmd_alias,		POS_DEAD,		1,  LOG_NORMAL, 1 },
-    { "chat", 		cmd_chat, 		POS_STANDING,	1,  LOG_NORMAL, 1 },
+    { "alias",		cmd_alias,		1, 0, 1, 1, Character::POSITION_ANY },
+    /*{ "chat", 		cmd_chat, 		POS_STANDING,	1,  LOG_NORMAL, 1 },
     { "description",cmd_description,	POS_DEAD,		1,  LOG_NORMAL, 1 },*/
     { "set",		cmd_set,		1, 0, 1, 1, Character::POSITION_ANY },
     { "title",		cmd_title,		1, 0, 1, 1, Character::POSITION_ANY },
-    /*{ "unalias",	cmd_unalias,		POS_DEAD,		1,  LOG_NORMAL, 1 },*/
+	{ "unalias",	cmd_unalias,	1, 0, 1, 1, Character::POSITION_ANY },
 
     /*
      * Communication commands.
@@ -444,8 +443,6 @@ Command * Command::GetCurrentCmdTable(Character * ch)
  */
 bool Command::Interpret(Character * ch, string argument)
 {
-	string command;
-    int cmd;
     bool found = false;
 
 	if(ch->HasQuery())
@@ -453,6 +450,29 @@ bool Command::Interpret(Character * ch, string argument)
 		if((ch->GetQueryFunc())(ch, argument))
 			return true;
 		//if the question wasn't answered, interpret normally
+	}
+
+	//Alias handling
+	if (!ch->IsNPC() && !ch->player->alias.empty()
+		&& (Utilities::str_prefix("alias", argument) || Utilities::str_prefix("unalias", argument)))
+	{
+		string command_remainder = argument;
+		string possible_alias;
+		string new_command;
+		command_remainder = Utilities::one_argument(command_remainder, possible_alias);
+		
+		auto map_iter = ch->player->alias.find(possible_alias);
+		if (map_iter != ch->player->alias.end())
+		{
+			new_command = map_iter->second;
+			new_command += command_remainder;
+			argument = new_command;
+			
+			if (argument.length() > MAX_COMMAND_LENGTH)
+			{
+				argument = argument.substr(0, MAX_COMMAND_LENGTH);
+			}
+		}
 	}
 
     // Strip leading spaces.
@@ -466,6 +486,7 @@ bool Command::Interpret(Character * ch, string argument)
      //Grab the command word.
      //Special parsing so ' can be a command,
      //also no spaces needed after punctuation.
+	string command;
     if(!argument.empty() && !iswalpha(argument[0]) && !iswdigit(argument[0]))
     {
 		command = argument[0];
@@ -493,6 +514,7 @@ bool Command::Interpret(Character * ch, string argument)
     }
 
     // Look for command in command table.
+	int cmd;
     for(cmd = 0; !found && whichTable[cmd].name.length() > 0; cmd++)
     {
         //Check for matching command name and level requirements
