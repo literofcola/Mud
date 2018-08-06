@@ -411,12 +411,13 @@ void Game::GameLoop(Server * server)
 						user->character->SaveCooldowns();
 						user->character->Save();
 					}
-					if (!user->character->IsGhost())
-						user->character->Message(user->character->name + " has left the game.", Character::MSG_ROOM_NOTCHAR);
+					if (user->character->HasGroup())
+						cmd_group(user->character, "leave");
 					user->character->ExitCombat();
 					user->character->ClearTarget();
+					if (!user->character->IsGhost())
+						user->character->Message(user->character->name + " has left the game.", Character::MSG_ROOM_NOTCHAR);
 					user->character->ChangeRooms(NULL);
-
                     user->character->NotifySubscribers();
                     characters.remove(user->character);
                 }

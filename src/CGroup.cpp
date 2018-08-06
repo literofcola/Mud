@@ -18,7 +18,7 @@ Group::~Group()
 {
 }
 
-int Group::GetNextFreeSlot()
+int Group::FindNextEmptySlot()
 {
 	int group_size = MAX_GROUP_SIZE;
 	if (israid)
@@ -32,7 +32,7 @@ int Group::GetNextFreeSlot()
 	return -1;
 }
 
-int Group::FindCharacterSlot(Character *ch)
+int Group::FindMemberSlot(Character *ch)
 {
 	for (int i = 0; i < MAX_RAID_SIZE; i++)
 	{
@@ -42,7 +42,7 @@ int Group::FindCharacterSlot(Character *ch)
 	return -1;
 }
 
-int Group::FindFirstInSubgroup(Character *ch)
+int Group::FindFirstSlotInSubgroup(Character *ch)
 {
 	int i;
 	for (i = 0; i < MAX_RAID_SIZE; i++)
@@ -52,23 +52,28 @@ int Group::FindFirstInSubgroup(Character *ch)
 	}
 	if (i != MAX_RAID_SIZE)
 	{
-		if (i % MAX_GROUP_SIZE == 0)
-			return i;
 		return (i / MAX_GROUP_SIZE) * MAX_GROUP_SIZE;
 	}
-
 	return -1;
 }
 
-bool Group::IsEmptySubgroup(Character *ch)
+bool Group::IsSlotEmpty(int slot)
 {
-	if (!ch->group)
+	if (slot <= 0 || slot > MAX_RAID_SIZE)
 		return false;
 
-	int start = (FindCharacterSlot(ch) / MAX_GROUP_SIZE) * MAX_GROUP_SIZE;
+	if (members[slot] == nullptr)
+		return true;
+
+	return false;
+}
+
+bool Group::IsSubgroupEmpty(int slot)
+{
+	int start = (slot / MAX_GROUP_SIZE) * MAX_GROUP_SIZE;
 	for (int i = start; i < start + MAX_GROUP_SIZE; i++)
 	{
-		if (members[i] != NULL)
+		if (members[i] != nullptr)
 			return false;
 	}
 	return true;
@@ -76,7 +81,7 @@ bool Group::IsEmptySubgroup(Character *ch)
 
 bool Group::Add(Character * ch)
 {
-	int empty_slot = GetNextFreeSlot();
+	int empty_slot = FindNextEmptySlot();
 	if (empty_slot == -1)
 		return false;
 	members[empty_slot] = ch;
@@ -87,13 +92,23 @@ bool Group::Add(Character * ch)
 
 bool Group::Remove(Character *ch)
 {
-	int char_slot = FindCharacterSlot(ch);
+	int char_slot = FindMemberSlot(ch);
 	if (char_slot == -1)
 		return false;
 	members[char_slot] = nullptr;
 	ch->group = nullptr;
 	count--;
 	return true;
+}
+
+void Group::Move(Character * ch, int slot) //slot is indexed from 1
+{
+	int from = FindMemberSlot(ch);
+	if (from == -1 || from == slot || slot <= 0 || slot > MAX_RAID_SIZE)
+		return;
+
+	members[from] = members[slot];
+	members[slot] = ch;
 }
 
 bool Group::IsGroupLeader(Character * ch)

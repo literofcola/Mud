@@ -465,7 +465,7 @@ bool Command::Interpret(Character * ch, string argument)
 		if (map_iter != ch->player->alias.end())
 		{
 			new_command = map_iter->second;
-			new_command += command_remainder;
+			new_command += " " + command_remainder;
 			argument = new_command;
 			
 			if (argument.length() > MAX_COMMAND_LENGTH)

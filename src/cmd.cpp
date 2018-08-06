@@ -686,7 +686,7 @@ void cmd_group(Character * ch, string argument)
 		}
 		int slot = -1;
 		if (ch->HasGroup())
-			slot = ch->group->GetNextFreeSlot();
+			slot = ch->group->FindNextEmptySlot();
 		if (ch->HasGroup() && slot == -1)
 		{
 			ch->Send("Your group is full.\n\r");
@@ -816,6 +816,11 @@ void cmd_group(Character * ch, string argument)
 			ch->Send("You aren't the group leader.\n\r");
 			return;
 		}
+		if (ch->group->israid)
+		{
+			ch->Send("You are already in a raid group.\n\r");
+			return;
+		}
 		ch->group->israid = true;
 		ch->Message("You have joined a raid group.", Character::MSG_GROUP);
 		return;
@@ -871,6 +876,48 @@ void cmd_group(Character * ch, string argument)
 		ch->Message("|C" + ch->name + " says to the group, '" + argument + "|C'|X", Character::MSG_GROUP_NOTCHAR);
 		return;
 	}
+	if (!Utilities::str_cmp(arg1, "move"))
+	{
+		if (!ch->HasGroup())
+		{
+			ch->Send("You aren't in a group.\n\r");
+			return;
+		}
+		if (!ch->group->IsGroupLeader(ch))
+		{
+			ch->Send("You aren't the group leader.\n\r");
+			return;
+		}
+		if (!ch->group->israid)
+		{
+			ch->Send("You aren't in a raid group.\n\r");
+			return;
+		}
+		string player_arg;
+		string slot_arg;
+		argument = Utilities::one_argument(argument, player_arg);
+		argument = Utilities::one_argument(argument, slot_arg);
+
+		if (player_arg.empty() || slot_arg.empty() || !Utilities::IsNumber(slot_arg))
+		{
+			ch->Send("Usage: group move <player> <slot #>\n\r");
+			return;
+		}
+		Character * group_member = ch->group->FindByName(player_arg);
+		if (!group_member)
+		{
+			ch->Send("That player is not in your group.\n\r");
+			return;
+		}
+		int slot_num = Utilities::atoi(slot_arg);
+		if (slot_num <= 0 || slot_num > Group::MAX_RAID_SIZE)
+		{
+			ch->Send("Slot number out of range.\n\r");
+			return;
+		}
+		ch->group->Move(group_member, slot_num - 1);
+		return;
+	}
 	if (!Utilities::str_cmp(arg1, "show"))
 	{
 		if (!ch->HasGroup())
@@ -903,7 +950,7 @@ void cmd_group(Character * ch, string argument)
 			group_format << "Your raid group (" << ch->group->GetMemberCount() << "/" << Group::MAX_RAID_SIZE << "):\n\r";
 			for (int format_loop = 0; format_loop < (Group::MAX_RAID_SIZE / Group::MAX_GROUP_SIZE) / 2; format_loop++)
 			{
-				group_format << "  Group " << (format_loop * 2) + 1 << "                   ";
+				group_format << "           Group " << (format_loop * 2) + 1 << "                  ";
 				group_format << "Group " << (format_loop * 2) + 2 << "\n\r";
 				for (int i = 0; i < Group::MAX_GROUP_SIZE; i++)
 				{
@@ -915,11 +962,31 @@ void cmd_group(Character * ch, string argument)
 							current_member->InCombat() ? group_format << "|R(X)|X" : group_format << "   ";
 							current_member == ch->group->leader ? group_format << "|Y*|X" : group_format << " ";
 
-							group_format << "|C" << left << setw(12) << current_member->name;
+							group_format << "|C" << left << setw(12) << current_member->name << "|X";
+
+							//Health
+							int percent;
+							string statColor;
+							if (current_member->GetHealth() > 0 && current_member->GetMaxHealth() > 0)
+								percent = (current_member->GetHealth() * 100) / current_member->GetMaxHealth();
+							else
+								percent = 0;
+
+							if (percent >= 75)
+								statColor = "|x";
+							else if (percent >= 50)
+								statColor = "|G";
+							else if (percent >= 25)
+								statColor = "|Y";
+							else
+								statColor = "|R";
+
+							group_format << statColor << right << setw(4) << current_member->GetHealth() << "/|X" << left << setw(4) << current_member->GetMaxHealth();
+
 						}
 						else
 						{
-							group_format << "Empty         ";
+							group_format << "    Empty                ";
 						}
 					}
 					group_format << "\n\r";
@@ -935,9 +1002,9 @@ void cmd_group(Character * ch, string argument)
 	ch->Send("group remove <player>\n\r");
 	ch->Send("group leave\n\r");
 	ch->Send("group talk <message>\n\r");
-	//ch->Send("group raid\n\r");
-	//ch->Send("group leader <player>\n\r");
-	//ch->Send("group move <player> <group #>\n\r");
+	ch->Send("group raid\n\r");
+	ch->Send("group leader <player>\n\r");
+	ch->Send("group move <player> <slot #>\n\r");
 }
 
 bool cmd_groupQuery(Character *ch, string argument)
@@ -964,7 +1031,7 @@ bool cmd_groupQuery(Character *ch, string argument)
 		}
 		else //joining an existing group
 		{
-			int slot = vch->group->GetNextFreeSlot();
+			int slot = vch->group->FindNextEmptySlot();
 			if ((!vch->group->israid && slot >= Group::MAX_GROUP_SIZE) || slot == -1)
 			{
 				ch->Send("That group is full.\n\r");

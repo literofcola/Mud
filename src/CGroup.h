@@ -17,12 +17,15 @@ public:
 	Character * leader;
 	bool israid;
 
-	int GetNextFreeSlot();
-	int FindCharacterSlot(Character *ch);  //??
-	int FindFirstInSubgroup(Character *ch); //??
-	bool IsEmptySubgroup(Character *ch);
+	int FindNextEmptySlot();
+	//int FindNextEmptySlotInSubgroup(int group);
+	int FindMemberSlot(Character *ch);
+	int FindFirstSlotInSubgroup(Character *ch);
+	bool IsSlotEmpty(int slot);
+	bool IsSubgroupEmpty(int slot);
 	bool Add(Character * ch);
 	bool Remove(Character *ch);
+	void Move(Character * ch, int slot);
 	bool IsGroupLeader(Character * ch);
 	Character * FindByName(std::string name);
 	int GetMemberCount() { return count; };
