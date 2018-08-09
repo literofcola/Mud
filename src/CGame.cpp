@@ -2378,10 +2378,12 @@ int Game::ExperienceForLevel(int level)
 
 int Game::CalculateExperience(Character * ch, Character * victim)
 {
-	if (LevelDifficulty(ch->level, victim->level) == 0) //no xp for "gray" con npcs
+	if (ch->HasGroup() && ch->group->IsRaidGroup()) //zero experience in a raid group
 		return 0;
-	//todo: use threat table to determine if this character was helped outside of tapped group
-	// and group modifiers if helpers wouldnt get exp from the npc...
+
+	if (LevelDifficulty(ch->level, victim->level) == 0) //zero experience for "gray" level npcs
+		return 0;
+	
 	double xp = ch->level * 5 + 45;	//base xp
 	if (victim->level > ch->level)
 	{
@@ -2395,6 +2397,15 @@ int Game::CalculateExperience(Character * ch, Character * victim)
 		double difference = ch->level - victim->level;
 		xp = xp * (1.0 - (difference / 7.0));		//lower level victim, less exp
 	}
+
+	//Group adjustment, equal share + 10%
+	if (ch->HasGroup())
+	{
+		int group_size = ch->group->GetMemberCount();
+		xp /= group_size;
+		xp += xp * 0.1;
+	}
+
 	return (int)ceil(xp);
 }
 

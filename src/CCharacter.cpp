@@ -2090,7 +2090,8 @@ void Character::AutoAttack(Character * victim)
 			GenerateRageOnAttack(damage_main, weaponSpeed_main, true, false);
 
 			string tapcolor = "|G";
-			if (victim->GetTap() != nullptr && !this->HasTap(victim))
+			Character * thetap = victim->GetTap();
+			if (thetap != nullptr && thetap != this && !thetap->InSameGroup(this))
 			{
 				tapcolor = "|D";
 			}
@@ -2117,7 +2118,8 @@ void Character::AutoAttack(Character * victim)
 			GenerateRageOnAttack(damage_off, weaponSpeed_off, false, false);
 
 			string tapcolor = "|G";
-			if (victim->GetTap() != nullptr && !this->HasTap(victim))
+			Character * thetap = victim->GetTap();
+			if (thetap != nullptr && thetap != this && !thetap->InSameGroup(this))
 			{
 				tapcolor = "|D";
 			}
@@ -2432,7 +2434,6 @@ void Character::OnDeath()
 		if (threat->ch->GetTarget() && threat->ch->GetTarget() == this)
 		{
 			threat->ch->meleeActive = false;
-			//threat->ch->ClearTarget();
 		}
 		if (threat->ch->comboPointTarget && threat->ch->comboPointTarget == this)
 		{
@@ -2453,10 +2454,11 @@ void Character::OnDeath()
 	}
 	else if (IsNPC()) //NPC killed, figure out by who...
 	{
-		//ChangeRooms(NULL);
 		Character * tap = nullptr;
 		Character * highdamage = nullptr;
-		int damage = 0;
+		int group_damage = 0;
+		int other_damage = 0;
+		int highest_damage = 0;
 		//find out who has the tap
 		std::list<Threat>::iterator iter;
 		for (iter = threatList.begin(); iter != threatList.end(); ++iter)
@@ -2465,12 +2467,13 @@ void Character::OnDeath()
 			{
 				tap = (*iter).ch;
 			}
-			if ((*iter).damage >= damage)
+			if ((*iter).damage >= highest_damage) //also find the individual with the highest damage for the (bug?) case where no one has the tap
 			{
-				damage = (*iter).damage;
+				highest_damage = (*iter).damage;
 				highdamage = (*iter).ch;
 			}
 		}
+
 		if (!highdamage)
 		{
 			LogFile::Log("error", "OnDeath(): npc killed with null highdamage");
@@ -2481,32 +2484,78 @@ void Character::OnDeath()
 			LogFile::Log("error", "OnDeath(): npc killed with null tap");
 			tap = highdamage;
 		}
-		
-		if (highdamage == tap && !highdamage->IsNPC() && !tap->IsNPC())
+
+		//now that we know who has the tap, go through the list again to total 
+		// all the damage done by their group, and damage done outside of group
+		for (iter = threatList.begin(); iter != threatList.end(); ++iter)
 		{
-			//only give credit if the tap (todo: or his group) also has the highest damage, and it wasnt a NPC doing the killing
-			int exp = Game::CalculateExperience(tap, this);
-			tap->Send("|BYou have gained |Y" + Utilities::itos(exp) + "|B experience.|X\n\r");
-			tap->ApplyExperience(exp);
-			std::list<DropData>::iterator dropiter;
-			for (dropiter = drops.begin(); dropiter != drops.end(); ++dropiter)
+			if (iter->ch == tap || iter->ch->InSameGroup(tap))
 			{
-				if (Server::rand() % 100 <= (*dropiter).percent && (*dropiter).id.size() > 0)
-				{
-					int which = Server::rand() % ((int)(*dropiter).id.size());
-					Item * drop = Game::GetGame()->GetItemIndex((*dropiter).id[which]);
-					tap->Send("You receive loot: " + (string)Item::quality_strings[drop->quality] + drop->name + "|X.\n\r");
-					tap->Message(tap->name + " receives loot: " + Item::quality_strings[drop->quality] + drop->name + "|X.\n\r",
-						Character::MSG_ROOM_NOTCHAR);
-					tap->player->NewItemInventory(drop);
-				}
+				group_damage += iter->damage;
 			}
-			if (tap->player)
+			else
 			{
-				tap->player->QuestCompleteObjective(Quest::OBJECTIVE_KILLNPC, (void*)this);
+				other_damage += iter->damage;
 			}
 		}
-		ExitCombat();			//Removes our threat list
+
+		if(group_damage >= other_damage) //The tap's group did most of the damage, give rewards
+		{
+			if (tap->HasGroup())
+			{
+				for (int i = 0; i < Group::MAX_RAID_SIZE; i++)
+				{
+					Character * group_member = tap->group->members[i];
+					if (group_member != nullptr && FindDistance(this->room, group_member->room, 5) != -1)
+					{
+						int exp = Game::CalculateExperience(group_member, this);
+						group_member->Send("|BYou have gained |Y" + Utilities::itos(exp) + "|B experience.|X\n\r");
+						group_member->ApplyExperience(exp);
+						std::list<DropData>::iterator dropiter;
+						for (dropiter = drops.begin(); dropiter != drops.end(); ++dropiter)
+						{
+							if (Server::rand() % 100 <= (*dropiter).percent && (*dropiter).id.size() > 0)
+							{
+								int which = Server::rand() % ((int)(*dropiter).id.size());
+								Item * drop = Game::GetGame()->GetItemIndex((*dropiter).id[which]);
+								group_member->Send("You receive loot: " + (string)Item::quality_strings[drop->quality] + drop->name + "|X.\n\r");
+								group_member->Message(group_member->name + " receives loot: " + Item::quality_strings[drop->quality] + drop->name + "|X.",
+									Character::MSG_ROOM_NOTCHAR);
+								group_member->player->NewItemInventory(drop);
+							}
+						}
+						if (group_member->player)
+						{
+							group_member->player->QuestCompleteObjective(Quest::OBJECTIVE_KILLNPC, (void*)this);
+						}
+					}
+				}
+			}
+			else
+			{
+				int exp = Game::CalculateExperience(tap, this);
+				tap->Send("|BYou have gained |Y" + Utilities::itos(exp) + "|B experience.|X\n\r");
+				tap->ApplyExperience(exp);
+				std::list<DropData>::iterator dropiter;
+				for (dropiter = drops.begin(); dropiter != drops.end(); ++dropiter)
+				{
+					if (Server::rand() % 100 <= (*dropiter).percent && (*dropiter).id.size() > 0)
+					{
+						int which = Server::rand() % ((int)(*dropiter).id.size());
+						Item * drop = Game::GetGame()->GetItemIndex((*dropiter).id[which]);
+						tap->Send("You receive loot: " + (string)Item::quality_strings[drop->quality] + drop->name + "|X.\n\r");
+						tap->Message(tap->name + " receives loot: " + Item::quality_strings[drop->quality] + drop->name + "|X.",
+							Character::MSG_ROOM_NOTCHAR);
+						tap->player->NewItemInventory(drop);
+					}
+				}
+				if (tap->player)
+				{
+					tap->player->QuestCompleteObjective(Quest::OBJECTIVE_KILLNPC, (void*)this);
+				}
+			}
+		}
+		ExitCombat(); //Removes NPC's threat list
 	}
 	SetCorpse();
 }
@@ -3636,6 +3685,15 @@ void Character::AddClassSkills()
 bool Character::HasGroup()
 {
 	if (group != nullptr)
+		return true;
+	return false;
+}
+
+bool Character::InSameGroup(Character * ch)
+{
+	if (ch == this)
+		return true;
+	if (HasGroup() && ch->HasGroup() && group == ch->group)
 		return true;
 	return false;
 }

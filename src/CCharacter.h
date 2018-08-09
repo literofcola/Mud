@@ -293,6 +293,7 @@ public:
     double GetCooldownRemaining(Skill * sk);
 	void AddClassSkills();
 	bool HasGroup();
+	bool InSameGroup(Character * ch);
 
     bool IsNPC();
 	bool IsPlayer();

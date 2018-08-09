@@ -816,12 +816,12 @@ void cmd_group(Character * ch, string argument)
 			ch->Send("You aren't the group leader.\n\r");
 			return;
 		}
-		if (ch->group->israid)
+		if (ch->group->IsRaidGroup())
 		{
 			ch->Send("You are already in a raid group.\n\r");
 			return;
 		}
-		ch->group->israid = true;
+		ch->group->MakeRaidGroup();
 		ch->Message("You have joined a raid group.", Character::MSG_GROUP);
 		return;
 	}
@@ -888,7 +888,7 @@ void cmd_group(Character * ch, string argument)
 			ch->Send("You aren't the group leader.\n\r");
 			return;
 		}
-		if (!ch->group->israid)
+		if (!ch->group->IsRaidGroup())
 		{
 			ch->Send("You aren't in a raid group.\n\r");
 			return;
@@ -928,7 +928,7 @@ void cmd_group(Character * ch, string argument)
 		stringstream group_format;
 
 		//Display non-raid group
-		if (!ch->group->israid)
+		if (!ch->group->IsRaidGroup())
 		{
 			group_format << "Your group (" << ch->group->GetMemberCount() << "/" << Group::MAX_GROUP_SIZE << "):\n\r";
 			for (int i = 0; i < Group::MAX_GROUP_SIZE; i++)
@@ -1032,7 +1032,7 @@ bool cmd_groupQuery(Character *ch, string argument)
 		else //joining an existing group
 		{
 			int slot = vch->group->FindNextEmptySlot();
-			if ((!vch->group->israid && slot >= Group::MAX_GROUP_SIZE) || slot == -1)
+			if ((!vch->group->IsRaidGroup() && slot >= Group::MAX_GROUP_SIZE) || slot == -1)
 			{
 				ch->Send("That group is full.\n\r");
 			}

@@ -4,7 +4,7 @@ using namespace std;
 
 Group::Group(Character * l)
 {
-	israid = false;
+	raid = false;
 	leader = l;
 	count = 1;
 	for (int i = 0; i < MAX_GROUP_SIZE; i++)
@@ -21,7 +21,7 @@ Group::~Group()
 int Group::FindNextEmptySlot()
 {
 	int group_size = MAX_GROUP_SIZE;
-	if (israid)
+	if (raid)
 		group_size = MAX_RAID_SIZE;
 
 	for (int i = 0; i < group_size; i++)
@@ -128,5 +128,15 @@ Character * Group::FindByName(std::string name)
 		}
 	}
 	return nullptr;
+}
+
+bool Group::IsRaidGroup()
+{
+	return raid;
+}
+
+void Group::MakeRaidGroup()
+{
+	raid = true;
 }
 

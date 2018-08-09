@@ -15,10 +15,8 @@ public:
 
 	Character * members[Group::MAX_RAID_SIZE];
 	Character * leader;
-	bool israid;
 
 	int FindNextEmptySlot();
-	//int FindNextEmptySlotInSubgroup(int group);
 	int FindMemberSlot(Character *ch);
 	int FindFirstSlotInSubgroup(Character *ch);
 	bool IsSlotEmpty(int slot);
@@ -29,9 +27,12 @@ public:
 	bool IsGroupLeader(Character * ch);
 	Character * FindByName(std::string name);
 	int GetMemberCount() { return count; };
+	bool IsRaidGroup();
+	void MakeRaidGroup();
 
 private:
 	int count;
+	bool raid;
 };
 
 #endif //CGROUP_H
