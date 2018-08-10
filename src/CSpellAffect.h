@@ -70,7 +70,7 @@ public:
 
     enum Auras
     {
-        AURA_MOVE_SPEED = 1, AURA_RESOURCE_COST = 2, AURA_EATING = 3
+        AURA_MOVE_SPEED = 1, AURA_RESOURCE_COST = 2, AURA_EATING = 3, AURA_DRINKING = 4
     };
 
 	//Comparison functor

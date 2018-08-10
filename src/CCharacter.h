@@ -183,6 +183,7 @@ public:
 	void SendGMCP(char * str);
     void Message(const std::string & txt, MessageType msg_type, Character * vict = NULL);
     Character * GetCharacterRoom(std::string name);
+	Room * GetRoom() { return room; }
 	Item * GetItemRoom(std::string name);
 	bool IsItemInRoom(Item * i);
     Character * GetCharacterAdjacentRoom(std::string name, std::string direction);

@@ -31,6 +31,7 @@ void Lua_DefineFunctions(sol::state * lua)
 	lua->set_function("LoadNPCRoom", Game::LoadNPCRoom); //LoadNPCRoom(int id, Room * toroom);
 	lua->set_function("cmd_cast", cmd_cast); //cmd_cast(Character * ch, string argument);
 	lua->set_function("cmd_look", cmd_look); //cmd_look(Character * ch, string argument);
+	lua->set_function("FlagIsSet", Utilities::FlagIsSet); //bool FlagIsSet(std::vector<int> & flags, const int flag)
 }
 
 void Lua_DefineClasses(sol::state * lua)
@@ -91,15 +92,19 @@ void Lua_DefineClasses(sol::state * lua)
 			"IsFighting", &Character::IsFighting,
 			"InCombat", &Character::InCombat,
 			"IsAlive", &Character::IsAlive,
+			"IsNPC", &Character::IsNPC,
 			"SetCooldown", &Character::SetCooldown,
 			"ChangeRoomsID", &Character::ChangeRoomsID,
 			"GetPlayer", &Character::GetPlayer,
 			"GetAuraModifier", &Character::GetAuraModifier,
 			"GetTarget", &Character::GetTarget,
-			"level", &Character::level
+			"GetRoom", &Character::GetRoom,
+			"level", &Character::level,
+			"flags", &Character::flags
 			);
 
 		(*lua).new_usertype<Room>("Room",
+			"characters", &Room::characters,
 			"id", &Room::id,
 			"name", &Room::name,
 			"description", &Room::description
@@ -118,6 +123,7 @@ void Lua_DefineClasses(sol::state * lua)
 			//sol::base_classes, sol::bases<Subscriber>(),
 			sol::constructors<SpellAffect()>(),
 			"ApplyAura", (void(SpellAffect::*)(int, int)) &SpellAffect::ApplyAura,
+			"name", &SpellAffect::name,
 			"GetCasterName", &SpellAffect::GetCasterName,
 			"SaveDataInt", &SpellAffect::SaveDataInt,
 			"SaveDataDouble", &SpellAffect::SaveDataDouble,

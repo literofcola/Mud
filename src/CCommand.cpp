@@ -453,7 +453,7 @@ bool Command::Interpret(Character * ch, string argument)
 	}
 
 	//Alias handling
-	if (!ch->IsNPC() && !ch->player->alias.empty()
+	if (!argument.empty() && !ch->IsNPC() && !ch->player->alias.empty()
 		&& (Utilities::str_prefix("alias", argument) || Utilities::str_prefix("unalias", argument)))
 	{
 		string command_remainder = argument;
