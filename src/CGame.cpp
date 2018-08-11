@@ -2644,7 +2644,7 @@ int Game::Search(string table_name, string field_name, int conditional_type, str
 {
 	//There has to be a way to reduce the code replication in this function but I haven't found it
     /*
-    DIDNT WORK!!!
+    template experiment didn't work but then I know jack about templates
     if(!Utilities::str_cmp(table_name, "rooms"))
     {
         std::map<int, Room *>::iterator iter;

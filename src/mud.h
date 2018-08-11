@@ -198,6 +198,7 @@ void questEditCmd_moneyreward(Character * ch, string argument);
 void questEditCmd_itemreward(Character * ch, string argument);
 void questEditCmd_shareable(Character * ch, string argument);
 void classEditCmd_show(Character * ch, string argument);
+void classEditCmd_skill(Character * ch, string argument);
 void helpEditCmd_show(Character * ch, string argument);
 void helpEditCmd_text(Character * ch, string argument);
 void helpEditCmd_name(Character * ch, string argument);

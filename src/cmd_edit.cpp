@@ -3274,18 +3274,56 @@ void questEditCmd_shareable(Character * ch, string argument)
 void classEditCmd_show(Character * ch, string argument)
 {
     Class * pClass = (Class *)ch->editData;
+	if (pClass == nullptr)
+		return;
 
     ch->Send("Name:      [" + pClass->name + "]\n\r");
     ch->Send("ID:        [" + Utilities::itos(pClass->id) + "]\n\r");
     ch->Send("Color string: [|" + pClass->color + "]\n\r");
 
-    ch->Send("Skills (ID, Level, Cost): ");
+    ch->Send("Skills (Level, Skill ID, long_name):\n\r");
     std::list<Class::SkillData>::iterator iter;
     for(iter = pClass->classSkills.begin(); iter != pClass->classSkills.end(); ++iter)
     {
-        ch->Send("{" + Utilities::itos((*iter).skill->id) + "," + Utilities::itos((*iter).level) + "} ");
-                    //Utilities::itos((*iter).learnCost) + "} ");
+        ch->Send("{" + Utilities::itos(iter->level) + ",    " + Utilities::itos(iter->skill->id) + ",     " + iter->skill->long_name + "}\n\r");
     }
+}
+
+void classEditCmd_skill(Character * ch, string argument)
+{
+	Class * pClass = (Class *)ch->editData;
+	if (pClass == nullptr)
+		return;
+
+	string arg1;
+	string arg2;
+	string arg3;
+	argument = Utilities::one_argument(argument, arg1);
+	argument = Utilities::one_argument(argument, arg2);
+	argument = Utilities::one_argument(argument, arg3);
+
+	if (arg1.empty() || arg2.empty() || !Utilities::IsNumber(arg2))
+	{
+		ch->Send("skill <add/remove> <#id> <#level>\n\r");
+		return;
+	}
+	if (!Utilities::str_cmp(arg1, "add"))
+	{
+		if (arg3.empty() || !Utilities::IsNumber(arg3))
+		{
+			ch->Send("skill <add/remove> <#id> <#level>\n\r");
+			return;
+		}
+
+		return;
+	}
+	else if (!Utilities::str_cmp(arg1, "remove"))
+	{
+
+		return;
+	}
+	ch->Send("skill <add/remove> <#id>\n\r");
+	return;
 }
 
 void helpEditCmd_show(Character * ch, string argument)

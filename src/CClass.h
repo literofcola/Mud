@@ -17,7 +17,6 @@ public:
     {
         Skill * skill;
         int level;
-        //int learnCost;
     };
     std::list<SkillData> classSkills;
 
