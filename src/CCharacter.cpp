@@ -1114,15 +1114,14 @@ Character * Character::LoadPlayer(std::string name, User * user)
 
 	//Skills saved with a player no longer a thing, determine skills from classes. Still load them for the session with AddSkill
 	loaded->AddClassSkills();
-	/*string skilltext = (string)row["skills"];
-	int first=0, last=0;
-	while(first < (int)skilltext.length())
+	//For imms also add every skill there is...
+	if (loaded->player && loaded->player->IMMORTAL())
 	{
-	last = (int)skilltext.find(";", first);
-	int id = Utilities::atoi(skilltext.substr(first, last - first));
-	loaded->AddSkill(Game::GetGame()->GetSkill(id));
-	first = last + 1;
-	}*/
+		for (auto iter = Game::GetGame()->skills.begin(); iter != Game::GetGame()->skills.end(); ++iter)
+		{
+			loaded->AddSkill(iter->second);
+		}
+	}
 
 	StoreQueryResult playerinventoryres = Server::sqlQueue->Read("SELECT * FROM player_inventory where player='" + loaded->name + "'");
 	for (iter = playerinventoryres.begin(); iter != playerinventoryres.end(); ++iter)
@@ -1426,7 +1425,6 @@ void Character::SetLevel(int newlevel)
 		player->statPoints += Player::STATS_PER_LEVEL;
 		Send("|WYou gain " + Utilities::itos(Player::STATS_PER_LEVEL) + " attribute points. Assign attribute points with the \"train\" command.|X\n\r");
 		
-		//todo meh, would need a functor struct to use find_if and avoid this traversal
 		std::list<Class::SkillData>::iterator newskills;
 		for (newskills = player->currentClass->classSkills.begin(); newskills != player->currentClass->classSkills.end(); newskills++)
 		{

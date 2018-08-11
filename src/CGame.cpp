@@ -1821,6 +1821,11 @@ void Game::LoadClasses(Server * server)
 			row = *j;
 			Class::SkillData skd;
 			skd.skill = Game::GetGame()->GetSkill(row["skill"]);
+			if (skd.skill == nullptr)
+			{
+				LogFile::Log("error", "Class::AddSkill, could not find skill id: " + Utilities::itos(row["skill"]));
+				continue;
+			}
 			skd.level = row["level"];
 			c->classSkills.push_back(skd);
 		}

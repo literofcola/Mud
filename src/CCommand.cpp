@@ -362,6 +362,7 @@ const class Command questEditCmd_table[] =
 const class Command classEditCmd_table[] =
 {
     { "show",       classEditCmd_show, 0, 0, 1, 1  },
+	{ "skill",      classEditCmd_skill, 0, 0, 1, 1 },
     { "",			0,  0, 0, 1, 1                 }
 };
 

@@ -3307,6 +3307,7 @@ void classEditCmd_skill(Character * ch, string argument)
 		ch->Send("skill <add/remove> <#id> <#level>\n\r");
 		return;
 	}
+	int id = Utilities::atoi(arg2);
 	if (!Utilities::str_cmp(arg1, "add"))
 	{
 		if (arg3.empty() || !Utilities::IsNumber(arg3))
@@ -3314,12 +3315,27 @@ void classEditCmd_skill(Character * ch, string argument)
 			ch->Send("skill <add/remove> <#id> <#level>\n\r");
 			return;
 		}
-
+		int level = Utilities::atoi(arg3);
+		if (!pClass->HasSkill(id))
+		{
+			pClass->changed = true;
+			pClass->AddSkill(id, level);
+			ch->Send("Added skill " + Utilities::itos(id) + "\n\r");
+			return;
+		}
+		ch->Send("Class already has skill id " + Utilities::itos(id) + "\n\r");
 		return;
 	}
 	else if (!Utilities::str_cmp(arg1, "remove"))
 	{
-
+		if (!pClass->HasSkill(id))
+		{
+			ch->Send("Class does not have skill id : " + Utilities::itos(id) + "\n\r");
+			return;
+		}
+		pClass->changed = true;
+		pClass->RemoveSkill(id);
+		ch->Send("Removed skill " + Utilities::itos(id) + "\n\r");
 		return;
 	}
 	ch->Send("skill <add/remove> <#id>\n\r");

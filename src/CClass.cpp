@@ -57,10 +57,60 @@ void Class::Save()
 	for (iter = classSkills.begin(); iter != classSkills.end(); ++iter)
 	{
 		string skillssql = "INSERT INTO class_skills (class, skill, level) values (";
-		skillssql += id + ", " + Utilities::itos((*iter).skill->id) + ", " + Utilities::itos((*iter).level) + ")";
+		skillssql += Utilities::itos(id) + ", " + Utilities::itos((*iter).skill->id) + ", " + Utilities::itos((*iter).level) + ")";
 		skillssql += " ON DUPLICATE KEY UPDATE class=VALUES(class), skill=VALUES(skill), level=VALUES(level)";
 		Server::sqlQueue->Write(skillssql);
 	}
 
     changed = false;
+}
+
+/*
+struct SkillData
+{
+	Skill * skill;
+	int level;
+};
+std::list<SkillData> classSkills;
+*/
+bool Class::HasSkill(int id)
+{
+	auto result = std::find_if(classSkills.begin(), classSkills.end(), CompareClassSkillBySkillID(id));
+	if (result == classSkills.end())
+		return false;
+	return true;
+}
+
+void Class::AddSkill(int id, int level)
+{
+	if (!HasSkill(id))
+	{
+		Class::SkillData skd;
+		skd.skill = Game::GetGame()->GetSkill(id);
+		if (skd.skill == nullptr)
+		{
+			LogFile::Log("error", "Class::AddSkill, could not find skill id: " + Utilities::itos(id));
+			return;
+		}
+		skd.level = level;
+		classSkills.push_back(skd);
+		return;
+	}
+	LogFile::Log("error", "Class::AddSkill, tried to add duplicate skill id: " + Utilities::itos(id));
+}
+
+void Class::RemoveSkill(int id)
+{
+	auto result = std::find_if(classSkills.begin(), classSkills.end(), CompareClassSkillBySkillID(id));
+	if (result == classSkills.end())
+	{
+		LogFile::Log("error", "Class::RemoveSkill, could not find skill id: " + Utilities::itos(id));
+		return;
+	}
+	classSkills.erase(result);
+}
+
+bool Class::CompareClassSkillBySkillID::operator()(SkillData & elem) const
+{
+	return value == elem.skill->id;
 }
