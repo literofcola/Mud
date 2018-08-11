@@ -543,7 +543,7 @@ void Game::WorldUpdate(Server * server)
 				if (curr->IsNPC())
 					curr->SetHealth(curr->GetMaxHealth()); //NPC's heal immediately out of combat
 				else
-					curr->AdjustHealth(NULL, (int)ceil(curr->GetLevel()*0.5 + 5));
+					curr->AdjustHealth(NULL, (int)ceil(10 * log10(curr->GetLevel()) + 5));
 			}
 			if (curr->GetMana() < curr->GetMaxMana() && curr->lastSpellCast + 5.0 <= Game::currentTime)
 			{
