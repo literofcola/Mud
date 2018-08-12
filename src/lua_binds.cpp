@@ -76,6 +76,7 @@ void Lua_DefineClasses(sol::state * lua)
 			"GetMaxHealth", &Character::GetMaxHealth,
 			"HasResource", &Character::HasResource,
 			"OneHit", &Character::OneHit,
+			"OneHeal", &Character::OneHeal,
 			"AdjustHealth", &Character::AdjustHealth,
 			"AdjustMana", &Character::AdjustMana,
 			"AdjustRage", &Character::AdjustRage,

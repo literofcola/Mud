@@ -223,6 +223,7 @@ public:
 	Character * GetTap();
     void AutoAttack(Character * victim);
     void OneHit(Character * victim, int damage);
+	void OneHeal(Character * target, int heal);
 	double GetMainhandWeaponSpeed();
 	double GetMainhandDamagePerSecond();
 	int GetOffhandDamageRandomHit();

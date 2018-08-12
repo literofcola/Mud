@@ -2147,34 +2147,36 @@ void Character::OneHit(Character * victim, int damage)
         victim->UpdateThreat(this, damage, Threat::Type::THREAT_DAMAGE);
         //Send("My threat on " + victim->name + " is " + Utilities::itos(victim->GetThreat(this)) + "\n\r");
     }
-	if (victim->CancelCastOnHit())
+	if (damage > 0 && victim->CancelCastOnHit())
 		victim->Send("Action Interrupted!\n\r");
 
     victim->AdjustHealth(this, -damage);
 }
-/*
-//todo: handle heals with threat considered: any heal that actually heals, go through OUR threat list and add threat to everyone
-void Character::OneHeal(Character * victim, int heal)
+
+void Character::OneHeal(Character * target, int heal)
 {
-	if (victim == NULL)
+	if (target == NULL)
 		return;
-	if (victim->remove)
+	if (target->remove)
 	{
-		//Victim is already toast
+		//Target is already toast
 		return;
 	}
 
-	if (IsNPC() || victim->IsNPC()) //Keep track of threat unless BOTH are players
+	std::list<Character::Threat>::iterator threatiter;
+	for (threatiter = target->threatList.begin(); threatiter != target->threatList.end(); threatiter++)
 	{
-		victim->UpdateThreat(this, damage, Threat::Type::THREAT_DAMAGE);
-		//Send("My threat on " + victim->name + " is " + Utilities::itos(victim->GetThreat(this)) + "\n\r");
+		Threat * threat = &(*threatiter);
+		if(threat->ch->HasThreat(target))
+		{
+			if(threat->ch->InCombat())
+				EnterCombat(threat->ch);
+			Send("Added healing threat of " + Utilities::itos(heal) + " to " + threat->ch->name + "\n\r");
+			threat->ch->UpdateThreat(this, heal, Threat::Type::THREAT_HEALING);
+		}
 	}
-	if (victim->CancelCastOnHit())
-		victim->Send("Action Interrupted!\n\r");
-
-	victim->AdjustHealth(this, -damage);
+	target->AdjustHealth(this, heal);
 }
-*/
 
 double Character::GetMainhandWeaponSpeed()
 {
