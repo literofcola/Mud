@@ -2141,7 +2141,8 @@ void Character::OneHit(Character * victim, int damage)
         return;
     }
 
-    if(IsNPC() || victim->IsNPC()) //Keep track of threat unless BOTH are players
+    if((IsNPC() || victim->IsNPC()) && victim->InCombat())
+		//Keep track of threat unless BOTH are players or victim is (somehow, "peace", leash with dots) not in combat
     {
         victim->UpdateThreat(this, damage, Threat::Type::THREAT_DAMAGE);
         //Send("My threat on " + victim->name + " is " + Utilities::itos(victim->GetThreat(this)) + "\n\r");
