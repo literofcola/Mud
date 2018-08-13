@@ -103,7 +103,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <AdditionalOptions>ws2_32.lib lua53_d.lib libmysqld.lib mysqlpp_d.lib zlibwapi.lib %(AdditionalOptions)</AdditionalOptions>
       <AdditionalLibraryDirectories>C:\Mud\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
@@ -121,7 +121,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <AdditionalOptions>ws2_32.lib lua53_d.lib libmysqld.lib mysqlpp_d.lib zlibwapi.lib %(AdditionalOptions)</AdditionalOptions>
       <AdditionalLibraryDirectories>C:\Mud\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>

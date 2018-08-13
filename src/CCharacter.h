@@ -210,6 +210,7 @@ public:
 	std::string AggressionColor(Character * target);
 	std::string AggressionLightColor(Character * target);
     void EnterCombat(Character * victim);
+	void EnterCombatAssist(Character * friendly);
     void ExitCombat();
     bool InCombat();
     bool IsFighting(Character * target);

@@ -45,26 +45,6 @@ void cmd_edit(Character * ch, string argument)
     arg3 = argument;
 	//argument = Utilities::one_argument(argument, arg3);
 	
-	/*if(!Utilities::str_cmp(arg1, "find"))
-	{
-		if(arg2.empty())
-		{
-			ch->Send("edit find <room>\n\r");
-			return;
-		}
-		else if(!Utilities::str_cmp(arg2, "room"))
-		{
-			int roomnum;
-			if(Utilities::IsNumber(arg3))
-			{
-				roomnum = Utilities::atoi(arg3);
-
-			}
-		}
-
-		return;
-	}*/
-	
 	if(!Utilities::str_cmp(arg1, "room"))
 	{
 		//check for "edit room create <id>"

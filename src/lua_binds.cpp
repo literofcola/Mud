@@ -90,6 +90,7 @@ void Lua_DefineClasses(sol::state * lua)
 			"GetName", &Character::GetName,
 			"HisHer", &Character::HisHer,
 			"EnterCombat", &Character::EnterCombat,
+			"EnterCombatAssist", &Character::EnterCombatAssist,
 			"IsFighting", &Character::IsFighting,
 			"InCombat", &Character::InCombat,
 			"IsAlive", &Character::IsAlive,

@@ -84,6 +84,11 @@ Room::~Room()
         if((*iter).second != NULL)
             delete (*iter).second;
     }
+	for (auto iter = items.begin(); iter != items.end(); iter++)
+	{
+		if ((*iter))
+			delete (*iter);
+	}
 }
 
 void Room::Save()

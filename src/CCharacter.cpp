@@ -2005,6 +2005,39 @@ void Character::EnterCombat(Character * victim)
 	victim->SendGMCP("char.vitals " + combat.dump());
 }
 
+void Character::EnterCombatAssist(Character * friendly)
+{
+	if (!IsAlive() || !friendly->IsAlive())
+	{
+		LogFile::Log("error", "EnterCombatAssist called on !IsAlive ch or vict");
+		return;
+	}
+
+	if (!friendly->combat)
+	{
+		return;
+	}
+
+	combat = true;
+    if(player)
+        player->lastCombatAction = Game::currentTime;
+
+	//go through friendly's threat list, add "zero" threat to everybody there
+	for (auto threatiter = friendly->threatList.begin(); threatiter != friendly->threatList.end(); threatiter++)
+	{
+		Threat * threat = &(*threatiter);
+		if (IsNPC() || threat->ch->IsNPC())
+		{
+			threat->ch->UpdateThreat(this, 0, Character::Threat::THREAT_DAMAGE);
+			UpdateThreat(threat->ch, 0, Character::Threat::THREAT_DAMAGE);
+		}
+	}
+
+    movementSpeed = Character::COMBAT_MOVE_SPEED;
+	json combat = { { "combat", 1 } };
+	SendGMCP("char.vitals " + combat.dump());
+}
+
 void Character::ExitCombat()
 {
     combat = false;
@@ -2153,29 +2186,25 @@ void Character::OneHit(Character * victim, int damage)
     victim->AdjustHealth(this, -damage);
 }
 
-void Character::OneHeal(Character * target, int heal)
+void Character::OneHeal(Character * victim, int heal)
 {
-	if (target == NULL)
+	if (victim == NULL)
 		return;
-	if (target->remove)
+	if (victim->remove)
 	{
-		//Target is already toast
+		//victim is already toast
 		return;
 	}
 
-	std::list<Character::Threat>::iterator threatiter;
-	for (threatiter = target->threatList.begin(); threatiter != target->threatList.end(); threatiter++)
+	EnterCombatAssist(victim);
+
+	for (auto threatiter = threatList.begin(); threatiter != threatList.end(); threatiter++)
 	{
 		Threat * threat = &(*threatiter);
-		if(threat->ch->HasThreat(target))
-		{
-			if(threat->ch->InCombat())
-				EnterCombat(threat->ch);
-			Send("Added healing threat of " + Utilities::itos(heal) + " to " + threat->ch->name + "\n\r");
-			threat->ch->UpdateThreat(this, heal, Threat::Type::THREAT_HEALING);
-		}
+		Send("Added healing threat of " + Utilities::itos(heal) + " to " + threat->ch->name + "\n\r");
+		threat->ch->UpdateThreat(this, heal, Threat::Type::THREAT_HEALING);
 	}
-	target->AdjustHealth(this, heal);
+	victim->AdjustHealth(this, heal);
 }
 
 double Character::GetMainhandWeaponSpeed()
@@ -2591,6 +2620,7 @@ void Character::RemoveCorpse()
 	{
 		if ((*itemiter)->keywords.find(name) != std::string::npos)
 		{
+			delete (*itemiter);
 			corpseroom->items.erase(itemiter);
 
 			if (room && room == corpseroom)

@@ -370,7 +370,6 @@ void cmd_drop(Character * ch, string argument)
         ch->Send("You're not carrying that item.\n\r");
         return;
     }
-	item = Game::GetGame()->GetItemIndex(item->id);
 	ch->SetQuery("Destroy " + item->name + "? (y/n) ", item, cmd_drop_Query);
 }
 
@@ -397,7 +396,9 @@ bool cmd_drop_Query(Character * ch, string argument)
             ch->Send("You're not carrying that item.\n\r");
             return true;
         }
-        ch->player->RemoveItemInventory(item->id);
+        Item * deleteme = ch->player->RemoveItemInventory(item->id);
+		if (deleteme)
+			delete deleteme;
         return true;
     }
     ch->QueryClear();
