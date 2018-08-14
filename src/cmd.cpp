@@ -59,6 +59,7 @@ void cmd_attack(Character * ch, string argument)
     ch->SetTarget(target);
     ch->Send("You begin attacking " + target->name + "!\n\r");
     target->Send(ch->name + " begins attacking you!\n\r");
+	ch->Message(ch->name + " begins attacking " + target->name + "!", Character::MSG_ROOM_NOTCHARVICT, target);
 
     ch->EnterCombat(target);
     target->EnterCombat(ch);
@@ -286,7 +287,7 @@ void cmd_look(Character * ch, string argument)
 				{
 					if ((*i)->IsFighting(ch))
 						fighting = ", fighting YOU!";
-					else if ((*i)->GetTarget() != NULL)
+					else if ((*i)->GetTarget() != NULL && (*i)->IsFighting((*i)->GetTarget()))
 						fighting = ", fighting " + (*i)->GetTarget()->name + ".";
 				}
 				aggressionColor = ch->AggressionColor((*i));
@@ -933,16 +934,35 @@ void cmd_group(Character * ch, string argument)
 			group_format << "Your group (" << ch->group->GetMemberCount() << "/" << Group::MAX_GROUP_SIZE << "):\n\r";
 			for (int i = 0; i < Group::MAX_GROUP_SIZE; i++)
 			{
-				if (ch->group->members[i] != nullptr)
+				Character * current_member = ch->group->members[i];
+				if (current_member != nullptr)
 				{
-					group_format << ch->group->members[i]->name;
-					if (ch->group->members[i] == ch->group->leader)
-					{
-						group_format << "|Y*|X";
-					}
-					group_format << "\n\r";
+					current_member->InCombat() ? group_format << "|R(X)|X" : group_format << "   ";
+					current_member == ch->group->leader ? group_format << "|Y*|X" : group_format << " ";
+
+					group_format << "|C" << left << setw(12) << current_member->name << "|X";
+
+					//Health
+					int percent;
+					string statColor;
+					if (current_member->GetHealth() > 0 && current_member->GetMaxHealth() > 0)
+						percent = (current_member->GetHealth() * 100) / current_member->GetMaxHealth();
+					else
+						percent = 0;
+
+					if (percent >= 75)
+						statColor = "|x";
+					else if (percent >= 50)
+						statColor = "|G";
+					else if (percent >= 25)
+						statColor = "|Y";
+					else
+						statColor = "|R";
+
+					group_format << statColor << right << setw(4) << current_member->GetHealth() << "|X/" << left << setw(4) << current_member->GetMaxHealth() << "  ";
 				}
 			}
+			group_format << "\n\r";
 		}
 		//Display raid group
 		else
@@ -981,7 +1001,7 @@ void cmd_group(Character * ch, string argument)
 							else
 								statColor = "|R";
 
-							group_format << statColor << right << setw(4) << current_member->GetHealth() << "/|X" << left << setw(4) << current_member->GetMaxHealth();
+							group_format << statColor << right << setw(4) << current_member->GetHealth() << "|X/" << left << setw(4) << current_member->GetMaxHealth();
 
 						}
 						else
@@ -1040,8 +1060,9 @@ bool cmd_groupQuery(Character *ch, string argument)
 			{
 				if (vch->group->Add(ch))
 				{
-					vch->Send(ch->name + " has joined your group.\n\r");
+					//vch->Send(ch->name + " has joined your group.\n\r");
 					ch->Send("You have joined " + vch->name + "'s group.\n\r");
+					ch->Message(ch->name + " has joined the group.", Character::MSG_GROUP_NOTCHAR);
 				}
 			}
 		}

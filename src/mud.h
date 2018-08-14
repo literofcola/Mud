@@ -45,6 +45,7 @@ void cmd_set(Character * ch, string argument);
 
 //cmd_imm.cpp
 void cmd_advance(Character * ch, string argument);
+void cmd_threat(Character * ch, string argument);
 void cmd_goto(Character * ch, string argument);
 void cmd_restore(Character * ch, string argument);
 void cmd_sockets(Character * ch, string argument);

@@ -21,6 +21,7 @@ public:
 	int FindFirstSlotInSubgroup(Character *ch);
 	bool IsSlotEmpty(int slot);
 	bool IsSubgroupEmpty(int slot);
+	int GetSubgroupCount(int slot);
 	bool Add(Character * ch);
 	bool Remove(Character *ch);
 	void Move(Character * ch, int slot);

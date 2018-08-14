@@ -104,9 +104,23 @@ bool SubscriberManager::HasSubscriber(Subscriber * l)
     return false;
 }
 
-void SubscriberManager::DebugPrintSubscribers()
+std::string SubscriberManager::DebugPrintSubscribers()
 {
-	//TODO
+	//handling the case where the manager is a Character, and we print all the subscribers that are characters
+	string mysubscribers;
+	Character * submanager_as_char;
+	if (submanager_as_char = dynamic_cast<Character*>(this))
+	{
+		for (auto iter = submanager_as_char->subscribers_.begin(); iter != submanager_as_char->subscribers_.end(); ++iter)
+		{
+			Character * subscriber_as_char;
+			if (subscriber_as_char = dynamic_cast<Character*>(iter->subscriber))
+			{
+				mysubscribers += subscriber_as_char->name + " ";
+			}
+		}
+	}
+	return mysubscribers;
 }
 
 void SubscriberManager::NotifySubscribers()

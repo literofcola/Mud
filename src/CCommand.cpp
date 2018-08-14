@@ -171,6 +171,7 @@ class Command cmd_table[] =
     /*
     { "at",         cmd_at,			POS_DEAD,       L6 },*/
     { "advance",	cmd_advance,	-9, 0, 1, 1, Character::POSITION_ANY },
+    { "threat",		cmd_threat,		-1, 0, 1, 1, Character::POSITION_ANY },
     /*
     { "disable",    cmd_disable,		POS_DEAD,	L1,  LOG_ALWAYS, 1 },
     { "dump",		cmd_dump,		POS_DEAD,	ML,  LOG_ALWAYS, 0 },
@@ -207,8 +208,7 @@ class Command cmd_table[] =
     { "poofout",	cmd_bamfout,		POS_DEAD,	L8,  LOG_NORMAL, 1 },
     { "gecho",		cmd_echo,		POS_DEAD,	L4,  LOG_ALWAYS, 1 },
     { "incognito",	cmd_incognito,	POS_DEAD,	IM,  LOG_NORMAL, 1 },
-    { "log",		cmd_log,			POS_DEAD,	L1,  LOG_ALWAYS, 1 },
-    { "memory",		cmd_memory,		POS_DEAD,	IM,  LOG_NORMAL, 1 },*/
+    { "log",		cmd_log,			POS_DEAD,	L1,  LOG_ALWAYS, 1 },*/
     { "peace",		cmd_peace,		-1,	0, 1, 1, Character::POSITION_ANY },
     /*{ "penalty",	cmd_penalty,		POS_DEAD,	L7,  LOG_NORMAL, 1 },
     { "echo",		cmd_recho,		POS_DEAD,	L6,  LOG_ALWAYS, 1 },
@@ -223,11 +223,7 @@ class Command cmd_table[] =
 
     { "wiznet",		cmd_wiznet,		POS_DEAD,	IM,  LOG_NORMAL, 1 },
     { "immtalk",	cmd_immtalk,		POS_DEAD,	IM,  LOG_NORMAL, 1 },
-    { "imotd",      cmd_imotd,		POS_DEAD,   IM,  LOG_NORMAL, 1 },
-    { ":",			cmd_immtalk,		POS_DEAD,	IM,  LOG_NORMAL, 0 },
-    { "smote",		cmd_smote,		POS_DEAD,	IM,  LOG_NORMAL, 1 },
-    { "prefi",		cmd_prefi,		POS_DEAD,	IM,  LOG_NORMAL, 0 },
-    { "prefix",		cmd_prefix,		POS_DEAD,	IM,  LOG_NORMAL, 1 },*/
+    { ":",			cmd_immtalk,		POS_DEAD,	IM,  LOG_NORMAL, 0 },*/
     /*
      * OLC
      */

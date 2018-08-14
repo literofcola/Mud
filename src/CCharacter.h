@@ -40,8 +40,8 @@ public:
     
 	Character * comboPointTarget;
     static const int HEALTH_FROM_STAMINA = 10;
-    static const int MANA_FROM_WISDOM = 10; //todo: move intellect into class per level up!
-	static constexpr double STRENGTH_DAMAGE_MODIFIER = 0.30;	//auto attack damage increased by 30% of strength
+    static const int MANA_FROM_WISDOM = 10;
+	static constexpr double STRENGTH_DAMAGE_MODIFIER = 0.10;	//auto attack damage increased by 10% of strength
     std::string name;
     std::string title;
     Room * room;
@@ -123,9 +123,9 @@ public:
     struct Threat
     {
         Character * ch;
-        int threat;
-		int damage;
-		int healing;
+		double threat;
+		double damage;
+		double healing;
 		bool tapped; //This character has a valid "tap" on us
 		enum Type { THREAT_DAMAGE, THREAT_HEALING, THREAT_OTHER };
     };
@@ -180,6 +180,7 @@ public:
     void Send(std::string str);
 	void Send(char * str);
 	void SendGMCP(std::string str);
+	void SendTargetSubscriberGMCP(std::string str);
 	void SendGMCP(char * str);
     void Message(const std::string & txt, MessageType msg_type, Character * vict = NULL);
     Character * GetCharacterRoom(std::string name);
@@ -215,8 +216,8 @@ public:
     bool InCombat();
     bool IsFighting(Character * target);
 	bool CheckThreatCombat();
-    void UpdateThreat(Character * ch, int value, int type);
-    int GetThreat(Character * ch);
+    void UpdateThreat(Character * ch, double value, int type);
+    double GetThreat(Character * ch);
     Character * GetTopThreat();
     bool HasThreat(Character * ch);
 	void RemoveThreat(Character * ch, bool removeall);

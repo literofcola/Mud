@@ -274,6 +274,31 @@ void cmd_advance(Character * ch, string argument)
     player_target->ApplyExperience(Game::ExperienceForLevel(new_level) - player_target->player->experience);
 }
 
+void cmd_threat(Character * ch, string argument)
+{
+	if (!ch)
+		return;
+
+	ch->Send("Current threat list:\n\r");
+	int ctr = 1;
+	for (auto iter = ch->threatList.begin(); iter != ch->threatList.end(); ++iter)
+	{
+		ch->Send(Utilities::itos(ctr) + ". " + iter->ch->name + ", " + Utilities::dtos(iter->damage, 2) + "/" +
+			Utilities::dtos(iter->healing, 2) + "/" + Utilities::dtos(iter->threat, 2) + "\n\r");
+		ch->Send("    Subscribers: " + iter->ch->DebugPrintSubscribers() + "\n\r");
+		if (!iter->ch->threatList.empty())
+		{
+			for (auto iter2 = iter->ch->threatList.begin(); iter2 != iter->ch->threatList.end(); ++iter2)
+			{
+				ch->Send("    " + iter2->ch->name + ", " + Utilities::dtos(iter2->damage, 2) + "/" + Utilities::dtos(iter2->healing, 2) + "/" + Utilities::dtos(iter2->threat, 2) + "\n\r");
+			}
+		}
+	}
+	//Roll this into this command because lazy
+	ch->Send("My Subscribers: ");
+	ch->Send(ch->DebugPrintSubscribers() + "\n\r");
+}
+
 void cmd_sql(Character * ch, string argument)
 {
     if(argument.empty())
@@ -441,5 +466,7 @@ void cmd_peace(Character * ch, string argument)
     for(std::list<Character*>::iterator iter = ch->room->characters.begin(); iter != ch->room->characters.end(); ++iter)
     {
         (*iter)->ExitCombat();
+		if((*iter)->IsNPC())
+			(*iter)->ClearTarget();
     }
 }

@@ -8,10 +8,10 @@ public:
     void AddSubscriber(Subscriber *);
     void RemoveSubscriber(Subscriber *);
     bool HasSubscriber(Subscriber *);
-	void DebugPrintSubscribers();
+	std::string DebugPrintSubscribers();
     void NotifySubscribers();
 
-private:
+//private:
 	struct SubscriberCount
 	{
 		SubscriberCount(Subscriber * l) : subscriber(l), refcount(1) {};

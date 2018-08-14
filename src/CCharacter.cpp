@@ -243,6 +243,25 @@ void Character::SendGMCP(std::string str)
     player->user->SendGMCP(str);
 }
 
+void Character::SendTargetSubscriberGMCP(std::string str)
+{
+	Character * submanager_as_char;
+	if (submanager_as_char = dynamic_cast<Character*>(this))
+	{
+		for (auto iter = submanager_as_char->subscribers_.begin(); iter != submanager_as_char->subscribers_.end(); ++iter)
+		{
+			Character * subscriber_as_char;
+			if (subscriber_as_char = dynamic_cast<Character*>(iter->subscriber))
+			{
+				if (subscriber_as_char->GetTarget() == this)
+				{
+					subscriber_as_char->SendGMCP(str);
+				}
+			}
+		}
+	}
+}
+
 void Character::SendGMCP(char * str)
 {
     if(player == NULL || player->user == NULL)
@@ -722,28 +741,52 @@ void Character::GeneratePrompt(double currentTime)
 		SendGMCP("targettarget.vitals " + targettargetvitals.dump());
 	}
     
-    /*
-	if(group)
+    
+	if(HasGroup())
 	{
-		Group * g = group;
-		int firstingroup = g->FindFirstInSubgroup(this);
-		if(!g->IsEmptySubgroup(this))
+		int firstingroup = group->FindFirstSlotInSubgroup(this);
+		if(group->GetSubgroupCount(firstingroup) > 1)
 		{
 			prompt += "\n\r";
-			for(int i = 0; i < SUBGROUP_SIZE; i++)
+			for(int i = 0; i < Group::MAX_GROUP_SIZE; i++)
 			{
-				if(g->members[firstingroup + i] && g->members[firstingroup + i] != this)
+				Character * current_member = group->members[firstingroup + i];
+				if(current_member && current_member != this)
 				{
 					prompt += "|B<";
-					prompt += "|Y" + g->members[firstingroup + i]->name + "|X ";
-					prompt += VitalsPercent(this) + "|B>|X";
+					
+
+					if(current_member->InCombat())
+						prompt += "|R(X)|X";
+					if(current_member == group->leader)
+						prompt += "|Y*|X";
+
+					prompt += "|C" + current_member->name + "|X ";
+
+					//Health
+					int percent;
+					string statColor;
+					if (current_member->GetHealth() > 0 && current_member->GetMaxHealth() > 0)
+						percent = (current_member->GetHealth() * 100) / current_member->GetMaxHealth();
+					else
+						percent = 0;
+
+					if (percent >= 75)
+						statColor = "|x";
+					else if (percent >= 50)
+						statColor = "|G";
+					else if (percent >= 25)
+						statColor = "|Y";
+					else
+						statColor = "|R";
+
+					prompt += statColor + Utilities::itos(current_member->GetHealth()) + "|X/" + Utilities::itos(current_member->GetMaxHealth());
+					prompt += "|B>|X";
 				}
 			}
 		}
 	}
-    */
     
-	
 	//todo: We could block the entire function at the top, but then we lose a lot of GMCP data. We need to structure this differently
 	if (player && player->prompt) 
 	{
@@ -2088,7 +2131,7 @@ void Character::AutoAttack(Character * victim)
 			victim->GenerateRageOnTakeDamage(damage);
 
 		victim->Send("|Y" + name + " hits you for " + Utilities::itos(damage) + " damage.|X\n\r");
-		Message("|G" + name + "'s attack hits " + victim->name + " for " + Utilities::itos(damage) + " damage.|X", Character::MSG_ROOM_NOTCHARVICT, victim);
+		//Message("|G" + name + "'s attack hits " + victim->name + " for " + Utilities::itos(damage) + " damage.|X", Character::MSG_ROOM_NOTCHARVICT, victim);
 
         OneHit(victim, damage); //TODO fancy damage calculations, block miss hit crit 
         //victim may be invalid here if it was killed!
@@ -2107,7 +2150,7 @@ void Character::AutoAttack(Character * victim)
 
         if(attack_mh && lastAutoAttack_main + weaponSpeed_main <= Game::currentTime)
         {
-			//damage_main += (int)ceil(strength * Character::STRENGTH_DAMAGE_MODIFIER);
+			damage_main += (int)ceil((strength * Character::STRENGTH_DAMAGE_MODIFIER) / weaponSpeed_main);
             if(victim->target == NULL) //Force a target on our victim
             {     
                 victim->SetTarget(this);
@@ -2128,14 +2171,14 @@ void Character::AutoAttack(Character * victim)
 			}
 			Send(tapcolor + "You hit " + victim->name + " for " + Utilities::itos(damage_main) + " damage.|X\n\r");
 			victim->Send("|Y" + name + " hits you for " + Utilities::itos(damage_main) + " damage.|X\n\r");
-			Message("|G" + name + "'s attack hits " + victim->name + " for " + Utilities::itos(damage_main) + " damage.|X", Character::MSG_ROOM_NOTCHARVICT, victim);
+			//Message("|G" + name + "'s attack hits " + victim->name + " for " + Utilities::itos(damage_main) + " damage.|X", Character::MSG_ROOM_NOTCHARVICT, victim);
 
             OneHit(victim, damage_main); //TODO fancy damage calculations, block miss hit crit 
             //victim may be invalid if it was killed!
         }
         if(attack_oh && lastAutoAttack_off + weaponSpeed_off <= Game::currentTime)
         {
-			//damage_off += (int)ceil(strength * Character::STRENGTH_DAMAGE_MODIFIER);
+			damage_off += (int)ceil((strength * Character::STRENGTH_DAMAGE_MODIFIER) / weaponSpeed_off);
             if(victim->target == NULL) //Force a target on our victim
             {     
                 victim->SetTarget(this);
@@ -2156,7 +2199,7 @@ void Character::AutoAttack(Character * victim)
 			}
 			Send(tapcolor + "You hit " + victim->name + " for " + Utilities::itos(damage_off) + " damage.|X\n\r");
 			victim->Send("|Y" + name + " hits you for " + Utilities::itos(damage_off) + " damage.|X\n\r");
-			Message("|G" + name + "'s attack hits " + victim->name + " for " + Utilities::itos(damage_off) + " damage.|X", Character::MSG_ROOM_NOTCHARVICT, victim);
+			//Message("|G" + name + "'s attack hits " + victim->name + " for " + Utilities::itos(damage_off) + " damage.|X", Character::MSG_ROOM_NOTCHARVICT, victim);
 
             OneHit(victim, damage_off); //TODO fancy damage calculations, block miss hit crit 
             //victim may be invalid if it was killed!
@@ -2201,8 +2244,7 @@ void Character::OneHeal(Character * victim, int heal)
 	for (auto threatiter = threatList.begin(); threatiter != threatList.end(); threatiter++)
 	{
 		Threat * threat = &(*threatiter);
-		Send("Added healing threat of " + Utilities::itos(heal) + " to " + threat->ch->name + "\n\r");
-		threat->ch->UpdateThreat(this, heal, Threat::Type::THREAT_HEALING);
+		threat->ch->UpdateThreat(this, (double)heal / threatList.size(), Threat::Type::THREAT_HEALING);
 	}
 	victim->AdjustHealth(this, heal);
 }
@@ -2440,6 +2482,12 @@ void Character::AdjustHealth(Character * source, int amount)
 	{
 		json vitals = { { "hp", health } };
 		SendGMCP("char.vitals " + vitals.dump());
+
+		int percent = 0;
+		if (maxHealth > 0)
+			percent = (health * 100) / maxHealth;
+		vitals = { { "hppercent", percent } };
+		SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
 	}
 
     if(health == 0) 
@@ -2486,9 +2534,9 @@ void Character::OnDeath()
 	{
 		Character * tap = nullptr;
 		Character * highdamage = nullptr;
-		int group_damage = 0;
-		int other_damage = 0;
-		int highest_damage = 0;
+		double group_damage = 0;
+		double other_damage = 0;
+		double highest_damage = 0;
 		//find out who has the tap
 		std::list<Threat>::iterator iter;
 		for (iter = threatList.begin(); iter != threatList.end(); ++iter)
@@ -2984,14 +3032,13 @@ void Character::ClearComboPointTarget()
 	comboPoints = 0;
 }
 
-void Character::UpdateThreat(Character * ch, int value, int type)
+void Character::UpdateThreat(Character * ch, double value, int type)
 {
     std::list<Threat>::iterator iter;
     for(iter = threatList.begin(); iter != threatList.end(); ++iter)
     {
         if((*iter).ch == ch)
         {
-            (*iter).threat += value;
 			switch (type)
 			{
 				case Threat::Type::THREAT_DAMAGE:
@@ -3000,10 +3047,12 @@ void Character::UpdateThreat(Character * ch, int value, int type)
 						//No one has the tap yet and THREAT_DAMAGE > 0, they get the tap
 						(*iter).tapped = true;
 					}
+					(*iter).threat += value;
 					(*iter).damage += value;
 					break;
 				case Threat::Type::THREAT_HEALING:
-					(*iter).healing += value;
+					(*iter).threat += value/2;
+					(*iter).healing += value/2;
 					break;
 			}
             return;
@@ -3011,14 +3060,16 @@ void Character::UpdateThreat(Character * ch, int value, int type)
     }
 	ch->AddSubscriber(this);
 	//cout << "UpdateThreat ADD" << endl;
-	Threat tt = { ch, value, 0, 0, false };
+	Threat tt = { ch, 0, 0, 0, false };
 	switch (type)
 	{
 	case Threat::Type::THREAT_DAMAGE:
+		tt.threat = value;
 		tt.damage = value;
 		break;
 	case Threat::Type::THREAT_HEALING:
-		tt.healing = value;
+		tt.threat = value/2;
+		tt.healing = value/2;
 		break;
 	}
 	if (IsNPC() && GetTap() == nullptr && value > 0 && type == Threat::Type::THREAT_DAMAGE)
@@ -3034,7 +3085,7 @@ Character * Character::GetTopThreat()
 	if (threatList.empty())
 		return nullptr;
 
-	int max = 0;
+	double max = 0;
 	Character * maxch = nullptr;
 	for (std::list<Threat>::iterator iter = threatList.begin(); iter != threatList.end(); iter++)
 	{
@@ -3101,7 +3152,7 @@ Character * Character::GetTap()
 	return nullptr;
 }
 
-int Character::GetThreat(Character * ch)
+double Character::GetThreat(Character * ch)
 {
     std::list<Threat>::iterator iter;
     for(iter = threatList.begin(); iter != threatList.end(); ++iter)

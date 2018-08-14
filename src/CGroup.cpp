@@ -79,6 +79,18 @@ bool Group::IsSubgroupEmpty(int slot)
 	return true;
 }
 
+int Group::GetSubgroupCount(int slot)
+{
+	int count = 0;
+	int start = (slot / MAX_GROUP_SIZE) * MAX_GROUP_SIZE;
+	for (int i = start; i < start + MAX_GROUP_SIZE; i++)
+	{
+		if (members[i] != nullptr)
+			++count;
+	}
+	return count;
+}
+
 bool Group::Add(Character * ch)
 {
 	int empty_slot = FindNextEmptySlot();
@@ -104,7 +116,7 @@ bool Group::Remove(Character *ch)
 void Group::Move(Character * ch, int slot) //slot is indexed from 1
 {
 	int from = FindMemberSlot(ch);
-	if (from == -1 || from == slot || slot <= 0 || slot > MAX_RAID_SIZE)
+	if (from == -1 || from == slot || slot < 0 || slot >= MAX_RAID_SIZE)
 		return;
 
 	members[from] = members[slot];
