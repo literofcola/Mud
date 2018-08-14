@@ -11,7 +11,7 @@ public:
 	std::string DebugPrintSubscribers();
     void NotifySubscribers();
 
-//private:
+protected:
 	struct SubscriberCount
 	{
 		SubscriberCount(Subscriber * l) : subscriber(l), refcount(1) {};
