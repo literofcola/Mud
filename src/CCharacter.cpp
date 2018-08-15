@@ -1485,6 +1485,9 @@ void Character::SetLevel(int newlevel)
 	json vitals = { { "hp", health },{ "hpmax", maxHealth },{ "mp", mana },{ "mpmax", maxMana },
 	{ "en", energy },{ "enmax", maxEnergy } };
 	SendGMCP("char.vitals " + vitals.dump());
+
+	vitals = { { "hppercent", 100 },{ "mppercent", 100 },{ "enpercent", 100 } };
+	SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
 }
 
 int Character::GetLevel()
@@ -2754,6 +2757,12 @@ void Character::ConsumeMana(int amount)
 	{
 		json vitals = { { "mp", mana } };
 		SendGMCP("char.vitals " + vitals.dump());
+
+		int percent = 0;
+		if (maxMana > 0)
+			percent = (mana * 100) / maxMana;
+		vitals = { { "mppercent", percent } };
+		SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
 	}
 }
 
@@ -2776,6 +2785,12 @@ void Character::SetMana(int amount)
 	{
 		json vitals = { { "mp", mana } };
 		SendGMCP("char.vitals " + vitals.dump());
+
+		int percent = 0;
+		if (maxMana > 0)
+			percent = (mana * 100) / maxMana;
+		vitals = { { "mppercent", percent } };
+		SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
 	}
 }
 
@@ -2797,6 +2812,12 @@ void Character::SetEnergy(int amount)
 	{
 		json vitals = { { "en", energy } };
 		SendGMCP("char.vitals " + vitals.dump());
+
+		int percent = 0;
+		if (maxEnergy > 0)
+			percent = (energy * 100) / maxEnergy;
+		vitals = { { "enpercent", percent } };
+		SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
 	}
 }
 
@@ -2818,6 +2839,12 @@ void Character::SetRage(int amount)
 	{
 		json vitals = { { "rage", rage } };
 		SendGMCP("char.vitals " + vitals.dump());
+
+		int percent = 0;
+		if (maxRage > 0)
+			percent = (rage * 100) / maxRage;
+		vitals = { { "ragepercent", percent } };
+		SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
 	}
 }
 
@@ -2828,6 +2855,12 @@ void Character::SetMaxHealth(int amount)
 	{
 		json vitals = { { "hpmax", maxHealth } };
 		SendGMCP("char.vitals " + vitals.dump());
+
+		int percent = 0;
+		if (maxHealth > 0)
+			percent = (health * 100) / maxHealth;
+		vitals = { { "hppercent", percent } };
+		SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
 	}
 }
 
@@ -2838,6 +2871,12 @@ void Character::SetMaxMana(int amount)
 	{
 		json vitals = { { "mpmax", maxMana } };
 		SendGMCP("char.vitals " + vitals.dump());
+
+		int percent = 0;
+		if (maxMana > 0)
+			percent = (mana * 100) / maxMana;
+		vitals = { { "mppercent", percent } };
+		SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
 	}
 }
 
@@ -2848,6 +2887,12 @@ void Character::SetMaxEnergy(int amount)
 	{
 		json vitals = { { "enmax", maxEnergy } };
 		SendGMCP("char.vitals " + vitals.dump());
+
+		int percent = 0;
+		if (maxEnergy > 0)
+			percent = (energy * 100) / maxEnergy;
+		vitals = { { "enpercent", percent } };
+		SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
 	}
 }
 
@@ -2858,6 +2903,12 @@ void Character::SetMaxRage(int amount)
 	{
 		json vitals = { { "ragemax", maxRage } };
 		SendGMCP("char.vitals " + vitals.dump());
+
+		int percent = 0;
+		if (maxRage > 0)
+			percent = (rage * 100) / maxRage;
+		vitals = { { "ragepercent", percent } };
+		SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
 	}
 }
 
@@ -2889,6 +2940,12 @@ void Character::SetHealth(int amount)
 	{
 		json vitals = { { "hp", health } };
 		SendGMCP("char.vitals " + vitals.dump());
+
+		int percent = 0;
+		if (maxHealth > 0)
+			percent = (health * 100) / maxHealth;
+		vitals = { { "hppercent", percent } };
+		SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
 	}
 }
 
@@ -2904,6 +2961,12 @@ void Character::AdjustEnergy(Character * source, int amount)
 	{
 		json vitals = { { "en", energy } };
 		SendGMCP("char.vitals " + vitals.dump());
+
+		int percent = 0;
+		if (maxEnergy > 0)
+			percent = (energy * 100) / maxEnergy;
+		vitals = { { "enpercent", percent } };
+		SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
 	}
 }
 
@@ -2919,6 +2982,12 @@ void Character::AdjustRage(Character * source, int amount)
 	{
 		json vitals = { { "rage", rage } };
 		SendGMCP("char.vitals " + vitals.dump());
+
+		int percent = 0;
+		if (maxRage > 0)
+			percent = (rage * 100) / maxRage;
+		vitals = { { "ragepercent", percent } };
+		SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
 	}
 }
 
@@ -2947,6 +3016,12 @@ void Character::ConsumeEnergy(int amount)
 	{
 		json vitals = { { "en", energy } };
 		SendGMCP("char.vitals " + vitals.dump());
+
+		int percent = 0;
+		if (maxEnergy > 0)
+			percent = (energy * 100) / maxEnergy;
+		vitals = { { "enpercent", percent } };
+		SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
 	}
 }
 
@@ -2973,6 +3048,12 @@ void Character::ConsumeRage(int amount)
 	{
 		json vitals = { { "rage", rage } };
 		SendGMCP("char.vitals " + vitals.dump());
+
+		int percent = 0;
+		if (maxRage > 0)
+			percent = (rage * 100) / maxRage;
+		vitals = { { "ragepercent", percent } };
+		SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
 	}
 }
 
