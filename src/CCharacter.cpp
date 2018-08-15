@@ -507,40 +507,9 @@ void Character::GeneratePrompt(double currentTime)
         prompt += statColor + Utilities::itos(mana) + "/|X" + Utilities::itos(maxMana) + "|Bm ";
 
 		//Energy
-		/*if (energy > 0 && maxEnergy > 0)
-			percent = (energy * 100) / maxEnergy;
-		else
-			percent = 0;
-
-		if (percent >= 75)
-			statColor = "|x";
-		else if (percent >= 50)
-			statColor = "|G";
-		else if (percent >= 25)
-			statColor = "|Y";
-		else
-			statColor = "|R";
-			
-		prompt += statColor + Utilities::itos(energy) + "/|X" + Utilities::itos(maxEnergy) + "|Ben "*/
 		prompt += "|X" + Utilities::itos(energy) + "/" + Utilities::itos(maxEnergy) + "|Be ";
 
 		//Rage
-		/*if (mana > 0 && maxMana > 0)
-			percent = (mana * 100) / maxMana;
-		else
-			percent = 0;
-
-		if (percent >= 75)
-			statColor = "|x";
-		else if (percent >= 50)
-			statColor = "|G";
-		else if (percent >= 25)
-			statColor = "|Y";
-		else
-			statColor = "|R";
-
-		prompt += statColor + Utilities::itos(mana) + "/|X" + Utilities::itos(maxMana) + "|Bmp ";
-		*/
 		prompt += "|X" + Utilities::itos(rage) + "/|X" + Utilities::itos(maxRage) + "|Br";
     }
     else
@@ -718,23 +687,6 @@ void Character::GeneratePrompt(double currentTime)
 
         targetPrompt += statColor + Utilities::itos(percent) + "|B%h>|X";
 
-        //Mana
-        /*if(targettarget->mana > 0 && targettarget->maxMana > 0)
-            percent = (targettarget->mana * 100)/targettarget->maxMana;
-        else
-            percent = 0;
-
-        if(percent >= 75 || targettarget->maxMana == 0)
-            statColor = "|x";
-        else if(percent >= 50)
-            statColor = "|G";
-        else if(percent >= 25)
-            statColor = "|Y";
-        else
-            statColor = "|R";
-
-        targetPrompt += statColor + Utilities::itos(percent) + "|B%mp ";
-		*/
 		prompt += targetPrompt;
 
 		json targettargetvitals = { { "name", targettarget->GetName() },{ "level", gmcplevel },{ "hppercent", percent } };
@@ -754,7 +706,6 @@ void Character::GeneratePrompt(double currentTime)
 				if(current_member && current_member != this)
 				{
 					prompt += "|B<";
-					
 
 					if(current_member->InCombat())
 						prompt += "|R(X)|X";
@@ -782,6 +733,11 @@ void Character::GeneratePrompt(double currentTime)
 
 					prompt += statColor + Utilities::itos(current_member->GetHealth()) + "|X/" + Utilities::itos(current_member->GetMaxHealth());
 					prompt += "|B>|X";
+
+					json vitals = { { "slot", i }, { "name", current_member->GetName() }, { "combat", current_member->InCombat() },
+					                { "hp", current_member->GetHealth() }, { "hpmax", current_member->GetMaxHealth() },
+					                { "mana", current_member->GetMana() },{ "mpmax", current_member->GetMaxMana() } };
+					SendGMCP("group.vitals " + vitals.dump());
 				}
 			}
 		}
