@@ -700,6 +700,7 @@ void Character::GeneratePrompt(double currentTime)
 		if(group->GetSubgroupCount(firstingroup) > 1)
 		{
 			prompt += "\n\r";
+			int gmcpslot = 1;
 			for(int i = 0; i < Group::MAX_GROUP_SIZE; i++)
 			{
 				Character * current_member = group->members[firstingroup + i];
@@ -734,9 +735,9 @@ void Character::GeneratePrompt(double currentTime)
 					prompt += statColor + Utilities::itos(current_member->GetHealth()) + "|X/" + Utilities::itos(current_member->GetMaxHealth());
 					prompt += "|B>|X";
 
-					json vitals = { { "slot", i }, { "name", current_member->GetName() }, { "combat", current_member->InCombat() },
+					json vitals = { { "slot", gmcpslot++ }, { "name", current_member->GetName() }, { "combat", current_member->InCombat() },
 					                { "hp", current_member->GetHealth() }, { "hpmax", current_member->GetMaxHealth() },
-					                { "mana", current_member->GetMana() },{ "mpmax", current_member->GetMaxMana() } };
+					                { "mp", current_member->GetMana() },{ "mpmax", current_member->GetMaxMana() } };
 					SendGMCP("group.vitals " + vitals.dump());
 				}
 			}
