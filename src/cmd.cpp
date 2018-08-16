@@ -753,15 +753,9 @@ void cmd_group(Character * ch, string argument)
 			return;
 		}
 
-		//go through any chars remaining in remove_me's subgroup and gmcp them the slot is empty
-		//json vitals = { { "slotempty", whichslot}, };
-		//SendGMCP("group.vitals " + vitals.dump());
-
 		remove_me->Send("You have been removed from the group.\n\r");
 		ch->group->Remove(remove_me);
 		ch->Message(remove_me->name + " has been removed from the group.", Character::MSG_GROUP);
-
-
 
 		if (ch->group->GetMemberCount() <= 1)
 		{

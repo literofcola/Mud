@@ -3731,7 +3731,7 @@ void Character::Notify(SubscriberManager * lm)
 		delay_active = false;
 	}
 
-	if (hasQuery && queryData == lm) //We have a query pending where the 'data' payload is the Character being deleted (group invite)
+	if (hasQuery && (Character *)queryData == (Character *)lm) //We have a query pending where the 'data' payload is the Character being deleted (group invite)
 	{
 		QueryClear();
 	}
