@@ -918,6 +918,14 @@ void cmd_group(Character * ch, string argument)
 			return;
 		}
 		ch->group->Move(group_member, slot_num - 1);
+		for (int i = 0; i < Group::MAX_RAID_SIZE; i++)
+		{
+			if (ch->group->members[i] != nullptr)
+			{
+				json groupstatus = { { "move", "playermoved" } };
+				ch->group->members[i]->SendGMCP("group.status " + groupstatus.dump());
+			}
+		}
 		return;
 	}
 	if (!Utilities::str_cmp(arg1, "show"))

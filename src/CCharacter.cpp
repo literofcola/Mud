@@ -2010,6 +2010,9 @@ void Character::EnterCombat(Character * victim)
 
 void Character::EnterCombatAssist(Character * friendly)
 {
+	if (this == friendly)
+		return;
+
 	if (!IsAlive() || !friendly->IsAlive())
 	{
 		LogFile::Log("error", "EnterCombatAssist called on !IsAlive ch or vict");
