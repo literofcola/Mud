@@ -191,10 +191,10 @@ void cmd_look(Character * ch, string argument)
 		{
 			for (auto itemiter = inroom->items.begin(); itemiter != inroom->items.end(); itemiter++)
 			{
-				if(!(*itemiter)->inroom_name.empty())
-					ch->Send((*itemiter)->inroom_name + "\n\r");
+				if(!itemiter->first->inroom_name.empty())
+					ch->Send(itemiter->first->inroom_name + "\n\r");
 				else
-					ch->Send((*itemiter)->name + "\n\r");
+					ch->Send(itemiter->first->name + "\n\r");
 			}
 
 			std::list<Character *>::iterator i;

@@ -693,7 +693,6 @@ void Character::GeneratePrompt(double currentTime)
 		SendGMCP("targettarget.vitals " + targettargetvitals.dump());
 	}
     
-    
 	if(HasGroup())
 	{
 		int firstingroup = group->FindFirstSlotInSubgroup(this);
@@ -788,13 +787,12 @@ Item * Character::GetItemRoom(string name)
 	string tempname = name;
 	int number = Utilities::number_argument(tempname);
 
-	std::list<Item *>::iterator iter;
-	for (iter = room->items.begin(); iter != room->items.end(); ++iter)
+	for (auto iter = room->items.begin(); iter != room->items.end(); ++iter)
 	{
-		if (!Utilities::IsName(tempname, (*iter)->name) && !Utilities::IsName(tempname, (*iter)->keywords))
+		if (!Utilities::IsName(tempname, iter->first->name) && !Utilities::IsName(tempname, iter->first->keywords))
 			continue;
 		if (++count == number)
-			return (*iter);
+			return iter->first;
 	}
 	return NULL;
 }
@@ -804,10 +802,9 @@ bool Character::IsItemInRoom(Item * i)
 	if (i == nullptr)
 		return false;
 
-	std::list<Item *>::iterator iter;
-	for (iter = room->items.begin(); iter != room->items.end(); ++iter)
+	for (auto iter = room->items.begin(); iter != room->items.end(); ++iter)
 	{
-		if ((*iter) == i)
+		if (iter->first == i)
 			return true;
 	}
 	return false;
@@ -1440,15 +1437,9 @@ void Character::SetLevel(int newlevel)
 		}
 	}
 	level = newlevel;
-	health = maxHealth;
-	mana = maxMana;
-	energy = maxEnergy;
-	json vitals = { { "hp", health },{ "hpmax", maxHealth },{ "mp", mana },{ "mpmax", maxMana },
-	{ "en", energy },{ "enmax", maxEnergy } };
-	SendGMCP("char.vitals " + vitals.dump());
-
-	vitals = { { "hppercent", 100 },{ "mppercent", 100 },{ "enpercent", 100 } };
-	SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
+	SetHealth(maxHealth);
+	SetMana(maxMana);
+	SetEnergy(maxEnergy);
 }
 
 int Character::GetLevel()
@@ -2422,51 +2413,6 @@ int Character::GetComboPoints()
 	return comboPoints;
 }
 
-void Character::AdjustHealth(Character * source, int amount)
-{
-	if (!IsAlive())
-	{
-		LogFile::Log("error", "AdjustHealth() called on !IsAlive() character");
-		return;
-	}
-    if(source == NULL)
-    {
-        //a possibility
-		source = this; //self damage!?!? Will this work?
-    }
-    if(amount < 0)
-    {
-        (health + amount >= 0) ? health += amount : health = 0;
-        if(health == 0 && player && player->IMMORTAL())
-            health = 1;
-    }
-    if(amount > 0)
-    {
-        (health + amount >= maxHealth) ? health = maxHealth : health += amount;
-    }
-
-	if (IsPlayer())
-	{
-		json vitals = { { "hp", health } };
-		SendGMCP("char.vitals " + vitals.dump());
-
-		int percent = 0;
-		if (maxHealth > 0)
-			percent = (health * 100) / maxHealth;
-		vitals = { { "hppercent", percent } };
-		SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
-	}
-
-    if(health == 0) 
-    {
-		Message("|R" + name + " has been slain!|X", Character::MSG_ROOM_NOTCHARVICT, source);
-		source->Send("|R" + name + " has been slain!|X\n\r");
-		Send("|RYou have been slain!|X\n\r");
-
-		OnDeath(); //The source of damage shouldn't matter except where cases of "killing blow" matters (none so far?)
-    }
-}
-
 void Character::OnDeath()
 {
 	std::list<Character::Threat>::iterator threatiter;
@@ -2614,7 +2560,7 @@ void Character::MakeCorpse()
 	Item * thecorpse = new Item("The corpse of " + name, 0);
 	thecorpse->keywords = "corpse " + name;
 	Utilities::FlagSet(thecorpse->flags, Item::FLAG_ROOMONLY);
-	room->items.push_back(thecorpse);
+	room->AddItem(thecorpse);
 }
 
 void Character::RemoveCorpse()
@@ -2630,13 +2576,11 @@ void Character::RemoveCorpse()
 
 	Room * corpseroom = Game::GetGame()->GetRoom(player->corpse_room);
 
-	std::list<Item *>::iterator itemiter;
-	for (itemiter = corpseroom->items.begin(); itemiter != corpseroom->items.end(); itemiter++)
+	for (auto itemiter = corpseroom->items.begin(); itemiter != corpseroom->items.end(); itemiter++)
 	{
-		if ((*itemiter)->keywords.find(name) != std::string::npos)
+		if (itemiter->first->keywords.find(name) != std::string::npos)
 		{
-			delete (*itemiter);
-			corpseroom->items.erase(itemiter);
+			corpseroom->RemoveItem(itemiter->first);
 
 			if (room && room == corpseroom)
 			{
@@ -2689,47 +2633,99 @@ bool Character::HasResource(int which, int amount)
     return false;
 }
 
-//Mana adjusting function to be used by spells. Invokes 5 second rule and checks for AURA_RESOURCE_COST
-//A negative amount would indicate a mana gain
-//todo: we have ConsumeMana, SetMana, AdjustMana, ridiculous. Sort that out
-void Character::ConsumeMana(int amount)
+void Character::AdjustHealth(Character * source, int amount)
 {
-    int resource_cost = GetAuraModifier(SpellAffect::AURA_RESOURCE_COST, 1);
-    
-    double increase = amount * (resource_cost / 100.0);
-    amount += (int)increase;
-
-    if(mana - amount < 0)
-    {
-        mana = 0;
-    }
-    else if(mana - amount > maxMana)
-    {
-        mana = maxMana;
-    }
-    else
-    {
-        mana -= amount;
-    }
-
-    //start 5 second rule if we lost mana
-    if(amount > 0)
-    {
-        this->lastSpellCast = Game::currentTime;
-    }   
-	if (IsPlayer())
+	if (!IsAlive())
 	{
-		json vitals = { { "mp", mana } };
-		SendGMCP("char.vitals " + vitals.dump());
+		LogFile::Log("error", "AdjustHealth() called on !IsAlive() character");
+		return;
+	}
+	if (source == NULL)
+	{
+		//a possibility
+		source = this; //self damage!?
+	}
+	SetHealth(GetHealth() + amount);
 
-		int percent = 0;
-		if (maxMana > 0)
-			percent = (mana * 100) / maxMana;
-		vitals = { { "mppercent", percent } };
-		SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
+	if (GetHealth() == 0)
+	{
+		Message("|R" + name + " has been slain!|X", Character::MSG_ROOM_NOTCHARVICT, source);
+		source->Send("|R" + name + " has been slain!|X\n\r");
+		Send("|RYou have been slain!|X\n\r");
+
+		OnDeath(); //The source of damage shouldn't matter except where cases of "killing blow" matters (none so far?)
 	}
 }
 
+void Character::SetHealth(int amount)
+{
+	if (amount <= 0)
+	{
+		if (player && player->IMMORTAL())
+			health = 1;
+		else
+			health = 0;
+	}
+	else if (amount > maxHealth)
+	{
+		health = maxHealth;
+	}
+	else
+	{
+		health = amount;
+	}
+	if (IsPlayer())
+	{
+		json vitals = { { "hp", health } };
+		SendGMCP("char.vitals " + vitals.dump());
+
+		int percent = 0;
+		if (maxHealth > 0)
+			percent = (health * 100) / maxHealth;
+		vitals = { { "hppercent", percent } };
+		SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
+
+		/*if (HasGroup())
+		{
+			int slot = group->FindMemberSlot(this); //slot is zero indexed from these functions
+			int first_slot = group->FindFirstSlotInSubgroup(this);
+
+			//slot is wrong here... change groupframe entirely to use name as a key. slot is different per character client side
+			for (int i = first_slot; i < first_slot + Group::MAX_GROUP_SIZE; i++)
+			{
+				if (group->members[i] != nullptr && group->members[i] != this)
+				{
+					json vitals = { { "slot", (slot % Group::MAX_GROUP_SIZE) + 1 },{ "name", GetName() },{ "combat", InCombat() },
+								    { "hp", GetHealth() },{ "hpmax", GetMaxHealth() }, { "mp", GetMana() },{ "mpmax", GetMaxMana() } };
+					group->members[i]->SendGMCP("group.vitals " + vitals.dump());
+				}
+			}
+		}*/
+	}
+}
+
+//Mana adjusting function to be used by spells. Invokes 5 second rule and checks for AURA_RESOURCE_COST
+//A negative amount would indicate a mana gain
+void Character::ConsumeMana(int amount)
+{
+    int resource_cost = GetAuraModifier(SpellAffect::AURA_RESOURCE_COST, 1);
+    double increase = amount * (resource_cost / 100.0);
+    amount += (int)increase;
+
+	//start 5 second rule if we lost mana
+	if (amount > 0)
+	{
+		this->lastSpellCast = Game::currentTime;
+	}
+
+	SetMana(GetMana() - amount);
+}
+
+//Does NOT reset mana regen or check for AURA_RESOURCE_COST
+void Character::AdjustMana(Character * source, int amount)
+{
+	SetMana(mana + amount);
+}
 
 void Character::SetMana(int amount)
 {
@@ -2758,6 +2754,22 @@ void Character::SetMana(int amount)
 	}
 }
 
+//Energy adjusting function to be used by spells. Checks for AURA_RESOURCE_COST
+//A negative amount would indicate an energy gain
+void Character::ConsumeEnergy(int amount)
+{
+	int resource_cost = GetAuraModifier(SpellAffect::AURA_RESOURCE_COST, 1);
+	double increase = amount * (resource_cost / 100.0);
+	amount += (int)increase;
+
+	SetEnergy(GetEnergy() - amount);
+}
+
+void Character::AdjustEnergy(Character * source, int amount)
+{
+	SetEnergy(GetEnergy() + amount);
+}
+
 void Character::SetEnergy(int amount)
 {
 	if (amount < 0)
@@ -2783,6 +2795,22 @@ void Character::SetEnergy(int amount)
 		vitals = { { "enpercent", percent } };
 		SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
 	}
+}
+
+//Rage adjusting function to be used by spells. Checks for AURA_RESOURCE_COST
+//A negative amount would indicate an rage gain
+void Character::ConsumeRage(int amount)
+{
+	int resource_cost = GetAuraModifier(SpellAffect::AURA_RESOURCE_COST, 1);
+	double increase = amount * (resource_cost / 100.0);
+	amount += (int)increase;
+
+	SetRage(GetRage() - amount);
+}
+
+void Character::AdjustRage(Character * source, int amount)
+{
+	SetRage(GetRage() + amount);
 }
 
 void Character::SetRage(int amount)
@@ -2866,151 +2894,6 @@ void Character::SetMaxRage(int amount)
 	if (IsPlayer())
 	{
 		json vitals = { { "ragemax", maxRage } };
-		SendGMCP("char.vitals " + vitals.dump());
-
-		int percent = 0;
-		if (maxRage > 0)
-			percent = (rage * 100) / maxRage;
-		vitals = { { "ragepercent", percent } };
-		SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
-	}
-}
-
-void Character::AdjustMana(Character * source, int amount)
-{
-	//start 5 second rule if source was ourself and we lost mana
-	if (source == this && amount < 0)
-	{
-		this->lastSpellCast = Game::currentTime;
-	}
-    SetMana(mana + amount);
-}
-
-void Character::SetHealth(int amount)
-{
-	if (amount < 0)
-	{
-		health = 0;
-	}
-	else if (amount > maxHealth)
-	{
-		health = maxHealth;
-	}
-	else
-	{
-		health = amount;
-	}
-	if (IsPlayer())
-	{
-		json vitals = { { "hp", health } };
-		SendGMCP("char.vitals " + vitals.dump());
-
-		int percent = 0;
-		if (maxHealth > 0)
-			percent = (health * 100) / maxHealth;
-		vitals = { { "hppercent", percent } };
-		SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
-	}
-}
-
-void Character::AdjustEnergy(Character * source, int amount)
-{
-	if (energy + amount > maxEnergy)
-		energy = maxEnergy;
-	else if (energy + amount < 0)
-		energy = 0;
-	else
-		energy += amount;
-	if (IsPlayer())
-	{
-		json vitals = { { "en", energy } };
-		SendGMCP("char.vitals " + vitals.dump());
-
-		int percent = 0;
-		if (maxEnergy > 0)
-			percent = (energy * 100) / maxEnergy;
-		vitals = { { "enpercent", percent } };
-		SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
-	}
-}
-
-void Character::AdjustRage(Character * source, int amount)
-{
-	if (rage + amount > maxRage)
-		rage = maxRage;
-	else if (rage + amount < 0)
-		rage = 0;
-	else
-		rage += amount;
-	if (IsPlayer())
-	{
-		json vitals = { { "rage", rage } };
-		SendGMCP("char.vitals " + vitals.dump());
-
-		int percent = 0;
-		if (maxRage > 0)
-			percent = (rage * 100) / maxRage;
-		vitals = { { "ragepercent", percent } };
-		SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
-	}
-}
-
-//Energy adjusting function to be used by spells. Checks for AURA_RESOURCE_COST
-//A negative amount would indicate an energy gain
-void Character::ConsumeEnergy(int amount)
-{
-	int resource_cost = GetAuraModifier(SpellAffect::AURA_RESOURCE_COST, 1);
-
-	double increase = amount * (resource_cost / 100.0);
-	amount += (int)increase;
-
-	if (energy - amount < 0)
-	{
-		energy = 0;
-	}
-	else if (energy - amount > maxEnergy)
-	{
-		energy = maxEnergy;
-	}
-	else
-	{
-		energy -= amount;
-	}
-	if (IsPlayer())
-	{
-		json vitals = { { "en", energy } };
-		SendGMCP("char.vitals " + vitals.dump());
-
-		int percent = 0;
-		if (maxEnergy > 0)
-			percent = (energy * 100) / maxEnergy;
-		vitals = { { "enpercent", percent } };
-		SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
-	}
-}
-
-void Character::ConsumeRage(int amount)
-{
-	int resource_cost = GetAuraModifier(SpellAffect::AURA_RESOURCE_COST, 1);
-
-	double increase = amount * (resource_cost / 100.0);
-	amount += (int)increase;
-
-	if (rage - amount < 0)
-	{
-		rage = 0;
-	}
-	else if (rage - amount > maxRage)
-	{
-		rage = maxRage;
-	}
-	else
-	{
-		rage -= amount;
-	}
-	if (IsPlayer())
-	{
-		json vitals = { { "rage", rage } };
 		SendGMCP("char.vitals " + vitals.dump());
 
 		int percent = 0;

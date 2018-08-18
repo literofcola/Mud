@@ -979,8 +979,7 @@ void Game::WorldUpdate(Server * server)
 							LogFile::Log("error", "Reset " + Utilities::itos(currReset->id) + " in room " + Utilities::itos(currRoom->id) + ": item " + Utilities::itos(currReset->targetID) + " does not exist.");
 							continue;
 						}
-						Item * newitem = new Item(*itemindex);
-						currReset->inroom->items.push_back(newitem);
+						currReset->inroom->AddItem(itemindex);
 					}
                 }
             }

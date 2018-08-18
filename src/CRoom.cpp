@@ -84,11 +84,6 @@ Room::~Room()
         if((*iter).second != NULL)
             delete (*iter).second;
     }
-	for (auto iter = items.begin(); iter != items.end(); iter++)
-	{
-		if ((*iter))
-			delete (*iter);
-	}
 }
 
 void Room::Save()
@@ -313,7 +308,7 @@ bool Room::HasItem(Item * i)
 		return false;
 	for (auto iter = items.begin(); iter != items.end(); iter++)
 	{
-		if ((*iter)->id == i->id)
+		if (iter->first->id == i->id)
 			return true;
 	}
 	return false;
@@ -324,7 +319,7 @@ bool Room::HasItem(int id)
 		return false;
 	for (auto iter = items.begin(); iter != items.end(); iter++)
 	{
-		if ((*iter)->id == id)
+		if (iter->first->id == id)
 			return true;
 	}
 	return false;
@@ -334,11 +329,31 @@ bool Room::RemoveItem(Item * i)
 {
 	for (auto iter = items.begin(); iter != items.end(); iter++)
 	{
-		if ((*iter) == i)
+		if (iter->first == i)
 		{
-			items.erase(iter);
+			iter->second--;
+			if (iter->second <= 0)
+			{
+				items.erase(iter);
+			}
 			return true;
 		}
 	}
 	return false;
+}
+
+void Room::AddItem(Item * i)
+{
+	if (i == nullptr)
+		return;
+
+	for (auto iter = items.begin(); iter != items.end(); iter++)
+	{
+		if (iter->first->id == i->id)
+		{
+			iter->second++;
+			return;
+		}
+	}
+	items.push_back(std::make_pair(i, 1));
 }

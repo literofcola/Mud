@@ -20,7 +20,7 @@ public:
     Exit * exits[Exit::DIR_LAST];
     std::map<int, Reset *> resets;
     std::map<int, Trigger> triggers;
-	std::list<Item *> items;
+	std::list<std::pair<Item *, int>> items;
 
     //For search  Store a reference to all searchable class data by type
     std::map<std::string, std::string*> stringTable;
@@ -58,6 +58,7 @@ public:
 	bool HasItem(Item * i);
 	bool HasItem(int id);
 	bool RemoveItem(Item * i);
+	void AddItem(Item * i);
 
     bool operator<(const Room& r)const{return id<r.id;}
 
