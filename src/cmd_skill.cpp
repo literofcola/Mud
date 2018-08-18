@@ -269,7 +269,7 @@ void cmd_cast(Character * ch, string argument)
     
     if(lua_ret == 0)
     {
-        //not enough resources to cast
+        //not enough resources to cast, or some other restriction
         return;
     }
 

@@ -1128,6 +1128,7 @@ Character * Character::LoadPlayer(std::string name, User * user)
 	{
 		Row invrow = *iter;
 		int id = invrow["item"];
+		int count = invrow["count"];
 		int location = invrow["location"]; //Location means equipped, in inventory, in bank...
 		switch (location)
 		{
@@ -1152,14 +1153,18 @@ Character * Character::LoadPlayer(std::string name, User * user)
 						loaded->player->AddItemInventory(loaded->player->RemoveItemEquipped(Player::EQUIP_MAINHAND));
 					}
 				}
-				loaded->player->EquipItemFromInventory(loaded->player->NewItemInventory(equip), equiploc);
+				loaded->player->AddItemInventory(equip);
+				loaded->player->EquipItemFromInventory(equip, equiploc);
 
 				break;
 			}
 
 			case DB_INVENTORY_INVENTORY:
 			{
-				loaded->player->NewItemInventory(Game::GetGame()->GetItemIndex(id));
+				for (int i = 0; i < count; i++)
+				{
+					loaded->player->AddItemInventory(Game::GetGame()->GetItemIndex(id));
+				}
 				break;
 			}
 
@@ -1288,16 +1293,15 @@ void Character::Save()
 		{
 			if (player->equipped[i] != NULL)
 			{
-				string equippedsql = "INSERT INTO player_inventory (player, item, location) values ('" + name + "',";
-				equippedsql += Utilities::itos(player->equipped[i]->id) + "," + Utilities::itos(DB_INVENTORY_EQUIPPED) + ")";
+				string equippedsql = "INSERT INTO player_inventory (player, item, count, location) values ('" + name + "',";
+				equippedsql += Utilities::itos(player->equipped[i]->id) + ",1," + Utilities::itos(DB_INVENTORY_EQUIPPED) + ")";
 				Server::sqlQueue->Write(equippedsql);
 			}
 		}
-		std::list<Item *>::iterator inviter;
-		for (inviter = player->inventory.begin(); inviter != player->inventory.end(); ++inviter)
+		for (auto inviter = player->inventory.begin(); inviter != player->inventory.end(); ++inviter)
 		{
-			string equippedsql = "INSERT INTO player_inventory (player, item, location) values ('" + name + "',";
-			equippedsql += Utilities::itos((*inviter)->id) + "," + Utilities::itos(DB_INVENTORY_INVENTORY) + ")";
+			string equippedsql = "INSERT INTO player_inventory (player, item, count, location) values ('" + name + "',";
+			equippedsql += Utilities::itos(inviter->first->id) + "," + Utilities::itos(inviter->second) + "," + Utilities::itos(DB_INVENTORY_INVENTORY) + ")";
 			Server::sqlQueue->Write(equippedsql);
 		}
 		
@@ -2562,7 +2566,7 @@ void Character::OnDeath()
 								group_member->Send("You receive loot: " + (string)Item::quality_strings[drop->quality] + drop->name + "|X.\n\r");
 								group_member->Message(group_member->name + " receives loot: " + Item::quality_strings[drop->quality] + drop->name + "|X.",
 									Character::MSG_ROOM_NOTCHAR);
-								group_member->player->NewItemInventory(drop);
+								group_member->player->AddItemInventory(drop);
 							}
 						}
 						if (group_member->player)
@@ -2587,7 +2591,7 @@ void Character::OnDeath()
 						tap->Send("You receive loot: " + (string)Item::quality_strings[drop->quality] + drop->name + "|X.\n\r");
 						tap->Message(tap->name + " receives loot: " + Item::quality_strings[drop->quality] + drop->name + "|X.",
 							Character::MSG_ROOM_NOTCHAR);
-						tap->player->NewItemInventory(drop);
+						tap->player->AddItemInventory(drop);
 					}
 				}
 				if (tap->player)
@@ -3320,6 +3324,17 @@ std::string Character::AggressionLightColor(Character * target)
 	{
 		return "|r";
 	}
+}
+
+bool Character::CanAttack(Character * victim)
+{
+	if ((victim->IsNPC() && Utilities::FlagIsSet(victim->flags, Character::FLAG_FRIENDLY))
+		|| (!victim->IsNPC() && room->pvp == 0)
+		|| (!victim->IsAlive()))
+	{
+		return false;
+	}
+	return true;
 }
 
 bool Character::CanMove()

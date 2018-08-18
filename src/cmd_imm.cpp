@@ -167,7 +167,7 @@ void cmd_load(Character * ch, string argument)
             ch->Send("Item " + arg2 + " does not exist.\n\r");
             return;
         }
-        ch->player->NewItemInventory(itemIndex);
+        ch->player->AddItemInventory(itemIndex);
     }
     else
     {

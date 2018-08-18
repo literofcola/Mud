@@ -272,6 +272,7 @@ DROP TABLE IF EXISTS `player_inventory`;
 CREATE TABLE `player_inventory` (
   `player` varchar(12) NOT NULL,
   `item` int(11) NOT NULL,
+  `count` int(11) NOT NULL,
   `location` int(11) NOT NULL,
   KEY `player` (`player`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
@@ -485,4 +486,4 @@ CREATE TABLE `triggers` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-08-16 20:51:39
+-- Dump completed on 2018-08-17 19:24:38

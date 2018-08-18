@@ -49,12 +49,11 @@ void cmd_attack(Character * ch, string argument)
         ch->Send("You can't attack yourself!\n\r");
         return;
     }
-    if((target->IsNPC() && Utilities::FlagIsSet(target->flags, Character::FLAG_FRIENDLY))
-		|| (!target->IsNPC() && ch->room->pvp == 0))
-    {
-        ch->Send("You can't attack that target.\n\r");
-        return;
-    }
+	if (!ch->CanAttack(target))
+	{
+		ch->Send("You can't attack that target.\n\r");
+		return;
+	}
 
     ch->SetTarget(target);
     ch->Send("You begin attacking " + target->name + "!\n\r");
@@ -137,7 +136,7 @@ void cmd_look(Character * ch, string argument)
                 areaname = "|G";
             else if(this_area->pvp == 2) //everyone attacks everyone
                 areaname = "|Y";
-            else if(this_area->pvp == 3) //everyone attacks everyone, lose all your equipment
+            else if(this_area->pvp == 3) //everyone attacks everyone, lose all your equipment?
                 areaname = "|R";
 
             areaname += this_area->name;
@@ -1460,10 +1459,9 @@ void cmd_quest(Character * ch, string argument)
                     {
                         if((*iter).type == Quest::OBJECTIVE_ITEM)
                         {
-                            std::list<Item*>::iterator inviter;
-                            for(inviter = ch->player->inventory.begin(); inviter != ch->player->inventory.end(); ++inviter)
+                            for(auto inviter = ch->player->inventory.begin(); inviter != ch->player->inventory.end(); ++inviter)
                             {
-                                if((*inviter)->id == ((Item*)((*iter).objective))->id)
+                                if(inviter->first->id == ((Item*)((*iter).objective))->id)
                                 {
                                     ch->player->questObjectives[ch->player->questLog.size()-1][objindex]++;
                                 }
@@ -1587,27 +1585,11 @@ void cmd_quest(Character * ch, string argument)
 				if ((*iter).type == Quest::OBJECTIVE_ITEM)
 				{
 					int found = 0;
-					std::list<Item*>::iterator inviter;
-					for (inviter = ch->player->inventory.begin(); inviter != ch->player->inventory.end();)
+					while (ch->player->RemoveItemInventory((Item*)((*iter).objective)))
 					{
-						if ((*inviter)->id == ((Item*)((*iter).objective))->id)
-						{
-							if (found < (*iter).count)
-							{
-								//remove from inventory
-								inviter = ch->player->inventory.erase(inviter);
-								ch->player->inventorySize--;
-							}
-							else
-							{
-								break;
-							}
-							found++;
-						}
-						else
-						{
-							++inviter;
-						}
+						found++;
+						if (found >= (*iter).count)
+							break;
 					}
 				}
 			}
@@ -1718,27 +1700,11 @@ bool questCompleteQuery(Character * ch, string argument)
 		if ((*iter).type == Quest::OBJECTIVE_ITEM)
 		{
 			int found = 0;
-			std::list<Item*>::iterator inviter;
-			for (inviter = ch->player->inventory.begin(); inviter != ch->player->inventory.end();)
+			while (ch->player->RemoveItemInventory((Item*)((*iter).objective)))
 			{
-				if ((*inviter)->id == ((Item*)((*iter).objective))->id)
-				{
-					if (found < (*iter).count)
-					{
-						//remove from inventory
-						inviter = ch->player->inventory.erase(inviter);
-						ch->player->inventorySize--;
-					}
-					else
-					{
-						break;
-					}
-					found++;
-				}
-				else
-				{
-					++inviter;
-				}
+				found++;
+				if (found >= (*iter).count)
+					break;
 			}
 		}
 	}
@@ -1756,7 +1722,7 @@ bool questCompleteQuery(Character * ch, string argument)
 	if(myreward)
 	{
 		ch->Send("|WYou receive loot: " + string(Item::quality_strings[myreward->quality]) + myreward->name + "|X\n\r");
-		ch->player->NewItemInventory(myreward);
+		ch->player->AddItemInventory(myreward);
 	}
 
 	ch->Send("|BYou have gained |Y" + Utilities::itos(quest->experienceReward) + "|B experience.|X\n\r");

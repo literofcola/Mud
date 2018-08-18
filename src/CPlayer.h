@@ -40,7 +40,8 @@ public:
 
     //Inventory and equipment
     std::vector<Item *> equipped;   //TODO save id only... no "oldstat" items... if all we save is the id, effectively the same thing?
-    std::list<Item *> inventory;	
+    //std::list<Item *> inventory;	
+	std::list<std::pair<Item *, int>> inventory;	//structured this way to support item stacks
     int inventorySize;
     int maxInventorySize; //new players start with 16 slots
 
@@ -70,7 +71,7 @@ public:
     bool QuestCompleted(Quest * quest);
     bool QuestObjectivesComplete(Quest * quest);
     void QuestCompleteObjective(int type, void * obj);
-    Item * NewItemInventory(Item * itemindex);
+    //Item * NewItemInventory(Item * itemindex);
     void AddItemInventory(Item * item);
     Item * GetItemInventory(int id);
     Item * GetItemInventory(std::string name);

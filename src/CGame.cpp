@@ -1276,7 +1276,7 @@ void Game::LoginHandler(Server * server, User * user, string argument)
 					}
 					for (int i = 0; i < count; i++)
 					{
-						itemIndex = user->character->player->NewItemInventory(itemIndex);
+						user->character->player->AddItemInventory(itemIndex);
 						if (itemIndex->equipLocation != Item::EquipLocation::EQUIP_NONE)
 						{
 							user->character->player->EquipItemFromInventory(itemIndex, user->character->player->GetEquipLocation(itemIndex));

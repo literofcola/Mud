@@ -210,6 +210,7 @@ public:
 	bool CancelCastOnHit();
 	std::string AggressionColor(Character * target);
 	std::string AggressionLightColor(Character * target);
+	bool CanAttack(Character * victim);
     void EnterCombat(Character * victim);
 	void EnterCombatAssist(Character * friendly);
     void ExitCombat();

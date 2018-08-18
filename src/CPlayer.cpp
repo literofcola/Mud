@@ -43,21 +43,20 @@ Player::Player(User * user_)
 
 Player::~Player()
 {
-    for(int i = 0; i < (int)equipped.size(); i++)
+    /*for(int i = 0; i < (int)equipped.size(); i++)
     {
         if(equipped[i] != NULL)
         {
             delete equipped[i];
             equipped[i] = NULL;
         }
-    }
+    }*/
     equipped.clear();
 
-    std::list<Item *>::iterator iter;
-    for(iter = inventory.begin(); iter != inventory.end(); ++iter)
+    /*for(auto iter = inventory.begin(); iter != inventory.end(); ++iter)
     {
         delete (*iter);
-    }
+    }*/
     inventory.clear();
 }
 
@@ -244,31 +243,47 @@ bool Player::QuestObjectivesComplete(Quest * quest)
     return false;
 }
 
-Item * Player::NewItemInventory(Item * itemindex)
+/*Item * Player::NewItemInventory(Item * itemindex)
 {
-    Item * ret = new Item(*itemindex);
-    inventory.push_back(ret);
+	//Check if this item is a quest objective
+	QuestCompleteObjective(Quest::OBJECTIVE_ITEM, (void*)itemindex);
+	
+	for (auto iter = inventory.begin(); iter != inventory.end(); iter++)
+	{
+		if (iter->first->id == itemindex->id)
+		{
+			iter->second++;
+			return iter->first;
+		}
+	}
+	Item * ret = new Item(*itemindex);
+    inventory.push_back(std::make_pair(ret, 1));
     inventorySize++;
-    //Check if this item is a quest objective
-    QuestCompleteObjective(Quest::OBJECTIVE_ITEM, (void*)itemindex);
     return ret;
-}
+}*/
 
 void Player::AddItemInventory(Item * item)
 {
-    inventory.push_front(item);
+	QuestCompleteObjective(Quest::OBJECTIVE_ITEM, (void*)item);
+	for (auto iter = inventory.begin(); iter != inventory.end(); iter++)
+	{
+		if (iter->first->id == item->id)
+		{
+			iter->second++;
+			return;
+		}
+	}
+    inventory.push_front(std::make_pair(item, 1));
     inventorySize++;
-    QuestCompleteObjective(Quest::OBJECTIVE_ITEM, (void*)item);
 }
 
 Item * Player::GetItemInventory(int id)
 {
-    std::list<Item*>::iterator iter;
-    for(iter = inventory.begin(); iter != inventory.end(); ++iter)
+    for(auto iter = inventory.begin(); iter != inventory.end(); ++iter)
     {
-        if((*iter)->id == id)
+        if(iter->first->id == id)
         {
-            return (*iter);
+			return iter->first;
         }
     }
     return NULL;
@@ -278,13 +293,12 @@ Item * Player::GetItemInventory(string name)
 {
     int numberarg = Utilities::number_argument(name);
     int ctr = 1;
-    std::list<Item*>::iterator iter;
-    for(iter = inventory.begin(); iter != inventory.end(); ++iter)
+    for(auto iter = inventory.begin(); iter != inventory.end(); ++iter)
     {
-        if(Utilities::IsName(name, (*iter)->name))
+        if(Utilities::IsName(name, iter->first->name))
         {
             if(ctr == numberarg)
-                return (*iter);
+                return iter->first;
             ctr++;
         }
     }
@@ -293,14 +307,17 @@ Item * Player::GetItemInventory(string name)
 
 Item * Player::RemoveItemInventory(int id)
 {
-    std::list<Item*>::iterator iter;
-    for(iter = inventory.begin(); iter != inventory.end(); ++iter)
+    for(auto iter = inventory.begin(); iter != inventory.end(); ++iter)
     {
-        if((*iter)->id == id)
+        if(iter->first->id == id)
         {
-            Item * ret = (*iter);
-            inventory.erase(iter);
-            inventorySize--;
+			Item * ret = iter->first;
+			iter->second--;
+			if (iter->second == 0)
+			{
+				inventory.erase(iter);
+				inventorySize--;
+			}
             return ret;
         }
     }
@@ -311,17 +328,20 @@ Item * Player::RemoveItemInventory(string name)
 {
     int numberarg = Utilities::number_argument(name);
     int ctr = 1;
-    std::list<Item*>::iterator iter;
-    for(iter = inventory.begin(); iter != inventory.end(); ++iter)
+    for(auto iter = inventory.begin(); iter != inventory.end(); ++iter)
     {
-        if(Utilities::IsName(name, (*iter)->name))
+        if(Utilities::IsName(name, iter->first->name))
         {
             if(ctr == numberarg)
             {
-                Item * ret = (*iter);
-                inventory.erase(iter);
-                inventorySize--;
-                return ret;
+				Item * ret = iter->first;
+				iter->second--;
+				if (iter->second == 0)
+				{
+					inventory.erase(iter);
+					inventorySize--;
+				}
+				return ret;
             }
             ctr++;
         }
@@ -331,14 +351,16 @@ Item * Player::RemoveItemInventory(string name)
 
 bool Player::RemoveItemInventory(Item * item)
 {
-    std::list<Item*>::iterator iter;
-    for(iter = inventory.begin(); iter != inventory.end(); ++iter)
+    for(auto iter = inventory.begin(); iter != inventory.end(); ++iter)
     {
-        if((*iter) == item)
+        if(iter->first == item)
         {
-            Item * ret = (*iter);
-            inventory.erase(iter);
-            inventorySize--;
+			iter->second--;
+			if (iter->second == 0)
+			{
+				inventory.erase(iter);
+				inventorySize--;
+			}
             return true;
         }
     }

@@ -33,7 +33,7 @@ void cmd_inventory(Character * ch, string argument)
 
 	ch->Send("You are carrying:\n\r");
 
-	std::list<std::pair<Item *, int>> coalesced;
+	/*std::list<std::pair<Item *, int>> coalesced;
 	//copy the actual inventory to the coalesced list
 	std::list<Item*>::iterator iter;
 	for (iter = ch->player->inventory.begin(); iter != ch->player->inventory.end(); ++iter)
@@ -59,6 +59,17 @@ void cmd_inventory(Character * ch, string argument)
 	//print the coalesced list
 	int total = 0;
 	for (auto i = coalesced.begin(); i != coalesced.end(); i++)
+	{
+		if (i->second > 1)
+			ch->Send("|M(" + Utilities::itos(i->second) + ") ");
+		else
+			ch->Send("    ");
+		ch->Send(Item::quality_strings[i->first->quality] + i->first->name + "|X\n\r");
+		total++;
+	}*/
+
+	int total = 0;
+	for (auto i = ch->player->inventory.begin(); i != ch->player->inventory.end(); i++)
 	{
 		if (i->second > 1)
 			ch->Send("|M(" + Utilities::itos(i->second) + ") ");
@@ -236,16 +247,16 @@ void cmd_wear(Character * ch, string argument)
 
     if(!Utilities::str_cmp(arg1, "all"))
     {
-        std::list<Item *>::iterator iter = ch->player->inventory.begin();
+        auto iter = ch->player->inventory.begin();
         
         while(iter != ch->player->inventory.end())
         {
-            std::list<Item *>::iterator thisiter = iter;
+            auto thisiter = iter;
             iter++;
-            int equiploc = ch->player->GetEquipLocation(*thisiter);
+            int equiploc = ch->player->GetEquipLocation(thisiter->first);
             if(equiploc != Player::EQUIP_LAST)
             {
-                Item * wear = (*thisiter);
+                Item * wear = thisiter->first;
 
                 //don't equip anything that requires something be removed
                 if(ch->player->equipped[equiploc] != NULL)
