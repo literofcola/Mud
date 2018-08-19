@@ -302,7 +302,7 @@ const class Command skillEditCmd_table[] =
     { "cast_time",		skillEditCmd_cast_time, 0, 0, 1, 1	},
 	{ "interrupt_flags",skillEditCmd_interrupt_flags, 0, 0, 1, 1 },
     { "cooldown",       skillEditCmd_cooldown, 0, 0, 1, 1 },
-	{ "ignore_global",  skillEditCmd_ignore_global, 0, 0, 1, 1 },
+	{ "flag",		    skillEditCmd_flag, 0, 0, 1, 1 },
     { "cost_function",  skillEditCmd_cost_function, 0, 0, 1, 1 },
     { "reload",         skillEditCmd_reload, 0, 0, 1, 1 },
 	{ "",			0, 0, 0, 1, 1				}

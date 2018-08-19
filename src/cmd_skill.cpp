@@ -152,6 +152,7 @@ void cmd_castCallback(Character::DelayData delayData)
 	{
 		LogFile::Log("error", "call_function unhandled exception cmd_castcallback _cast");
 	}
+	delayData.caster->SetCooldown(delayData.sk, -1);
 }
 
 void cmd_cast(Character * ch, string argument)
@@ -281,8 +282,8 @@ void cmd_cast(Character * ch, string argument)
 		ch->SendGMCP("char.casttime " + casttime.dump());
 	}
  
-    //Start global cooldown
-    ch->SetCooldown(nullptr, "", true, 0);
+	if(!Utilities::FlagIsSet(spell->flags, Skill::FLAG_NOGCD))
+		ch->StartGlobalCooldown();
 
     //TODO: call the skill function (or just cmd_castCallback) directly with no delay for instant skills ???
     ch->delay = (Game::GetGame()->currentTime + spell->castTime);
@@ -324,13 +325,13 @@ void cmd_skills(Character * ch, string argument)
 
 void cmd_cooldowns(Character * ch, string argument)
 {
-    ch->Send("|MCooldowns greater than 2 seconds: |X\n\r");
+    ch->Send("|MCooldowns greater than 1.5 seconds:|X\n\r");
 
     std::map<string, Skill *>::iterator iter;
     for(iter = ch->knownSkills.begin(); iter != ch->knownSkills.end(); ++iter)
     {
         double cd;
-        if((cd = ch->GetCooldownRemaining((*iter).second)) >= 2)
+        if((cd = ch->GetCooldownRemaining((*iter).second)) > 1.5)
         {
             ch->Send("|MSpell:|G " + (*iter).second->long_name + " |MTime Left:|G " + Utilities::dtos(cd, 1) + "|X\n\r");
         }

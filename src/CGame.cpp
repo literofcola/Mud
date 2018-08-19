@@ -1652,6 +1652,7 @@ void Game::LoadSkills(Server * server)
     if(skillres.empty())
         return;
 
+	int first, last;
     Row row;
     StoreQueryResult::iterator i;
     for(i = skillres.begin(); i != skillres.end(); i++)
@@ -1668,7 +1669,18 @@ void Game::LoadSkills(Server * server)
         s->description = (string)row["description"];
 		s->costDescription = (string)row["cost_description"];
         s->castTime = row["cast_time"];
-		s->ignoreGlobal = row["ignore_global"];
+		string flagtext = (string)row["flags"];
+		if (flagtext != "NULL")
+		{
+			first = last = 0;
+			while (first < (int)flagtext.length())
+			{
+				last = (int)flagtext.find(";", first);
+				int flag = Utilities::atoi(flagtext.substr(first, last - first));
+				Utilities::FlagSet(s->flags, flag);
+				first = last + 1;
+			}
+		}
 		
 		string iflagtext = (string)row["interrupt_flags"];
 		if (iflagtext != "NULL")

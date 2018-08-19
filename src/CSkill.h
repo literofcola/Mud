@@ -15,11 +15,23 @@ public:
     std::string function_name;
 	double castTime;
 	double cooldown;
-	bool ignoreGlobal;
 	enum TargetType { TARGET_SELF, TARGET_OTHER, TARGET_HOSTILE, TARGET_ANY, TARGET_FRIENDLY, TARGET_NONE, TARGET_PASSIVE };
 	TargetType targetType;
 	enum Interrupt { INTERRUPT_MOVE, INTERRUPT_HIT, INTERRUPT_NOPUSHBACK };
 	std::bitset<3> interruptFlags;
+
+	std::vector<int> flags; //a vector of constants to indicate flag is set
+	enum Flags
+	{
+		FLAG_NOGCD, FLAG_GCDIMMUNE //NOGCD means doesn't trigger the gcd. GCDIMMUNE means doesn't respond to the gcd
+	};
+	struct flag_type
+	{
+		int flag;
+		std::string flag_name;
+	};
+	static flag_type flag_table[];
+
 	std::string description;
 	std::string costDescription;
 	std::string costFunction;

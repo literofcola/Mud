@@ -3190,7 +3190,6 @@ bool Character::CancelActiveDelay()
 		}
 		if (global > Game::currentTime) //If we're canceling a cast and gcd is active, reset it
 		{
-			Send("debug: canceling gcd\n\r");
 			global = Game::currentTime;
 		}
 		json casttime = { { "time", 0 } };
@@ -3376,36 +3375,20 @@ bool Character::HasSkillByName(string name) //Not guaranteed to be the same skil
     return false;
 }
 
-void Character::SetCooldown(Skill * sk, std::string name, bool gcd, double length) //USE LENGTH -1 TO USE SKILL->COOLDOWN
+void Character::StartGlobalCooldown()
 {
-	if (gcd) //Don't use ch->cooldowns for the global, for ease of canceling it
-	{
-		Send("debug: setting gcd, 1.5 seconds\n\r");
-		this->global = Game::currentTime + 1.5;
-	}
-    /*if(global)//Set 1.5 second cooldown on everything
-    {
-        std::map<string, Skill *>::iterator iter;
-        for(iter = knownSkills.begin(); iter != knownSkills.end(); ++iter)
-        {
-            //TODO
-            //if(!(*iter).second->ignoreGlobal)
-                cooldowns[(*iter).second->name] = Game::currentTime + 1.5;
-        }
-    }*/
+	global = Game::currentTime + 1.5;
+}
+
+void Character::SetCooldown(Skill * sk, double length) //USE LENGTH -1 TO USE SKILL->COOLDOWN
+{
     if(length == 0)
         return;
-    if(sk == NULL && !name.empty())
-    {
-        sk = GetSkillShortName(name);
-    }
 
     if(sk != NULL)
     {
         if(length < 0) //if length default argument == -1, use sk->cooldown
             length = sk->cooldown;
-        if(length == 0)
-            return;
         cooldowns[sk->id] = Game::currentTime + length;
     }
 }
@@ -3420,17 +3403,14 @@ double Character::GetCooldownRemaining(Skill * sk)
 
 	//Global cooldown in progress
 	double remaining_global = 0;
-	if (!sk->ignoreGlobal && this->global > Game::currentTime)
+	if (!Utilities::FlagIsSet(sk->flags, Skill::FLAG_GCDIMMUNE) && this->global > Game::currentTime)
 	{
 		remaining_global = this->global - Game::currentTime;
 	}
 
 	double remaining_cd = 0;
-    std::map<int, double>::iterator iter;
-    iter = cooldowns.find(sk->id);
-	if (iter == cooldowns.end() || (*iter).second <= Game::currentTime)
-		remaining_cd = 0;
-	else
+    auto iter = cooldowns.find(sk->id);
+	if (iter != cooldowns.end() && (*iter).second > Game::currentTime)
 		remaining_cd = (*iter).second - Game::currentTime;
 
 	if(remaining_global > remaining_cd)

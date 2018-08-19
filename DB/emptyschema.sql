@@ -442,7 +442,7 @@ CREATE TABLE `skills` (
   `long_name` varchar(100) NOT NULL,
   `name` varchar(100) NOT NULL,
   `cooldown` double NOT NULL,
-  `ignore_global` int(11) NOT NULL,
+  `flags` tinytext,
   `target_type` int(11) NOT NULL,
   `description` tinytext,
   `cost_description` tinytext,
@@ -487,4 +487,4 @@ CREATE TABLE `triggers` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-08-19 13:35:47
+-- Dump completed on 2018-08-19 15:23:55

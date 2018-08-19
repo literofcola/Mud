@@ -37,6 +37,10 @@ TARGET_FRIENDLY = 4;
 TARGET_NONE = 5;
 TARGET_PASSIVE = 6;
 
+-- CSkill.h enum Flags
+FLAG_NOGCD = 0;
+FLAG_GCDIMMUNE = 1;
+
 -- CCharacter.h enum Races
 RACE_NONE,
 RACE_HUMAN,

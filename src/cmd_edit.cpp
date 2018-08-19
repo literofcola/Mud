@@ -1271,7 +1271,13 @@ void skillEditCmd_show(Character * ch, string argument)
     ch->Send("name:      [" + pSkill->name + "]\n\r");
     ch->Send("id:        [" + Utilities::itos(pSkill->id) + "]\n\r");
     ch->Send("cast_time: [" + Utilities::dtos(pSkill->castTime, 2) + " seconds]\n\r");
-	ch->Send("ignore_global: [" + string(pSkill->ignoreGlobal ? "true" : "false") + "]\n\r");
+	ch->Send("flags: ");
+	std::vector<int>::iterator flagiter;
+	for (flagiter = pSkill->flags.begin(); flagiter != pSkill->flags.end(); ++flagiter)
+	{
+		ch->Send(Skill::flag_table[(*flagiter)].flag_name + " ");
+	}
+	ch->Send("\n\r");
 	ch->Send("interrupt_flags: [");
 	for (int i = 0; i < (int)pSkill->interruptFlags.size(); ++i)
 	{
@@ -1559,28 +1565,40 @@ void skillEditCmd_cooldown(Character * ch, string argument)
     ch->Send("Cooldown set.\n\r");
 }
 
-void skillEditCmd_ignore_global(Character * ch, string argument)
+void skillEditCmd_flag(Character * ch, string argument)
 {
 	Skill * pSkill = (Skill *)ch->editData;
 
-	string arg;
-	Utilities::one_argument(argument, arg);
+	string arg1;
+	argument = Utilities::one_argument(argument, arg1);
 
-	
-	if (!Utilities::IsNumber(arg))
+	if (arg1.empty())
 	{
-		ch->Send("ignore_global: 1 || 0\n\r");
+		ch->Send("flags: nogcd gcdimmune\n\r");
 		return;
 	}
-	int global = Utilities::atoi(arg);
-	if (global != 0 || global != 1)
+
+	arg1 = Utilities::ToLower(arg1);
+
+	for (int i = 0; Skill::flag_table[i].flag != -1; i++)
 	{
-		ch->Send("ignore_global: 1 || 0\n\r");
-		return;
+		if (!Utilities::str_cmp(Skill::flag_table[i].flag_name, arg1))
+		{
+			if (Utilities::FlagIsSet(pSkill->flags, Skill::flag_table[i].flag))
+			{
+				Utilities::FlagUnSet(pSkill->flags, Skill::flag_table[i].flag);
+				ch->Send(arg1 + " flag removed.\n\r");
+			}
+			else
+			{
+				Utilities::FlagSet(pSkill->flags, Skill::flag_table[i].flag);
+				ch->Send(arg1 + " flag set.\n\r");
+			}
+			pSkill->changed = true;
+			return;
+		}
 	}
-	pSkill->ignoreGlobal = global;
-	pSkill->changed = true;
-	ch->Send("ignore_global set.\n\r");
+	ch->Send("flags: nogcd gcdimmune\n\r");
 }
 
 void npcEditCmd_show(Character * ch, string argument)

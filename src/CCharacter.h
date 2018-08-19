@@ -295,7 +295,8 @@ public:
     bool HasSkillByName(std::string name);
     void RemoveSkill(Skill * sk);
     void RemoveSkill(std::string name);
-    void SetCooldown(Skill * sk, std::string name, bool global, double length);
+	void StartGlobalCooldown();
+    void SetCooldown(Skill * sk, double length);
     double GetCooldownRemaining(Skill * sk);
 	void AddClassSkills();
 	bool HasGroup();

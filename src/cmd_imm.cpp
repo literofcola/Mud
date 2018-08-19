@@ -152,6 +152,7 @@ void cmd_load(Character * ch, string argument)
         Character * newChar = Game::GetGame()->NewCharacter(charIndex);
 		newChar->leashOrigin = ch->room;
         newChar->ChangeRooms(ch->room);
+		ch->Send(newChar->name + " loaded into room.\n\r");
     }
     else if(!Utilities::str_cmp(arg1, "item"))
     {
@@ -168,6 +169,7 @@ void cmd_load(Character * ch, string argument)
             return;
         }
         ch->player->AddItemInventory(itemIndex);
+		ch->Send(itemIndex->name + " loaded into inventory.\n\r");
     }
     else
     {
