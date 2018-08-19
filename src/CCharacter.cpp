@@ -734,7 +734,7 @@ void Character::GeneratePrompt(double currentTime)
 					prompt += statColor + Utilities::itos(current_member->GetHealth()) + "|X/" + Utilities::itos(current_member->GetMaxHealth());
 					prompt += "|B>|X";
 
-					json vitals = { { "slot", gmcpslot++ }, { "name", current_member->GetName() }, { "combat", current_member->InCombat() },
+					json vitals = { { "name", current_member->GetName() }, { "combat", current_member->InCombat() ? 1 : 0 },
 					                { "hp", current_member->GetHealth() }, { "hpmax", current_member->GetMaxHealth() },
 					                { "mp", current_member->GetMana() },{ "mpmax", current_member->GetMaxMana() } };
 					SendGMCP("group.vitals " + vitals.dump());
@@ -2001,6 +2001,19 @@ void Character::EnterCombat(Character * victim)
 	json combat = { { "combat", 1 } };
 	SendGMCP("char.vitals " + combat.dump());
 	victim->SendGMCP("char.vitals " + combat.dump());
+
+	if (HasGroup())
+	{
+		combat = { { "name", GetName() },{ "combat", 1 } };
+		int first_slot = group->FindFirstSlotInSubgroup(this);
+		for (int i = first_slot; i < first_slot + Group::MAX_GROUP_SIZE; i++)
+		{
+			if (group->members[i] != nullptr && group->members[i] != this)
+			{
+				group->members[i]->SendGMCP("group.vitals " + combat.dump());
+			}
+		}
+	}
 }
 
 void Character::EnterCombatAssist(Character * friendly)
@@ -2037,6 +2050,19 @@ void Character::EnterCombatAssist(Character * friendly)
     movementSpeed = Character::COMBAT_MOVE_SPEED;
 	json combat = { { "combat", 1 } };
 	SendGMCP("char.vitals " + combat.dump());
+
+	if (HasGroup())
+	{
+		combat = { { "name", GetName() },{ "combat", 1 } };
+		int first_slot = group->FindFirstSlotInSubgroup(this);
+		for (int i = first_slot; i < first_slot + Group::MAX_GROUP_SIZE; i++)
+		{
+			if (group->members[i] != nullptr && group->members[i] != this)
+			{
+				group->members[i]->SendGMCP("group.vitals " + combat.dump());
+			}
+		}
+	}
 }
 
 void Character::ExitCombat()
@@ -2047,6 +2073,19 @@ void Character::ExitCombat()
     movementSpeed = Character::NORMAL_MOVE_SPEED;
 	json combat = { { "combat", 0 } };
 	SendGMCP("char.vitals " + combat.dump());
+
+	if (HasGroup())
+	{
+		combat = { { "name", GetName() },{ "combat", 0 } };
+		int first_slot = group->FindFirstSlotInSubgroup(this);
+		for (int i = first_slot; i < first_slot + Group::MAX_GROUP_SIZE; i++)
+		{
+			if (group->members[i] != nullptr && group->members[i] != this)
+			{
+				group->members[i]->SendGMCP("group.vitals " + combat.dump());
+			}
+		}
+	}
 }
 
 bool Character::InCombat()
@@ -2685,22 +2724,18 @@ void Character::SetHealth(int amount)
 		vitals = { { "hppercent", percent } };
 		SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
 
-		/*if (HasGroup())
+		if (HasGroup())
 		{
-			int slot = group->FindMemberSlot(this); //slot is zero indexed from these functions
 			int first_slot = group->FindFirstSlotInSubgroup(this);
-
-			//slot is wrong here... change groupframe entirely to use name as a key. slot is different per character client side
 			for (int i = first_slot; i < first_slot + Group::MAX_GROUP_SIZE; i++)
 			{
 				if (group->members[i] != nullptr && group->members[i] != this)
 				{
-					json vitals = { { "slot", (slot % Group::MAX_GROUP_SIZE) + 1 },{ "name", GetName() },{ "combat", InCombat() },
-								    { "hp", GetHealth() },{ "hpmax", GetMaxHealth() }, { "mp", GetMana() },{ "mpmax", GetMaxMana() } };
+					json vitals = { { "name", GetName() }, { "hp", GetHealth() } };
 					group->members[i]->SendGMCP("group.vitals " + vitals.dump());
 				}
 			}
-		}*/
+		}
 	}
 }
 
