@@ -53,7 +53,7 @@ public:
     Character * CreateNPCAnyID(std::string arg);
     Character * GetCharacterIndex(int id);
     Item * CreateItemAnyID(std::string arg);
-    Item * GetItemIndex(int id);
+    Item * GetItem(int id);
     Class * GetClass(int id);
     Class * GetClassByName(std::string name);
 	Help * GetHelp(int id);
@@ -73,7 +73,7 @@ public:
     void SaveSkills();
     void SaveCharacterIndex();
     void SaveQuests();
-    void SaveItemIndex();
+    void SaveItems();
     void SaveClasses();
     void SaveAreas();
 	void SaveHelp();
@@ -103,7 +103,7 @@ public:
     std::map<int, Room *> rooms;
     std::map<int, Skill *> skills;
     std::map<int, Quest *> quests;
-    std::map<int, Item *> itemIndex;
+    std::map<int, Item *> items;
     std::map<int, Class *> classes;
     std::map<int, Area *> areas;
 	std::map<int, Help *> helpIndex;

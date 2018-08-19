@@ -188,6 +188,8 @@ void Server::DeInitialize()
         //Save user/player
         if(user->character)
         {
+			if (user->character->HasGroup())
+				cmd_group(user->character, "leave"); //maybe we need a leavegroup function eh
 			user->character->ExitCombat();
 			user->character->ClearTarget();
 			if (!user->character->IsAlive())

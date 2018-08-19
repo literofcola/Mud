@@ -137,6 +137,7 @@ void skillEditCmd_remove_script(Character * ch, string argument);
 void skillEditCmd_cast_time(Character * ch, string argument);
 void skillEditCmd_interrupt_flags(Character * ch, string argument);
 void skillEditCmd_cooldown(Character * ch, string argument);
+void skillEditCmd_ignore_global(Character * ch, string argument);
 void skillEditCmd_cost_function(Character * ch, string argument);
 void skillEditCmd_reload(Character * ch, string argument);
 void skillEditCmd_description(Character * ch, string argument);

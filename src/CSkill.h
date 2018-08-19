@@ -15,6 +15,7 @@ public:
     std::string function_name;
 	double castTime;
 	double cooldown;
+	bool ignoreGlobal;
 	enum TargetType { TARGET_SELF, TARGET_OTHER, TARGET_HOSTILE, TARGET_ANY, TARGET_FRIENDLY, TARGET_NONE, TARGET_PASSIVE };
 	TargetType targetType;
 	enum Interrupt { INTERRUPT_MOVE, INTERRUPT_HIT, INTERRUPT_NOPUSHBACK };
@@ -27,7 +28,7 @@ public:
     std::string tickScript;
     std::string removeScript;
     
-    //bool ignoreGlobal; //TODO, flag to ignore global cooldowns
+    
     bool changed;
     void Save();
 

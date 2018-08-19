@@ -137,11 +137,11 @@ Game::~Game()
     quests.clear();
 
 	std::map<int, Item *>::iterator iter6;
-    for(iter6 = itemIndex.begin(); iter6 != itemIndex.end(); ++iter6)
+    for(iter6 = items.begin(); iter6 != items.end(); ++iter6)
     {
         delete (*iter6).second;
     }
-    itemIndex.clear();
+	items.clear();
 
 	std::map<int, Help *>::iterator iter7;
     for(iter7 = helpIndex.begin(); iter7 != helpIndex.end(); ++iter7)
@@ -973,7 +973,7 @@ void Game::WorldUpdate(Server * server)
 					{
 						currReset->lastReset = Game::currentTime;
 						//load it
-						Item * itemindex = Game::GetGame()->GetItemIndex(currReset->targetID);
+						Item * itemindex = Game::GetGame()->GetItem(currReset->targetID);
 						if (itemindex == NULL)
 						{
 							LogFile::Log("error", "Reset " + Utilities::itos(currReset->id) + " in room " + Utilities::itos(currRoom->id) + ": item " + Utilities::itos(currReset->targetID) + " does not exist.");
@@ -1267,7 +1267,7 @@ void Game::LoginHandler(Server * server, User * user, string argument)
 					int id = Utilities::atoi(classitems.substr(first, comma - first));
 					int count = Utilities::atoi(classitems.substr(comma+1, last - comma+1));
 					first = last + 1;
-					Item * itemIndex = GetItemIndex(id);
+					Item * itemIndex = GetItem(id);
 					if (itemIndex == NULL)
 					{
 						LogFile::Log("error", "Item " + Utilities::itos(id) + " does not exist.");
@@ -1668,6 +1668,7 @@ void Game::LoadSkills(Server * server)
         s->description = (string)row["description"];
 		s->costDescription = (string)row["cost_description"];
         s->castTime = row["cast_time"];
+		s->ignoreGlobal = row["ignore_global"];
 		
 		string iflagtext = (string)row["interrupt_flags"];
 		if (iflagtext != "NULL")
@@ -1783,7 +1784,7 @@ void Game::LoadItems(Server * server)
         i->value = row["value"];
         i->speed = row["speed"];
 
-        itemIndex[i->id] = i;
+        items[i->id] = i;
     }
 }
 
@@ -1895,10 +1896,10 @@ void Game::SaveCharacterIndex()
     }
 }
 
-void Game::SaveItemIndex()
+void Game::SaveItems()
 {
     std::map<int, Item *>::iterator iter;
-    for(iter = itemIndex.begin(); iter != itemIndex.end(); ++iter)
+    for(iter = items.begin(); iter != items.end(); ++iter)
     {
         iter->second->Save();
     }
@@ -2199,10 +2200,10 @@ Character * Game::GetCharacterIndex(int id)
     return NULL;
 }
 
-Item * Game::GetItemIndex(int id)
+Item * Game::GetItem(int id)
 {
-    std::map<int,Item*>::iterator it = itemIndex.find(id);
-    if(it != itemIndex.end())
+    std::map<int,Item*>::iterator it = items.find(id);
+    if(it != items.end())
         return (*it).second;
     return NULL;
 }
@@ -2319,7 +2320,7 @@ Item * Game::CreateItemAnyID(string arg)
 {
     int ctr = 1;
     std::map<int,Item *>::iterator iter;
-    for(iter = itemIndex.begin(); iter != itemIndex.end(); ++iter)
+    for(iter = items.begin(); iter != items.end(); ++iter)
     {
         if(ctr != iter->second->id)
         {
@@ -2331,7 +2332,7 @@ Item * Game::CreateItemAnyID(string arg)
 
     Item * pItem = new Item(arg, ctr);
     pItem->changed = true;
-    itemIndex.insert(std::pair<int, Item *>(pItem->id, pItem));
+	items.insert(std::pair<int, Item *>(pItem->id, pItem));
     return pItem;
 }
 
@@ -2719,20 +2720,20 @@ int Game::Search(string table_name, string field_name, int conditional_type, str
     }
     else if(!Utilities::str_cmp(table_name, "items"))
     {
-		if (itemIndex.begin() == itemIndex.end())
+		if (items.begin() == items.end())
 		{
 			result += "No items in the item list.\n\r";
 			return 0;
 		}
-		if (data_type == 1 && itemIndex.begin()->second->intTable.find(field_name) != itemIndex.begin()->second->intTable.end())
+		if (data_type == 1 && items.begin()->second->intTable.find(field_name) != items.begin()->second->intTable.end())
 		{
 			whichtable = 1;
 		}
-		else if (data_type == 1 && itemIndex.begin()->second->doubleTable.find(field_name) != itemIndex.begin()->second->doubleTable.end())
+		else if (data_type == 1 && items.begin()->second->doubleTable.find(field_name) != items.begin()->second->doubleTable.end())
 		{
 			whichtable = 2;
 		}
-		else if(data_type == 2 && itemIndex.begin()->second->stringTable.find(field_name) != itemIndex.begin()->second->stringTable.end())
+		else if(data_type == 2 && items.begin()->second->stringTable.find(field_name) != items.begin()->second->stringTable.end())
 		{
 			whichtable = 3;
 		}
@@ -2743,7 +2744,7 @@ int Game::Search(string table_name, string field_name, int conditional_type, str
 		}
 
         std::map<int, Item *>::iterator iter;
-        for(iter = itemIndex.begin(); iter != itemIndex.end(); iter++)
+        for(iter = items.begin(); iter != items.end(); iter++)
         {
 			switch (whichtable)
 			{

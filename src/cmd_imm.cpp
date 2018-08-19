@@ -161,7 +161,7 @@ void cmd_load(Character * ch, string argument)
             return;
         }
         int id = Utilities::atoi(arg2);
-        Item * itemIndex = Game::GetGame()->GetItemIndex(id);
+        Item * itemIndex = Game::GetGame()->GetItem(id);
         if(itemIndex == NULL)
         {
             ch->Send("Item " + arg2 + " does not exist.\n\r");

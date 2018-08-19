@@ -1,5 +1,5 @@
 #include "stdafx.h"
-//#include "vld.h"
+#include "vld.h"
 
 
 extern void Lua_DefineClasses(sol::state * lua);

@@ -105,7 +105,7 @@ void Quest::AddObjective(int type, int count, int id, string desc)
             break;
 
         case Quest::OBJECTIVE_ITEM:
-            t.objective = Game::GetGame()->GetItemIndex(id);
+            t.objective = Game::GetGame()->GetItem(id);
             break;
     }
     objectives.push_back(t);

@@ -1131,7 +1131,7 @@ Character * Character::LoadPlayer(std::string name, User * user)
 		{
 			case DB_INVENTORY_EQUIPPED:
 			{
-				Item * equip = Game::GetGame()->GetItemIndex(id);
+				Item * equip = Game::GetGame()->GetItem(id);
 				//todo Equipping an item should be in an easy to use function OR we should really just assume the state the character was saved in is valid
 				int equiploc = loaded->player->GetEquipLocation(equip);
 				Item * removed = loaded->player->RemoveItemEquipped(equiploc); //remove any item already in the slot
@@ -1160,7 +1160,7 @@ Character * Character::LoadPlayer(std::string name, User * user)
 			{
 				for (int i = 0; i < count; i++)
 				{
-					loaded->player->AddItemInventory(Game::GetGame()->GetItemIndex(id));
+					loaded->player->AddItemInventory(Game::GetGame()->GetItem(id));
 				}
 				break;
 			}
@@ -1719,8 +1719,8 @@ void Character::SaveCooldowns()
     std::map<string, Skill *>::iterator iter;
     for(iter = knownSkills.begin(); iter != knownSkills.end(); ++iter)
     {
-        std::map<string, double>::iterator iter2;
-        iter2 = cooldowns.find((*iter).second->name);
+        std::map<int, double>::iterator iter2;
+        iter2 = cooldowns.find((*iter).second->id);
         if(iter2 == cooldowns.end()) //not on cooldown
             continue;
         if((*iter2).second <= Game::currentTime) //not on cooldown
@@ -1754,7 +1754,7 @@ void Character::LoadCooldowns()
         Skill * sk = Game::GetGame()->GetSkill(row["skill"]);
         if(sk != NULL)
         {
-            cooldowns[sk->name] = row["timestamp"];
+            cooldowns[sk->id] = row["timestamp"];
         }
     }
 
@@ -2002,6 +2002,9 @@ void Character::EnterCombat(Character * victim)
 	SendGMCP("char.vitals " + combat.dump());
 	victim->SendGMCP("char.vitals " + combat.dump());
 
+	SendTargetSubscriberGMCP("target.vitals " + combat.dump());
+	victim->SendTargetSubscriberGMCP("target.vitals " + combat.dump());
+
 	if (HasGroup())
 	{
 		combat = { { "name", GetName() },{ "combat", 1 } };
@@ -2051,6 +2054,8 @@ void Character::EnterCombatAssist(Character * friendly)
 	json combat = { { "combat", 1 } };
 	SendGMCP("char.vitals " + combat.dump());
 
+	SendTargetSubscriberGMCP("target.vitals " + combat.dump());
+
 	if (HasGroup())
 	{
 		combat = { { "name", GetName() },{ "combat", 1 } };
@@ -2073,6 +2078,8 @@ void Character::ExitCombat()
     movementSpeed = Character::NORMAL_MOVE_SPEED;
 	json combat = { { "combat", 0 } };
 	SendGMCP("char.vitals " + combat.dump());
+
+	SendTargetSubscriberGMCP("target.vitals " + combat.dump());
 
 	if (HasGroup())
 	{
@@ -2547,7 +2554,7 @@ void Character::OnDeath()
 							if (Server::rand() % 100 <= (*dropiter).percent && (*dropiter).id.size() > 0)
 							{
 								int which = Server::rand() % ((int)(*dropiter).id.size());
-								Item * drop = Game::GetGame()->GetItemIndex((*dropiter).id[which]);
+								Item * drop = Game::GetGame()->GetItem((*dropiter).id[which]);
 								group_member->Send("You receive loot: " + (string)Item::quality_strings[drop->quality] + drop->name + "|X.\n\r");
 								group_member->Message(group_member->name + " receives loot: " + Item::quality_strings[drop->quality] + drop->name + "|X.",
 									Character::MSG_ROOM_NOTCHAR);
@@ -2572,7 +2579,7 @@ void Character::OnDeath()
 					if (Server::rand() % 100 <= (*dropiter).percent && (*dropiter).id.size() > 0)
 					{
 						int which = Server::rand() % ((int)(*dropiter).id.size());
-						Item * drop = Game::GetGame()->GetItemIndex((*dropiter).id[which]);
+						Item * drop = Game::GetGame()->GetItem((*dropiter).id[which]);
 						tap->Send("You receive loot: " + (string)Item::quality_strings[drop->quality] + drop->name + "|X.\n\r");
 						tap->Message(tap->name + " receives loot: " + Item::quality_strings[drop->quality] + drop->name + "|X.",
 							Character::MSG_ROOM_NOTCHAR);
@@ -2786,6 +2793,19 @@ void Character::SetMana(int amount)
 			percent = (mana * 100) / maxMana;
 		vitals = { { "mppercent", percent } };
 		SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
+
+		if (HasGroup())
+		{
+			int first_slot = group->FindFirstSlotInSubgroup(this);
+			for (int i = first_slot; i < first_slot + Group::MAX_GROUP_SIZE; i++)
+			{
+				if (group->members[i] != nullptr && group->members[i] != this)
+				{
+					json vitals = { { "name", GetName() },{ "mp", GetMana() } };
+					group->members[i]->SendGMCP("group.vitals " + vitals.dump());
+				}
+			}
+		}
 	}
 }
 
@@ -3168,6 +3188,11 @@ bool Character::CancelActiveDelay()
 		{
 			delayData.charTarget->RemoveSubscriber(delayData.caster);
 		}
+		if (global > Game::currentTime) //If we're canceling a cast and gcd is active, reset it
+		{
+			Send("debug: canceling gcd\n\r");
+			global = Game::currentTime;
+		}
 		json casttime = { { "time", 0 } };
 		SendGMCP("char.casttime " + casttime.dump());
 		delay_active = false;
@@ -3351,9 +3376,14 @@ bool Character::HasSkillByName(string name) //Not guaranteed to be the same skil
     return false;
 }
 
-void Character::SetCooldown(Skill * sk, std::string name, bool global, double length) //USE LENGTH -1 TO USE SKILL->COOLDOWN
+void Character::SetCooldown(Skill * sk, std::string name, bool gcd, double length) //USE LENGTH -1 TO USE SKILL->COOLDOWN
 {
-    if(global)//Set 1.5 second cooldown on everything
+	if (gcd) //Don't use ch->cooldowns for the global, for ease of canceling it
+	{
+		Send("debug: setting gcd, 1.5 seconds\n\r");
+		this->global = Game::currentTime + 1.5;
+	}
+    /*if(global)//Set 1.5 second cooldown on everything
     {
         std::map<string, Skill *>::iterator iter;
         for(iter = knownSkills.begin(); iter != knownSkills.end(); ++iter)
@@ -3362,7 +3392,7 @@ void Character::SetCooldown(Skill * sk, std::string name, bool global, double le
             //if(!(*iter).second->ignoreGlobal)
                 cooldowns[(*iter).second->name] = Game::currentTime + 1.5;
         }
-    }
+    }*/
     if(length == 0)
         return;
     if(sk == NULL && !name.empty())
@@ -3376,7 +3406,7 @@ void Character::SetCooldown(Skill * sk, std::string name, bool global, double le
             length = sk->cooldown;
         if(length == 0)
             return;
-        cooldowns[sk->name] = Game::currentTime + length;
+        cooldowns[sk->id] = Game::currentTime + length;
     }
 }
 
@@ -3388,13 +3418,24 @@ double Character::GetCooldownRemaining(Skill * sk)
     if(player && player->IMMORTAL())
         return 0;
 
-    std::map<string, double>::iterator iter;
-    iter = cooldowns.find(sk->name);
-    if(iter == cooldowns.end())
-        return 0;
-    if((*iter).second <= Game::currentTime)
-        return 0;
-    return (*iter).second - Game::currentTime;
+	//Global cooldown in progress
+	double remaining_global = 0;
+	if (!sk->ignoreGlobal && this->global > Game::currentTime)
+	{
+		remaining_global = this->global - Game::currentTime;
+	}
+
+	double remaining_cd = 0;
+    std::map<int, double>::iterator iter;
+    iter = cooldowns.find(sk->id);
+	if (iter == cooldowns.end() || (*iter).second <= Game::currentTime)
+		remaining_cd = 0;
+	else
+		remaining_cd = (*iter).second - Game::currentTime;
+
+	if(remaining_global > remaining_cd)
+		return remaining_global;
+	return remaining_cd;
 }
 
 bool Character::IsNPC()

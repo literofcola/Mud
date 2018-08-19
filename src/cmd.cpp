@@ -1398,7 +1398,7 @@ void cmd_quest(Character * ch, string argument)
 						string combinedRewards;
 						for (auto itemiter = std::begin(q->itemRewards); itemiter != std::end(q->itemRewards); ++itemiter)
 						{
-							string itemreward = Game::GetGame()->GetItemIndex(*itemiter)->FormatItemInfo();
+							string itemreward = Game::GetGame()->GetItem(*itemiter)->FormatItemInfo();
 							combinedRewards = Utilities::SideBySideString(combinedRewards, itemreward);
 						}
 						ch->Send(combinedRewards);
@@ -1569,7 +1569,7 @@ void cmd_quest(Character * ch, string argument)
 				rewardQueryString += Utilities::itos(ctr++);
 				if (ctr <= complete->itemRewards.size())
 					rewardQueryString += ", ";
-				string itemreward = Game::GetGame()->GetItemIndex(*itemiter)->FormatItemInfo();
+				string itemreward = Game::GetGame()->GetItem(*itemiter)->FormatItemInfo();
 				combinedRewards = Utilities::SideBySideString(combinedRewards, itemreward);
 			}
 			rewardQueryString += "): ";
@@ -1658,7 +1658,7 @@ void cmd_quest(Character * ch, string argument)
 			string combinedRewards;
 			for (auto itemiter = std::begin(progress->itemRewards); itemiter != std::end(progress->itemRewards); ++itemiter)
 			{
-				string itemreward = Game::GetGame()->GetItemIndex(*itemiter)->FormatItemInfo();
+				string itemreward = Game::GetGame()->GetItem(*itemiter)->FormatItemInfo();
 				combinedRewards = Utilities::SideBySideString(combinedRewards, itemreward);
 			}
 			ch->Send(combinedRewards);
@@ -1718,7 +1718,7 @@ bool questCompleteQuery(Character * ch, string argument)
 	ch->Send(quest->name + " completed!\n\r");
 	ch->Send(quest->completionMessage + "\n\r");
 
-	Item * myreward = Game::GetGame()->GetItemIndex(quest->itemRewards[choice - 1]);
+	Item * myreward = Game::GetGame()->GetItem(quest->itemRewards[choice - 1]);
 	if(myreward)
 	{
 		ch->Send("|WYou receive loot: " + string(Item::quality_strings[myreward->quality]) + myreward->name + "|X\n\r");

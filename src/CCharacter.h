@@ -148,7 +148,8 @@ public:
     bool debuffs_invalid;
     bool buffs_invalid;
     std::map<std::string, Skill *> knownSkills;
-    std::map<std::string, double> cooldowns;
+    std::map<int, double> cooldowns;
+	double global;
     double lastSpellCast;  //time stamp for mana regen 5 second rule
 
     std::map<int, Trigger> triggers;

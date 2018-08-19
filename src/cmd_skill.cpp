@@ -282,7 +282,8 @@ void cmd_cast(Character * ch, string argument)
 	}
  
     //Start global cooldown
-    ch->SetCooldown(NULL, "", true, 0);
+    ch->SetCooldown(nullptr, "", true, 0);
+
     //TODO: call the skill function (or just cmd_castCallback) directly with no delay for instant skills ???
     ch->delay = (Game::GetGame()->currentTime + spell->castTime);
     Character::DelayData dd;

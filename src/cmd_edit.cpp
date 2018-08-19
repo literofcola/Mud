@@ -144,7 +144,7 @@ void cmd_edit(Character * ch, string argument)
         }
         else if(Utilities::IsNumber(arg2))
         {  
-            Item * item = Game::GetGame()->GetItemIndex(Utilities::atoi(arg2));
+            Item * item = Game::GetGame()->GetItem(Utilities::atoi(arg2));
             if(item == NULL)
             {
                 ch->Send("Item " + arg2 + " not found.\n\r");
@@ -337,7 +337,7 @@ void cmd_edit(Character * ch, string argument)
                 ch->Send("NPCs saved.\n\r");
                 break;
             case Character::ED_ITEM:
-                Game::GetGame()->SaveItemIndex();
+                Game::GetGame()->SaveItems();
                 ch->Send("Items saved.\n\r");
                 break;
             case Character::ED_QUEST:
@@ -613,7 +613,7 @@ void roomEditCmd_reset(Character * ch, string argument)
 					int newid = Utilities::atoi(arg3);
 					if (r->type == 2) //obj
 					{
-						Item * newindex = Game::GetGame()->GetItemIndex(newid);
+						Item * newindex = Game::GetGame()->GetItem(newid);
 						if (newindex != NULL)
 						{
 							r->targetID = newid;
@@ -715,7 +715,7 @@ void roomEditCmd_reset(Character * ch, string argument)
 			if (Utilities::IsNumber(arg3))
 			{
 				int id = Utilities::atoi(arg3);
-				Item * item = Game::GetGame()->GetItemIndex(id);
+				Item * item = Game::GetGame()->GetItem(id);
 				if (item == NULL)
 				{
 					ch->Send("Item with that id does not exist.\n\r");
@@ -1271,6 +1271,7 @@ void skillEditCmd_show(Character * ch, string argument)
     ch->Send("name:      [" + pSkill->name + "]\n\r");
     ch->Send("id:        [" + Utilities::itos(pSkill->id) + "]\n\r");
     ch->Send("cast_time: [" + Utilities::dtos(pSkill->castTime, 2) + " seconds]\n\r");
+	ch->Send("ignore_global: [" + string(pSkill->ignoreGlobal ? "true" : "false") + "]\n\r");
 	ch->Send("interrupt_flags: [");
 	for (int i = 0; i < (int)pSkill->interruptFlags.size(); ++i)
 	{
@@ -1558,6 +1559,30 @@ void skillEditCmd_cooldown(Character * ch, string argument)
     ch->Send("Cooldown set.\n\r");
 }
 
+void skillEditCmd_ignore_global(Character * ch, string argument)
+{
+	Skill * pSkill = (Skill *)ch->editData;
+
+	string arg;
+	Utilities::one_argument(argument, arg);
+
+	
+	if (!Utilities::IsNumber(arg))
+	{
+		ch->Send("ignore_global: 1 || 0\n\r");
+		return;
+	}
+	int global = Utilities::atoi(arg);
+	if (global != 0 || global != 1)
+	{
+		ch->Send("ignore_global: 1 || 0\n\r");
+		return;
+	}
+	pSkill->ignoreGlobal = global;
+	pSkill->changed = true;
+	ch->Send("ignore_global set.\n\r");
+}
+
 void npcEditCmd_show(Character * ch, string argument)
 {
 	Character * pChar = (Character *)ch->editData;
@@ -1800,7 +1825,7 @@ void npcEditCmd_drop(Character * ch, string argument)
             return;
         }
         Item * item;
-        if((item = Game::GetGame()->GetItemIndex(itemid)) == NULL)
+        if((item = Game::GetGame()->GetItem(itemid)) == NULL)
         {
             ch->Send("That item does not exist.\n\r");
             return;
@@ -3217,7 +3242,7 @@ void questEditCmd_itemreward(Character * ch, string argument)
 		ch->Send("Item reward removed\n\r");
 		return;
 	}
-	Item * reward = Game::GetGame()->GetItemIndex(itemid);
+	Item * reward = Game::GetGame()->GetItem(itemid);
 	if (!reward)
 	{
 		ch->Send("Item with that ID does not exist.\n\r");
