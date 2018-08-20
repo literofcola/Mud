@@ -14,10 +14,10 @@ public:
     bool Connect(std::string db, std::string server, std::string user, std::string password="", int port=0);
     std::string PeekWrite();
     std::string PeekRead();
-    void Write(std::string sql);    //queued write
-    void Read(std::string sql, void (*callback)(StoreQueryResult)); //queued read
+    void WriteQueued(std::string sql);    //queued write
+    void ReadQueued(std::string sql, void (*callback)(StoreQueryResult)); //queued read
     StoreQueryResult Read(std::string sql);   //non-queued read
-    void Write(std::string sql, std::string & status);  //non-queued write
+    void Write(std::string sql);  //non-queued write
     void Close();
     void Disconnect();
 

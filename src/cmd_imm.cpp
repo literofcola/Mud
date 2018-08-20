@@ -353,9 +353,7 @@ void cmd_sql(Character * ch, string argument)
     {
         //write
         string status;
-        Server::sqlQueue->Write(argument, status);
-        
-        ch->Send(status + "\n\r");
+        Server::sqlQueue->Write(argument);
     }
 }
 

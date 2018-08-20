@@ -76,7 +76,7 @@ string mySQLQueue::PeekRead()
     return readFirst->query;
 }
 
-void mySQLQueue::Write(string sql)
+void mySQLQueue::WriteQueued(string sql)
 {
     //set up the queue with data to write
     queueData * qd = new queueData();
@@ -97,8 +97,9 @@ void mySQLQueue::Write(string sql)
     ResumeThread(myThreadHandle); //resume the thread (if it's not already)
 }
 
-void mySQLQueue::Write(string sql, string & status)
+void mySQLQueue::Write(string sql)
 {
+	std::string status;
     Query q = conn.query();
     try
     {
@@ -126,7 +127,7 @@ void mySQLQueue::Write(string sql, string & status)
 	}
 }
 
-void mySQLQueue::Read(string sql, void (*callback)(StoreQueryResult))
+void mySQLQueue::ReadQueued(string sql, void (*callback)(StoreQueryResult))
 {
     //set up the queue with data to read
     queueData * qd = new queueData();
