@@ -50,7 +50,6 @@ int main(int argc, char * argv[])
         return 0;
     }
 
-	//todo: turn logfile into a multithreaded queue?
 	LogFile::Log("status", "Server listening on port 4000");
 	
 	//todo: consider reordering here to load game from db prior to server accept

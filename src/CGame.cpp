@@ -745,9 +745,20 @@ void Game::WorldUpdate(Server * server)
 						curr->meleeActive = false;		  //target isn't in the room...
 					}
                 }
-				//New top threat, change target
+				//Check for taunt and highest threat
+				SpellAffect * taunt = curr->GetFirstSpellAffectWithAura(SpellAffect::AURA_TAUNT);
 				Character * topthreat = curr->GetTopThreat();
-                if(topthreat && topthreat != curr->GetTarget() && (curr->GetThreat(curr->GetTarget()) + curr->GetThreat(curr->GetTarget()) * .1) < curr->GetThreat(topthreat))
+				if (taunt != nullptr && taunt->caster != nullptr)
+				{
+					if (curr->GetTarget() != taunt->caster)
+					{
+						taunt->caster->Send(curr->GetName() + " changes " + curr->HisHer() + " target and begins attacking you!\n\r");
+						taunt->caster->Message(curr->GetName() + " changes " + curr->HisHer() + " target and begins attacking " + taunt->caster->GetName() + "!",
+							Character::MessageType::MSG_ROOM_NOTCHARVICT, curr);
+					}
+					curr->SetTarget(taunt->caster);
+				}
+                else if(topthreat && topthreat != curr->GetTarget() && (curr->GetThreat(curr->GetTarget()) + curr->GetThreat(curr->GetTarget()) * .1) < curr->GetThreat(topthreat))
                 {
                     curr->SetTarget(curr->GetTopThreat());
 					curr->GetTarget()->Send(curr->GetName() + " changes " + curr->HisHer() + " target and begins attacking you!\n\r");

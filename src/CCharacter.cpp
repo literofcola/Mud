@@ -1550,7 +1550,26 @@ SpellAffect * Character::HasSpellAffect(string name)
             return (*iter);
         }
     }
-    return NULL;
+	return nullptr;
+}
+
+SpellAffect * Character::GetFirstSpellAffectWithAura(int aura_id)
+{
+	for (auto iter = buffs.begin(); iter != buffs.end(); ++iter)
+	{
+		if ((*iter)->HasAura(aura_id))
+		{
+			return (*iter);
+		}
+	}
+	for (auto iter = debuffs.begin(); iter != debuffs.end(); ++iter)
+	{
+		if ((*iter)->HasAura(aura_id))
+		{
+			return (*iter);
+		}
+	}
+	return nullptr;
 }
 
 int Character::CleanseSpellAffect(Character * cleanser, int category, int howMany)
@@ -1789,7 +1808,7 @@ void Character::LoadSpellAffects()
     SpellAffect::Load(this);
 }
 
-int Character::GetAuraModifier(int affect, int whatModifier)
+int Character::GetAuraModifier(int aura_id, int whatModifier)
 {
     //whatModifier: 1 total, 2 largest, 3 smallest, 4 largest positive, 5 smallest negative
     int result = 0;
@@ -1802,7 +1821,7 @@ int Character::GetAuraModifier(int affect, int whatModifier)
         {
             for(iter2 = (*iter)->auraAffects.begin(); iter2 != (*iter)->auraAffects.end(); ++iter2)
             {
-                if((*iter2).affectID == affect)
+                if((*iter2).auraID == aura_id)
                 {
                     switch(whatModifier)
                     {
@@ -1836,7 +1855,7 @@ int Character::GetAuraModifier(int affect, int whatModifier)
         {
             for(iter2 = (*iter)->auraAffects.begin(); iter2 != (*iter)->auraAffects.end(); ++iter2)
             {
-                if((*iter2).affectID == affect)
+                if((*iter2).auraID == aura_id)
                 {
                     switch(whatModifier)
                     {
@@ -1868,7 +1887,7 @@ int Character::GetAuraModifier(int affect, int whatModifier)
     return result;
 }
 
-int Character::GetTotalAuraModifier(int affect)
+int Character::GetTotalAuraModifier(int aura_id)
 {
     int total = 0;
 
@@ -1880,7 +1899,7 @@ int Character::GetTotalAuraModifier(int affect)
         {
             for(iter2 = (*iter)->auraAffects.begin(); iter2 != (*iter)->auraAffects.end(); ++iter2)
             {
-                if((*iter2).affectID == affect)
+                if((*iter2).auraID == aura_id)
                     total += (*iter2).modifier;
             }
         }
@@ -1891,7 +1910,7 @@ int Character::GetTotalAuraModifier(int affect)
         {
             for(iter2 = (*iter)->auraAffects.begin(); iter2 != (*iter)->auraAffects.end(); ++iter2)
             {
-                if((*iter2).affectID == affect)
+                if((*iter2).auraID == aura_id)
                     total += (*iter2).modifier;
             }
         }
@@ -1899,7 +1918,7 @@ int Character::GetTotalAuraModifier(int affect)
     return total;
 }
 
-int Character::GetLargestAuraModifier(int affect)
+int Character::GetLargestAuraModifier(int aura_id)
 {
     //TODO: largest will return the largest negative modifier, if there's no positive
     // change it to getlargestpositiveauramodifier, getsmallestnegativeauramodifier?
@@ -1913,7 +1932,7 @@ int Character::GetLargestAuraModifier(int affect)
         {
             for(iter2 = (*iter)->auraAffects.begin(); iter2 != (*iter)->auraAffects.end(); ++iter2)
             {
-                if((*iter2).affectID == affect && (largest < (*iter2).modifier || largest == 0))
+                if((*iter2).auraID == aura_id && (largest < (*iter2).modifier || largest == 0))
                     largest = (*iter2).modifier;
             }
         }
@@ -1924,7 +1943,7 @@ int Character::GetLargestAuraModifier(int affect)
         {
             for(iter2 = (*iter)->auraAffects.begin(); iter2 != (*iter)->auraAffects.end(); ++iter2)
             {
-                if((*iter2).affectID == affect && (largest < (*iter2).modifier || largest == 0))
+                if((*iter2).auraID == aura_id && (largest < (*iter2).modifier || largest == 0))
                     largest = (*iter2).modifier;
             }
         }
@@ -1932,7 +1951,7 @@ int Character::GetLargestAuraModifier(int affect)
     return largest;
 }
 
-int Character::GetSmallestAuraModifier(int affect)
+int Character::GetSmallestAuraModifier(int aura_id)
 {
     int smallest = 0;
 
@@ -1944,7 +1963,7 @@ int Character::GetSmallestAuraModifier(int affect)
         {
             for(iter2 = (*iter)->auraAffects.begin(); iter2 != (*iter)->auraAffects.end(); ++iter2)
             {
-                if((*iter2).affectID == affect && (smallest > (*iter2).modifier || smallest == 0))
+                if((*iter2).auraID == aura_id && (smallest > (*iter2).modifier || smallest == 0))
                     smallest = (*iter2).modifier;
             }
         }
@@ -1955,7 +1974,7 @@ int Character::GetSmallestAuraModifier(int affect)
         {
             for(iter2 = (*iter)->auraAffects.begin(); iter2 != (*iter)->auraAffects.end(); ++iter2)
             {
-                if((*iter2).affectID == affect && (smallest < (*iter2).modifier || smallest == 0))
+                if((*iter2).auraID == aura_id && (smallest < (*iter2).modifier || smallest == 0))
                     smallest = (*iter2).modifier;
             }
         }
@@ -3035,7 +3054,10 @@ void Character::UpdateThreat(Character * ch, double value, int type)
 					break;
 				case Threat::Type::THREAT_HEALING:
 					(*iter).threat += value/2;
-					(*iter).healing += value/2;
+					(*iter).healing += value;
+					break;
+				case Threat::Type::THREAT_OTHER:
+					(*iter).threat += value;
 					break;
 			}
             return;
@@ -3052,7 +3074,10 @@ void Character::UpdateThreat(Character * ch, double value, int type)
 		break;
 	case Threat::Type::THREAT_HEALING:
 		tt.threat = value/2;
-		tt.healing = value/2;
+		tt.healing = value;
+		break;
+	case Threat::Type::THREAT_OTHER:
+		tt.threat = value;
 		break;
 	}
 	if (IsNPC() && GetTap() == nullptr && value > 0 && type == Threat::Type::THREAT_DAMAGE)
@@ -3178,6 +3203,16 @@ bool Character::CheckThreatCombat()
 std::string Character::HisHer()
 {
     return (gender == 1 ? "his" : "her");
+}
+
+std::string Character::HimHer()
+{
+	return (gender == 1 ? "him" : "her");
+}
+
+std::string Character::HisHers()
+{
+	return (gender == 1 ? "his" : "hers");
 }
 
 bool Character::CancelActiveDelay()

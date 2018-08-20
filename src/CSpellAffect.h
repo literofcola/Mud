@@ -36,7 +36,7 @@ public:
 
     struct AuraAffect
     {
-        int affectID;
+        int auraID;
         int modifier;
     };
     std::list<struct AuraAffect> auraAffects;
@@ -44,11 +44,12 @@ public:
     struct AuraTable
     {
         std::string affectName;
-        int affectID;
+        int auraID;
     };
 
-    void ApplyAura(int affect, int modifier);
-    void ApplyAura(std::string affectName, int modifier);
+    void ApplyAura(int aura_id, int modifier);
+    void ApplyAura(std::string aura_name, int modifier);
+	bool HasAura(int aura_id);
     std::string GetCasterName();
     std::string GetAffectCategoryName();
     void SaveDataInt(std::string tag, int val);
@@ -70,7 +71,7 @@ public:
 
     enum Auras
     {
-        AURA_MOVE_SPEED = 1, AURA_RESOURCE_COST = 2, AURA_EATING = 3, AURA_DRINKING = 4
+        AURA_MOVE_SPEED = 1, AURA_RESOURCE_COST = 2, AURA_EATING = 3, AURA_DRINKING = 4, AURA_TAUNT = 5
     };
 
 	//Comparison functor

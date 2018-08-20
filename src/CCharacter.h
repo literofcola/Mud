@@ -207,6 +207,8 @@ public:
 	Player * GetPlayer();
     std::string GetName();
 	std::string HisHer();
+	std::string HimHer();
+	std::string HisHers();
 	bool CancelActiveDelay();
 	bool CancelCastOnHit();
 	std::string AggressionColor(Character * target);
@@ -274,6 +276,7 @@ public:
     SpellAffect * AddSpellAffect(int isDebuff, Character * caster, std::string name,
                         bool hidden, bool stackable, int ticks, double duration, int category, Skill * sk, std::string affect_description);
     SpellAffect * HasSpellAffect(std::string name);
+	SpellAffect * GetFirstSpellAffectWithAura(int aura_id);
     int CleanseSpellAffect(Character * cleanser, int category, int howMany = -1);
 	bool RemoveSpellAffectsByAura(int isDebuff, int auraid);
     void RemoveSpellAffect(int isDebuff, int id);
@@ -283,10 +286,10 @@ public:
     void LoadSpellAffects();
     void SaveCooldowns();
     void LoadCooldowns();
-    int GetAuraModifier(int affect, int whatModifier);
-    int GetTotalAuraModifier(int affect);
-    int GetSmallestAuraModifier(int affect);
-    int GetLargestAuraModifier(int affect);
+    int GetAuraModifier(int aura_id, int whatModifier);
+    int GetTotalAuraModifier(int aura_id);
+    int GetSmallestAuraModifier(int aura_id);
+    int GetLargestAuraModifier(int aura_id);
     bool CanMove();
     double GetMoveSpeed();
     void AddSkill(Skill * newskill);

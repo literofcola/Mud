@@ -30,6 +30,8 @@ const struct SpellAffect::AuraTable aura_table[] =
     { "MOVE_SPEED", SpellAffect::AURA_MOVE_SPEED },
     { "RESOURCE_COST", SpellAffect::AURA_RESOURCE_COST },
 	{ "EATING", SpellAffect::AURA_EATING },
+	{ "DRINKING", SpellAffect::AURA_DRINKING },
+	{ "TAUNT", SpellAffect::AURA_TAUNT },
     { "", 0 }
 };
 
@@ -70,7 +72,7 @@ void SpellAffect::ApplyAura(string affectName, int modifier)
 {
     bool found = false;
     int i;
-    for(i = 0; aura_table[i].affectID != 0; i++)
+    for(i = 0; aura_table[i].auraID != 0; i++)
     {
         if(affectName == aura_table[i].affectName)
         {
@@ -83,16 +85,26 @@ void SpellAffect::ApplyAura(string affectName, int modifier)
         LogFile::Log("error", "SpellAffect::ApplyAura, bad affectName");
         return;
     }
-    AuraAffect af = { aura_table[i].affectID, modifier };
+    AuraAffect af = { aura_table[i].auraID, modifier };
     auraAffects.push_front(af);
 }
 
-void SpellAffect::ApplyAura(int affectID, int modifier)
+bool SpellAffect::HasAura(int aura_id)
+{
+	for (auto iter = auraAffects.begin(); iter != auraAffects.end(); iter++)
+	{
+		if (iter->auraID == aura_id)
+			return true;
+	}
+	return false;
+}
+
+void SpellAffect::ApplyAura(int auraID, int modifier)
 {
     bool found = false;
-    for(int i = 0; aura_table[i].affectID != 0; i++)
+    for(int i = 0; aura_table[i].auraID != 0; i++)
     {
-        if(affectID == aura_table[i].affectID)
+        if(auraID == aura_table[i].auraID)
         {
             found = true;
             break;
@@ -103,7 +115,7 @@ void SpellAffect::ApplyAura(int affectID, int modifier)
         LogFile::Log("error", "SpellAffect::ApplyAura, bad affectID");
         return;
     }
-    AuraAffect af = { affectID, modifier };
+    AuraAffect af = { auraID, modifier };
     auraAffects.push_front(af);
 }
 
@@ -156,7 +168,7 @@ void SpellAffect::Notify(SubscriberManager * lm)
     //caster about to be deleted... player quit, npc killed etc. At least save the name
     casterName = caster->name;
 	caster->RemoveSubscriber(this);
-    caster = NULL;
+    caster = nullptr;
 }
 
 void SpellAffect::Save(std::string charname)
@@ -180,7 +192,7 @@ void SpellAffect::Save(std::string charname)
     {
         for(iter = auraAffects.begin(); iter != auraAffects.end(); ++iter)
         {
-            affectsql += Utilities::itos((*iter).affectID) + "," + Utilities::itos((*iter).modifier) + ";";
+            affectsql += Utilities::itos((*iter).auraID) + "," + Utilities::itos((*iter).modifier) + ";";
         }
     }
     affectsql += "', '";
@@ -299,5 +311,5 @@ void SpellAffect::Load(Character * ch)
 
 bool SpellAffect::CompareAuraByID::operator()(AuraAffect & elem) const
 {
-	return value == elem.affectID;
+	return value == elem.auraID;
 }

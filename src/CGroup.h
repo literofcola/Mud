@@ -3,7 +3,6 @@
 
 class Character;
 
-//TODO: pasted this from old Mudv2, needs work
 class Group
 {
 public:
