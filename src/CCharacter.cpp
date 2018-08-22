@@ -245,17 +245,38 @@ void Character::SendGMCP(std::string str)
 
 void Character::SendTargetSubscriberGMCP(std::string str)
 {
-	Character * submanager_as_char;
-	if (submanager_as_char = dynamic_cast<Character*>(this))
+	for (auto iter = this->subscribers_.begin(); iter != this->subscribers_.end(); ++iter)
 	{
-		for (auto iter = submanager_as_char->subscribers_.begin(); iter != submanager_as_char->subscribers_.end(); ++iter)
+		Character * subscriber_as_char;
+		if (subscriber_as_char = dynamic_cast<Character*>(iter->subscriber))
 		{
-			Character * subscriber_as_char;
-			if (subscriber_as_char = dynamic_cast<Character*>(iter->subscriber))
+			if (subscriber_as_char->GetTarget() == this)
 			{
-				if (subscriber_as_char->GetTarget() == this)
+				subscriber_as_char->SendGMCP(str);
+			}
+		}
+	}
+}
+
+void Character::SendTargetTargetSubscriberGMCP(std::string str)
+{
+	for (auto iter1 = this->subscribers_.begin(); iter1 != this->subscribers_.end(); ++iter1)
+	{
+		Character * subscriber_as_char;
+		if (subscriber_as_char = dynamic_cast<Character*>(iter1->subscriber))
+		{
+			if (subscriber_as_char->GetTarget() == this)
+			{
+				for (auto iter2 = subscriber_as_char->subscribers_.begin(); iter2 != subscriber_as_char->subscribers_.end(); ++iter2)
 				{
-					subscriber_as_char->SendGMCP(str);
+					Character * subofsub_as_char;
+					if (subofsub_as_char = dynamic_cast<Character*>(iter2->subscriber))
+					{
+						if (subofsub_as_char->GetTarget() == subscriber_as_char)
+						{
+							subofsub_as_char->SendGMCP(str);
+						}
+					}
 				}
 			}
 		}
@@ -2739,27 +2760,25 @@ void Character::SetHealth(int amount)
 	{
 		health = amount;
 	}
-	if (IsPlayer())
+
+	json vitals = { { "hp", health } };
+	SendGMCP("char.vitals " + vitals.dump());
+	int percent = 0;
+	if (maxHealth > 0)
+		percent = (health * 100) / maxHealth;
+	vitals = { { "hppercent", percent } };
+	SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
+	SendTargetTargetSubscriberGMCP("targettarget.vitals " + vitals.dump());
+
+	if (HasGroup())
 	{
-		json vitals = { { "hp", health } };
-		SendGMCP("char.vitals " + vitals.dump());
-
-		int percent = 0;
-		if (maxHealth > 0)
-			percent = (health * 100) / maxHealth;
-		vitals = { { "hppercent", percent } };
-		SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
-
-		if (HasGroup())
+		int first_slot = group->FindFirstSlotInSubgroup(this);
+		for (int i = first_slot; i < first_slot + Group::MAX_GROUP_SIZE; i++)
 		{
-			int first_slot = group->FindFirstSlotInSubgroup(this);
-			for (int i = first_slot; i < first_slot + Group::MAX_GROUP_SIZE; i++)
+			if (group->members[i] != nullptr && group->members[i] != this)
 			{
-				if (group->members[i] != nullptr && group->members[i] != this)
-				{
-					json vitals = { { "name", GetName() }, { "hp", GetHealth() } };
-					group->members[i]->SendGMCP("group.vitals " + vitals.dump());
-				}
+				vitals = { { "name", GetName() }, { "hp", GetHealth() } };
+				group->members[i]->SendGMCP("group.vitals " + vitals.dump());
 			}
 		}
 	}
@@ -2802,27 +2821,25 @@ void Character::SetMana(int amount)
 	{
 		mana = amount;
 	}
-	if (IsPlayer())
+
+	json vitals = { { "mp", mana } };
+	SendGMCP("char.vitals " + vitals.dump());
+
+	int percent = 0;
+	if (maxMana > 0)
+		percent = (mana * 100) / maxMana;
+	vitals = { { "mppercent", percent } };
+	SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
+
+	if (HasGroup())
 	{
-		json vitals = { { "mp", mana } };
-		SendGMCP("char.vitals " + vitals.dump());
-
-		int percent = 0;
-		if (maxMana > 0)
-			percent = (mana * 100) / maxMana;
-		vitals = { { "mppercent", percent } };
-		SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
-
-		if (HasGroup())
+		int first_slot = group->FindFirstSlotInSubgroup(this);
+		for (int i = first_slot; i < first_slot + Group::MAX_GROUP_SIZE; i++)
 		{
-			int first_slot = group->FindFirstSlotInSubgroup(this);
-			for (int i = first_slot; i < first_slot + Group::MAX_GROUP_SIZE; i++)
+			if (group->members[i] != nullptr && group->members[i] != this)
 			{
-				if (group->members[i] != nullptr && group->members[i] != this)
-				{
-					json vitals = { { "name", GetName() },{ "mp", GetMana() } };
-					group->members[i]->SendGMCP("group.vitals " + vitals.dump());
-				}
+				vitals = { { "name", GetName() },{ "mp", GetMana() } };
+				group->members[i]->SendGMCP("group.vitals " + vitals.dump());
 			}
 		}
 	}
@@ -2858,17 +2875,14 @@ void Character::SetEnergy(int amount)
 	{
 		energy = amount;
 	}
-	if (IsPlayer())
-	{
-		json vitals = { { "en", energy } };
-		SendGMCP("char.vitals " + vitals.dump());
+	json vitals = { { "en", energy } };
+	SendGMCP("char.vitals " + vitals.dump());
 
-		int percent = 0;
-		if (maxEnergy > 0)
-			percent = (energy * 100) / maxEnergy;
-		vitals = { { "enpercent", percent } };
-		SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
-	}
+	int percent = 0;
+	if (maxEnergy > 0)
+		percent = (energy * 100) / maxEnergy;
+	vitals = { { "enpercent", percent } };
+	SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
 }
 
 //Rage adjusting function to be used by spells. Checks for AURA_RESOURCE_COST
@@ -2901,17 +2915,14 @@ void Character::SetRage(int amount)
 	{
 		rage = amount;
 	}
-	if (IsPlayer())
-	{
-		json vitals = { { "rage", rage } };
-		SendGMCP("char.vitals " + vitals.dump());
+	json vitals = { { "rage", rage } };
+	SendGMCP("char.vitals " + vitals.dump());
 
-		int percent = 0;
-		if (maxRage > 0)
-			percent = (rage * 100) / maxRage;
-		vitals = { { "ragepercent", percent } };
-		SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
-	}
+	int percent = 0;
+	if (maxRage > 0)
+		percent = (rage * 100) / maxRage;
+	vitals = { { "ragepercent", percent } };
+	SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
 }
 
 void Character::SetMaxHealth(int amount)
@@ -3667,11 +3678,11 @@ void Character::ClearTarget()
 {
     if(target)
     {
-		if (target->GetTarget())
-		{
+		//if (target->GetTarget())
+		//{
 			json targettargetvitals = { { "name", "" },{ "level", 0 },{ "hppercent", 0 } };
 			SendGMCP("targettarget.vitals " + targettargetvitals.dump());
-		}
+		//}
         target->RemoveSubscriber(this);
 		//cout << "ClearTarget REMOVE" << endl;
         target = NULL;

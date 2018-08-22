@@ -182,6 +182,7 @@ public:
 	void Send(char * str);
 	void SendGMCP(std::string str);
 	void SendTargetSubscriberGMCP(std::string str);
+	void SendTargetTargetSubscriberGMCP(std::string str);
 	void SendGMCP(char * str);
     void Message(const std::string & txt, MessageType msg_type, Character * vict = NULL);
     Character * GetCharacterRoom(std::string name);
