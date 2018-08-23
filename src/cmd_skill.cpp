@@ -285,7 +285,7 @@ void cmd_cast(Character * ch, string argument)
 	if(!Utilities::FlagIsSet(spell->flags, Skill::FLAG_NOGCD))
 		ch->StartGlobalCooldown();
 
-    //TODO: call the skill function (or just cmd_castCallback) directly with no delay for instant skills ???
+    //TODO: call cmd_castCallback directly with no delay for instant skills ???
     ch->delay = (Game::GetGame()->currentTime + spell->castTime);
     Character::DelayData dd;
     dd.caster = ch;

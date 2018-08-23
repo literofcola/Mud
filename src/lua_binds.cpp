@@ -130,6 +130,7 @@ void Lua_DefineClasses(sol::state * lua)
 			//sol::base_classes, sol::bases<Subscriber>(),
 			sol::constructors<SpellAffect()>(),
 			"ApplyAura", (void(SpellAffect::*)(int, int)) &SpellAffect::ApplyAura,
+			"RemoveAura", &SpellAffect::RemoveAura,
 			"name", &SpellAffect::name,
 			"GetCasterName", &SpellAffect::GetCasterName,
 			"SaveDataInt", &SpellAffect::SaveDataInt,

@@ -68,6 +68,8 @@ public:
         int percent;
     };
     std::list<DropData> drops; //TODO Random drops
+	std::list<Character *> validLooters; //is this list safe without subscribing to each Character for deletion?
+	std::list<Item *> loot;
     Reset * reset; //reset that spawned this npc, if any
     std::vector<Quest *> questStart;
     std::vector<Quest *> questEnd;
@@ -267,6 +269,7 @@ public:
 	void ConsumeRage(int amount);
 	void AdjustHealth(Character * source, int amount);
 	void OnDeath();
+	void HandleNPCKillRewards(Character * killed);
 	void MakeCorpse();
 	void RemoveCorpse();
     void AdjustMana(Character * source, int amount);

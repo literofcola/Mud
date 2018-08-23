@@ -50,6 +50,7 @@ public:
     void ApplyAura(int aura_id, int modifier);
     void ApplyAura(std::string aura_name, int modifier);
 	bool HasAura(int aura_id);
+	void RemoveAura(int aura_id);
     std::string GetCasterName();
     std::string GetAffectCategoryName();
     void SaveDataInt(std::string tag, int val);

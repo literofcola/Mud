@@ -2576,59 +2576,21 @@ void Character::OnDeath()
 			}
 		}
 
-		if(group_damage >= other_damage) //The tap's group did most of the damage, give rewards
+		if(group_damage >= other_damage && tap->IsPlayer()) //The tap's group did most of the damage, give rewards
 		{
+			tap->HandleNPCKillRewards(this);
+			this->validLooters.push_back(tap);
+
 			if (tap->HasGroup())
 			{
 				for (int i = 0; i < Group::MAX_RAID_SIZE; i++)
 				{
 					Character * group_member = tap->group->members[i];
-					if (group_member != nullptr && FindDistance(this->room, group_member->room, 5) != -1)
+					if (group_member != nullptr && group_member != tap && FindDistance(this->room, group_member->room, 5) != -1)
 					{
-						int exp = Game::CalculateExperience(group_member, this);
-						group_member->Send("|BYou have gained |Y" + Utilities::itos(exp) + "|B experience.|X\n\r");
-						group_member->ApplyExperience(exp);
-						std::list<DropData>::iterator dropiter;
-						for (dropiter = drops.begin(); dropiter != drops.end(); ++dropiter)
-						{
-							if (Server::rand() % 100 <= (*dropiter).percent && (*dropiter).id.size() > 0)
-							{
-								int which = Server::rand() % ((int)(*dropiter).id.size());
-								Item * drop = Game::GetGame()->GetItem((*dropiter).id[which]);
-								group_member->Send("You receive loot: " + (string)Item::quality_strings[drop->quality] + drop->name + "|X.\n\r");
-								group_member->Message(group_member->name + " receives loot: " + Item::quality_strings[drop->quality] + drop->name + "|X.",
-									Character::MSG_ROOM_NOTCHAR);
-								group_member->player->AddItemInventory(drop);
-							}
-						}
-						if (group_member->player)
-						{
-							group_member->player->QuestCompleteObjective(Quest::OBJECTIVE_KILLNPC, (void*)this);
-						}
+						group_member->HandleNPCKillRewards(this);
+						this->validLooters.push_back(group_member);
 					}
-				}
-			}
-			else
-			{
-				int exp = Game::CalculateExperience(tap, this);
-				tap->Send("|BYou have gained |Y" + Utilities::itos(exp) + "|B experience.|X\n\r");
-				tap->ApplyExperience(exp);
-				std::list<DropData>::iterator dropiter;
-				for (dropiter = drops.begin(); dropiter != drops.end(); ++dropiter)
-				{
-					if (Server::rand() % 100 <= (*dropiter).percent && (*dropiter).id.size() > 0)
-					{
-						int which = Server::rand() % ((int)(*dropiter).id.size());
-						Item * drop = Game::GetGame()->GetItem((*dropiter).id[which]);
-						tap->Send("You receive loot: " + (string)Item::quality_strings[drop->quality] + drop->name + "|X.\n\r");
-						tap->Message(tap->name + " receives loot: " + Item::quality_strings[drop->quality] + drop->name + "|X.",
-							Character::MSG_ROOM_NOTCHAR);
-						tap->player->AddItemInventory(drop);
-					}
-				}
-				if (tap->player)
-				{
-					tap->player->QuestCompleteObjective(Quest::OBJECTIVE_KILLNPC, (void*)this);
 				}
 			}
 		}
@@ -2637,6 +2599,31 @@ void Character::OnDeath()
 	SetCorpse();
 }
 
+void Character::HandleNPCKillRewards(Character * killed)
+{
+	int exp = Game::CalculateExperience(this, killed);
+	Send("|BYou have gained |Y" + Utilities::itos(exp) + "|B experience.|X\n\r");
+	ApplyExperience(exp);
+	player->QuestCompleteObjective(Quest::OBJECTIVE_KILLNPC, (void*)killed);
+
+	for (auto dropiter = killed->drops.begin(); dropiter != killed->drops.end(); ++dropiter)
+	{
+		if (Server::rand() % 100 <= (*dropiter).percent && (*dropiter).id.size() > 0)
+		{
+			int which = Server::rand() % ((int)(*dropiter).id.size());
+			Item * drop = Game::GetGame()->GetItem((*dropiter).id[which]);
+
+			if (drop->quest && !player->ShouldDropQuestItem(drop))
+			{
+				continue;
+			}
+			Send("You receive loot: " + (string)Item::quality_strings[drop->quality] + drop->name + "|X.\n\r");
+			Message(name + " receives loot: " + Item::quality_strings[drop->quality] + drop->name + "|X.",
+				Character::MSG_ROOM_NOTCHAR);
+			player->AddItemInventory(drop);
+		}
+	}
+}
 
 void Character::MakeCorpse()
 {

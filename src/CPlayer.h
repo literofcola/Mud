@@ -54,7 +54,6 @@ public:
     std::list<ClassData> classList;
 
     //Quest
-    //std::map<int, Quest *> completedQuests; //TODO Save quest stuff, really only need a std::set of id's
 	std::set<int> completedQuests;
     std::vector<Quest *> questLog;
     static const int QUESTLOG_MAX_SIZE = 20;
@@ -70,7 +69,7 @@ public:
     bool QuestCompleted(Quest * quest);
     bool QuestObjectivesComplete(Quest * quest);
     void QuestCompleteObjective(int type, void * obj);
-    //Item * NewItemInventory(Item * itemindex);
+	bool ShouldDropQuestItem(Item * founditem);
     void AddItemInventory(Item * item);
     Item * GetItemInventory(int id);
     Item * GetItemInventory(std::string name);

@@ -213,6 +213,35 @@ void Player::QuestCompleteObjective(int type, void * obj)
     }
 }
 
+bool Player::ShouldDropQuestItem(Item * founditem)
+{
+	if (questLog.empty())
+		return false;
+
+	int i = 0;
+	for (auto logiter = questLog.begin(); logiter != questLog.end(); ++logiter)
+	{
+		Quest * q = (*logiter);
+
+		int j = 0;
+		for (auto objiter = q->objectives.begin(); objiter != q->objectives.end(); ++objiter)
+		{
+			if (questObjectives[i][j] < (*objiter).count && (*objiter).type == Quest::OBJECTIVE_ITEM)
+			{
+				Item * questitem = (Item*)((*objiter).objective);
+				if (founditem && questitem && founditem->id == questitem->id)
+				{
+					return true;
+				}
+				break;
+			}
+			j++;
+		}
+		i++;
+	}
+	return false;
+}
+
 bool Player::QuestObjectivesComplete(Quest * quest)
 {
     if(questLog.empty())

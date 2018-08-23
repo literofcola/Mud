@@ -99,6 +99,17 @@ bool SpellAffect::HasAura(int aura_id)
 	return false;
 }
 
+void SpellAffect::RemoveAura(int aura_id)
+{
+	for (auto iter = auraAffects.begin(); iter != auraAffects.end();)
+	{
+		if (iter->auraID == aura_id)
+			iter = auraAffects.erase(iter);
+		else
+			++iter;
+	}
+}
+
 void SpellAffect::ApplyAura(int auraID, int modifier)
 {
     bool found = false;

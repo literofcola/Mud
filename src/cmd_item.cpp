@@ -33,41 +33,6 @@ void cmd_inventory(Character * ch, string argument)
 
 	ch->Send("You are carrying:\n\r");
 
-	/*std::list<std::pair<Item *, int>> coalesced;
-	//copy the actual inventory to the coalesced list
-	std::list<Item*>::iterator iter;
-	for (iter = ch->player->inventory.begin(); iter != ch->player->inventory.end(); ++iter)
-	{
-		coalesced.push_back(std::make_pair((*iter), 1));
-	}
-	//traverse the copy and delete duplicates while incrementing count
-	for (auto i = coalesced.begin(); i != coalesced.end(); i++)
-	{
-		for (auto j = std::next(i, 1); j != coalesced.end();)
-		{
-			if (i->first->id == j->first->id) //found an item match
-			{
-				i->second++;
-				j = coalesced.erase(j);
-			}
-			else
-			{
-				j++;
-			}
-		}
-	}
-	//print the coalesced list
-	int total = 0;
-	for (auto i = coalesced.begin(); i != coalesced.end(); i++)
-	{
-		if (i->second > 1)
-			ch->Send("|M(" + Utilities::itos(i->second) + ") ");
-		else
-			ch->Send("    ");
-		ch->Send(Item::quality_strings[i->first->quality] + i->first->name + "|X\n\r");
-		total++;
-	}*/
-
 	int total = 0;
 	for (auto i = ch->player->inventory.begin(); i != ch->player->inventory.end(); i++)
 	{
@@ -82,10 +47,6 @@ void cmd_inventory(Character * ch, string argument)
     if(total == 0)
         ch->Send("     Nothing.\n\r");
 
-    /*if(total != ch->player->inventorySize)
-    {
-        LogFile::Log("error", "cmd_inventory, total != user->character->inventorySize");
-    }*/
     ch->Send(Utilities::itos(total) + "/" + Utilities::itos(ch->player->maxInventorySize) + " items\n\r");
 }
 
