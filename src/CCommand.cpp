@@ -60,6 +60,7 @@ class Command cmd_table[] =
     { "attack",     cmd_attack,     1, 0, 0, 0, Character::POSITION_STANDING },
     { "kill",		cmd_attack,		1, 0, 0, 0, Character::POSITION_STANDING },
     { "look",		cmd_look,		1, 0, 1, 1, Character::POSITION_ANY },
+	{ "loot",		cmd_loot,		1, 0, 0, 0, Character::POSITION_STANDING },
     /*{ "gt",		cmd_clantalk,	POS_DEAD,		1,		LOG_NORMAL, 1 },
     { "guild",		cmd_clan,		POS_DEAD,		1,		LOG_NORMAL, 1 },*/
     { "learn",      cmd_learn,	    -1, 0, 0, 0, Character::POSITION_ANY },

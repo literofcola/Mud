@@ -68,8 +68,7 @@ public:
         int percent;
     };
     std::list<DropData> drops; //TODO Random drops
-	std::list<Character *> validLooters; //is this list safe without subscribing to each Character for deletion?
-	std::list<Item *> loot;
+	std::list<std::pair<Item *, std::vector<std::string>>> loot; //actual loot dropped is a list of items each of which has a list of valid looters
     Reset * reset; //reset that spawned this npc, if any
     std::vector<Quest *> questStart;
     std::vector<Quest *> questEnd;

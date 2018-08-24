@@ -70,6 +70,7 @@ void cmd_eat(Character * ch, string argument);
 void cmd_drink(Character * ch, string argument);
 void cmd_take(Character * ch, string argument);
 void cmd_takeCallback(Character::DelayData delayData);
+void cmd_loot(Character * ch, string argument);
 
 //cmd_move.cpp
 void cmd_north(Character * ch, string argument);

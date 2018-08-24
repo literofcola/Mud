@@ -363,14 +363,12 @@ bool cmd_drop_Query(Character * ch, string argument)
     {
         Item * item = (Item*)ch->GetQueryData(); //the query data is the Item Index just in case it got deleted in the meantime
         ch->QueryClear();
-        if((item = ch->player->GetItemInventory(item->id)) == NULL)
+        if((item = ch->player->GetItemInventory(item->id)) == nullptr)
         {
             ch->Send("You're not carrying that item.\n\r");
             return true;
         }
-        Item * deleteme = ch->player->RemoveItemInventory(item->id);
-		if (deleteme)
-			delete deleteme;
+        ch->player->RemoveItemInventory(item->id);
         return true;
     }
     ch->QueryClear();
@@ -453,6 +451,34 @@ void cmd_takeCallback(Character::DelayData delayData)
 		delayData.caster->player->AddItemInventory(delayData.itemTarget);
 	delayData.caster->Send("You take " + delayData.itemTarget->name + "\n\r");
 	delayData.caster->Message(delayData.caster->name + " takes " + delayData.itemTarget->name, Character::MSG_ROOM_NOTCHAR);
+}
+
+void cmd_loot(Character * ch, string argument)
+{
+	if (ch->IsNPC())
+		return;
+
+	if (argument.empty())
+	{
+		if (ch->GetTarget() != nullptr)
+		{
+			Character * loot_target = ch->GetTarget();
+			if (loot_target->loot.empty())
+			{
+				ch->Send("Your target has no lootable items.\n\r");
+				return;
+			}
+			ch->Send("You can loot the following items from " + loot_target->GetName() + ":\n\r");
+			for (auto iter = std::begin(loot_target->loot); iter != std::end(loot_target->loot); ++iter)
+			{ //std::list<std::pair<Item *, std::vector<std::string>>> loot;
+				auto found = std::find(std::begin(iter->second), std::end(iter->second), ch->GetName());
+				if (found != std::end(iter->second))
+				{
+					ch->Send((string)Item::quality_strings[iter->first->quality] + iter->first->name + "|X\n\r");
+				}
+			}
+		}
+	}
 }
 
 void cmd_drink(Character * ch, string argument)
