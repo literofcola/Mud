@@ -465,26 +465,50 @@ void cmd_loot(Character * ch, string argument)
 
 	if (arg1.empty())
 	{
-		if (ch->GetTarget() != nullptr)
+		if(!ch->pending_loot_rolls.empty())
+			ch->Send("Pending loot rolls:\n\r");
+
+		auto iter = std::begin(ch->pending_loot_rolls);
+		while (iter != std::end(ch->pending_loot_rolls))
+		{
+			Character::OneLoot * loot = iter->corpse->GetCorpseLoot(iter->corpse_id);
+			if (loot == nullptr)
+			{
+				LogFile::Log("error", "Pending loot roll couldn't find corresponding loot on corpse");
+				iter = ch->pending_loot_rolls.erase(iter);
+				continue;
+			}
+			//todo: check for us in loot->looters, and that we're still CorpseLoot::ROLL_UNDECIDED
+			ch->Send(Utilities::itos(iter->my_id) + ". " + (string)Item::quality_strings[loot->item->quality] + loot->item->name + "|X");
+			if (loot->roll_timer > 0 && loot->roll_timer > Game::currentTime)
+				ch->Send(" |Y[" + Utilities::dtos(loot->roll_timer - Game::currentTime, 1) + "s remaining]|X");
+			ch->Send("\n\r");
+			++iter;
+		}
+
+		if (ch->GetTarget() != nullptr && !ch->GetTarget()->IsAlive())
 		{
 			Character * loot_target = ch->GetTarget();
 			bool lootable_items = false;
 			ch->Send("You can loot the following items from " + loot_target->GetName() + ":\n\r");
 			for (auto iter = std::begin(loot_target->loot); iter != std::end(loot_target->loot); ++iter)
 			{
-				auto can_loot = iter->looters.find(ch->GetName());
+				/*std::find_if(iter->looters.begin(), iter->looters.end(),
+							[&cch = ch] (const struct Character::Looter & lc) -> bool { return cch == lc.ch; }); //lamba function solution instead of operator== in the struct*/
+				auto can_loot = std::find(iter->looters.begin(), iter->looters.end(), ch);
 				if (can_loot != std::end(iter->looters))
 				{
 					lootable_items = true;
 					ch->Send(Utilities::itos(iter->id) + ". " + (string)Item::quality_strings[iter->item->quality] + iter->item->name + "|X");
 					if (iter->roll_timer > 0 && iter->roll_timer > Game::currentTime)
-						ch->Send("|YAuto pass [" + Utilities::dtos(iter->roll_timer - Game::currentTime, 1) + "s]");
+						ch->Send(" |Y[" + Utilities::dtos(iter->roll_timer - Game::currentTime, 1) + "s remaining]|X");
 					ch->Send("\n\r");
 				}
 			}
 			if (lootable_items == 0)
 				ch->Send("None\n\r");
 		}
+		
 	}
 	else if (!Utilities::str_cmp(arg1, "info"))
 	{

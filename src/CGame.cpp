@@ -527,12 +527,15 @@ void Game::WorldUpdate(Server * server)
 				if (!curr->loot.empty())
 				{
 					//Check for any roll timers expiring
-					for (auto iter = begin(curr->loot); iter != end(curr->loot); ++iter)
+					for (auto iter = begin(curr->loot); iter != end(curr->loot);)
 					{
-						if (iter->roll_timer > 0 && iter->roll_timer < Game::currentTime) //expired!
+						if (iter->roll_timer > 0 && iter->roll_timer < Game::currentTime && curr->DoLootRoll(&(*iter)))  //expired! returns true if item successfully looted (not everyone passed)
+						{ 
+							iter = curr->loot.erase(iter); //remove it!
+						}
+						else
 						{
-							curr->DoLootRoll(&(*iter));
-							iter->roll_timer = 0;
+							++iter;
 						}
 					}
 				}

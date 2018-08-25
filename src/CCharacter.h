@@ -68,21 +68,40 @@ public:
         int percent;
     };
     std::list<DropData> drops; //TODO Random drops
-	struct LootData
+
+	//Getting a little struct happy
+	struct Looter //A single eligible looter for a piece of loot dropped in a corpse
 	{
 		enum RollType
 		{
 			ROLL_UNDECIDED, ROLL_NEED, ROLL_GREED, ROLL_PASS
 		};
+		Character * ch;
+		RollType roll_type;
+		int final_roll;
 
+		Looter(Character * ch_) : ch(ch_), roll_type(ROLL_UNDECIDED), final_roll(0) {};
+		bool operator == (const Character * c) const
+		{
+			return ch == c;
+		}
+	};
+	struct OneLoot //One item dropped in a corpse
+	{
 		int id;
 		Item * item;
-		std::map<std::string, std::pair<RollType, int>> looters; //eligible looters, name, need/greed/pass, actual roll
+		std::vector<Looter> looters;
 		double roll_timer;
 	};
-	std::list<LootData> loot; //Loot dropped in a corpse
-	
+	std::list<OneLoot> loot; //Loot dropped in a corpse
 
+	struct LootRoll //A piece of loot in a corpse somewhere that we're rolling on
+	{
+		int my_id;
+		int corpse_id;
+		Character * corpse;
+	};
+	std::list<LootRoll> pending_loot_rolls; //pointer back to a corpse that has uncommon+ loot we're rolling on
 
     Reset * reset; //reset that spawned this npc, if any
     std::vector<Quest *> questStart;
@@ -284,7 +303,14 @@ public:
 	void AdjustHealth(Character * source, int amount);
 	void OnDeath();
 	void HandleNPCKillRewards(Character * killed);
-	void DoLootRoll(LootData * ld);
+	bool DoLootRoll(OneLoot * oneloot);
+	OneLoot * GetCorpseLoot(int corpse_id);
+	int AddLootRoll(int corpse_id, Character * corpse);
+	void RemoveLootRoll(int my_id);
+	void RemoveLootRoll(Character * corpse);
+	void RemoveAllLootRolls();
+	void RemoveLooter(Character * ch);
+	void RemoveAllLooters();
 	void MakeCorpse();
 	void RemoveCorpse();
     void AdjustMana(Character * source, int amount);

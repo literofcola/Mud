@@ -137,6 +137,9 @@ void SubscriberManager::NotifySubscribers()
 		submanager_as_char->CancelActiveDelay();
 		submanager_as_char->RemoveThreat(nullptr, true);
 		submanager_as_char->RemoveAllSpellAffects();
+
+		submanager_as_char->RemoveAllLooters();
+		submanager_as_char->RemoveAllLootRolls();
 	}
 
     std::list<SubscriberCount>::iterator iter = subscribers_.begin();
