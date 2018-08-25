@@ -519,6 +519,25 @@ void cmd_loot(Character * ch, string argument)
 		}
 		int lootnum = Utilities::atoi(arg2);
 	}
+	else if (!Utilities::str_cmp(arg1, "need"))
+	{
+		if (!Utilities::IsNumber(arg2))
+		{
+			ch->Send("loot need <roll number>\n\r");
+			return;
+		}
+		int rollnum = Utilities::atoi(arg2);
+
+		for (auto iter = ch->pending_loot_rolls.begin(); iter != ch->pending_loot_rolls.end(); ++iter)
+		{
+			if (iter->my_id == rollnum)
+			{
+				ch->SetRollType(iter->corpse, iter->corpse_id, Character::Looter::ROLL_NEED);
+				return;
+			}
+		}
+		ch->Send("You do not have a pending loot roll with that number.\n\r");
+	}
 }
 
 void cmd_drink(Character * ch, string argument)

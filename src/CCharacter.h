@@ -306,11 +306,14 @@ public:
 	bool DoLootRoll(OneLoot * oneloot);
 	OneLoot * GetCorpseLoot(int corpse_id);
 	int AddLootRoll(int corpse_id, Character * corpse);
-	void RemoveLootRoll(int my_id);
-	void RemoveLootRoll(Character * corpse);
+	void RemoveLootRoll(int my_id);	//Remove only one pending roll by roll-ers ID
+	void RemoveLootRoll(Character * corpse); //Remove all pending rolls that point to a specific corpse
+	void RemoveLootRoll(Character * corpse, int corpse_id); //Remove only one pending roll for specific corpse/ID combo
 	void RemoveAllLootRolls();
 	void RemoveLooter(Character * ch);
 	void RemoveAllLooters();
+	void RemoveLoot(OneLoot *);
+	void SetRollType(Character * who, int corpse_id, Looter::RollType type); //Set a looter's roll type in the corpse's loot object
 	void MakeCorpse();
 	void RemoveCorpse();
     void AdjustMana(Character * source, int amount);
