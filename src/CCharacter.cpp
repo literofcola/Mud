@@ -2594,72 +2594,122 @@ void Character::OnDeath()
 					}
 				}
 			}
-
+			int loot_id_ctr = 1;
 			for (auto dropiter = drops.begin(); dropiter != drops.end(); ++dropiter)
 			{
 				if (Server::rand() % 100 <= (*dropiter).percent && (*dropiter).id.size() > 0)
 				{
 					int which = Server::rand() % ((int)(*dropiter).id.size());
 					Item * drop = Game::GetGame()->GetItem((*dropiter).id[which]);
-					std::vector<std::string> looter_names;
+
+					LootData loot_data;
+					loot_data.item = drop;
+					loot_data.id = loot_id_ctr++;
+					loot_data.roll_timer = 0;
 
 					if (drop->quest)
 					{
-						//found a quest item drop
-						if (tap->player->ShouldDropQuestItem(drop) && FindDistance(this->room, tap->room, 5) != -1)
-						{
-							looter_names.push_back(tap->GetName());
-							tap->Send(GetName() + " drops loot: " + (string)Item::quality_strings[drop->quality] + drop->name + "|X\n\r");
-							//tap->player->AddItemInventory(drop);
-						}
-						//go through the whole group if it exists, to see who is allowed to loot
+						//found a quest item drop, go through the whole group if it exists, to see who is allowed to loot
 						if (tap->HasGroup())
 						{
 							for (int i = 0; i < Group::MAX_RAID_SIZE; i++)
 							{
 								Character * group_member = tap->group->members[i];
-								if (group_member != nullptr && group_member != tap 
+								if (group_member != nullptr
 									&& group_member->player->ShouldDropQuestItem(drop) 
 									&& FindDistance(this->room, group_member->room, 5) != -1)
 								{
+									loot_data.looters[group_member->GetName()].first = LootData::ROLL_UNDECIDED;
+									loot_data.looters[group_member->GetName()].second = 0;
 									group_member->Send(GetName() + " drops loot: " + (string)Item::quality_strings[drop->quality] + drop->name + "|X\n\r");
-									looter_names.push_back(group_member->GetName());
-									//group_member->player->AddItemInventory(drop);
 								}
 							}
 						}
-						loot.push_back(std::make_pair(drop, looter_names));
+						else if (tap->player->ShouldDropQuestItem(drop) && FindDistance(this->room, tap->room, 5) != -1)
+						{
+							loot_data.looters[tap->GetName()].first = LootData::ROLL_UNDECIDED;
+							loot_data.looters[tap->GetName()].second = 0;
+							tap->Send(GetName() + " drops loot: " + (string)Item::quality_strings[drop->quality] + drop->name + "|X\n\r");
+						}
 					}
 					else
 					{
-						if (FindDistance(this->room, tap->room, 5) != -1)
-						{
-							looter_names.push_back(tap->GetName());
-							tap->Send(GetName() + " drops loot: " + (string)Item::quality_strings[drop->quality] + drop->name + "|X\n\r");
-							//tap->player->AddItemInventory(drop);
-						}
 						if (tap->HasGroup())
 						{
 							for (int i = 0; i < Group::MAX_RAID_SIZE; i++)
 							{
 								Character * group_member = tap->group->members[i];
-								if (group_member != nullptr && group_member != tap
-									&& FindDistance(this->room, group_member->room, 5) != -1)
+								if (group_member != nullptr && FindDistance(this->room, group_member->room, 5) != -1)
 								{
-									group_member->Send(GetName() + " drops loot: " + (string)Item::quality_strings[drop->quality] + drop->name + "|X\n\r");
-									looter_names.push_back(group_member->GetName());
-									//group_member->player->AddItemInventory(drop);
+									loot_data.looters[group_member->GetName()].first = LootData::ROLL_UNDECIDED;
+									loot_data.looters[group_member->GetName()].second = 0;
+									group_member->Send(GetName() + " drops loot: " + (string)Item::quality_strings[drop->quality] + drop->name + "|X");
+									if (drop->quality >= Item::QUALITY_UNCOMMON)
+									{
+										loot_data.roll_timer = Game::currentTime + 60;
+										group_member->Send(" |Y(60 seconds to 'need', 'greed', or 'pass')|X");
+									}
+									group_member->Send("\n\r");
 								}
 							}
 						}
-						loot.push_back(std::make_pair(drop, looter_names));
+						else if(FindDistance(this->room, tap->room, 5) != -1)
+						{
+							loot_data.looters[tap->GetName()].first = LootData::ROLL_UNDECIDED;
+							loot_data.looters[tap->GetName()].second = 0;
+							tap->Send(GetName() + " drops loot: " + (string)Item::quality_strings[drop->quality] + drop->name + "|X\n\r");
+						}
 					}
+					loot.push_back(loot_data);
 				}
 			}
 		}
 		ExitCombat(); //Removes NPC's threat list
 	}
 	SetCorpse();
+}
+
+void Character::DoLootRoll(LootData * ld)
+{
+	/*
+	struct LootData
+	{
+		enum RollType
+		{
+			ROLL_UNDECIDED, ROLL_NEED, ROLL_GREED, ROLL_PASS
+		};
+
+		int id;
+		Item * item;
+		std::map<std::string, RollType> looters; //save a players name if they're eligible to loot, and if they've choosen need/greed/pass
+		double roll_timer;
+	};
+	*/
+
+	/*int which_roll = LootData::ROLL_PASS;
+
+	for (auto looter_iter = ld->looters.begin(); looter_iter != ld->looters.end(); ++looter_iter)
+	{
+		if (looter_iter->second.first == LootData::ROLL_NEED)
+		{
+			which_roll = LootData::ROLL_NEED;
+			break;
+		}
+		if (looter_iter->second.first == LootData::ROLL_GREED)
+		{
+			which_roll = LootData::ROLL_GREED;
+		}
+	}
+	if (which_roll == LootData::ROLL_PASS)
+	{
+		return;
+	}
+	while (ld->looters.size() > 1) //roll until only 1 looter left. Need this loop in case of ties...
+	{
+		int best_roll = 0;
+		for (auto looter_iter = ld->looters.begin(); looter_iter != ld->looters.end(); ++looter_iter)
+		{
+	}*/
 }
 
 void Character::HandleNPCKillRewards(Character * killed)

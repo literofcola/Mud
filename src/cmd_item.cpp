@@ -457,27 +457,43 @@ void cmd_loot(Character * ch, string argument)
 {
 	if (ch->IsNPC())
 		return;
+	
+	string arg1;
+	string arg2;
+	argument = Utilities::one_argument(argument, arg1);
+	argument = Utilities::one_argument(argument, arg2);
 
-	if (argument.empty())
+	if (arg1.empty())
 	{
 		if (ch->GetTarget() != nullptr)
 		{
 			Character * loot_target = ch->GetTarget();
-			if (loot_target->loot.empty())
-			{
-				ch->Send("Your target has no lootable items.\n\r");
-				return;
-			}
+			bool lootable_items = false;
 			ch->Send("You can loot the following items from " + loot_target->GetName() + ":\n\r");
 			for (auto iter = std::begin(loot_target->loot); iter != std::end(loot_target->loot); ++iter)
-			{ //std::list<std::pair<Item *, std::vector<std::string>>> loot;
-				auto found = std::find(std::begin(iter->second), std::end(iter->second), ch->GetName());
-				if (found != std::end(iter->second))
+			{
+				auto can_loot = iter->looters.find(ch->GetName());
+				if (can_loot != std::end(iter->looters))
 				{
-					ch->Send((string)Item::quality_strings[iter->first->quality] + iter->first->name + "|X\n\r");
+					lootable_items = true;
+					ch->Send(Utilities::itos(iter->id) + ". " + (string)Item::quality_strings[iter->item->quality] + iter->item->name + "|X");
+					if (iter->roll_timer > 0 && iter->roll_timer > Game::currentTime)
+						ch->Send("|YAuto pass [" + Utilities::dtos(iter->roll_timer - Game::currentTime, 1) + "s]");
+					ch->Send("\n\r");
 				}
 			}
+			if (lootable_items == 0)
+				ch->Send("None\n\r");
 		}
+	}
+	else if (!Utilities::str_cmp(arg1, "info"))
+	{
+		if (!Utilities::IsNumber(arg2))
+		{
+			ch->Send("loot info <lootnum>\n\r");
+			return;
+		}
+		int lootnum = Utilities::atoi(arg2);
 	}
 }
 

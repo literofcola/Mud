@@ -68,7 +68,22 @@ public:
         int percent;
     };
     std::list<DropData> drops; //TODO Random drops
-	std::list<std::pair<Item *, std::vector<std::string>>> loot; //actual loot dropped is a list of items each of which has a list of valid looters
+	struct LootData
+	{
+		enum RollType
+		{
+			ROLL_UNDECIDED, ROLL_NEED, ROLL_GREED, ROLL_PASS
+		};
+
+		int id;
+		Item * item;
+		std::map<std::string, std::pair<RollType, int>> looters; //eligible looters, name, need/greed/pass, actual roll
+		double roll_timer;
+	};
+	std::list<LootData> loot; //Loot dropped in a corpse
+	
+
+
     Reset * reset; //reset that spawned this npc, if any
     std::vector<Quest *> questStart;
     std::vector<Quest *> questEnd;
@@ -157,7 +172,7 @@ public:
     void AddTrigger(Trigger & trig);
     Trigger * GetTrigger(int id, int type = -1);
 
-	//this should for sure be in user right...
+	//this should for sure be in user, right...
     enum EditState
     {
         ED_NONE, ED_ROOM, ED_SKILL, ED_NPC, ED_ITEM, ED_QUEST, ED_CLASS, ED_PLAYER, ED_HELP, ED_AREA
@@ -269,6 +284,7 @@ public:
 	void AdjustHealth(Character * source, int amount);
 	void OnDeath();
 	void HandleNPCKillRewards(Character * killed);
+	void DoLootRoll(LootData * ld);
 	void MakeCorpse();
 	void RemoveCorpse();
     void AdjustMana(Character * source, int amount);

@@ -524,8 +524,21 @@ void Game::WorldUpdate(Server * server)
 			}
 			if(curr->IsNPC())
 			{
+				if (!curr->loot.empty())
+				{
+					//Check for any roll timers expiring
+					for (auto iter = begin(curr->loot); iter != end(curr->loot); ++iter)
+					{
+						if (iter->roll_timer > 0 && iter->roll_timer < Game::currentTime) //expired!
+						{
+							curr->DoLootRoll(&(*iter));
+							iter->roll_timer = 0;
+						}
+					}
+				}
 				//Check NPC corpse despawn time
-				if (curr->TimeSinceDeath() >= 120) //todo: variable duration per NPC
+				if ((curr->loot.empty() && curr->TimeSinceDeath() >= 120) ||
+				   (!curr->loot.empty() && curr->TimeSinceDeath() >= 360)) //todo: variable duration per NPC
 				{
 					curr->Message(curr->name + "'s corpse crumbles into dust.", Character::MessageType::MSG_ROOM_NOTCHAR);
 					RemoveCharacter(curr);
