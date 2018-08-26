@@ -42,6 +42,7 @@ public:
     static const int HEALTH_FROM_STAMINA = 10;
     static const int MANA_FROM_WISDOM = 10;
 	static constexpr double STRENGTH_DAMAGE_MODIFIER = 0.10;	//auto attack damage increased by 10% of strength
+	static const int GROUP_LOOT_DISTANCE = 10;
     std::string name;
     std::string title;
     Room * room;
@@ -90,7 +91,7 @@ public:
 	{
 		int id;
 		Item * item;
-		std::vector<Looter> looters;
+		std::list<Looter> looters;
 		double roll_timer;
 	};
 	std::list<OneLoot> loot; //Loot dropped in a corpse
@@ -303,9 +304,10 @@ public:
 	void AdjustHealth(Character * source, int amount);
 	void OnDeath();
 	void HandleNPCKillRewards(Character * killed);
-	bool DoLootRoll(OneLoot * oneloot);
+	void DoLootRoll(OneLoot * oneloot);
 	OneLoot * GetCorpseLoot(int corpse_id);
 	int AddLootRoll(int corpse_id, Character * corpse);
+	bool HasLootRoll(Character * corpse, int corpse_id);
 	void RemoveLootRoll(int my_id);	//Remove only one pending roll by roll-ers ID
 	void RemoveLootRoll(Character * corpse); //Remove all pending rolls that point to a specific corpse
 	void RemoveLootRoll(Character * corpse, int corpse_id); //Remove only one pending roll for specific corpse/ID combo

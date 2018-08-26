@@ -70,7 +70,7 @@ public:
     bool QuestObjectivesComplete(Quest * quest);
     void QuestCompleteObjective(int type, void * obj);
 	bool ShouldDropQuestItem(Item * founditem);
-    void AddItemInventory(Item * item);
+    bool AddItemInventory(Item * item);
     Item * GetItemInventory(int id);
     Item * GetItemInventory(std::string name);
     Item * RemoveItemInventory(int id);

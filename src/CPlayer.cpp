@@ -272,38 +272,23 @@ bool Player::QuestObjectivesComplete(Quest * quest)
     return false;
 }
 
-/*Item * Player::NewItemInventory(Item * itemindex)
+bool Player::AddItemInventory(Item * item)
 {
-	//Check if this item is a quest objective
-	QuestCompleteObjective(Quest::OBJECTIVE_ITEM, (void*)itemindex);
-	
-	for (auto iter = inventory.begin(); iter != inventory.end(); iter++)
-	{
-		if (iter->first->id == itemindex->id)
-		{
-			iter->second++;
-			return iter->first;
-		}
-	}
-	Item * ret = new Item(*itemindex);
-    inventory.push_back(std::make_pair(ret, 1));
-    inventorySize++;
-    return ret;
-}*/
+	if (inventorySize >= maxInventorySize && !IMMORTAL())
+		return false;
 
-void Player::AddItemInventory(Item * item)
-{
 	QuestCompleteObjective(Quest::OBJECTIVE_ITEM, (void*)item);
 	for (auto iter = inventory.begin(); iter != inventory.end(); iter++)
 	{
 		if (iter->first->id == item->id)
 		{
 			iter->second++;
-			return;
+			return true;
 		}
 	}
     inventory.push_front(std::make_pair(item, 1));
     inventorySize++;
+	return true;
 }
 
 Item * Player::GetItemInventory(int id)

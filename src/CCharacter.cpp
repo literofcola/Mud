@@ -2583,13 +2583,13 @@ void Character::OnDeath()
 				for (int i = 0; i < Group::MAX_RAID_SIZE; i++)
 				{
 					Character * group_member = tap->group->members[i];
-					if (group_member != nullptr && FindDistance(this->room, group_member->room, 5) != -1)
+					if (group_member != nullptr && FindDistance(this->room, group_member->room, GROUP_LOOT_DISTANCE) != -1)
 					{
 						group_member->HandleNPCKillRewards(this);
 					}
 				}
 			}
-			else if (FindDistance(this->room, tap->room, 5) != -1)
+			else if (FindDistance(this->room, tap->room, GROUP_LOOT_DISTANCE) != -1)
 			{
 				tap->HandleNPCKillRewards(this);
 			}
@@ -2613,7 +2613,7 @@ void Character::OnDeath()
 						{
 							Character * group_member = tap->group->members[i];
 							if (group_member != nullptr && (!drop->quest || group_member->player->ShouldDropQuestItem(drop))
-								&& FindDistance(this->room, group_member->room, 5) != -1)
+								&& FindDistance(this->room, group_member->room, GROUP_LOOT_DISTANCE) != -1)
 							{
 								one_loot.looters.push_back(Looter(group_member));
 								group_member->AddSubscriber(this);
@@ -2629,14 +2629,15 @@ void Character::OnDeath()
 							}
 						}
 					}
-					else if((!drop->quest || tap->player->ShouldDropQuestItem(drop)) && FindDistance(this->room, tap->room, 5) != -1)
+					else if((!drop->quest || tap->player->ShouldDropQuestItem(drop)) && FindDistance(this->room, tap->room, GROUP_LOOT_DISTANCE) != -1)
 					{
 						one_loot.looters.push_back(Looter(tap));
 						tap->AddSubscriber(this);
 
 						tap->Send(GetName() + " drops loot: " + (string)Item::quality_strings[drop->quality] + drop->name + "|X\n\r");
 					}
-					loot.push_back(one_loot);
+					if(!one_loot.looters.empty()) //Don't actually drop this loot if no one can loot it
+						loot.push_back(one_loot);
 				}
 			}
 		}
@@ -2672,6 +2673,16 @@ int Character::AddLootRoll(int corpse_id, Character * corpse)
 	pending_loot_rolls.push_back(lr);
 	corpse->AddSubscriber(this);
 	return empty_id;
+}
+
+bool Character::HasLootRoll(Character * corpse, int corpse_id)
+{
+	for (auto iter = pending_loot_rolls.begin(); iter != pending_loot_rolls.end(); ++iter)
+	{
+		if (iter->corpse == corpse && iter->corpse_id == corpse_id)
+			return true;
+	}
+	return false;
 }
 
 void Character::RemoveLootRoll(int my_id)
@@ -2818,18 +2829,18 @@ void Character::SetRollType(Character * who, int corpse_id, Looter::RollType typ
 		if (looter_iter->ch == this)
 		{
 			looter_iter->roll_type = type;
-			looter_iter->ch->RemoveLootRoll(this, oneloot->id);
+			looter_iter->ch->RemoveLootRoll(who, oneloot->id);
 
 			//tell everyone else our choice
 			for (auto looter_iter2 = oneloot->looters.begin(); looter_iter2 != oneloot->looters.end(); ++looter_iter2)
 			{
 				if (looter_iter2->ch != looter_iter->ch)
 				{
-					looter_iter2->ch->Send(looter_iter->ch->GetName() + " has " + roll_msg + (string)Item::quality_strings[oneloot->item->quality] + oneloot->item->name + "|X\n\r");
+					looter_iter2->ch->Send(looter_iter->ch->GetName() + " has" + roll_msg + (string)Item::quality_strings[oneloot->item->quality] + oneloot->item->name + "|X\n\r");
 				}
 				else if (looter_iter2->ch == looter_iter->ch)
 				{
-					looter_iter2->ch->Send("You have " + roll_msg + (string)Item::quality_strings[oneloot->item->quality] + oneloot->item->name + "|X\n\r");
+					looter_iter2->ch->Send("You have" + roll_msg + (string)Item::quality_strings[oneloot->item->quality] + oneloot->item->name + "|X\n\r");
 				}
 			}
 		}
@@ -2844,7 +2855,7 @@ void Character::SetRollType(Character * who, int corpse_id, Looter::RollType typ
 	who->DoLootRoll(oneloot);
 }
 
-bool Character::DoLootRoll(OneLoot * oneloot) 
+void Character::DoLootRoll(OneLoot * oneloot) 
 {
 	int which_roll = Looter::ROLL_PASS;
 	for (auto looter_iter = oneloot->looters.begin(); looter_iter != oneloot->looters.end(); ++looter_iter)
@@ -2942,10 +2953,15 @@ bool Character::DoLootRoll(OneLoot * oneloot)
 		}
 	}
 	winner->Send("You receive loot: " + (string)Item::quality_strings[oneloot->item->quality] + oneloot->item->name + "|X\n\r");
-	winner->player->AddItemInventory(oneloot->item);
-	//todo if additeminventory fails, leave it in the corpse for cmd_loot and return false
-	this->RemoveLoot(oneloot);
-	return true;
+	if(!winner->player->AddItemInventory(oneloot->item)) //if additeminventory fails, leave it in the corpse for cmd_loot
+	{
+		winner->Send("Your inventory is full.\n\r");
+		oneloot->roll_timer = 0;
+	}
+	else
+	{
+		this->RemoveLoot(oneloot);
+	}
 }
 
 void Character::HandleNPCKillRewards(Character * killed)

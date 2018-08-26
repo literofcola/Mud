@@ -529,14 +529,10 @@ void Game::WorldUpdate(Server * server)
 					//Check for any roll timers expiring
 					for (auto iter = begin(curr->loot); iter != end(curr->loot);)
 					{
-						if (iter->roll_timer > 0 && iter->roll_timer < Game::currentTime && curr->DoLootRoll(&(*iter)))  //expired! returns true if item successfully looted (not everyone passed)
-						{ 
-							iter = curr->loot.erase(iter); //remove it!
-						}
-						else
-						{
-							++iter;
-						}
+						Character::OneLoot * oneloot = &(*iter);
+						++iter; //incremented here because DoLootRoll might remove this loot item
+						if (oneloot->roll_timer > 0 && oneloot->roll_timer < Game::currentTime) //expired!
+							curr->DoLootRoll(oneloot);
 					}
 				}
 				//Check NPC corpse despawn time
