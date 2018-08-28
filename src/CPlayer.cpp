@@ -170,7 +170,7 @@ void Player::QuestCompleteObjective(int type, void * obj)
                             questObjectives[i][j]++;
                             user->Send("|W" + q->name + ": ");
                             user->Send("|Y" + (*objiter).description + " (" + Utilities::itos(questObjectives[i][j]) 
-                                       + "/" + Utilities::itos((*objiter).count) + ")|X\n\r\n\r");
+                                       + "/" + Utilities::itos((*objiter).count) + ")|X\n\r");
                         }
                         break;
                     }

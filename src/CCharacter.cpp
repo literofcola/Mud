@@ -2896,6 +2896,13 @@ void Character::DoLootRoll(OneLoot * oneloot)
 		case Looter::ROLL_GREED:
 			roll_msg = "Greed Roll";
 			break;
+		case Looter::ROLL_PASS:
+			oneloot->roll_timer = 0;
+			for (auto looter_iter = oneloot->looters.begin(); looter_iter != oneloot->looters.end(); ++looter_iter)
+			{
+				looter_iter->ch->Send("Everyone passed on " + (string)Item::quality_strings[oneloot->item->quality] + oneloot->item->name + "|X\n\r");
+			}
+			return;
 	}
 	int highest_roll = 0;
 	for (auto looter_iter = oneloot->looters.begin(); looter_iter != oneloot->looters.end(); ++looter_iter)

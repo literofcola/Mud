@@ -460,11 +460,22 @@ void cmd_loot(Character * ch, string argument)
 	
 	string arg1;
 	string arg2;
+	string arg3;
 	argument = Utilities::one_argument(argument, arg1);
 	argument = Utilities::one_argument(argument, arg2);
+	argument = Utilities::one_argument(argument, arg3);
 
 	if (arg1.empty())
 	{
+		if (ch->pending_loot_rolls.empty() && !ch->GetTarget())
+		{
+			ch->Send("Target a corpse with this command to see available items to loot.\n\r");
+			ch->Send("loot take||get <loot id>||all\n\r");
+			ch->Send("loot need||greed||pass <loot id>\n\r");
+			ch->Send("loot info roll||target <loot id>\n\r");
+			return;
+		}
+
 		if(!ch->pending_loot_rolls.empty())
 			ch->Send("Pending loot rolls:\n\r");
 
@@ -507,6 +518,7 @@ void cmd_loot(Character * ch, string argument)
 			if (lootable_items == 0)
 				ch->Send("None\n\r");
 		}
+		return;
 	}
 	else if (!Utilities::str_cmp(arg1, "take") || !Utilities::str_cmp(arg1, "get"))
 	{
@@ -528,12 +540,20 @@ void cmd_loot(Character * ch, string argument)
 				Character::OneLoot * oneloot = &(*iter);
 				++iter;
 				auto can_loot = std::find(oneloot->looters.begin(), oneloot->looters.end(), ch);
-				if (!ch->HasLootRoll(loot_target, oneloot->id) && can_loot != std::end(oneloot->looters))
+				if (oneloot->roll_timer == 0 && can_loot != std::end(oneloot->looters))
 				{
 					Item * theitem = oneloot->item;
-					ch->Send("You receive loot: " + (string)Item::quality_strings[theitem->quality] + theitem->name + "|X\n\r");
 					if (ch->player->AddItemInventory(theitem))
 					{
+						//send to other looters
+						for (auto looter_iter = oneloot->looters.begin(); looter_iter != oneloot->looters.end(); ++looter_iter)
+						{
+							if (looter_iter->ch != ch)
+							{
+								looter_iter->ch->Send(ch->GetName() + " receives loot: " + (string)Item::quality_strings[oneloot->item->quality] + oneloot->item->name + "|X\n\r");
+							}
+						}
+						ch->Send("You receive loot: " + (string)Item::quality_strings[theitem->quality] + theitem->name + "|X\n\r");
 						loot_target->RemoveLoot(oneloot);
 					}
 					else
@@ -554,12 +574,44 @@ void cmd_loot(Character * ch, string argument)
 	}
 	else if (!Utilities::str_cmp(arg1, "info"))
 	{
-		if (!Utilities::IsNumber(arg2))
+		if (!Utilities::IsNumber(arg3) || Utilities::str_cmp(arg2, "roll") || Utilities::str_cmp(arg2, "target"))
 		{
 			ch->Send("loot info roll||target <loot id>\n\r");
 			return;
 		}
-		int lootnum = Utilities::atoi(arg2);
+		int lootnum = Utilities::atoi(arg3);
+
+		if (!Utilities::str_cmp(arg2, "roll"))
+		{
+			for (auto iter = ch->pending_loot_rolls.begin(); iter != ch->pending_loot_rolls.end(); ++iter)
+			{
+				if (iter->my_id == lootnum)
+				{
+					ch->Send(iter->corpse->GetCorpseLoot(iter->corpse_id)->item->FormatItemInfo()); //this is fun pointer times
+					return;
+				}
+			}
+			ch->Send("You do not have a pending loot roll with that number.\n\r");
+			return;
+		}
+		if (!Utilities::str_cmp(arg2, "target"))
+		{
+			if (!ch->GetTarget())
+			{
+				ch->Send("You do not have a target.\n\r");
+				return;
+			}
+			Character::OneLoot * oneloot = ch->GetTarget()->GetCorpseLoot(lootnum);
+			if (oneloot == nullptr)
+			{
+				ch->Send("Could not find loot item " + Utilities::itos(lootnum) + " on your target.\n\r");
+				return;
+			}
+			ch->Send(oneloot->item->FormatItemInfo());
+			return;
+		}
+		ch->Send("loot info roll||target <loot id>\n\r");
+		return;
 	}
 	else if (!Utilities::str_cmp(arg1, "need"))
 	{
@@ -579,6 +631,7 @@ void cmd_loot(Character * ch, string argument)
 			}
 		}
 		ch->Send("You do not have a pending loot roll with that number.\n\r");
+		return;
 	}
 	else if (!Utilities::str_cmp(arg1, "greed"))
 	{
@@ -598,6 +651,7 @@ void cmd_loot(Character * ch, string argument)
 			}
 		}
 		ch->Send("You do not have a pending loot roll with that number.\n\r");
+		return;
 	}
 	else if (!Utilities::str_cmp(arg1, "pass"))
 	{
@@ -617,6 +671,7 @@ void cmd_loot(Character * ch, string argument)
 			}
 		}
 		ch->Send("You do not have a pending loot roll with that number.\n\r");
+		return;
 	}
 	ch->Send("Target a corpse with this command to see available items to loot.\n\r");
 	ch->Send("loot take||get <loot id>||all\n\r");
