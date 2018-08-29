@@ -60,6 +60,7 @@ CREATE TABLE `classes` (
   `name` varchar(12) DEFAULT NULL,
   `color` varchar(5) DEFAULT NULL,
   `items` tinytext,
+  `armor` tinytext,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -122,6 +123,12 @@ CREATE TABLE `items` (
   `damage_high` int(11) NOT NULL,
   `value` int(11) NOT NULL,
   `speed` decimal(10,1) NOT NULL,
+  `agility` int(11) NOT NULL,
+  `intellect` int(11) NOT NULL,
+  `strength` int(11) NOT NULL,
+  `stamina` int(11) NOT NULL,
+  `wisdom` int(11) NOT NULL,
+  `spirit` int(11) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -487,4 +494,4 @@ CREATE TABLE `triggers` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-08-27 21:35:57
+-- Dump completed on 2018-08-29  0:08:23

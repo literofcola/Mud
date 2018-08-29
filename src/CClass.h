@@ -11,7 +11,8 @@ public:
     int id;
     std::string name;
     std::string color;
-    std::string items;
+    std::string items; //starting items
+	std::map<int, int> armor; //armor type and level gained //TYPE_ARMOR_CLOTH, TYPE_ARMOR_LEATHER, TYPE_ARMOR_MAIL, TYPE_ARMOR_PLATE
 
     struct SkillData
     {

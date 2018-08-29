@@ -406,12 +406,49 @@ Item * Player::GetItemEquipped(string name)
     return NULL;
 }
 
-//Ignores inventory limit
 Item * Player::RemoveItemEquipped(int index)
 {
     Item * remove = equipped[index];
     equipped[index] = NULL;
     return remove;
+}
+
+bool Player::EquipItemFromInventory(Item * wear)
+{
+	int equipSlot = GetEquipLocation(wear);
+	if (equipSlot < 0 || equipSlot >= Player::EQUIP_LAST)
+	{
+		LogFile::Log("error", "EquipItemFromInventory, invalid equipSlot");
+		return false;
+	}
+
+	if (equipped[equipSlot] != NULL)
+	{
+		LogFile::Log("error", "EquipItemFromInventory, equipped[equipSlot] != NULL");
+		return false;
+	}
+	RemoveItemInventory(wear);
+	equipped[equipSlot] = wear;
+	return true;
+}
+
+bool Player::EquipItem(Item * wear)
+{
+	int equipSlot = GetEquipLocation(wear);
+
+	if (equipSlot < 0 || equipSlot >= Player::EQUIP_LAST)
+	{
+		LogFile::Log("error", "EquipItemFromInventory, invalid equipSlot");
+		return false;
+	}
+
+	if (equipped[equipSlot] != NULL)
+	{
+		LogFile::Log("error", "EquipItem, equipped[equipSlot] != NULL");
+		return false;
+	}
+	equipped[equipSlot] = wear;
+	return true;
 }
 
 //return the equip location for this item given what the player is currently wearing
@@ -472,24 +509,6 @@ int Player::GetEquipLocation(Item * equip)
     }*/
 
     return equipSlot;
-}
-
-bool Player::EquipItemFromInventory(Item * wear, int equipSlot)
-{
-	if (equipSlot < 0 || equipSlot >= Player::EQUIP_LAST)
-	{
-		LogFile::Log("error", "EquipItemFromInventory, invalid equipSlot");
-		return false;
-	}
-
-    if(equipped[equipSlot] != NULL)
-    {
-        LogFile::Log("error", "EquipItemFromInventory, equipped[equipSlot] != NULL");
-        return false;
-    }
-    RemoveItemInventory(wear);
-    equipped[equipSlot] = wear;
-    return true;
 }
 
 void Player::AddClass(int id, int level)

@@ -196,6 +196,19 @@ std::string Item::FormatItemInfo()
 		itemstring += "(" + Utilities::dtos(dps, 2) + " damage per second)\n\r";
 	}
 
+	if (agility > 0)
+		itemstring += "+" + Utilities::itos(agility) + " Agility\n\r";
+	if (intellect > 0)
+		itemstring += "+" + Utilities::itos(intellect) + " Intellect\n\r";
+	if (strength > 0)
+		itemstring += "+" + Utilities::itos(strength) + " Strength\n\r";
+	if (stamina > 0)
+		itemstring += "+" + Utilities::itos(stamina) + " Stamina\n\r";
+	if (wisdom > 0)
+		itemstring += "+" + Utilities::itos(wisdom) + " Wisdom\n\r";
+	if (spirit > 0)
+		itemstring += "+" + Utilities::itos(spirit) + " Spirit\n\r";
+
 	if (durability)
 	{
 		itemstring += "Durability " + Utilities::itos(durability) + "\n\r";
@@ -216,19 +229,22 @@ void Item::Save()
         return;
 
     string sql = "INSERT INTO items (items.id, items.name, items.keywords, items.inroom_name, items.item_level, items.char_level, items.equip_location, items.quality,";
-    sql += " items.binds, items.type, items.skill_id, items.quest, items.armor, items.durability, items.unique, items.damage_low, items.damage_high, items.value, items.speed) values (";
+	sql += " items.binds, items.type, items.skill_id, items.quest, items.armor, items.durability, items.unique, items.damage_low, items.damage_high, items.value, items.speed,";
+	sql += " items.agility, items.intellect, items.strength, items.stamina, items.wisdom, items.spirit) values (";
     sql += Utilities::itos(id) + ", '" + Utilities::SQLFixQuotes(name) + "', '" + Utilities::SQLFixQuotes(keywords) + "', '" + Utilities::SQLFixQuotes(inroom_name) + "', " + Utilities::itos(itemLevel);
     sql += ", " + Utilities::itos(charLevel) + ", " + Utilities::itos(equipLocation);
     sql += ", " + Utilities::itos(quality) + ", " + Utilities::itos(binds) + ", " + Utilities::itos(type) + ", " + Utilities::itos(useSkillID) + ", " + (quest ? "1" : "0");
     sql += ", " + Utilities::itos(armor) + ", " + Utilities::itos(durability) + ", " + (unique ? "1" : "0");
     sql += ", " + Utilities::itos(damageLow) + ", " + Utilities::itos(damageHigh) + ", " + Utilities::itos(value);
-    sql += ", " + Utilities::dtos(speed, 1) + ")";
+	sql += ", " + Utilities::dtos(speed, 1) + ", " + Utilities::itos(agility) + ", " + Utilities::itos(intellect) + ", " + Utilities::itos(strength) + ", " + Utilities::itos(stamina);
+	sql += ", " + Utilities::itos(wisdom) + ", " + Utilities::itos(spirit) + ")";
 
     sql += " ON DUPLICATE KEY UPDATE items.id=VALUES(items.id), items.name=VALUES(items.name), items.keywords=VALUES(items.keywords),items.inroom_name=VALUES(items.inroom_name),items.item_level=VALUES(items.item_level), ";
     sql += "items.char_level=VALUES(items.char_level), items.equip_location=VALUES(items.equip_location), items.quality=VALUES(items.quality), ";
     sql += "items.binds=VALUES(items.binds), items.type=VALUES(items.type), items.skill_id=VALUES(items.skill_id),items.quest=VALUES(items.quest), items.armor=VALUES(items.armor), ";
     sql += "items.durability=VALUES(items.durability), items.unique=VALUES(items.unique), items.damage_low=VALUES(items.damage_low), ";
-    sql += "items.damage_high=VALUES(items.damage_high), items.value=VALUES(items.value), items.speed=VALUES(items.speed)";
+    sql += "items.damage_high=VALUES(items.damage_high), items.value=VALUES(items.value), items.speed=VALUES(items.speed), items.agility=VALUES(items.agility), ";
+	sql += "items.intellect=VALUES(items.intellect), items.strength=VALUES(items.strength), items.stamina=VALUES(items.stamina), items.wisdom=VALUES(items.wisdom), items.spirit=VALUES(items.spirit)";
     
     Server::sqlQueue->Write(sql);
 

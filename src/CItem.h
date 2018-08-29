@@ -67,6 +67,19 @@ public:
 	int value;
     std::list<Item *> contents; //TODO
 
+	//stat bonuses
+	int agility;	//crit chance and avoidance
+	int intellect;  //spell power
+	int strength;	//attack power
+	int stamina;	//health
+	int wisdom;		//mana
+	int spirit;		//mana regen
+	//double movementSpeed;
+	//hit chance
+	//crit chance
+	//dodge chance
+	//spell school resist?
+
 	std::string FormatItemInfo();
 
     //For search  Store a reference to all searchable class data by type

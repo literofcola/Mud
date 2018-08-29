@@ -447,6 +447,28 @@ void Character::ResetMaxStats()
 	maxComboPoints = 5;
 }
 
+void Character::AddEquipmentStats(Item * add)
+{
+	agility += add->agility;
+	intellect += add->intellect;
+	strength += add->strength;
+	stamina += add->stamina;
+	wisdom += add->wisdom;
+	spirit += add->spirit;
+	ResetMaxStats();
+}
+
+void Character::RemoveEquipmentStats(Item * remove)
+{
+	agility -= remove->agility;
+	intellect -= remove->intellect;
+	strength -= remove->strength;
+	stamina -= remove->stamina;
+	wisdom -= remove->wisdom;
+	spirit -= remove->spirit;
+	ResetMaxStats();
+}
+
 void Character::GeneratePrompt(double currentTime)
 {
 	string prompt = "\n\r";
@@ -1153,27 +1175,8 @@ Character * Character::LoadPlayer(std::string name, User * user)
 			case DB_INVENTORY_EQUIPPED:
 			{
 				Item * equip = Game::GetGame()->GetItem(id);
-				//todo Equipping an item should be in an easy to use function OR we should really just assume the state the character was saved in is valid
-				int equiploc = loaded->player->GetEquipLocation(equip);
-				Item * removed = loaded->player->RemoveItemEquipped(equiploc); //remove any item already in the slot
-				if (removed != NULL)
-					loaded->player->AddItemInventory(removed);
-				if (equiploc == Player::EQUIP_MAINHAND && equip->equipLocation == Item::EQUIP_TWOHAND)
-				{   //pretty unlikely this will happen when loading a character, but just in case
-					Item * offhand = loaded->player->RemoveItemEquipped(Player::EQUIP_OFFHAND); //remove any offhand when equipping a two hand
-					if (offhand != NULL)
-						loaded->player->AddItemInventory(offhand);
-				}
-				else if (equiploc == Player::EQUIP_OFFHAND) //remove a twohand when equipping an offhand
-				{
-					if (loaded->player->equipped[Player::EQUIP_MAINHAND] != NULL && loaded->player->equipped[Player::EQUIP_MAINHAND]->type == Item::EQUIP_TWOHAND)
-					{
-						loaded->player->AddItemInventory(loaded->player->RemoveItemEquipped(Player::EQUIP_MAINHAND));
-					}
-				}
-				loaded->player->AddItemInventory(equip);
-				loaded->player->EquipItemFromInventory(equip, equiploc);
-
+				loaded->player->EquipItem(equip);
+				//do NOT add equipment stats here, since a player is saved while wearing said equipment
 				break;
 			}
 
@@ -2321,7 +2324,7 @@ double Character::GetOffhandWeaponSpeed()
 
 int Character::GetMainhandDamageRandomHit()
 {
-	if (player == NULL)
+	if (player == NULL) //should be a player function, obviously
 		return 1;
 
 	int damage = 1;
@@ -2345,7 +2348,7 @@ int Character::GetMainhandDamageRandomHit()
 
 double Character::GetMainhandDamagePerSecond()
 {
-	if (player == NULL)
+	if (player == NULL) //should be a player function, obviously
 		return 1;
 
 	double dps = 1;
@@ -2367,7 +2370,7 @@ double Character::GetMainhandDamagePerSecond()
 
 int Character::GetOffhandDamageRandomHit()
 {
-	if (player == NULL)
+	if (player == NULL) //should be a player function, obviously
 		return 1;
 
 	int damage = 1;
@@ -2391,7 +2394,7 @@ int Character::GetOffhandDamageRandomHit()
 
 double Character::GetOffhandDamagePerSecond()
 {
-	if (player == NULL)
+	if (player == NULL) //should be a player function, obviously
 		return 1;
 
 	double dps = 1;

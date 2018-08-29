@@ -64,7 +64,7 @@ public:
     
     static int ExperienceForLevel(int level);
     static int CalculateExperience(Character * ch, Character * victim);
-    static int LevelDifficulty(int level1, int level2);
+    static int LevelDifficulty(int ch, int vict);
 	static std::string LevelDifficultyColor(int leveldifficulty);
 	static std::string LevelDifficultyLightColor(int leveldifficulty);
     static Character * LoadNPCRoom(int id, Room * toroom);

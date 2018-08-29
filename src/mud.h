@@ -183,6 +183,7 @@ void itemEditCmd_damageLow(Character * ch, string argument);
 void itemEditCmd_damageHigh(Character * ch, string argument);
 void itemEditCmd_speed(Character * ch, string argument);
 void itemEditCmd_value(Character * ch, string argument);
+void itemEditCmd_stats(Character * ch, string argument);
 void questEditCmd_show(Character * ch, string argument);
 void questEditCmd_objective(Character * ch, string argument);
 void questEditCmd_name(Character * ch, string argument);

@@ -47,8 +47,14 @@ void cmd_edit(Character * ch, string argument)
 	
 	if(!Utilities::str_cmp(arg1, "room"))
 	{
-		//check for "edit room create <id>"
-		//and "edit room <id>"
+		if (!Utilities::str_cmp("create", arg2))
+		{
+			ch->editData = Game::GetGame()->CreateRoomAnyID();
+			ch->editState = Character::ED_ROOM;
+			ch->Send("Room " + Utilities::itos(((Room*)(ch->editData))->id) + " created.\n\r");
+			return;
+		}
+
 		if(ch && ch->room)
 		{
             ch->editState = Character::ED_ROOM;
@@ -556,6 +562,49 @@ void roomEditCmd_reset(Character * ch, string argument)
     argument = Utilities::one_argument(argument, arg1);
 	argument = Utilities::one_argument(argument, arg2);
     argument = Utilities::one_argument(argument, arg3);
+	if (!Utilities::str_cmp(arg1, "force"))
+	{
+		Room * currRoom = pRoom;
+		for (std::map<int, Reset*>::iterator resetiter = currRoom->resets.begin(); resetiter != currRoom->resets.end(); ++resetiter)
+		{
+			Reset * currReset = (*resetiter).second;
+			if (!currReset->removeme)
+			{
+				if (currReset->type == 1 && currReset->npc == NULL) //npc reset type and npc no longer exists
+				{
+					currReset->lastReset = Game::currentTime;
+					//load it
+					Character * charIndex = Game::GetGame()->GetCharacterIndex(currReset->targetID);
+					if (charIndex == NULL)
+					{
+						LogFile::Log("error", "Reset " + Utilities::itos(currReset->id) + " in room " + Utilities::itos(currRoom->id) + ": npc does not exist.");
+						continue;
+					}
+					Character * newChar = Game::GetGame()->NewCharacter(charIndex);
+					newChar->leashOrigin = currRoom;
+					newChar->ChangeRooms(currRoom);
+					newChar->Message("|W" + newChar->name + " has arrived.|X", Character::MSG_ROOM_NOTCHAR);
+					newChar->reset = currReset;
+					//LogFile::Log("status", "Adding subscriber to " + newChar->name + " of reset id " + Utilities::itos(currReset->id));
+					newChar->AddSubscriber(currReset);
+					currReset->npc = newChar;
+				}
+				else if (currReset->type == 2 && !currReset->inroom->HasItem(currReset->targetID))
+				{
+					currReset->lastReset = Game::currentTime;
+					//load it
+					Item * itemindex = Game::GetGame()->GetItem(currReset->targetID);
+					if (itemindex == NULL)
+					{
+						LogFile::Log("error", "Reset " + Utilities::itos(currReset->id) + " in room " + Utilities::itos(currRoom->id) + ": item " + Utilities::itos(currReset->targetID) + " does not exist.");
+						continue;
+					}
+					currReset->inroom->AddItem(itemindex);
+				}
+			}
+		}
+		return;
+	}
     if(Utilities::IsNumber(arg1))
     {
         int resetnum = Utilities::atoi(arg1);
@@ -918,59 +967,7 @@ void roomEditDirection(Character * ch, string argument, int direction)
     Room * pRoom = (Room *)ch->editData;
     string command;
     string arg;
-    //int value;
-  
-    // Set the exit flags, needs full argument.
-    /*if ( ( value = flag_value( exit_flags, argument ) ) != NO_FLAG )
-    {
-        ROOM_INDEX_DATA *pToRoom;
-        int rev;                                 
 
-        if ( !pRoom->exits[direction] )
-        {
-            send_to_char("Exit doesn't exist.\n\r",ch);
-            return FALSE;
-        }
-        if((value == EX_LOCKED || value == EX_CLOSED)
-            && !IS_SET(pRoom->exit[door]->rs_flags, EX_ISDOOR))
-        {
-            send_to_char("You must set the 'door' flag first.\n\r", ch);
-            return FALSE;
-        }
-        if((value == EX_ISDOOR && IS_SET(pRoom->exit[door]->rs_flags, EX_ISDOOR))
-            && (IS_SET(pRoom->exit[door]->rs_flags, EX_CLOSED)
-            || IS_SET(pRoom->exit[door]->rs_flags, EX_LOCKED)))
-        {
-            send_to_char("You must remove the closed/locked flag first.\n\r", ch);
-            return FALSE;
-        }
-        //  pRoom->exit[door] = new_exit(); 
-
-
-        // This room.
-
-        TOGGLE_BIT(pRoom->exit[door]->rs_flags,  value);
-        // Don't toggle exit_info because it can be changed by players.
-        pRoom->exit[door]->exit_info = pRoom->exit[door]->rs_flags;
-
-
-        //  Connected room.
-
-        pToRoom = pRoom->exit[door]->u1.to_room;    
-        rev = rev_dir[door];
-
-        if (pToRoom->exit[rev] != NULL)
-        {
-            TOGGLE_BIT(pToRoom->exit[rev]->rs_flags,  value);
-            TOGGLE_BIT(pToRoom->exit[rev]->exit_info, value);
-        }
-
-        send_to_char( "Exit flag toggled.\n\r", ch );
-        return TRUE;
-    }*/
-
-
-    //Now parse the arguments.
     argument = Utilities::one_argument(argument, command);
     Utilities::one_argument( argument, arg );
 
@@ -979,12 +976,6 @@ void roomEditDirection(Character * ch, string argument, int direction)
         ch->Move(direction);
 	    return;
     }
-
-    /*if(command[0] == '?')
-    {
-	    do_help( ch, "EXIT" );
-	    return FALSE;
-    }*/
 
     if(!Utilities::str_cmp(command, "delete"))
     {
@@ -1083,128 +1074,6 @@ void roomEditDirection(Character * ch, string argument, int direction)
 	    ch->Send("Two-way link established.\n\r");
 	    return;
     }
-        
-    /*if ( !str_cmp( command, "dig" ) )
-    {
-	    char buf[MAX_STRING_LENGTH];
-    	
-	    if ( arg[0] == '\0' || !is_number( arg ) )
-	    {
-	        send_to_char( "Syntax: [direction] dig <vnum>\n\r", ch );
-	        return FALSE;
-	    }
-    	
-	    redit_create( ch, arg );
-	    sprintf( buf, "link %s", arg );
-	    change_exit( ch, buf, door);
-	    return TRUE;
-    }*/
-
-    /*if ( !str_cmp( command, "room" ) )
-    {
-	    if ( arg[0] == '\0' || !is_number( arg ) )
-	    {
-	        send_to_char( "Syntax:  [direction] room [vnum]\n\r", ch );
-	        return FALSE;
-	    }
-
-	    if ( !pRoom->exit[door] )
-	    {
-	        pRoom->exit[door] = new_exit();
-	    }
-
-	    value = atoi( arg );
-
-	    if ( !get_room_index( value ) )
-	    {
-	        send_to_char( "REdit:  Cannot link to non-existant room.\n\r", ch );
-	        return FALSE;
-	    }
-
-	    pRoom->exit[door]->u1.to_room = get_room_index( value );    
-	    pRoom->exit[door]->orig_door = door;
-        //pRoom->exit[door]->vnum = value;                 Can't set vnum in ROM 
-
-	    send_to_char( "One-way link established.\n\r", ch );
-	    return TRUE;
-    }*/
-
-    /*if ( !str_cmp( command, "key" ) )
-    {
-	    if ( arg[0] == '\0' || !is_number( arg ) )
-	    {
-	        send_to_char( "Syntax:  [direction] key [vnum]\n\r", ch );
-	        return FALSE;
-	    }
-
-	    if ( !pRoom->exit[door] )
-        {
-            send_to_char("Exit does not exist.\n\r",ch);
-            return FALSE;
-        }
-
-	    value = atoi( arg );
-
-	    if ( !get_obj_index( value ) )
-	    {
-	        send_to_char( "REdit:  Item doesn't exist.\n\r", ch );
-	        return FALSE;
-	    }
-
-	    if ( get_obj_index( atoi( argument ) )->item_type != ITEM_KEY )
-	    {
-	        send_to_char( "REdit:  Key doesn't exist.\n\r", ch );
-	        return FALSE;
-	    }
-
-	    pRoom->exit[door]->key = value;
-
-	    send_to_char( "Exit key set.\n\r", ch );
-	    return TRUE;
-    }*/
-
-    /*if ( !str_cmp( command, "name" ) )
-    {
-	    if ( arg[0] == '\0' )
-	    {
-	        send_to_char( "Syntax:  [direction] name [string]\n\r", ch );
-	        send_to_char( "         [direction] name none\n\r", ch );
-	        return FALSE;
-	    }
-
-	    if ( !pRoom->exit[door] )
-	       {
-	   	    send_to_char("Exit does not exist.\n\r",ch);
-	   	    return FALSE;
-	       }
-
-	    free_string( pRoom->exit[door]->keyword );
-	    if (str_cmp(arg,"none"))
-		    pRoom->exit[door]->keyword = str_dup( arg );
-	    else
-		    pRoom->exit[door]->keyword = str_dup( "" );
-
-	    send_to_char( "Exit name set.\n\r", ch );
-	    return TRUE;
-    }*/
-
-    /*if ( !str_prefix( command, "description" ) )
-    {
-	    if ( arg[0] == '\0' )
-	    {
-	       if ( !pRoom->exit[door] )
-	       {
-	   	    send_to_char("Exit does not exist.\n\r",ch);
-	   	    return FALSE;
-	       }
-
-	        string_append( ch, &pRoom->exit[door]->description );
-	        return TRUE;
-	    }
-
-	    send_to_char( "Syntax:  [direction] desc\n\r", ch );
-	    return FALSE;
-    }*/
 }
 
 void roomEditCmd_north(Character * ch, string argument)
@@ -2369,6 +2238,8 @@ void itemEditCmd_show(Character * ch, string argument)
     ch->Send("quest item:     [" + Utilities::itos(pItem->quest) + "]\n\r");
     ch->Send("unique:         [" + Utilities::itos(pItem->unique) + "]\n\r");
     ch->Send("armor:          [" + Utilities::itos(pItem->armor) + "]\n\r");
+	ch->Send("stats:  agility:[" + Utilities::itos(pItem->agility) + "] intellect:[" + Utilities::itos(pItem->intellect) + "] strength:[" + Utilities::itos(pItem->strength) + "]\n\r");
+	ch->Send("        stamina:[" + Utilities::itos(pItem->stamina) + "] wisdom:[" + Utilities::itos(pItem->wisdom) + "] spirit:[" + Utilities::itos(pItem->spirit) + "]\n\r");
     ch->Send("durability:     [" + Utilities::itos(pItem->durability) + "]\n\r");
     ch->Send("damage_low:     [" + Utilities::itos(pItem->damageLow) + "]\n\r");
     ch->Send("damage_high:    [" + Utilities::itos(pItem->damageHigh) + "]\n\r");
@@ -2757,6 +2628,61 @@ void itemEditCmd_value(Character * ch, string argument)
     }
     pItem->changed = true;
     pItem->value = value;
+}
+
+void itemEditCmd_stats(Character * ch, string argument)
+{
+	Item * pItem = (Item *)ch->editData;
+
+	string arg1;
+	string arg2;
+	argument = Utilities::one_argument(argument, arg1);
+	argument = Utilities::one_argument(argument, arg2);
+
+	if (arg1.empty() || arg2.empty() || !Utilities::IsNumber(arg2))
+	{
+		ch->Send("stats agility/intellect/strength/stamina/wisdom/spirit <val>\n\r");
+		return;
+	}
+	int val = Utilities::atoi(arg2);
+
+	if (!Utilities::str_cmp("agility", arg1))
+	{
+		pItem->agility = val;
+		ch->Send("agility set\n\r");
+		return;
+	}
+	else if (!Utilities::str_cmp("intellect", arg1))
+	{
+		pItem->intellect = val;
+		ch->Send("intellect set\n\r");
+		return;
+	}
+	else if (!Utilities::str_cmp("strength", arg1))
+	{
+		pItem->strength = val;
+		ch->Send("strength set\n\r");
+		return;
+	}
+	else if (!Utilities::str_cmp("stamina", arg1))
+	{
+		pItem->stamina = val;
+		ch->Send("stamina set\n\r");
+		return;
+	}
+	else if (!Utilities::str_cmp("wisdom", arg1))
+	{
+		pItem->wisdom = val;
+		ch->Send("wisdom set\n\r");
+		return;
+	}
+	else if (!Utilities::str_cmp("spirit", arg1))
+	{
+		pItem->spirit = val;
+		ch->Send("spirit set\n\r");
+		return;
+	}
+	ch->Send("stats agility/intellect/strength/stamina/wisdom/spirit <val>\n\r");
 }
 
 void questEditCmd_show(Character * ch, string argument)

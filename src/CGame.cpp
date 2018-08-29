@@ -1278,7 +1278,7 @@ void Game::LoginHandler(Server * server, User * user, string argument)
 			{
 				user->character->player->AddClass(user->character->player->currentClass->id, 1);
 				user->character->AddClassSkills();
-				//function-ize the default items
+				//function-ize the default items (or parse it into a container upon loading...)
 				string classitems = user->character->player->currentClass->items;
 				int first = 0, last = 0, comma = 0;
 				while (first < (int)classitems.length())
@@ -1301,7 +1301,8 @@ void Game::LoginHandler(Server * server, User * user, string argument)
 						user->character->player->AddItemInventory(itemIndex);
 						if (itemIndex->equipLocation != Item::EquipLocation::EQUIP_NONE)
 						{
-							user->character->player->EquipItemFromInventory(itemIndex, user->character->player->GetEquipLocation(itemIndex));
+							user->character->player->EquipItemFromInventory(itemIndex);
+							user->character->AddEquipmentStats(itemIndex);
 						}
 					}
 				}
@@ -1818,6 +1819,12 @@ void Game::LoadItems(Server * server)
         i->damageHigh = row["damage_high"];
         i->value = row["value"];
         i->speed = row["speed"];
+		i->agility = row["agility"];
+		i->intellect = row["intellect"];
+		i->strength = row["strength"];
+		i->stamina = row["stamina"];
+		i->wisdom = row["wisdom"];
+		i->spirit = row["spirit"];
 
         items[i->id] = i;
     }
@@ -1848,6 +1855,20 @@ void Game::LoadClasses(Server * server)
         c->name = (string)row["name"];
         c->color = (string)row["color"];
         c->items = row["items"];
+
+		string armor = (string)row["armor"];
+		int first = 0, last = 0, comma = 0;
+		while (first < (int)armor.length())
+		{
+			last = (int)armor.find(";", first);
+			if (last == std::string::npos)
+				break;
+			comma = (int)armor.find(",", first);
+			int armor_type = Utilities::atoi(armor.substr(first, comma - first));
+			int level = Utilities::atoi(armor.substr(comma + 1, last - comma + 1));
+			c->armor[armor_type] = level;
+			first = last + 1;
+		}
 
 		StoreQueryResult skillsres = server->sqlQueue->Read("SELECT * from class_skills where class=" + Utilities::itos(c->id));
 		StoreQueryResult::iterator j;
@@ -2449,17 +2470,17 @@ int Game::CalculateExperience(Character * ch, Character * victim)
 	return (int)ceil(xp);
 }
 
-int Game::LevelDifficulty(int level1, int level2)
+int Game::LevelDifficulty(int ch, int vict)
 {
-    if(level2 >= level1 + 10)       //Red / ??
+    if(vict >= ch + 12)       //Red / ??
         return 5;
-    else if(level2 >= level1 + 5)   //Red
+    else if(vict >= ch + 7)   //Red
         return 4;
-    else if(level2 >= level1 + 3)   //Magenta
+    else if(vict >= ch + 5)   //Magenta
         return 3;
-    else if(level2 >= level1 - 2)   //Yellow
+    else if(vict >= ch - 3)   //Yellow
         return 2;
-    else if(level2 >= level1 - 4)   //Green
+    else if(vict >= ch - 6)   //Green
         return 1;
     else                            //Gray
         return 0;

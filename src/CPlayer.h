@@ -77,7 +77,8 @@ public:
     Item * RemoveItemInventory(std::string name);
     bool RemoveItemInventory(Item * item);
     int GetEquipLocation(Item * equip);
-    bool EquipItemFromInventory(Item * wear, int equipSlot);
+    bool EquipItemFromInventory(Item * wear);
+	bool EquipItem(Item * wear);
     Item * RemoveItemEquipped(int index);
     int GetEquippedItemIndex(std::string name);
     Item * GetItemEquipped(std::string name);

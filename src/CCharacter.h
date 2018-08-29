@@ -207,6 +207,8 @@ public:
 
     //TODO sort these functions!
 	void ResetMaxStats();
+	void AddEquipmentStats(Item *);
+	void RemoveEquipmentStats(Item *);
     void GeneratePrompt(double currentTime);
     void QueryClear();
 	void SetQuery(std::string prompt, void * data, bool(*queryFunction)(Character *, std::string));

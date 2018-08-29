@@ -157,6 +157,7 @@ void cmd_remove(Character * ch, string argument)
                 {
                     LogFile::Log("error", "cmd_remove (all), removed a NULL item");
                 }
+				ch->RemoveEquipmentStats(remove);
                 ch->player->AddItemInventory(remove);
                 ch->Send("You remove " + remove->name + ".\n\r");
             }
@@ -182,6 +183,7 @@ void cmd_remove(Character * ch, string argument)
     {
         LogFile::Log("error", "cmd_remove, removed a NULL item");
     }
+	ch->RemoveEquipmentStats(remove);
     ch->player->AddItemInventory(remove);
     ch->Send("You remove " + remove->name + ".\n\r");
 }   
@@ -232,7 +234,8 @@ void cmd_wear(Character * ch, string argument)
                 {
                     continue;
                 }
-                ch->player->EquipItemFromInventory(wear, equiploc);
+                ch->player->EquipItemFromInventory(wear);
+				ch->AddEquipmentStats(wear);
                 ch->Send("You wear " + wear->name + ".\n\r");
             }
         }
@@ -256,6 +259,7 @@ void cmd_wear(Character * ch, string argument)
     Item * removed = ch->player->RemoveItemEquipped(equiploc);
     if(removed != NULL) //remove anything already in this slot
     {
+		ch->RemoveEquipmentStats(removed);
         ch->player->AddItemInventory(removed);
         ch->Send("You remove " + removed->name + ".\n\r");
     }
@@ -264,6 +268,7 @@ void cmd_wear(Character * ch, string argument)
         Item * offhand = ch->player->RemoveItemEquipped(Player::EQUIP_OFFHAND);
         if(offhand != NULL)
         {
+			ch->RemoveEquipmentStats(offhand);
             ch->player->AddItemInventory(offhand);
             ch->Send("You remove " + offhand->name + ".\n\r");
         }
@@ -273,11 +278,13 @@ void cmd_wear(Character * ch, string argument)
         if(ch->player->equipped[Player::EQUIP_MAINHAND] != NULL && ch->player->equipped[Player::EQUIP_MAINHAND]->equipLocation == Item::EQUIP_TWOHAND)
         {
             Item * mh = ch->player->RemoveItemEquipped(Player::EQUIP_MAINHAND);
+			ch->RemoveEquipmentStats(mh);
             ch->player->AddItemInventory(mh);
             ch->Send("You remove " + mh->name + ".\n\r");
         }
     }
-    ch->player->EquipItemFromInventory(wear, equiploc);
+    ch->player->EquipItemFromInventory(wear);
+	ch->AddEquipmentStats(wear);
     ch->Send("You wear " + wear->name + ".\n\r");
 }
 
@@ -399,6 +406,16 @@ void cmd_take(Character * ch, string argument)
 	if (i == nullptr)
 	{
 		ch->Send("You don't see that here.\n\r");
+		return;
+	}
+	if (Utilities::FlagIsSet(i->flags, Item::FLAG_ROOMONLY))
+	{
+		ch->Send("You can't take that.\n\r");
+		return;
+	}
+	if (i->quest && !ch->player->ShouldDropQuestItem(i))
+	{
+		ch->Send("You can't take that.\n\r");
 		return;
 	}
 
