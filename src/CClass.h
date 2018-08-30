@@ -27,6 +27,7 @@ public:
 	bool HasSkill(int id);
 	void AddSkill(int id, int level);
 	void RemoveSkill(int id);
+	int GetArmorLevel(int itemtype);
 
 	//Comparison functor
 	struct CompareClassSkillBySkillID

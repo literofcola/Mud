@@ -318,6 +318,7 @@ public:
 	void RemoveAllLooters();
 	void RemoveLoot(OneLoot *);
 	void SetRollType(Character * who, int corpse_id, Looter::RollType type); //Set a looter's roll type in the corpse's loot object
+	bool CanWearArmor(int armortype);
 	void MakeCorpse();
 	void RemoveCorpse();
     void AdjustMana(Character * source, int amount);

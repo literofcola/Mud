@@ -604,7 +604,7 @@ void cmd_loot(Character * ch, string argument)
 			{
 				if (iter->my_id == lootnum)
 				{
-					ch->Send(iter->corpse->GetCorpseLoot(iter->corpse_id)->item->FormatItemInfo()); //this is fun pointer times
+					ch->Send(iter->corpse->GetCorpseLoot(iter->corpse_id)->item->FormatItemInfo(ch)); //this is fun pointer times
 					return;
 				}
 			}
@@ -624,7 +624,7 @@ void cmd_loot(Character * ch, string argument)
 				ch->Send("Could not find loot item " + Utilities::itos(lootnum) + " on your target.\n\r");
 				return;
 			}
-			ch->Send(oneloot->item->FormatItemInfo());
+			ch->Send(oneloot->item->FormatItemInfo(ch));
 			return;
 		}
 		ch->Send("loot info roll||target <loot id>\n\r");

@@ -110,6 +110,16 @@ void Class::RemoveSkill(int id)
 	classSkills.erase(result);
 }
 
+int Class::GetArmorLevel(int itemtype)
+{
+	auto found = armor.find(itemtype);
+	if (found != armor.end())
+	{
+		return found->second;
+	}
+	return 0;
+}
+
 bool Class::CompareClassSkillBySkillID::operator()(SkillData & elem) const
 {
 	return value == elem.skill->id;

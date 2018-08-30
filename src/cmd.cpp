@@ -313,7 +313,7 @@ void cmd_look(Character * ch, string argument)
             ch->Send("You don't see that here.\n\r");
             return;
         }
-		ch->Send(inspect->FormatItemInfo());
+		ch->Send(inspect->FormatItemInfo(ch));
     }
 }
 
@@ -397,6 +397,16 @@ void cmd_score(Character * ch, string argument)
     {
         ch->Send("None\n\r");
     }
+	ch->Send("Available armor types: ");
+	if (ch->CanWearArmor(Item::TYPE_ARMOR_CLOTH))
+		ch->Send("Cloth ");
+	if (ch->CanWearArmor(Item::TYPE_ARMOR_LEATHER))
+		ch->Send("Leather ");
+	if (ch->CanWearArmor(Item::TYPE_ARMOR_MAIL))
+		ch->Send("Mail ");
+	if (ch->CanWearArmor(Item::TYPE_ARMOR_PLATE))
+		ch->Send("Plate ");
+	ch->Send("\n\r");
     if(ch->player->IMMORTAL())
         ch->Send("Immortal Level: " + Utilities::itos(ch->player->immlevel) + "\n\r");
     ch->Send("Health: " + Utilities::itos(ch->GetHealth()) + "/" + Utilities::itos(ch->GetMaxHealth()));
@@ -1398,7 +1408,7 @@ void cmd_quest(Character * ch, string argument)
 						string combinedRewards;
 						for (auto itemiter = std::begin(q->itemRewards); itemiter != std::end(q->itemRewards); ++itemiter)
 						{
-							string itemreward = Game::GetGame()->GetItem(*itemiter)->FormatItemInfo();
+							string itemreward = Game::GetGame()->GetItem(*itemiter)->FormatItemInfo(ch);
 							combinedRewards = Utilities::SideBySideString(combinedRewards, itemreward);
 						}
 						ch->Send(combinedRewards);
@@ -1569,7 +1579,7 @@ void cmd_quest(Character * ch, string argument)
 				rewardQueryString += Utilities::itos(ctr++);
 				if (ctr <= complete->itemRewards.size())
 					rewardQueryString += ", ";
-				string itemreward = Game::GetGame()->GetItem(*itemiter)->FormatItemInfo();
+				string itemreward = Game::GetGame()->GetItem(*itemiter)->FormatItemInfo(ch);
 				combinedRewards = Utilities::SideBySideString(combinedRewards, itemreward);
 			}
 			rewardQueryString += "): ";
@@ -1658,7 +1668,7 @@ void cmd_quest(Character * ch, string argument)
 			string combinedRewards;
 			for (auto itemiter = std::begin(progress->itemRewards); itemiter != std::end(progress->itemRewards); ++itemiter)
 			{
-				string itemreward = Game::GetGame()->GetItem(*itemiter)->FormatItemInfo();
+				string itemreward = Game::GetGame()->GetItem(*itemiter)->FormatItemInfo(ch);
 				combinedRewards = Utilities::SideBySideString(combinedRewards, itemreward);
 			}
 			ch->Send(combinedRewards);

@@ -80,7 +80,7 @@ public:
 	//dodge chance
 	//spell school resist?
 
-	std::string FormatItemInfo();
+	std::string FormatItemInfo(class Character * ch = nullptr);
 
     //For search  Store a reference to all searchable class data by type
     std::map<std::string, std::string*> stringTable;

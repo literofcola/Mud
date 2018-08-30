@@ -2982,6 +2982,23 @@ void Character::HandleNPCKillRewards(Character * killed)
 	player->QuestCompleteObjective(Quest::OBJECTIVE_KILLNPC, (void*)killed);
 }
 
+bool Character::CanWearArmor(int armortype)
+{
+	if (!player)
+		return false;
+
+	std::list<Player::ClassData>::iterator iter;
+	for (iter = player->classList.begin(); iter != player->classList.end(); ++iter)
+	{
+		Class * curr = Game::GetGame()->GetClass(iter->id);
+		int armorlevel = curr->GetArmorLevel(armortype);
+
+		if (curr && armorlevel != 0 && armorlevel <= GetLevel())
+			return true;
+	}
+	return false;
+}
+
 void Character::MakeCorpse()
 {
 	if (!player)

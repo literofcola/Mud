@@ -148,7 +148,7 @@ Item::~Item()
 
 }
 
-std::string Item::FormatItemInfo()
+std::string Item::FormatItemInfo(Character * ch)
 {
 	std::string itemstring;
 
@@ -172,7 +172,13 @@ std::string Item::FormatItemInfo()
 		itemstring += Item::equip_strings[equipLocation];
 		if (type != Item::TYPE_MISC)
 		{
-			itemstring += "     " + (string)Item::type_strings[type] + "\n\r";
+			int armorlevel = 0;
+			//TYPE_ARMOR_CLOTH, TYPE_ARMOR_LEATHER, TYPE_ARMOR_MAIL, TYPE_ARMOR_PLATE,
+			if (ch && !ch->CanWearArmor(type))
+			{
+				itemstring += "|R";
+			}
+			itemstring += "     " + (string)Item::type_strings[type] + "|X\n\r";
 		}
 		else
 		{
@@ -214,7 +220,11 @@ std::string Item::FormatItemInfo()
 		itemstring += "Durability " + Utilities::itos(durability) + "\n\r";
 	}
 	if (charLevel > 0)
-		itemstring += "Requires Level " + Utilities::itos(charLevel) + "\n\r";
+	{
+		if (ch && ch->GetLevel() < charLevel)
+			itemstring += "|R";
+		itemstring += "Requires Level " + Utilities::itos(charLevel) + "|X\n\r";
+	}
 	if (itemLevel > 0)
 		itemstring += "Item Level " + Utilities::itos(itemLevel) + "\n\r";
 	if (value > 0)
