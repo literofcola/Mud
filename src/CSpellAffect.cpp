@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "CSpellAffect.h"
 #include "CServer.h"
 #include "CGame.h"

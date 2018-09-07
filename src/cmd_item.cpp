@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "mud.h"
 #include "CCharacter.h"
 #include "CServer.h"
@@ -13,8 +14,14 @@
 #include "json.hpp"
 // for convenience
 using json = nlohmann::json;
-#define SOL_CHECK_ARGUMENTS 1
-#define SOL_USING_CXX_LUA
+extern "C"
+{
+#include "lua.h"
+#include "lualib.h"
+#include "lauxlib.h"
+}
+#define SOL_CHECK_ARGUMENTS
+#define SOL_PRINT_ERRORS
 #include <sol.hpp>
 #include <sstream>
 #include <iomanip>

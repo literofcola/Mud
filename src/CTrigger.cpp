@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "CTrigger.h"
 #include "utils.h"
 #include <string>

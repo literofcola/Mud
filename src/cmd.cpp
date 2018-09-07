@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "mud.h"
 #include "CQuest.h"
 #include "CPlayer.h"

@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "CServer.h"
 #include "CUser.h"
 #include "CGame.h"
@@ -752,4 +753,15 @@ std::string Server::SQLSelectPassword(std::string name)
 	Row row = *passwordres.begin();
 
 	return (std::string)row["password"];
+}
+
+void Server::my_panic(sol::optional<std::string> maybe_msg) 
+{
+	LogFile::Log("error", "Lua is in a panic state and will now abort() the application");
+	if (maybe_msg) 
+	{
+		const std::string& msg = maybe_msg.value();
+		LogFile::Log("error", "\terror message: " + msg);
+	}
+	// When this function exits, Lua will exhibit default behavior and abort()
 }

@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "CGroup.h"
 #include "CPlayer.h"
 #include "CCharacter.h"

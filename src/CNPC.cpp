@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "CNPC.h"
 #include "CCharacter.h"
 #include "CLogFile.h"
@@ -15,6 +16,10 @@ NPC::NPC(NPCIndex * index_) : Character()
 
 	reset = nullptr;
 	leashOrigin = nullptr;
+
+	health = GetMaxHealth();
+	mana = GetMaxMana();
+	energy = GetMaxEnergy();
 }
 
 NPC::~NPC()
@@ -318,4 +323,53 @@ bool NPC::HasSkill(Skill * sk)
 bool NPC::HasSkillByName(string name) //Not guaranteed to be the same skill id, just the same name
 {
 	return npcindex->HasSkillByName(name);
+}
+
+void NPC::Notify(SubscriberManager * lm)
+{
+	Character::Notify(lm);
+
+	RemoveLooter((Character *)lm);
+}
+
+double NPC::GetMainhandWeaponSpeed()
+{
+	return npcindex->npcAttackSpeed;
+}
+
+double NPC::GetOffhandWeaponSpeed()
+{
+	return 0;
+}
+
+int NPC::GetMainhandDamageRandomHit()
+{
+	int damage = 1;
+	int high = npcindex->npcDamageHigh;
+	int low = npcindex->npcDamageLow;
+	if (high != low)
+		damage = (Server::rand() % (high + 1 - low)) + low;
+	else
+		damage = low;
+	return damage;
+}
+
+double NPC::GetMainhandDamagePerSecond()
+{
+	double dps = 1;
+	double weaponSpeed_main = npcindex->npcAttackSpeed;
+	int high = npcindex->npcDamageHigh;
+	int low = npcindex->npcDamageLow;
+	dps = ((low + high) / 2.0) / weaponSpeed_main;
+	return dps;
+}
+
+int NPC::GetOffhandDamageRandomHit()
+{
+	return 0;
+}
+
+double NPC::GetOffhandDamagePerSecond()
+{
+	return 0;
 }

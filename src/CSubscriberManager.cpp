@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "CSubscriberManager.h"
 #include "CSubscriber.h"
 #include "CCharacter.h"

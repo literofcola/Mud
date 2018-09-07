@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "CGame.h"
 #include "CServer.h"
 #include "CClient.h"

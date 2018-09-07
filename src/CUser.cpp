@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "CUser.h"
 #include "CClient.h"
 #include "CPlayer.h"

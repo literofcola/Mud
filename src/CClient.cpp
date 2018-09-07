@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "CClient.h"
 #include "CCommand.h"
 #include <string>

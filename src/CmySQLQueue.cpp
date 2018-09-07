@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "CmySQLQueue.h"
 #include "CLogFile.h"
 #include <process.h>

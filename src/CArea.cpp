@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "CArea.h"
 #include "CServer.h"
 #include "utils.h"

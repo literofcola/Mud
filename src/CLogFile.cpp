@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "CLogFile.h"
 #include "utils.h"
 #include <fstream>

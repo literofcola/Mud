@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "CQuest.h"
 #include "CGame.h"
 #include "CLogFile.h"

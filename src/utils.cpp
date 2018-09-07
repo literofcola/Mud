@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "utils.h"
 #include "CLogFile.h"
 #include <string>
@@ -13,7 +14,7 @@
 namespace Utilities
 {
 
-std::string itos(const int & i)
+std::string itos(int i)
 {
     thread_local std::stringstream ss;
     ss.str("");
@@ -22,7 +23,7 @@ std::string itos(const int & i)
     return ss.str();
 }
 
-std::string dtos(const double & i, int precision)
+std::string dtos(double i, int precision)
 {
 	thread_local std::stringstream ss;
 	ss.str("");
@@ -32,7 +33,7 @@ std::string dtos(const double & i, int precision)
 	return ss.str();
 }
 
-std::string i64tos(const __int64 & i)
+std::string i64tos(__int64 i)
 {
 	thread_local std::stringstream ss;
 	ss.str("");

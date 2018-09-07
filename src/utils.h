@@ -6,9 +6,9 @@
 
 namespace Utilities
 {
-    std::string itos(const int & i);
-    std::string dtos(const double & i, int precision);
-	std::string i64tos(const __int64 & i);
+    std::string itos(int i);
+    std::string dtos(double i, int precision);
+	std::string i64tos(__int64 i);
     int atoi(const std::string & str);
     double atof(const std::string & str);
     int GetNoOfProcessors();

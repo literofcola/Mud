@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "mud.h"
 #include "CPlayer.h"
 #include "CServer.h"

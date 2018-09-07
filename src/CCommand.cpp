@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "CCommand.h"
 #include "CPlayer.h"
 #include "CClient.h"
@@ -304,12 +305,6 @@ const class Command npcEditCmd_table[] =
     { "drop",       npcEditCmd_drop, 0, 0, 1, 1 },
     { "level",      npcEditCmd_level, 0, 0, 1, 1 },
     { "gender",     npcEditCmd_gender, 0, 0, 1, 1 },
-    { "agility",    npcEditCmd_agility, 0, 0, 1, 1 },
-    { "intellect",  npcEditCmd_intellect, 0, 0, 1, 1 },
-    { "strength",   npcEditCmd_strength, 0, 0, 1, 1 },
-    { "stamina",   npcEditCmd_stamina, 0, 0, 1, 1 },
-    { "wisdom",     npcEditCmd_wisdom, 0, 0, 1, 1 },
-	{ "spirit",     npcEditCmd_spirit, 0, 0, 1, 1 },
     { "health",     npcEditCmd_health, 0, 0, 1, 1 },
     { "mana",       npcEditCmd_mana, 0, 0, 1, 1 },
     { "attack_speed",npcEditCmd_attackSpeed, 0, 0, 1, 1 },

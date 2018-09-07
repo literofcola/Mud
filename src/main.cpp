@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "vld.h"
 
 #include "CGame.h"
@@ -5,15 +6,15 @@
 #include "CHighResTimer.h"
 #include "CLogFile.h"
 
-#define SOL_CHECK_ARGUMENTS 1
-#define SOL_USING_CXX_LUA
-#include <sol.hpp>
 extern "C"
 {
 #include "lua.h"
 #include "lualib.h"
 #include "lauxlib.h"
 }
+#define SOL_CHECK_ARGUMENTS
+#define SOL_PRINT_ERRORS
+#include <sol.hpp>
 
 extern void Lua_DefineClasses(sol::state * lua);
 extern void Lua_DefineFunctions(sol::state * lua);
@@ -34,6 +35,7 @@ int main(int argc, char * argv[])
     }
 
 	//Init Lua
+	//Server::lua.set_panic(sol::c_call<decltype(&Server::my_panic), &Server::my_panic>);
 	// open some common libraries
 	Server::lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::math, sol::lib::string);
 	Server::lua.script_file("lua_constants.lua");

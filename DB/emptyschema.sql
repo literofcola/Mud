@@ -175,12 +175,6 @@ CREATE TABLE `npcs` (
   `level` int(11) NOT NULL,
   `gender` int(11) NOT NULL,
   `race` int(11) NOT NULL,
-  `agility` int(11) NOT NULL,
-  `intellect` int(11) NOT NULL,
-  `strength` int(11) NOT NULL,
-  `stamina` int(11) NOT NULL,
-  `wisdom` int(11) NOT NULL,
-  `spirit` int(11) NOT NULL,
   `health` int(11) NOT NULL,
   `mana` int(11) NOT NULL,
   `energy` int(11) NOT NULL,
@@ -494,4 +488,4 @@ CREATE TABLE `triggers` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-08-29  0:08:23
+-- Dump completed on 2018-09-07  9:50:58

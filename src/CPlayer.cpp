@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "CPlayer.h"
 #include "CGame.h"
 #include "CServer.h"
@@ -68,6 +69,10 @@ Player::Player(std::string name_, User * user_) : Character()
 	queryFunction = nullptr;
 	queryData = nullptr;
 	isGhost = false;
+
+	health = GetMaxHealth();
+	mana = GetMaxMana();
+	energy = GetMaxEnergy();
 }
 
 Player::~Player()
@@ -1376,12 +1381,12 @@ Player * Player::LoadPlayer(std::string name, User * user)
 void Player::Save()
 {
 	string sql;
-		string password = Utilities::SQLFixQuotes(password);
+		string fixpassword = Utilities::SQLFixQuotes(password);
 		string fixtitle = Utilities::SQLFixQuotes(title);
 
 		sql = "INSERT INTO players (name, password, immlevel, title, experience, room, level, gender, race, agility, intellect, strength, stamina, ";
 		sql += "wisdom, spirit, health, mana, class, recall, ghost, corpse_room, stat_points) values ('";
-		sql += name + "','" + password + "'," + Utilities::itos(GetImmLevel());
+		sql += name + "','" + fixpassword + "'," + Utilities::itos(GetImmLevel());
 		sql += ",'" + fixtitle + "'," + Utilities::itos(experience) + "," + Utilities::itos(room->id);
 		sql += "," + Utilities::itos(level) + "," + Utilities::itos(gender) + "," + Utilities::itos(race) + ",";
 		sql += Utilities::itos(agility) + "," + Utilities::itos(intellect) + "," + Utilities::itos(strength) + ",";
@@ -1768,7 +1773,153 @@ double Player::GetOffhandDamagePerSecond()
 	return dps;
 }
 
-int Player::GetComboPoints()
+void Player::SetComboPoints(int howmany)
 {
-	return comboPoints;
+	if (howmany < 0 || howmany > maxComboPoints)
+		return;
+	comboPoints = howmany;
+}
+
+void Player::GenerateComboPoint(Character * target)
+{
+	if (target == nullptr)
+		return;
+
+	if (!target->IsAlive())
+	{
+		LogFile::Log("error", "GenerateComboPoint on !IsAlive target");
+		return;
+	}
+
+	if (target != comboPointTarget)	//Changing our combo target
+	{
+		if (comboPointTarget != nullptr)	//If we had a previous combo target...
+		{
+			comboPointTarget->RemoveSubscriber(this);
+		}
+		comboPointTarget = target;
+		comboPoints = 1;
+		target->AddSubscriber(this);
+	}
+	else if (comboPoints < maxComboPoints)
+	{
+		comboPoints++;
+	}
+}
+
+int Player::SpendComboPoints(Character * target)
+{
+	if (target == nullptr || comboPointTarget == nullptr || target != comboPointTarget || comboPoints <= 0)
+		return 0;
+
+	comboPointTarget->RemoveSubscriber(this);
+	comboPointTarget = nullptr;
+	int combos = comboPoints;
+	comboPoints = 0;
+	return combos;
+}
+
+void Player::ClearComboPointTarget()
+{
+	if (comboPointTarget == nullptr)
+		return;
+
+	comboPointTarget->RemoveSubscriber(this);
+	comboPointTarget = nullptr;
+	comboPoints = 0;
+}
+
+void Player::MakeCorpse()
+{
+	Item * thecorpse = new Item("The corpse of " + GetName(), 0);
+	thecorpse->keywords = "corpse " + GetName();
+	Utilities::FlagSet(thecorpse->flags, Item::FLAG_ROOMONLY);
+	room->AddItem(thecorpse);
+}
+
+void Player::RemoveCorpse()
+{
+	if (corpse_room == 0)
+	{
+		LogFile::Log("error", "Character::RemoveCorpse() with bad player->corpse_room");
+		return;
+	}
+
+	Room * corpseroom = Game::GetGame()->GetRoom(corpse_room);
+
+	for (auto itemiter = corpseroom->items.begin(); itemiter != corpseroom->items.end(); itemiter++)
+	{
+		if (itemiter->first->keywords.find(GetName()) != std::string::npos)
+		{
+			corpseroom->RemoveItem(itemiter->first);
+
+			if (room && room == corpseroom)
+			{
+				Message(GetName() + "'s corpse crumbles into dust.", Character::MessageType::MSG_ROOM_NOTCHAR);
+			}
+			else
+			{
+				corpseroom->Message(GetName() + "'s corpse crumbles into dust.");
+			}
+
+			break;
+		}
+	}
+}
+
+void Player::StartGlobalCooldown()
+{
+	globalCooldown = Game::currentTime + 1.5;
+}
+
+void Player::ApplyExperience(int amount)
+{
+	SetExperience(experience + amount);
+
+	while (experience < Game::ExperienceForLevel(level - 1))
+	{
+		//lose levels
+		SetLevel(level - 1);
+	}
+	while (level < Game::MAX_LEVEL && experience >= Game::ExperienceForLevel(level + 1))
+	{
+		//gain levels
+		SetLevel(level + 1);
+	}
+}
+
+void Player::Notify(SubscriberManager * lm)
+{
+	Character::Notify(lm);
+
+	if (comboPointTarget && lm == comboPointTarget)
+	{
+		comboPointTarget->RemoveSubscriber(this);
+		comboPointTarget = nullptr;
+	}
+
+	if (hasQuery && (Character *)queryData == (Character *)lm) //We have a query pending where the 'data' payload is the Character being deleted (group invite)
+	{
+		lm->RemoveSubscriber(this);
+		QueryClear();
+	}
+
+	RemoveLootRoll((Character *)lm);
+}
+
+void Player::AddClassSkills()
+{
+	std::list<Player::ClassData>::iterator iter;
+	for (iter = classList.begin(); iter != classList.end(); ++iter) //For every class this player has multiclassed into...
+	{
+		Class * iclass = Game::GetGame()->classes.at(iter->id);	//Grab that class from the game...
+		std::list<Class::SkillData>::iterator csiter;
+		for (csiter = iclass->classSkills.begin(); csiter != iclass->classSkills.end(); csiter++) //For every skill players of that class get...
+		{
+			if (csiter->level <= iter->level || IsImmortal()) //if that skill's level < our level of the class, add it
+			{
+				AddSkill(csiter->skill);
+			}
+		}
+	}
 }

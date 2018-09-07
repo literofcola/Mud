@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "CNPCIndex.h"
 #include "CCharacter.h"
 #include "CTrigger.h"

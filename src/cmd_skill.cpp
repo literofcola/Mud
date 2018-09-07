@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "mud.h"
 #include "CLogFile.h"
 #include "CSkill.h"
@@ -13,8 +14,14 @@
 #include "json.hpp"
 // for convenience
 using json = nlohmann::json;
-#define SOL_CHECK_ARGUMENTS 1
-#define SOL_USING_CXX_LUA
+extern "C"
+{
+#include "lua.h"
+#include "lualib.h"
+#include "lauxlib.h"
+}
+#define SOL_CHECK_ARGUMENTS
+#define SOL_PRINT_ERRORS
 #include <sol.hpp>
 #include <sstream>
 #include <iomanip>
@@ -124,11 +131,22 @@ void cmd_castCallback(Character::DelayData delayData)
     }
 
     string func = delayData.sk->function_name + "_cast";
-    try
-    {
+    //try
+    //{
 		sol::function lua_cast_func = Server::lua[func.c_str()];
-		lua_cast_func(delayData.caster, delayData.charTarget, delayData.sk);
-    }
+		sol::protected_function_result result = lua_cast_func(delayData.caster, delayData.charTarget, delayData.sk);
+    //}
+	if (!result.valid()) 
+	{
+		// Call failed
+		sol::error err = result;
+		std::string what = err.what();
+		std::cout << "call failed, sol::error::what() is " << what << std::endl;
+		// 'what' Should read 
+		// "Handled this message: negative number detected"
+	}
+
+	/*
 	catch (const sol::error& e)
 	{
 		LogFile::Log("error", e.what());
@@ -140,7 +158,7 @@ void cmd_castCallback(Character::DelayData delayData)
 	catch(...)
 	{
 		LogFile::Log("error", "call_function unhandled exception cmd_castcallback _cast");
-	}
+	}*/
 	delayData.caster->SetCooldown(delayData.sk, -1);
 }
 

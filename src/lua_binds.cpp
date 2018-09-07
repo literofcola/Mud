@@ -1,25 +1,25 @@
+#include "stdafx.h"
 #include "CGame.h"
 #include "CSubscriber.h"
 #include "CSubscriberManager.h"
 #include "CCharacter.h"
 #include "CPlayer.h"
+#include "CNPC.h"
 #include "CUser.h"
 #include "CSpellAffect.h"
 #include "CRoom.h"
 #include "CSkill.h"
 #include "utils.h"
 #include "mud.h"
-
-#define SOL_CHECK_ARGUMENTS 1
-#define SOL_USING_CXX_LUA
-#include <sol.hpp>
-
 extern "C"
 {
 #include "lua.h"
 #include "lualib.h"
 #include "lauxlib.h"
 }
+#define SOL_CHECK_ARGUMENTS
+#define SOL_PRINT_ERRORS
+#include <sol.hpp>
 
 void Lua_DefineFunctions(sol::state * lua)
 {
@@ -69,6 +69,8 @@ void Lua_DefineClasses(sol::state * lua)
 			"GetMaxMana", &Character::GetMaxMana,
 			"GetMaxHealth", &Character::GetMaxHealth,
 			"HasResource", &Character::HasResource,
+			"GetIntellect", &Character::GetIntellect,
+			"GetStrength", &Character::GetStrength,
 			"OneHit", &Character::OneHit,
 			"OneHeal", &Character::OneHeal,
 			"AdjustHealth", &Character::AdjustHealth,
@@ -79,8 +81,6 @@ void Lua_DefineClasses(sol::state * lua)
 			"ConsumeRage", &Character::ConsumeRage,
 			"GenerateComboPoint", &Character::GenerateComboPoint,
 			"SpendComboPoints", &Character::SpendComboPoints,
-			"GetMainhandDamagePerSecond", &Character::GetMainhandDamagePerSecond,
-			"GetOffhandDamagePerSecond", &Character::GetOffhandDamagePerSecond,
 			"GetName", &Character::GetName,
 			"HisHer", &Character::HisHer,
 			"HimHer", &Character::HisHer,
@@ -98,7 +98,13 @@ void Lua_DefineClasses(sol::state * lua)
 			"ChangeRoomsID", &Character::ChangeRoomsID,
 			"GetAuraModifier", &Character::GetAuraModifier,
 			"GetTarget", &Character::GetTarget,
-			"GetRoom", &Character::GetRoom
+			"GetRoom", &Character::GetRoom,
+			"GetMainhandWeaponSpeed", &Character::GetMainhandWeaponSpeed,
+			"GetOffhandWeaponSpeed", &Character::GetOffhandWeaponSpeed,
+			"GetMainhandDamagePerSecond", &Character::GetMainhandDamagePerSecond,
+			"GetOffhandDamageRandomHit", &Character::GetOffhandDamageRandomHit,
+			"GetOffhandDamagePerSecond", &Character::GetOffhandDamagePerSecond,
+			"GetMainhandDamageRandomHit", &Character::GetMainhandDamageRandomHit
 			//"level", &Character::level,
 			//"flags", &Character::flags
 			);
@@ -111,11 +117,14 @@ void Lua_DefineClasses(sol::state * lua)
 			);
 
 		(*lua).new_usertype<Player>("Player",
+			sol::base_classes, sol::bases<Character>(),
 			"GetClassLevel", &Player::GetClassLevel,
 			"recall", &Player::recall,
-			"GetIntellect", &Player::GetIntellect,
-			"GetStrength", &Player::GetStrength,
 			"SetLevel", &Player::SetLevel
+			);
+
+		(*lua).new_usertype<NPC>("NPC",
+			sol::base_classes, sol::bases<Character>()
 			);
 
 		(*lua).new_usertype<Skill>("Skill",

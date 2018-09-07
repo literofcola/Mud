@@ -26,7 +26,7 @@ public:
     Character(const Character & copy) = delete;
     virtual ~Character();
 
-    void Notify(SubscriberManager *);
+    virtual void Notify(SubscriberManager *);
 
     enum MessageType
     {
@@ -120,7 +120,12 @@ public:
 	virtual void SetMaxMana(int amount) { };
 	virtual void SetMaxEnergy(int amount) { };
 	virtual void SetMaxRage(int amount) { };
-	//virtual void GetAgility() { };
+	virtual inline int GetAgility() { return 1; };
+	virtual inline int GetIntellect() { return 1; };
+	virtual inline int GetStrength() { return 1; };
+	virtual inline int GetStamina() { return 1; };
+	virtual inline int GetWisdom() { return 1; };
+	virtual inline int GetSpirit() { return 1; };
 
     void Message(const std::string & txt, MessageType msg_type, Character * vict = nullptr);
 
@@ -181,16 +186,24 @@ public:
 	void OneHeal(Character * target, int heal);
 	
 	
-
-	
+	virtual double GetMainhandWeaponSpeed() = 0;
+	virtual double GetOffhandWeaponSpeed() = 0;
+	virtual double GetMainhandDamagePerSecond() = 0;
+	virtual int GetOffhandDamageRandomHit() = 0;
+	virtual double GetOffhandDamagePerSecond() = 0;
+	virtual int GetMainhandDamageRandomHit() = 0;
 
 	void GenerateRageOnAttack(int damage, double weapon_speed, bool mainhand, bool wascrit);
 	void GenerateRageOnTakeDamage(int damage);
 	
-	void SetComboPoints(int howmany);
-	void GenerateComboPoint(Character * target);
-	int SpendComboPoints(Character * target);
-	void ClearComboPointTarget();
+	virtual void SetComboPoints(int howmany) { };
+	virtual void GenerateComboPoint(Character * target) { };
+	virtual int SpendComboPoints(Character * target) { return 0; };
+	virtual void ClearComboPointTarget() { };
+	virtual bool HasComboPointTarget() { return false; };
+	virtual Character * GetComboPointTarget() { return nullptr; };
+	virtual int GetComboPoints() { return 0; };
+
     void ConsumeMana(int amount);
 	void ConsumeEnergy(int amount);
 	void ConsumeRage(int amount);
@@ -201,13 +214,12 @@ public:
 	virtual void RemoveAllLootRolls() { };
 	virtual void RemoveAllLooters() { };
 	//void SetRollType(Character * who, int corpse_id, int type); //Set a looter's roll type in the corpse's loot object
-	void MakeCorpse();
-	void RemoveCorpse();
+
     void AdjustMana(Character * source, int amount);
 	void AdjustEnergy(Character * source, int amount);
 	void AdjustRage(Character * source, int amount);
 	bool HasResource(int which, int amount);
-    void ApplyExperience(int amount);
+    
     SpellAffect * AddSpellAffect(int isDebuff, Character * caster, std::string name,
                         bool hidden, bool stackable, int ticks, double duration, int category, Skill * sk, std::string affect_description);
     SpellAffect * HasSpellAffect(std::string name);
@@ -232,10 +244,10 @@ public:
 	virtual void RemoveSkill(std::string name) = 0;
 	virtual Skill * GetSkillShortName(std::string name) = 0;
 
-	void StartGlobalCooldown();
+	
     void SetCooldown(Skill * sk, double length);
     double GetCooldownRemaining(Skill * sk);
-	void AddClassSkills();
+	
 	virtual bool HasGroup() { return false; };
 	bool InSameGroup(Character * ch);
 

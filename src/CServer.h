@@ -3,16 +3,15 @@
 
 #include "CmySQLQueue.h"
 
-#define SOL_CHECK_ARGUMENTS 1
-#define SOL_USING_CXX_LUA
-#include <sol.hpp>
-
-extern "C" 
+extern "C"
 {
 #include "lua.h"
 #include "lualib.h"
 #include "lauxlib.h"
 }
+#define SOL_CHECK_ARGUMENTS
+#define SOL_PRINT_ERRORS
+#include <sol.hpp>
 
 #include <winsock2.h>
 #include <WS2tcpip.h>
@@ -74,6 +73,7 @@ public:
 	bool CheckTempBanList(std::string address);
 	std::string EncryptDecrypt(std::string toEncrypt);
 	std::string SQLSelectPassword(std::string name);
+	static void my_panic(sol::optional<std::string> maybe_msg);
 
 	SOCKET ListenSocket;
 	struct sockaddr_in ServerAddress;

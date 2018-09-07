@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "CUser.h"
 #include "utils.h"
 #include <string>

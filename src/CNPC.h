@@ -56,6 +56,8 @@ public:
 	inline bool IsNPC() override { return true; };
 	inline bool IsPlayer() override { return false; };
 
+	void Notify(SubscriberManager * lm);
+
 	inline int GetMaxHealth() override { return npcindex->maxHealth; };
 	inline int GetMaxMana() override { return npcindex->maxMana; };
 	inline int GetMaxEnergy() override { return npcindex->maxEnergy; };
@@ -83,6 +85,13 @@ public:
 	void RemoveSkill(Skill * sk) override;
 	void RemoveSkill(std::string name) override;
 	Skill * GetSkillShortName(std::string name) override;
+
+	double GetMainhandWeaponSpeed() override;
+	double GetOffhandWeaponSpeed() override;
+	double GetMainhandDamagePerSecond() override;
+	int GetOffhandDamageRandomHit() override;
+	double GetOffhandDamagePerSecond() override;
+	int GetMainhandDamageRandomHit() override;
 
 private:
 	NPCIndex * npcindex;

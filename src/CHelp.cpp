@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "CHelp.h"
 #include "utils.h"
 #include "CServer.h"

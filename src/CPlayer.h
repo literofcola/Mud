@@ -114,6 +114,8 @@ public:
 	inline bool IsNPC() override { return false; };
 	inline bool IsPlayer() override { return true; };
 
+	void Notify(SubscriberManager * lm);
+
 	void SendBW(std::string str) override;
 	void Send(std::string str) override;
 	void Send(char * str) override;
@@ -138,12 +140,12 @@ public:
 	inline int GetMaxMana() override { return maxMana; };
 	inline int GetMaxEnergy() override { return maxEnergy; };
 	inline int GetMaxRage() override { return maxRage; };
-	inline int GetAgility() { return agility; };
-	inline int GetIntellect() { return intellect; };
-	inline int GetStrength() { return strength; };
-	inline int GetStamina() { return stamina; };
-	inline int GetWisdom() { return wisdom; };
-	inline int GetSpirit() { return spirit; };
+	inline int GetAgility() override { return agility; };
+	inline int GetIntellect() override { return intellect; };
+	inline int GetStrength() override { return strength; };
+	inline int GetStamina() override { return stamina; };
+	inline int GetWisdom() override { return wisdom; };
+	inline int GetSpirit() override { return spirit; };
 	inline void SetAgility(int val) { agility <= 0 ? agility = val : agility = 1; };
 	inline void SetIntellect(int val) { intellect <= 0 ? intellect = val : intellect = 1; };
 	inline void SetStrength(int val) { strength <= 0 ? strength = val : strength = 1; };
@@ -171,15 +173,24 @@ public:
 	inline int GetGender() override { return gender; };
 	inline void SetGender(int g_) { gender = g_; };
 	inline virtual std::string GetTitle() override { return title; };
-	int GetComboPoints();
 
-	double GetMainhandWeaponSpeed();
-	double GetOffhandWeaponSpeed();
-	double GetMainhandDamagePerSecond();
-	int GetOffhandDamageRandomHit();
-	double GetOffhandDamagePerSecond();
+	void SetComboPoints(int howmany);
+	void GenerateComboPoint(Character * target);
+	int SpendComboPoints(Character * target);
+	void ClearComboPointTarget();
+	int GetComboPoints() override { return comboPoints; };
+	bool HasComboPointTarget() override { return (comboPointTarget != nullptr); };
+	Character * GetComboPointTarget() override { return comboPointTarget; };
 
-	int GetMainhandDamageRandomHit();
+	void MakeCorpse();
+	void RemoveCorpse();
+
+	double GetMainhandWeaponSpeed() override;
+	double GetOffhandWeaponSpeed() override;
+	double GetMainhandDamagePerSecond() override;
+	int GetOffhandDamageRandomHit() override;
+	double GetOffhandDamagePerSecond() override;
+	int GetMainhandDamageRandomHit() override;
 
 	bool HasGroup() override;
 	inline Group * GetGroup() override { return group; };
@@ -187,6 +198,7 @@ public:
 	void Stand() override;
 	void Sit() override;
 
+	void StartGlobalCooldown();
 	inline double GetGlobalCooldown() override { return globalCooldown; };
 	inline void SetGlobalCooldown(double time) override { globalCooldown = time; };
 
@@ -199,6 +211,8 @@ public:
 	inline int GetImmLevel() override { return immlevel; };
     //static Player * Load(Server * server, std::string name, User * user);
     void SetExperience(int newexp);
+	void ApplyExperience(int amount);
+	
     bool QuestEligible(Quest * quest);
     bool QuestActive(Quest * quest);
     bool QuestCompleted(Quest * quest);
@@ -221,6 +235,7 @@ public:
     void AddClass(int id, int level);
     int GetClassLevel(int classid);
     void SetClassLevel(int classid, int newlevel);
+	void AddClassSkills();
 	void SetGhost() override;
 	void SetCorpse() override;
 	void SetAlive() override;

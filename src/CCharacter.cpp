@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "CCharacter.h"
 #include "CSubscriber.h"
 #include "CSubscriberManager.h"
@@ -1168,26 +1169,6 @@ bool Character::IsFighting(Character * target)
     return false;
 }
 
-int Character::GetHealth()
-{
-    return health;
-}
-
-int Character::GetMana()
-{
-    return mana;
-}
-
-int Character::GetEnergy()
-{
-	return energy;
-}
-
-int Character::GetRage()
-{
-	return rage;
-}
-
 void Character::GenerateRageOnAttack(int damage, double weapon_speed, bool mainhand, bool wascrit)
 {
 	//Rage generation stuff, inspired by wow, for now
@@ -1225,7 +1206,7 @@ void Character::OnDeath()
 		{
 			threat->ch->meleeActive = false;
 		}
-		if (threat->ch->comboPointTarget && threat->ch->comboPointTarget == this)
+		if (threat->ch->HasComboPointTarget() && threat->ch->GetComboPointTarget() == this)
 		{
 			threat->ch->ClearComboPointTarget();
 		}
@@ -1239,11 +1220,13 @@ void Character::OnDeath()
 	
 	if (!IsNPC()) //player killed... doesn't matter by who, no rewards yet for doing so
 	{
+		Player * thisplayer = (Player *)this;
 		ExitCombat();			//Removes our threat list
-		SetQuery("Release spirit? ('release') ", nullptr, releaseSpiritQuery);
+		thisplayer->SetQuery("Release spirit? ('release') ", nullptr, releaseSpiritQuery);
 	}
 	else if (IsNPC()) //NPC killed, figure out by who...
 	{
+		NPC * thisnpc = (NPC*)this;
 		Character * tap = nullptr;
 		Character * highdamage = nullptr;
 		double group_damage = 0;
@@ -1291,31 +1274,32 @@ void Character::OnDeath()
 
 		if(group_damage >= other_damage && tap->IsPlayer()) //The tap's group did most of the damage, give rewards
 		{
-			if (tap->HasGroup())
+			Player * tap_player = (Player *)tap;
+			if (tap_player->HasGroup())
 			{
 				for (int i = 0; i < Group::MAX_RAID_SIZE; i++)
 				{
-					Character * group_member = tap->group->members[i];
-					if (group_member != nullptr && FindDistance(this->room, group_member->room, GROUP_LOOT_DISTANCE) != -1)
+					Player * group_member = tap_player->GetGroup()->members[i];
+					if (group_member != nullptr && FindDistance(this->room, group_member->room, Player::GROUP_LOOT_DISTANCE) != -1)
 					{
 						group_member->HandleNPCKillRewards(this);
 					}
 				}
 			}
-			else if (FindDistance(this->room, tap->room, GROUP_LOOT_DISTANCE) != -1)
+			else if (FindDistance(this->room, tap_player->room, Player::GROUP_LOOT_DISTANCE) != -1)
 			{
-				tap->HandleNPCKillRewards(this);
+				tap_player->HandleNPCKillRewards(this);
 			}
 
 			int loot_id_ctr = 1;
-			for (auto dropiter = drops.begin(); dropiter != drops.end(); ++dropiter)
+			for (auto dropiter = thisnpc->GetNPCIndex()->drops.begin(); dropiter != thisnpc->GetNPCIndex()->drops.end(); ++dropiter)
 			{
 				if (Server::rand() % 100 <= (*dropiter).percent && (*dropiter).id.size() > 0)
 				{
 					int which = Server::rand() % ((int)(*dropiter).id.size());
 					Item * drop = Game::GetGame()->GetItem((*dropiter).id[which]);
 
-					OneLoot one_loot;
+					NPC::OneLoot one_loot;
 					one_loot.item = drop;
 					one_loot.id = loot_id_ctr++;
 					one_loot.roll_timer = 0;
@@ -1324,17 +1308,17 @@ void Character::OnDeath()
 					{
 						for (int i = 0; i < Group::MAX_RAID_SIZE; i++)
 						{
-							Character * group_member = tap->group->members[i];
-							if (group_member != nullptr && (!drop->quest || group_member->player->ShouldDropQuestItem(drop))
-								&& FindDistance(this->room, group_member->room, GROUP_LOOT_DISTANCE) != -1)
+							Player * group_member = tap->GetGroup()->members[i];
+							if (group_member != nullptr && (!drop->quest || group_member->ShouldDropQuestItem(drop))
+								&& FindDistance(this->room, group_member->room, Player::GROUP_LOOT_DISTANCE) != -1)
 							{
-								one_loot.looters.push_back(Looter(group_member));
+								one_loot.looters.push_back(NPC::Looter(group_member));
 								group_member->AddSubscriber(this);
 
 								group_member->Send(GetName() + " drops loot: " + (string)Item::quality_strings[drop->quality] + drop->name + "|X");
 								if (drop->quality >= Item::QUALITY_UNCOMMON)
 								{
-									int my_id = group_member->AddLootRoll(one_loot.id, this);
+									int my_id = group_member->AddLootRoll(one_loot.id, thisnpc);
 									one_loot.roll_timer = Game::currentTime + 60;
 									group_member->Send(" |Y(60 seconds to roll: #" + Utilities::itos(my_id) + ")|X");
 								}
@@ -1342,68 +1326,21 @@ void Character::OnDeath()
 							}
 						}
 					}
-					else if((!drop->quest || tap->player->ShouldDropQuestItem(drop)) && FindDistance(this->room, tap->room, GROUP_LOOT_DISTANCE) != -1)
+					else if((!drop->quest || tap_player->ShouldDropQuestItem(drop)) && FindDistance(this->room, tap->room, Player::GROUP_LOOT_DISTANCE) != -1)
 					{
-						one_loot.looters.push_back(Looter(tap));
+						one_loot.looters.push_back(NPC::Looter(tap_player));
 						tap->AddSubscriber(this);
 
 						tap->Send(GetName() + " drops loot: " + (string)Item::quality_strings[drop->quality] + drop->name + "|X\n\r");
 					}
 					if(!one_loot.looters.empty()) //Don't actually drop this loot if no one can loot it
-						loot.push_back(one_loot);
+						thisnpc->loot.push_back(one_loot);
 				}
 			}
 		}
 		ExitCombat(); //Removes NPC's threat list
 	}
 	SetCorpse();
-}
-
-
-
-
-void Character::MakeCorpse()
-{
-	if (!player)
-		return;
-
-	Item * thecorpse = new Item("The corpse of " + name, 0);
-	thecorpse->keywords = "corpse " + name;
-	Utilities::FlagSet(thecorpse->flags, Item::FLAG_ROOMONLY);
-	room->AddItem(thecorpse);
-}
-
-void Character::RemoveCorpse()
-{
-	if (!player)
-		return;
-
-	if (player->corpse_room == 0)
-	{
-		LogFile::Log("error", "Character::RemoveCorpse() with bad player->corpse_room");
-		return;
-	}
-
-	Room * corpseroom = Game::GetGame()->GetRoom(player->corpse_room);
-
-	for (auto itemiter = corpseroom->items.begin(); itemiter != corpseroom->items.end(); itemiter++)
-	{
-		if (itemiter->first->keywords.find(name) != std::string::npos)
-		{
-			corpseroom->RemoveItem(itemiter->first);
-
-			if (room && room == corpseroom)
-			{
-				Message(name + "'s corpse crumbles into dust.", Character::MessageType::MSG_ROOM_NOTCHAR);
-			}
-			else
-			{
-				corpseroom->Message(name + "'s corpse crumbles into dust.");
-			}
-
-			break;
-		}
-	}
 }
 
 //To be used in spell _cost function. Checks AURA_RESOURCE_COST
@@ -1433,7 +1370,7 @@ bool Character::HasResource(int which, int amount)
 				return true;
 			break;
 		case RESOURCE_COMBO:
-			if (comboPoints >= amount)
+			if (GetComboPoints() >= amount)
 				return true;
 			break;
         default:
@@ -1496,7 +1433,7 @@ void Character::SetHealth(int amount)
 
 	if (HasGroup())
 	{
-		int first_slot = GetGroup()->FindFirstSlotInSubgroup(this);
+		int first_slot = GetGroup()->FindFirstSlotInSubgroup((Player *)this);
 		for (int i = first_slot; i < first_slot + Group::MAX_GROUP_SIZE; i++)
 		{
 			if (GetGroup()->members[i] != nullptr && GetGroup()->members[i] != this)
@@ -1557,7 +1494,7 @@ void Character::SetMana(int amount)
 
 	if (HasGroup())
 	{
-		int first_slot = GetGroup()->FindFirstSlotInSubgroup(this);
+		int first_slot = GetGroup()->FindFirstSlotInSubgroup((Player *)this);
 		for (int i = first_slot; i < first_slot + Group::MAX_GROUP_SIZE; i++)
 		{
 			if (GetGroup()->members[i] != nullptr && GetGroup()->members[i] != this)
@@ -1650,62 +1587,6 @@ void Character::SetRage(int amount)
 }
 
 
-
-void Character::SetComboPoints(int howmany)
-{
-	if (howmany < 0 || howmany > maxComboPoints)
-		return;
-	comboPoints = howmany;
-}
-
-void Character::GenerateComboPoint(Character * target)
-{
-	if (target == nullptr)
-		return;
-
-	if (!target->IsAlive())
-	{
-		LogFile::Log("error", "GenerateComboPoint on !IsAlive target");
-		return;
-	}
-
-	if (target != comboPointTarget)	//Changing our combo target
-	{
-		if (comboPointTarget != nullptr)	//If we had a previous combo target...
-		{
-			comboPointTarget->RemoveSubscriber(this);
-		}
-		comboPointTarget = target;
-		comboPoints = 1;
-		target->AddSubscriber(this);
-	}
-	else if(comboPoints < maxComboPoints)
-	{
-		comboPoints++;
-	}
-}
-
-int Character::SpendComboPoints(Character * target)
-{
-	if (target == nullptr || comboPointTarget == nullptr || target != comboPointTarget || comboPoints <= 0)
-		return 0;
-
-	comboPointTarget->RemoveSubscriber(this);
-	comboPointTarget = nullptr;
-	int combos = comboPoints;
-	comboPoints = 0;
-	return combos;
-}
-
-void Character::ClearComboPointTarget()
-{
-	if (comboPointTarget == nullptr)
-		return;
-
-	comboPointTarget->RemoveSubscriber(this);
-	comboPointTarget = nullptr;
-	comboPoints = 0;
-}
 
 void Character::UpdateThreat(Character * ch, double value, int type)
 {
@@ -2017,10 +1898,7 @@ double Character::GetMoveSpeed()
     return newspeed / 100;
 }
 
-void Character::StartGlobalCooldown()
-{
-	global = Game::currentTime + 1.5;
-}
+
 
 void Character::SetCooldown(Skill * sk, double length) //USE LENGTH -1 TO USE SKILL->COOLDOWN
 {
@@ -2040,14 +1918,14 @@ double Character::GetCooldownRemaining(Skill * sk)
     if(sk == nullptr)
         return 0;
 
-    if(player && player->IsImmortal())
+    if(IsImmortal())
         return 0;
 
 	//Global cooldown in progress
 	double remaining_global = 0;
-	if (!Utilities::FlagIsSet(sk->flags, Skill::FLAG_GCDIMMUNE) && this->global > Game::currentTime)
+	if (!Utilities::FlagIsSet(sk->flags, Skill::FLAG_GCDIMMUNE) && this->GetGlobalCooldown() > Game::currentTime)
 	{
-		remaining_global = this->global - Game::currentTime;
+		remaining_global = this->GetGlobalCooldown() - Game::currentTime;
 	}
 
 	double remaining_cd = 0;
@@ -2067,8 +1945,10 @@ bool Character::ChangeRooms(Room * toroom)
         room->characters.remove(this);
     if(toroom != nullptr)
     {
-		if (player != nullptr && player->user != nullptr)
+		if (IsPlayer())
 		{
+			//Check if this room is a quest objective
+			((Player*)this)->QuestCompleteObjective(Quest::OBJECTIVE_ROOM, (void*)toroom);
 			//Send GMCP room.info
 			json roominfo;
 			roominfo["name"] = toroom->name;
@@ -2092,18 +1972,14 @@ bool Character::ChangeRooms(Room * toroom)
 		
         room = toroom;
         toroom->characters.push_front(this);
-        //Check if this room is a quest objective
-        if(player)
-        {
-            player->QuestCompleteObjective(Quest::OBJECTIVE_ROOM, (void*)toroom);
-        }
+
         //Check for room movement triggers
         Trigger * trig = nullptr;
         int ctr = 0;
         Trigger::TriggerType tt;
 
         //ENTER_NPC, ENTER_PC
-        if(player)
+        if(IsPlayer())
             tt = Trigger::ENTER_PC;
         else
             tt = Trigger::ENTER_NPC;
@@ -2195,25 +2071,6 @@ int Character::TimeSinceDeath()
 	return (int)(Game::currentTime - deathTime);
 }
 
-void Character::ApplyExperience(int amount)
-{
-    if(!player)
-        return;
-
-    player->SetExperience(player->experience + amount);
-
-    while(player->experience < Game::ExperienceForLevel(level-1))
-    {
-        //lose levels
-        SetLevel(level - 1);
-    }
-    while(level < Game::MAX_LEVEL && player->experience >= Game::ExperienceForLevel(level + 1))
-    {
-        //gain levels
-        SetLevel(level + 1);
-    }
-}
-
 void Character::SetTarget(Character * t)
 {
     if(target == t)
@@ -2274,48 +2131,15 @@ void Character::Notify(SubscriberManager * lm)
         RemoveThreat((Character*)lm, false);
     }
 
-	if (comboPointTarget && lm == comboPointTarget)
-	{
-		comboPointTarget->RemoveSubscriber(this);
-		comboPointTarget = nullptr;
-	}
-
 	if (delay_active && delayData.itemTarget == lm)
 	{
 		delayData.itemTarget->RemoveSubscriber(this);
 		delayData.itemTarget = nullptr;
 		delay_active = false;
 	}
-
-	if (hasQuery && (Character *)queryData == (Character *)lm) //We have a query pending where the 'data' payload is the Character being deleted (group invite)
-	{
-		lm->RemoveSubscriber(this);
-		QueryClear();
-	}
-
-	RemoveLooter((Character *)lm);
-	RemoveLootRoll((Character *)lm);
 }
 
-void Character::AddClassSkills()
-{
-	if (!player)
-		return;
 
-	std::list<Player::ClassData>::iterator iter;
-	for (iter = player->classList.begin(); iter != player->classList.end(); ++iter) //For every class this player has multiclassed into...
-	{
-		Class * iclass = Game::GetGame()->classes.at(iter->id);	//Grab that class from the game...
-		std::list<Class::SkillData>::iterator csiter;
-		for (csiter = iclass->classSkills.begin(); csiter != iclass->classSkills.end(); csiter++) //For every skill players of that class get...
-		{
-			if (csiter->level <= iter->level || player->IsImmortal()) //if that skill's level < our level of the class, add it
-			{
-				AddSkill(csiter->skill);
-			}
-		}
-	}
-}
 
 bool Character::InSameGroup(Character * ch)
 {
