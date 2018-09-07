@@ -1,5 +1,5 @@
-#include "stdafx.h"
 #include "CHighResTimer.h"
+#include <Windows.h>
 
 double HighResTimer::frequency;
 

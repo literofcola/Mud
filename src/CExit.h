@@ -1,6 +1,8 @@
 #ifndef CEXIT_H
 #define CEXIT_H
 
+#include <string>
+
 class Room;
 
 class Exit

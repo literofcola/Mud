@@ -1,7 +1,12 @@
 #ifndef CITEM_H
 #define CITEM_H
 
+#include "CSubscriberManager.h"
+#include <vector>
+#include <map>
+
 class Server;
+class Player;
 
 class Item : public SubscriberManager
 {
@@ -80,7 +85,7 @@ public:
 	//dodge chance
 	//spell school resist?
 
-	std::string FormatItemInfo(class Character * ch = nullptr);
+	std::string FormatItemInfo(Player * ch = nullptr);
 
     //For search  Store a reference to all searchable class data by type
     std::map<std::string, std::string*> stringTable;

@@ -1,6 +1,14 @@
 #ifndef CUSER_H
 #define CUSER_H
 
+#include <memory>
+#include <deque>
+#define ZLIB_WINAPI
+#include "zlib.h"
+
+class Client;
+class Player;
+
 class User
 {
 public:
@@ -32,7 +40,7 @@ public:
 	std::deque<std::string> GMCPQueue;
 	
     State connectedState;
-    Character * character;
+    Player * character;
     bool wasInput;
 	bool remove;
 	double lastInput; //timestamp for idle disconnect

@@ -1,6 +1,10 @@
 #ifndef CLISTENERMANAGER_H
 #define CLISTENERMANAGER_H
 
+#include <list>
+
+class Subscriber;
+
 class SubscriberManager
 {
 public:

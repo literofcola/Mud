@@ -1,12 +1,16 @@
 #ifndef CQUEST_H
 #define CQUEST_H
 
+#include <vector>
+#include <map>
+#include <string>
+
 class Character;
 
 class Quest
 {
 public:
-    Quest();
+	Quest() = delete;
     Quest(std::string name, int id);
     ~Quest();
 
@@ -21,8 +25,8 @@ public:
     int questRequirement; //id of a quest that must be completed to offer this quest
     int questRestriction; //id of a quest that must not be already completed or active to offer this quest
     int levelRequirement;
-    Character * start;
-    Character * end;
+    int start; //npcindex id
+    int end; //npcindex id
     std::vector<int> itemRewards;
     int experienceReward;
     int moneyReward;

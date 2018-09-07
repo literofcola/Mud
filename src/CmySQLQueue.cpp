@@ -1,9 +1,9 @@
-#include "stdafx.h"
 #include "CmySQLQueue.h"
 #include "CLogFile.h"
-//#include "mud.h"
+#include <process.h>
+#include <iostream>
 
-using namespace std;
+using std::string;
 using namespace mysqlpp;
 
 mySQLQueue::mySQLQueue()
@@ -11,7 +11,7 @@ mySQLQueue::mySQLQueue()
     writeFirst = readFirst = writeLast = readLast = 0;
     running = true;
     query = new Query(&conn);
-    myThreadHandle = (HANDLE)_beginthreadex(NULL, 0, mySQLQueue::Start, this, 0, NULL);
+    myThreadHandle = (HANDLE)_beginthreadex(nullptr, 0, mySQLQueue::Start, this, 0, nullptr);
 }
 
 mySQLQueue::~mySQLQueue()
@@ -22,14 +22,14 @@ mySQLQueue::~mySQLQueue()
     while(wf)
     {
         next = wf->next;
-        wf->next = NULL;
+        wf->next = nullptr;
         delete wf;
         wf = next;
     }
     while(rf)
     {
         next = rf->next;
-        rf->next = NULL;
+        rf->next = nullptr;
         delete rf;
         rf = next;
     }
@@ -80,9 +80,9 @@ void mySQLQueue::WriteQueued(string sql)
 {
     //set up the queue with data to write
     queueData * qd = new queueData();
-    qd->next = NULL;
+    qd->next = nullptr;
     qd->query = sql;
-    qd->callback = NULL;
+    qd->callback = nullptr;
 
     if(!writeLast)
     {
@@ -131,7 +131,7 @@ void mySQLQueue::ReadQueued(string sql, void (*callback)(StoreQueryResult))
 {
     //set up the queue with data to read
     queueData * qd = new queueData();
-    qd->next = NULL;
+    qd->next = nullptr;
     qd->query = sql;
     qd->callback = callback;
 
@@ -175,7 +175,7 @@ void mySQLQueue::Run()
     while(running)
     {
         //cerr << "ran once" << endl;
-        //while(writeFirst != NULL || readFirst != NULL)
+        //while(writeFirst != nullptr || readFirst != nullptr)
         //{
             //handle reads...
             while(readFirst)
@@ -189,18 +189,18 @@ void mySQLQueue::Run()
                 catch (const BadQuery & er)
                 { // handle any connection
                     // or query errors that may come up
-                    cerr << "Error: " << er.what() << endl;
+                    std::cerr << "Error: " << er.what() << std::endl;
                 } 
                 catch (const BadConversion & er) 
                 {
                     // we still need to cache bad conversions incase something goes
                     // wrong when the data is converted into stock
-                    cerr << "Error: Tried to convert \"" << er.data << "\" to a \""
-                        << er.type_name << "\"." << endl;
+					std::cerr << "Error: Tried to convert \"" << er.data << "\" to a \""
+                        << er.type_name << "\"." << std::endl;
                 } 
 				catch (const Exception & er)
 				{
-					cerr << "Error: " << er.what() << endl;
+					std::cerr << "Error: " << er.what() << std::endl;
 				}
 
                 readFirst->callback(readFirst->result);
@@ -208,7 +208,7 @@ void mySQLQueue::Run()
                 if(readFirst == readLast)
                 {
                     delete readFirst;
-                    readFirst = readLast = NULL;
+                    readFirst = readLast = nullptr;
                 }
                 else
                 {
@@ -245,7 +245,7 @@ void mySQLQueue::Run()
                 if(writeFirst == writeLast)
                 {
                     delete writeFirst;
-                    writeFirst = writeLast = NULL;
+                    writeFirst = writeLast = nullptr;
                 }
                 else
                 {

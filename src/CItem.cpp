@@ -1,28 +1,8 @@
-#include "stdafx.h"
-#include "CSubscriber.h"
-#include "CSubscriberManager.h"
-#include "CmySQLQueue.h"
-#include "CLogFile.h"
-#include "CClient.h"
-#include "CHighResTimer.h"
-#include "CHelp.h"
-#include "CTrigger.h"
 #include "CItem.h"
-#include "CSkill.h"
-#include "CClass.h"
-#include "CExit.h"
-#include "CReset.h"
-#include "CArea.h"
-#include "CRoom.h"
-#include "CQuest.h"
 #include "CPlayer.h"
-#include "CUser.h"
-#include "CGame.h"
 #include "CServer.h"
-#include "CCharacter.h"
-#include "CSpellAffect.h"
 #include "utils.h"
-#include "mud.h"
+#include <string>
 
 //These tables must match the order of enums in class Item
 const char * Item::equip_strings[] = 
@@ -148,7 +128,7 @@ Item::~Item()
 
 }
 
-std::string Item::FormatItemInfo(Character * ch)
+std::string Item::FormatItemInfo(Player * ch)
 {
 	std::string itemstring;
 
@@ -156,7 +136,7 @@ std::string Item::FormatItemInfo(Character * ch)
 
 	if (binds != Item::BIND_NONE)
 	{
-		itemstring += ((string)Item::bind_strings[binds] + "\n\r");
+		itemstring += ((std::string)Item::bind_strings[binds] + "\n\r");
 	}
 	if (quest)
 	{
@@ -178,7 +158,7 @@ std::string Item::FormatItemInfo(Character * ch)
 			{
 				itemstring += "|R";
 			}
-			itemstring += "     " + (string)Item::type_strings[type] + "|X\n\r";
+			itemstring += "     " + (std::string)Item::type_strings[type] + "|X\n\r";
 		}
 		else
 		{
@@ -187,7 +167,7 @@ std::string Item::FormatItemInfo(Character * ch)
 	}
 	else if (equipLocation == Item::EQUIP_NONE && type != Item::TYPE_MISC)
 	{
-		itemstring += (string)Item::type_strings[type] + "\n\r";
+		itemstring += (std::string)Item::type_strings[type] + "\n\r";
 	}
 
 	if (armor > 0)
@@ -238,7 +218,7 @@ void Item::Save()
     if(!changed)
         return;
 
-    string sql = "INSERT INTO items (items.id, items.name, items.keywords, items.inroom_name, items.item_level, items.char_level, items.equip_location, items.quality,";
+	std::string sql = "INSERT INTO items (items.id, items.name, items.keywords, items.inroom_name, items.item_level, items.char_level, items.equip_location, items.quality,";
 	sql += " items.binds, items.type, items.skill_id, items.quest, items.armor, items.durability, items.unique, items.damage_low, items.damage_high, items.value, items.speed,";
 	sql += " items.agility, items.intellect, items.strength, items.stamina, items.wisdom, items.spirit) values (";
     sql += Utilities::itos(id) + ", '" + Utilities::SQLFixQuotes(name) + "', '" + Utilities::SQLFixQuotes(keywords) + "', '" + Utilities::SQLFixQuotes(inroom_name) + "', " + Utilities::itos(itemLevel);

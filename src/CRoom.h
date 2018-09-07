@@ -1,8 +1,14 @@
 #ifndef CROOM_H
 #define CROOM_H
 
+#include "CExit.h"
+#include <string>
+#include <vector>
+
 class Character;
 class Server;
+class Trigger;
+class Reset;
 
 class Room
 {
@@ -27,11 +33,6 @@ public:
     std::map<std::string, int*> intTable;
 
     bool changed;
-
-    /*enum TriggerType //Moved to CTrigger.h
-    {
-        ENTER_CHAR, ENTER_NPC, ENTER_PC, EXIT_CHAR, EXIT_NPC, EXIT_PC, TRIG_LAST
-    };*/
 
 	std::vector<int> flags; //a vector of constants to indicate flag is set
 
@@ -59,11 +60,11 @@ public:
 	bool HasItem(int id);
 	bool RemoveItem(Item * i);
 	void AddItem(Item * i);
+	Item * GetItem(std::string name);
+	Character * GetCharacter(std::string name);
+	Character * GetCharacter(Character * target);
 
     bool operator<(const Room& r)const{return id<r.id;}
-
-
-private:
 
 };
 

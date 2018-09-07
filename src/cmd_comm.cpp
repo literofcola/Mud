@@ -1,30 +1,12 @@
-#include "stdafx.h"
-#include "CSubscriber.h"
-#include "CSubscriberManager.h"
-#include "CmySQLQueue.h"
-#include "CHighResTimer.h"
-#include "CHelp.h"
-#include "CTrigger.h"
-#include "CClient.h"
-#include "CItem.h"
-#include "CSkill.h"
-#include "CClass.h"
-#include "CExit.h"
-#include "CReset.h"
-#include "CArea.h"
-#include "CRoom.h"
-#include "CQuest.h"
+#include "mud.h"
 #include "CPlayer.h"
-#include "CCharacter.h"
-#include "CSpellAffect.h"
 #include "CUser.h"
+#include "CCharacter.h"
 #include "CGame.h"
-#include "CServer.h"
 #include "utils.h"
+#include <list>
 
-using namespace std;
-
-void cmd_shout(Character * ch, string argument)
+void cmd_shout(Player * ch, std::string argument)
 {
     if(argument.empty())
     {
@@ -38,14 +20,14 @@ void cmd_shout(Character * ch, string argument)
     {
         if((*iter)->connectedState == User::CONN_PLAYING && (*iter)->character && (*iter)->character != ch)
 		{
-		    (*iter)->Send("|M" + ch->name + " shouts '" + argument + "|X|M'|X\n\r");
+		    (*iter)->Send("|M" + ch->GetName() + " shouts '" + argument + "|X|M'|X\n\r");
 			shoutCount++;
 		}
     }
     ch->Send("|M[" + Utilities::itos(shoutCount) + "] people heard you shout: " + argument + "|X\n\r");
 }
 
-void cmd_say(Character * ch, string argument)
+void cmd_say(Player * ch, std::string argument)
 {
     if(!ch)
         return;
@@ -57,44 +39,41 @@ void cmd_say(Character * ch, string argument)
     }
 	if (argument == "color_test")
 	{
-		string twofiftysix = "THIS STRING IS 256 CHARACTERS xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
-		string colored;
+		std::string twofiftysix = "THIS STRING IS 256 CHARACTERS xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+		std::string colored;
 		for (int i = 0; i < 256; i++)
 		{
 			colored += "\033[38;5;" + Utilities::itos(i) + "m" + twofiftysix[i];
 		}
 		ch->Send(colored + "\n\r");
 	}
-    ch->Message("|W" + ch->name + " says, '" + argument + "|W'|X", Character::MSG_ROOM_NOTCHAR);
+    ch->Message("|W" + ch->GetName() + " says, '" + argument + "|W'|X", Character::MSG_ROOM_NOTCHAR);
     ch->Send("|WYou say, '" + argument + "|X|W'|X\n\r");
 }
 
-void cmd_tell(Character * ch, string argument)
+void cmd_tell(Player * ch, std::string argument)
 {
     ch->Send("cmd_tell\n\r");
 }
 
-void cmd_reply(Character * ch, string argument)
+void cmd_reply(Player * ch, std::string argument)
 {
     ch->Send("cmd_reply\n\r");
 }
 
-void cmd_yell(Character * ch, string argument)
+void cmd_yell(Player * ch, std::string argument)
 {
     ch->Send("cmd_yell\n\r");
 }
 
-void cmd_set(Character * ch, string argument)
+void cmd_set(Player * ch, std::string argument)
 {
-	if (!ch || !ch->player)
-		return;
-
-	string arg;
+	std::string arg;
 	Utilities::one_argument(argument, arg);
 
 	if (!Utilities::str_cmp(arg, "prompt"))
 	{
-		ch->player->prompt = !ch->player->prompt;
+		ch->prompt = !ch->prompt;
 		return;
 	}
 

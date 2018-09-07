@@ -1,44 +1,29 @@
-#include "stdafx.h"
-#include "CSubscriber.h"
-#include "CSubscriberManager.h"
-#include "CmySQLQueue.h"
-#include "CHighResTimer.h"
-#include "CHelp.h"
-#include "CTrigger.h"
-#include "CLogFile.h"
-#include "CClient.h"
-#include "CItem.h"
-#include "CSkill.h"
-#include "CClass.h"
-#include "CExit.h"
-#include "CReset.h"
-#include "CArea.h"
-#include "CRoom.h"
-#include "CQuest.h"
-#include "CPlayer.h"
+#include "mud.h"
 #include "CCharacter.h"
-#include "CSpellAffect.h"
-#include "CUser.h"
 #include "CGame.h"
 #include "CServer.h"
+#include "CPlayer.h"
+#include "CNPCIndex.h"
+#include "CNPC.h"
+#include "CReset.h"
+#include "CTrigger.h"
+#include "CRoom.h"
+#include "CItem.h"
+#include "CQuest.h"
+#include "CSkill.h"
+#include "CClass.h"
+#include "CArea.h"
+#include "CHelp.h"
 #include "utils.h"
-#include "mud.h"
+#include "CLogFile.h"
+#include <string>
 
-extern "C" 
-{
-#include "lua.h"
-#include "lualib.h"
-#include "lauxlib.h"
-}
-
-using namespace std;
-
-void cmd_edit(Character * ch, string argument)
+void cmd_edit(Player * ch, std::string argument)
 {
     /*if(!user->character)
 		return;
     */
-	string arg1, arg2, arg3;
+	std::string arg1, arg2, arg3;
 
     argument = Utilities::one_argument(argument, arg1);
 	argument = Utilities::one_argument(argument, arg2);
@@ -50,21 +35,21 @@ void cmd_edit(Character * ch, string argument)
 		if (!Utilities::str_cmp("create", arg2))
 		{
 			ch->editData = Game::GetGame()->CreateRoomAnyID();
-			ch->editState = Character::ED_ROOM;
+			ch->editState = Player::ED_ROOM;
 			ch->Send("Room " + Utilities::itos(((Room*)(ch->editData))->id) + " created.\n\r");
 			return;
 		}
 
 		if(ch && ch->room)
 		{
-            ch->editState = Character::ED_ROOM;
+            ch->editState = Player::ED_ROOM;
 			ch->editData = ch->room;
             ch->Send("Ok.\n\r");
 		}
 		else
 		{
-            LogFile::Log("error", "cmd_edit, (user->character == NULL || user->character->room == NULL) with no room id argument");
-			ch->editData = NULL;
+            LogFile::Log("error", "cmd_edit, (user->character == nullptr || user->character->room == nullptr) with no room id argument");
+			ch->editData = nullptr;
 		}
 	}
     else if(!Utilities::str_cmp(arg1, "skill"))
@@ -83,18 +68,18 @@ void cmd_edit(Character * ch, string argument)
 				ch->Send("Error: skill with that name already exists\n\r");
 				return;
 			}
-			ch->editState = Character::ED_SKILL;
+			ch->editState = Player::ED_SKILL;
             ch->Send("Ok.\n\r");
         }
         else if(Utilities::IsNumber(arg2))
         {  
             Skill * sk = Game::GetGame()->GetSkill(Utilities::atoi(arg2));
-            if(sk == NULL)
+            if(sk == nullptr)
             {
                 ch->Send("Skill not found.\n\r");
                 return;
             }
-            ch->editState = Character::ED_SKILL;
+            ch->editState = Player::ED_SKILL;
             ch->editData = sk;
             ch->Send("Ok.\n\r");
         }
@@ -113,19 +98,19 @@ void cmd_edit(Character * ch, string argument)
                 ch->Send("Syntax: edit npc create <name>\n\r");
                 return;
             }
-            ch->editState = Character::ED_NPC;
+            ch->editState = Player::ED_NPC;
             ch->editData = Game::GetGame()->CreateNPCAnyID(arg3);
             ch->Send("Ok.\n\r");
         }
         else if(Utilities::IsNumber(arg2))
         {  
-            Character * tch = Game::GetGame()->GetCharacterIndex(Utilities::atoi(arg2));
-            if(tch == NULL)
+            NPCIndex * tch = Game::GetGame()->GetNPCIndex(Utilities::atoi(arg2));
+            if(tch == nullptr)
             {
                 ch->Send("NPC " + arg2 + " not found.\n\r");
                 return;
             }
-            ch->editState = Character::ED_NPC;
+            ch->editState = Player::ED_NPC;
             ch->editData = tch;
             ch->Send("Ok.\n\r");
         }
@@ -144,19 +129,19 @@ void cmd_edit(Character * ch, string argument)
                 ch->Send("Syntax: edit item create <name>\n\r");
                 return;
             }
-            ch->editState = Character::ED_ITEM;
+            ch->editState = Player::ED_ITEM;
             ch->editData = Game::GetGame()->CreateItemAnyID(arg3);
             ch->Send("Ok.\n\r");
         }
         else if(Utilities::IsNumber(arg2))
         {  
             Item * item = Game::GetGame()->GetItem(Utilities::atoi(arg2));
-            if(item == NULL)
+            if(item == nullptr)
             {
                 ch->Send("Item " + arg2 + " not found.\n\r");
                 return;
             }
-            ch->editState = Character::ED_ITEM;
+            ch->editState = Player::ED_ITEM;
             ch->editData = item;
             ch->Send("Ok.\n\r");
         }
@@ -175,19 +160,19 @@ void cmd_edit(Character * ch, string argument)
                 ch->Send("Syntax: edit quest create <name>\n\r");
                 return;
             }
-            ch->editState = Character::ED_QUEST;
+            ch->editState = Player::ED_QUEST;
             ch->editData = Game::GetGame()->CreateQuestAnyID(arg3);
             ch->Send("Ok.\n\r");
         }
         else if(Utilities::IsNumber(arg2))
         {  
             Quest * q = Game::GetGame()->GetQuest(Utilities::atoi(arg2));
-            if(q == NULL)
+            if(q == nullptr)
             {
                 ch->Send("Quest " + arg2 + " not found.\n\r");
                 return;
             }
-            ch->editState = Character::ED_QUEST;
+            ch->editState = Player::ED_QUEST;
             ch->editData = q;
             ch->Send("Ok.\n\r");
         }
@@ -206,19 +191,19 @@ void cmd_edit(Character * ch, string argument)
                 ch->Send("Syntax: edit area create <name>\n\r");
                 return;
             }
-            ch->editState = Character::ED_AREA;
+            ch->editState = Player::ED_AREA;
             ch->editData = Game::GetGame()->CreateAreaAnyID(arg3);
             ch->Send("Ok.\n\r");
         }
         else if(Utilities::IsNumber(arg2))
         {  
             Area * a = Game::GetGame()->GetArea(Utilities::atoi(arg2));
-            if(a == NULL)
+            if(a == nullptr)
             {
                 ch->Send("Area " + arg2 + " not found.\n\r");
                 return;
             }
-            ch->editState = Character::ED_AREA;
+            ch->editState = Player::ED_AREA;
             ch->editData = a;
             ch->Send("Ok.\n\r");
         }
@@ -237,19 +222,19 @@ void cmd_edit(Character * ch, string argument)
                 ch->Send("Syntax: edit help create <name>\n\r");
                 return;
             }
-            ch->editState = Character::ED_HELP;
+            ch->editState = Player::ED_HELP;
             ch->editData = Game::GetGame()->CreateHelpAnyID(arg3);
             ch->Send("Ok.\n\r");
         }
 		else if(Utilities::IsNumber(arg2))
         {  
 			Help * h = Game::GetGame()->GetHelp(Utilities::atoi(arg2));
-            if(h == NULL)
+            if(h == nullptr)
             {
                 ch->Send("Help topic '" + arg2 + "' not found.\n\r");
                 return;
             }
-            ch->editState = Character::ED_HELP;
+            ch->editState = Player::ED_HELP;
             ch->editData = h;
             ch->Send("Ok.\n\r");
         }
@@ -276,12 +261,12 @@ void cmd_edit(Character * ch, string argument)
         if(Utilities::IsNumber(arg2))
         {  
             Class * c = Game::GetGame()->GetClass(Utilities::atoi(arg2));
-            if(c == NULL)
+            if(c == nullptr)
             {
                 ch->Send("Class " + arg2 + " not found.\n\r");
                 return;
             }
-            ch->editState = Character::ED_CLASS;
+            ch->editState = Player::ED_CLASS;
             ch->editData = c;
             ch->Send("Ok.\n\r");
         }
@@ -293,17 +278,17 @@ void cmd_edit(Character * ch, string argument)
     }
 	else if(!Utilities::str_cmp(arg1, "player"))
 	{
-        Character *vch;
-        vch = Game::GetGame()->GetCharacterByPCName(arg2);
+        Player *vch;
+        vch = Game::GetGame()->GetPlayerByName(arg2);
         //arg2 = ReplaceApostrophe(arg2);
-        if(vch == NULL)// && server->sqlQueue->Read("select name from players where name='" + arg2 + "'").empty())
+        if(vch == nullptr)// && server->sqlQueue->Read("select name from players where name='" + arg2 + "'").empty())
         {
             ch->Send("That player is not online.\n\r");
             return;
         }
         //have to get creative to ensure we're not trying to edit bad data if a player quits
-        ch->editData = (void*)(new string(arg2.c_str()));
-        ch->editState = Character::ED_PLAYER;
+        ch->editData = (void*)(new std::string(arg2.c_str()));
+        ch->editState = Player::ED_PLAYER;
         ch->Send("Ok.\n\r");
         //todo
 		//to edit a player, the name must be specified: edit player <name>
@@ -315,66 +300,66 @@ void cmd_edit(Character * ch, string argument)
 	else if(!Utilities::str_cmp(arg1, "exit"))
 	{
 		ch->Send("Exiting editor.\n\r");
-        if(ch->editState == Character::ED_PLAYER) //special cleanup for players
+        if(ch->editState == Player::ED_PLAYER) //special cleanup for players
         {
-            string * deleteme = (string *)ch->editData;
+            std::string * deleteme = (std::string *)ch->editData;
             delete deleteme;
         }
-        ch->editState = Character::ED_NONE;
-		ch->editData = NULL;
+        ch->editState = Player::ED_NONE;
+		ch->editData = nullptr;
 	}
     else if(!Utilities::str_cmp(arg1, "save"))
 	{
 		switch(ch->editState)
 		{
-			case Character::ED_NONE:
+			case Player::ED_NONE:
 				ch->Send("You're not currently editing anything.\n\r");
 				break;
-            case Character::ED_SKILL:
+            case Player::ED_SKILL:
                 Game::GetGame()->SaveSkills();
                 ch->Send("Skills saved.\n\r");
                 break;
-			case Character::ED_ROOM:
+			case Player::ED_ROOM:
 				Game::GetGame()->SaveRooms();
 				ch->Send("Rooms saved.\n\r");
 				break;
-            case Character::ED_NPC:
-                Game::GetGame()->SaveCharacterIndex();
+            case Player::ED_NPC:
+                Game::GetGame()->SaveNPCIndex();
                 ch->Send("NPCs saved.\n\r");
                 break;
-            case Character::ED_ITEM:
+            case Player::ED_ITEM:
                 Game::GetGame()->SaveItems();
                 ch->Send("Items saved.\n\r");
                 break;
-            case Character::ED_QUEST:
+            case Player::ED_QUEST:
                 Game::GetGame()->SaveQuests();
                 ch->Send("Quests saved.\n\r");
                 break;
-            case Character::ED_AREA:
+            case Player::ED_AREA:
                 Game::GetGame()->SaveAreas();
                 ch->Send("Areas saved.\n\r");
                 break;
-            case Character::ED_CLASS:
+            case Player::ED_CLASS:
                 Game::GetGame()->SaveClasses();
                 ch->Send("Classes saved.\n\r");
                 break;
-			case Character::ED_HELP:
+			case Player::ED_HELP:
 				if(((Help*)ch->editData)->remove)
 				{
-					ch->editState = Character::ED_NONE;
-					ch->editData = NULL;
+					ch->editState = Player::ED_NONE;
+					ch->editData = nullptr;
 				}
                 Game::GetGame()->SaveHelp();
                 ch->Send("Help saved.\n\r");
                 break;
-            case Character::ED_PLAYER:
+            case Player::ED_PLAYER:
 				break;
 		}
 	}
 	else
 	{
 		//this should be a help file
-		string syntax = "";
+		std::string syntax = "";
 		syntax += "Syntax: Edit: room\n\r";
         syntax += "              skill <id> || skill create <name>\n\r";
         syntax += "              npc <id> || npc create <name>\n\r";
@@ -391,13 +376,13 @@ void cmd_edit(Character * ch, string argument)
 }
 
 
-void roomEditCmd_show(Character * ch, string argument)
+void roomEditCmd_show(Player * ch, std::string argument)
 {
     Room * pRoom = (Room *)ch->editData;
 
 	if(!pRoom)
 	{
-        LogFile::Log("error", "roomEditCmd_show : user->editData == NULL");
+        LogFile::Log("error", "roomEditCmd_show : user->editData == nullptr");
 		return;
 	}
 
@@ -418,12 +403,12 @@ void roomEditCmd_show(Character * ch, string argument)
 	{
 		if(pRoom->exits[i] && pRoom->exits[i]->to)
 		{
-            ch->Send("-" + string(Exit::exitNames[i]) + " to [" + Utilities::itos(pRoom->exits[i]->to->id) + "]\n\r");
+            ch->Send("-" + std::string(Exit::exitNames[i]) + " to [" + Utilities::itos(pRoom->exits[i]->to->id) + "]\n\r");
 		}
 	}
 	ch->Send("Description:\n\r" + pRoom->description + "\n\r");
 
-	string characters = "Characters: [";
+	std::string characters = "Characters: [";
     int limit = 0;
     for(std::list<Character *>::iterator i = pRoom->characters.begin(); i != pRoom->characters.end(); ++i)
 	{
@@ -432,7 +417,7 @@ void roomEditCmd_show(Character * ch, string argument)
             characters += "...";
             break;
         }
-		characters += (*i)->name + " ";
+		characters += (*i)->GetName() + " ";
 	}
 	characters += "]\n\r";
 	ch->Send(characters);
@@ -459,7 +444,7 @@ void roomEditCmd_show(Character * ch, string argument)
     }
 }
 
-void roomEditCmd_name(Character * ch, string argument)
+void roomEditCmd_name(Player * ch, std::string argument)
 {
     Room * pRoom = (Room *)ch->editData;
 
@@ -481,11 +466,11 @@ void roomEditCmd_name(Character * ch, string argument)
 	ch->Send("Name set.\n\r");
 }
 
-void roomEditCmd_area(Character * ch, string argument)
+void roomEditCmd_area(Player * ch, std::string argument)
 {
     Room * pRoom = (Room *)ch->editData;
 
-    string arg1;
+    std::string arg1;
     argument = Utilities::one_argument(argument, arg1);
 
     if(arg1.empty() || !Utilities::IsNumber(arg1))
@@ -503,13 +488,13 @@ void roomEditCmd_area(Character * ch, string argument)
     pRoom->area = area;
 }
 
-void roomEditCmd_description(Character * ch, string argument)
+void roomEditCmd_description(Player * ch, std::string argument)
 {
     Room * pRoom = (Room *)ch->editData;
 
-    if(argument.empty() && ch->player && ch->player->user)
+    if(argument.empty() && ch->user)
     {
-        StringEdit::string_append( ch->player->user, &pRoom->description );
+        StringEdit::string_append( ch->user, &pRoom->description );
         pRoom->changed = true;
         return;
     }
@@ -517,11 +502,11 @@ void roomEditCmd_description(Character * ch, string argument)
     ch->Send( "Syntax:  desc\n\r" );
 }
 
-void roomEditCmd_flag(Character * ch, string argument)
+void roomEditCmd_flag(Player * ch, std::string argument)
 {
     Room * pRoom = (Room *)ch->editData;
 
-    string arg1;
+    std::string arg1;
     argument = Utilities::one_argument(argument, arg1);
 
     if(arg1.empty())
@@ -553,11 +538,11 @@ void roomEditCmd_flag(Character * ch, string argument)
     ch->Send("flags: recall nopvp\n\r");
 }
 
-void roomEditCmd_reset(Character * ch, string argument)
+void roomEditCmd_reset(Player * ch, std::string argument)
 {
     Room * pRoom = (Room *)ch->editData;
 
-    string arg1, arg2, arg3;
+    std::string arg1, arg2, arg3;
 
     argument = Utilities::one_argument(argument, arg1);
 	argument = Utilities::one_argument(argument, arg2);
@@ -570,20 +555,20 @@ void roomEditCmd_reset(Character * ch, string argument)
 			Reset * currReset = (*resetiter).second;
 			if (!currReset->removeme)
 			{
-				if (currReset->type == 1 && currReset->npc == NULL) //npc reset type and npc no longer exists
+				if (currReset->type == 1 && currReset->npc == nullptr) //npc reset type and npc no longer exists
 				{
 					currReset->lastReset = Game::currentTime;
 					//load it
-					Character * charIndex = Game::GetGame()->GetCharacterIndex(currReset->targetID);
-					if (charIndex == NULL)
+					NPCIndex * charIndex = Game::GetGame()->GetNPCIndex(currReset->targetID);
+					if (charIndex == nullptr)
 					{
 						LogFile::Log("error", "Reset " + Utilities::itos(currReset->id) + " in room " + Utilities::itos(currRoom->id) + ": npc does not exist.");
 						continue;
 					}
-					Character * newChar = Game::GetGame()->NewCharacter(charIndex);
+					NPC * newChar = Game::GetGame()->NewNPC(charIndex);
 					newChar->leashOrigin = currRoom;
 					newChar->ChangeRooms(currRoom);
-					newChar->Message("|W" + newChar->name + " has arrived.|X", Character::MSG_ROOM_NOTCHAR);
+					newChar->Message("|W" + newChar->GetName() + " has arrived.|X", Character::MSG_ROOM_NOTCHAR);
 					newChar->reset = currReset;
 					//LogFile::Log("status", "Adding subscriber to " + newChar->name + " of reset id " + Utilities::itos(currReset->id));
 					newChar->AddSubscriber(currReset);
@@ -594,7 +579,7 @@ void roomEditCmd_reset(Character * ch, string argument)
 					currReset->lastReset = Game::currentTime;
 					//load it
 					Item * itemindex = Game::GetGame()->GetItem(currReset->targetID);
-					if (itemindex == NULL)
+					if (itemindex == nullptr)
 					{
 						LogFile::Log("error", "Reset " + Utilities::itos(currReset->id) + " in room " + Utilities::itos(currRoom->id) + ": item " + Utilities::itos(currReset->targetID) + " does not exist.");
 						continue;
@@ -609,7 +594,7 @@ void roomEditCmd_reset(Character * ch, string argument)
     {
         int resetnum = Utilities::atoi(arg1);
         Reset * r = pRoom->GetReset(resetnum);
-        if(r == NULL)
+        if(r == nullptr)
         {
             ch->Send("Reset " + Utilities::itos(resetnum) + " not found.\n\r");
             return;
@@ -644,8 +629,8 @@ void roomEditCmd_reset(Character * ch, string argument)
                 int newid = Utilities::atoi(arg3);
                 if(r->type == 1) //npc
                 {
-                    Character * newindex = Game::GetGame()->GetCharacterIndex(newid);
-                    if(newindex != NULL)
+                    NPCIndex * newindex = Game::GetGame()->GetNPCIndex(newid);
+                    if(newindex != nullptr)
                     {
                         r->targetID = newid;
                         pRoom->changed = true;
@@ -663,7 +648,7 @@ void roomEditCmd_reset(Character * ch, string argument)
 					if (r->type == 2) //obj
 					{
 						Item * newindex = Game::GetGame()->GetItem(newid);
-						if (newindex != NULL)
+						if (newindex != nullptr)
 						{
 							r->targetID = newid;
 							pRoom->changed = true;
@@ -748,8 +733,8 @@ void roomEditCmd_reset(Character * ch, string argument)
             if(Utilities::IsNumber(arg3))
             {
                 int id = Utilities::atoi(arg3);
-                Character * npc = Game::GetGame()->GetCharacterIndex(id);
-                if(npc == NULL)
+                NPCIndex * npc = Game::GetGame()->GetNPCIndex(id);
+                if(npc == nullptr)
                 {
                     ch->Send("NPC with that id does not exist.\n\r");
                     return;
@@ -765,7 +750,7 @@ void roomEditCmd_reset(Character * ch, string argument)
 			{
 				int id = Utilities::atoi(arg3);
 				Item * item = Game::GetGame()->GetItem(id);
-				if (item == NULL)
+				if (item == nullptr)
 				{
 					ch->Send("Item with that id does not exist.\n\r");
 					return;
@@ -785,7 +770,7 @@ void roomEditCmd_reset(Character * ch, string argument)
         }
         int delid = Utilities::atoi(arg2);
         Reset * deleteme = pRoom->GetReset(delid);
-        if(deleteme != NULL)
+        if(deleteme != nullptr)
         {
             if(!deleteme->removeme)
             {
@@ -809,11 +794,11 @@ void roomEditCmd_reset(Character * ch, string argument)
     }
 }
 
-void roomEditCmd_trigger(Character * ch, string argument)
+void roomEditCmd_trigger(Player * ch, std::string argument)
 {
     Room * pRoom = (Room *)ch->editData;
 
-    string arg1, arg2, arg3;
+    std::string arg1, arg2, arg3;
 
     argument = Utilities::one_argument(argument, arg1);
 	argument = Utilities::one_argument(argument, arg2);
@@ -825,7 +810,7 @@ void roomEditCmd_trigger(Character * ch, string argument)
     {
         int trignum = Utilities::atoi(arg1);
         Trigger * t = pRoom->GetTrigger(trignum);
-        if(t == NULL)
+        if(t == nullptr)
         {
             ch->Send("Trigger " + Utilities::itos(trignum) + " not found.\n\r");
             return;
@@ -856,9 +841,9 @@ void roomEditCmd_trigger(Character * ch, string argument)
         }
         else if(!Utilities::str_cmp(arg2, "script"))
         {
-            if(ch->player && ch->player->user)
+            if(ch && ch->user)
             {
-                StringEdit::string_append( ch->player->user, &t->GetScript() );
+                StringEdit::string_append( ch->user, &t->GetScript() );
                 pRoom->changed = true;
             }
             return;
@@ -895,7 +880,7 @@ void roomEditCmd_trigger(Character * ch, string argument)
         }
         int delid = Utilities::atoi(arg2);
         Trigger * deleteme = pRoom->GetTrigger(delid);
-        if(deleteme != NULL)
+        if(deleteme != nullptr)
         {
             if(!deleteme->removeme)
             {
@@ -924,7 +909,7 @@ void roomEditCmd_trigger(Character * ch, string argument)
     }
 }
 
-void roomEditCmd_create(Character * ch, string argument)
+void roomEditCmd_create(Player * ch, std::string argument)
 {
     if(argument.empty() || !Utilities::IsNumber(argument))
     {
@@ -941,7 +926,7 @@ void roomEditCmd_create(Character * ch, string argument)
     }
 
     Room * pRoom;
-    if((pRoom = Game::GetGame()->GetRoom(value)) != NULL)
+    if((pRoom = Game::GetGame()->GetRoom(value)) != nullptr)
     {
 	    ch->Send( "REdit: Room id already exists.\n\r");
 	    return;
@@ -956,7 +941,7 @@ void roomEditCmd_create(Character * ch, string argument)
     return;
 }
 
-void roomEditDirection(Character * ch, string argument, int direction)
+void roomEditDirection(Player * ch, std::string argument, int direction)
 {
     if(direction < 0 || direction >= Exit::DIR_LAST)
     {
@@ -965,8 +950,8 @@ void roomEditDirection(Character * ch, string argument, int direction)
     }
 
     Room * pRoom = (Room *)ch->editData;
-    string command;
-    string arg;
+    std::string command;
+    std::string arg;
 
     argument = Utilities::one_argument(argument, command);
     Utilities::one_argument( argument, arg );
@@ -995,12 +980,12 @@ void roomEditDirection(Character * ch, string argument, int direction)
 	    if(pToRoom->exits[rev])
 	    {
             pToRoom->exits[rev]->removeme = true;
-            pToRoom->exits[rev]->to = NULL;
+            pToRoom->exits[rev]->to = nullptr;
 	    }
 
 	    //Remove this exit.
 	    pRoom->exits[direction]->removeme = true;
-        pRoom->exits[direction]->to = NULL;
+        pRoom->exits[direction]->to = nullptr;
 
         pRoom->changed = true;
         pToRoom->changed = true;
@@ -1076,63 +1061,63 @@ void roomEditDirection(Character * ch, string argument, int direction)
     }
 }
 
-void roomEditCmd_north(Character * ch, string argument)
+void roomEditCmd_north(Player * ch, std::string argument)
 {
     roomEditDirection(ch, argument, Exit::DIR_NORTH);
 }
 
-void roomEditCmd_east(Character * ch, string argument)
+void roomEditCmd_east(Player * ch, std::string argument)
 {
     roomEditDirection(ch, argument, Exit::DIR_EAST);
 }
 
-void roomEditCmd_south(Character * ch, string argument)
+void roomEditCmd_south(Player * ch, std::string argument)
 {
     roomEditDirection(ch, argument, Exit::DIR_SOUTH);
 }
 
-void roomEditCmd_west(Character * ch, string argument)
+void roomEditCmd_west(Player * ch, std::string argument)
 {
     roomEditDirection(ch, argument, Exit::DIR_WEST);
 }
 
-void roomEditCmd_northeast(Character * ch, string argument)
+void roomEditCmd_northeast(Player * ch, std::string argument)
 {
     roomEditDirection(ch, argument, Exit::DIR_NORTHEAST);
 }
 
-void roomEditCmd_southeast(Character * ch, string argument)
+void roomEditCmd_southeast(Player * ch, std::string argument)
 {
     roomEditDirection(ch, argument, Exit::DIR_SOUTHEAST);
 }
 
-void roomEditCmd_southwest(Character * ch, string argument)
+void roomEditCmd_southwest(Player * ch, std::string argument)
 {
     roomEditDirection(ch, argument, Exit::DIR_SOUTHWEST);
 }
 
-void roomEditCmd_northwest(Character * ch, string argument)
+void roomEditCmd_northwest(Player * ch, std::string argument)
 {
     roomEditDirection(ch, argument, Exit::DIR_NORTHWEST);
 }
 
-void roomEditCmd_up(Character * ch, string argument)
+void roomEditCmd_up(Player * ch, std::string argument)
 {
     roomEditDirection(ch, argument, Exit::DIR_UP);
 }
 
-void roomEditCmd_down(Character * ch, string argument)
+void roomEditCmd_down(Player * ch, std::string argument)
 {
     roomEditDirection(ch, argument, Exit::DIR_DOWN);
 }
 
-void skillEditCmd_show(Character * ch, string argument)
+void skillEditCmd_show(Player * ch, std::string argument)
 {
     Skill * pSkill = (Skill *)ch->editData;
 
 	if(!pSkill)
 	{
-        LogFile::Log("error", "skillEditCmd_show : user->editData == NULL");
+        LogFile::Log("error", "skillEditCmd_show : user->editData == nullptr");
 		return;
 	}
 
@@ -1166,7 +1151,7 @@ void skillEditCmd_show(Character * ch, string argument)
     ch->SendBW("Remove script:\n\r" + pSkill->removeScript + "\n\r");
 }
 
-void skillEditCmd_name(Character * ch, string argument)
+void skillEditCmd_name(Player * ch, std::string argument)
 {
     Skill * pSkill = (Skill *)ch->editData;
 
@@ -1186,7 +1171,7 @@ void skillEditCmd_name(Character * ch, string argument)
 	ch->Send("Name set.\n\r");
 }
 
-void skillEditCmd_long_name(Character * ch, string argument)
+void skillEditCmd_long_name(Player * ch, std::string argument)
 {
     Skill * pSkill = (Skill*)ch->editData;
 
@@ -1204,7 +1189,7 @@ void skillEditCmd_long_name(Character * ch, string argument)
     ch->Send("Long name set.\n\r");
 }
 
-void skillEditCmd_function_name(Character * ch, string argument)
+void skillEditCmd_function_name(Player * ch, std::string argument)
 {
     Skill * pSkill = (Skill *)ch->editData;
 
@@ -1213,7 +1198,7 @@ void skillEditCmd_function_name(Character * ch, string argument)
 		return;
 	}
 
-    string arg;
+    std::string arg;
     Utilities::one_argument(argument, arg);
 
 	if(arg.length() > 106)
@@ -1228,11 +1213,11 @@ void skillEditCmd_function_name(Character * ch, string argument)
 	ch->Send("function_name set.\n\r");
 }
 
-void skillEditCmd_target_type(Character * ch, string argument)
+void skillEditCmd_target_type(Player * ch, std::string argument)
 {
     Skill * pSkill = (Skill *)ch->editData;
 
-    string arg1;
+    std::string arg1;
     argument = Utilities::one_argument(argument, arg1);
 
     if(arg1.empty() || !Utilities::IsNumber(arg1))
@@ -1244,7 +1229,7 @@ void skillEditCmd_target_type(Character * ch, string argument)
     pSkill->targetType = (Skill::TargetType)Utilities::atoi(arg1);
 }
 
-void skillEditCmd_reload(Character * ch, string argument)
+void skillEditCmd_reload(Player * ch, std::string argument)
 {
     Skill * pSkill = (Skill *)ch->editData;
 
@@ -1265,28 +1250,28 @@ void skillEditCmd_reload(Character * ch, string argument)
 	/*
     if(luaL_dostring(Server::luaState, pSkill->costFunction.c_str()))
     {
-        LogFile::Log("error", string("Cost script: ") + lua_tostring(Server::luaState, -1));
+        LogFile::Log("error", std::string("Cost script: ") + lua_tostring(Server::luaState, -1));
     }
     if(luaL_dostring(Server::luaState, pSkill->castScript.c_str()))
     {
-        LogFile::Log("error", string("Cast script: ") + lua_tostring(Server::luaState, -1));
+        LogFile::Log("error", std::string("Cast script: ") + lua_tostring(Server::luaState, -1));
     }
     if(luaL_dostring(Server::luaState, pSkill->applyScript.c_str()))
     {
-        LogFile::Log("error", string("Apply script: ") + lua_tostring(Server::luaState, -1));
+        LogFile::Log("error", std::string("Apply script: ") + lua_tostring(Server::luaState, -1));
     }
     if(luaL_dostring(Server::luaState, pSkill->tickScript.c_str()))
     {
-        LogFile::Log("error", string("Tick script: ") + lua_tostring(Server::luaState, -1));
+        LogFile::Log("error", std::string("Tick script: ") + lua_tostring(Server::luaState, -1));
     }
     if(luaL_dostring(Server::luaState, pSkill->removeScript.c_str()))
     {
-        LogFile::Log("error", string("Remove script: ") + lua_tostring(Server::luaState, -1));
+        LogFile::Log("error", std::string("Remove script: ") + lua_tostring(Server::luaState, -1));
     }
 	*/
 }
 
-void skillEditCmd_description(Character * ch, string argument)
+void skillEditCmd_description(Player * ch, std::string argument)
 {
     Skill * pSkill = (Skill *)ch->editData;
 
@@ -1305,7 +1290,7 @@ void skillEditCmd_description(Character * ch, string argument)
     pSkill->changed = true;
 	ch->Send("description set.\n\r");
 }
-void skillEditCmd_cost_description(Character * ch, string argument)
+void skillEditCmd_cost_description(Player * ch, std::string argument)
 {
 	Skill * pSkill = (Skill *)ch->editData;
 
@@ -1325,66 +1310,55 @@ void skillEditCmd_cost_description(Character * ch, string argument)
 	ch->Send("cost_description set.\n\r");
 }
 
-void skillEditCmd_cast_script(Character * ch, string argument)
+void skillEditCmd_cast_script(Player * ch, std::string argument)
 {
     Skill * pSkill = (Skill *)ch->editData;
 
-    if(ch->player)
-    {
-        StringEdit::string_append( ch->player->user, &pSkill->castScript );
+
+        StringEdit::string_append( ch->user, &pSkill->castScript );
         pSkill->changed = true;
-    }
 }
 
-void skillEditCmd_apply_script(Character * ch, string argument)
+void skillEditCmd_apply_script(Player * ch, std::string argument)
 {
     Skill * pSkill = (Skill *)ch->editData;
 
-    if(ch->player)
-    {
-        StringEdit::string_append( ch->player->user, &pSkill->applyScript );
+
+        StringEdit::string_append( ch->user, &pSkill->applyScript );
         pSkill->changed = true;
-    }
 }
 
-void skillEditCmd_tick_script(Character * ch, string argument)
+void skillEditCmd_tick_script(Player * ch, std::string argument)
 {
     Skill * pSkill = (Skill *)ch->editData;
 
-    if(ch->player)
-    {
-        StringEdit::string_append( ch->player->user, &pSkill->tickScript );
+
+        StringEdit::string_append( ch->user, &pSkill->tickScript );
         pSkill->changed = true;
-    }
 }
 
-void skillEditCmd_remove_script(Character * ch, string argument)
+void skillEditCmd_remove_script(Player * ch, std::string argument)
 {
     Skill * pSkill = (Skill *)ch->editData;
 
-    if(ch->player)
-    {
-        StringEdit::string_append( ch->player->user, &pSkill->removeScript );
+        StringEdit::string_append( ch->user, &pSkill->removeScript );
         pSkill->changed = true;
-    }
 }
 
-void skillEditCmd_cost_function(Character * ch, string argument)
+void skillEditCmd_cost_function(Player * ch, std::string argument)
 {
     Skill * pSkill = (Skill *)ch->editData;
 
-    if(ch->player)
-    {
-        StringEdit::string_append( ch->player->user, &pSkill->costFunction );
+
+        StringEdit::string_append( ch->user, &pSkill->costFunction );
         pSkill->changed = true;
-    }
 }
 
-void skillEditCmd_cast_time(Character * ch, string argument)
+void skillEditCmd_cast_time(Player * ch, std::string argument)
 {
     Skill * pSkill = (Skill *)ch->editData;
 
-    string arg;
+    std::string arg;
     Utilities::one_argument(argument, arg);
 
     double ct;
@@ -1398,11 +1372,11 @@ void skillEditCmd_cast_time(Character * ch, string argument)
     ch->Send("cast_time set.\n\r");
 }
 
-void skillEditCmd_interrupt_flags(Character * ch, string argument)
+void skillEditCmd_interrupt_flags(Player * ch, std::string argument)
 {
 	Skill * pSkill = (Skill *)ch->editData;
 
-	string arg;
+	std::string arg;
 	Utilities::one_argument(argument, arg);
 	//enum Interrupt { INTERRUPT_MOVE, INTERRUPT_HIT, INTERRUPT_NOPUSHBACK };
 	int flag;
@@ -1416,11 +1390,11 @@ void skillEditCmd_interrupt_flags(Character * ch, string argument)
 	ch->Send("interrupt_flag set.\n\r");
 }
 
-void skillEditCmd_cooldown(Character * ch, string argument)
+void skillEditCmd_cooldown(Player * ch, std::string argument)
 {
     Skill * pSkill = (Skill *)ch->editData;
 
-    string arg;
+    std::string arg;
     Utilities::one_argument(argument, arg);
 
     double cd;
@@ -1434,11 +1408,11 @@ void skillEditCmd_cooldown(Character * ch, string argument)
     ch->Send("Cooldown set.\n\r");
 }
 
-void skillEditCmd_flag(Character * ch, string argument)
+void skillEditCmd_flag(Player * ch, std::string argument)
 {
 	Skill * pSkill = (Skill *)ch->editData;
 
-	string arg1;
+	std::string arg1;
 	argument = Utilities::one_argument(argument, arg1);
 
 	if (arg1.empty())
@@ -1470,13 +1444,13 @@ void skillEditCmd_flag(Character * ch, string argument)
 	ch->Send("flags: nogcd gcdimmune\n\r");
 }
 
-void npcEditCmd_show(Character * ch, string argument)
+void npcEditCmd_show(Player * ch, std::string argument)
 {
-	Character * pChar = (Character *)ch->editData;
+	NPCIndex * pChar = (NPCIndex *)ch->editData;
 
 	if (!pChar)
 	{
-		LogFile::Log("error", "npcEditCmd_show : user->editData == NULL");
+		LogFile::Log("error", "npcEditCmd_show : user->editData == nullptr");
 		return;
 	}
 
@@ -1486,15 +1460,9 @@ void npcEditCmd_show(Character * ch, string argument)
     ch->Send("Level:     [" + Utilities::itos(pChar->level) + "]\n\r");
     ch->Send("Title:     [" + pChar->title + "]\n\r");
     ch->Send("Gender:    [" + Utilities::itos(pChar->gender) + "]\n\r");
-    ch->Send("Agility:   [" + Utilities::itos(pChar->agility) + "]\n\r");
-    ch->Send("Intellect: [" + Utilities::itos(pChar->intellect) + "]\n\r");
-    ch->Send("Strength:  [" + Utilities::itos(pChar->strength) + "]\n\r");
-    ch->Send("Stamina:  [" + Utilities::itos(pChar->stamina) + "]\n\r");
-    ch->Send("Wisdom:    [" + Utilities::itos(pChar->wisdom) + "]\n\r");
-	ch->Send("Spirit:    [" + Utilities::itos(pChar->spirit) + "]\n\r");
-    ch->Send("Health:    [" + Utilities::itos(pChar->GetMaxHealth()) + "]\n\r");
-    ch->Send("Mana:      [" + Utilities::itos(pChar->GetMaxMana()) + "]\n\r");
-    ch->Send("Energy:    [" + Utilities::itos(pChar->GetMaxEnergy()) + "]\n\r");
+    ch->Send("Health:    [" + Utilities::itos(pChar->maxHealth) + "]\n\r");
+    ch->Send("Mana:      [" + Utilities::itos(pChar->maxMana) + "]\n\r");
+    ch->Send("Energy:    [" + Utilities::itos(pChar->maxEnergy) + "]\n\r");
     ch->Send("attack_speed: [" + Utilities::dtos(pChar->npcAttackSpeed, 2) + "]\n\r");
     ch->Send("damage_low:   [" + Utilities::itos(pChar->npcDamageLow) + "]\n\r");
     ch->Send("damage_high:  [" + Utilities::itos(pChar->npcDamageHigh) + "]\n\r");
@@ -1523,12 +1491,12 @@ void npcEditCmd_show(Character * ch, string argument)
     std::vector<int>::iterator flagiter;
     for(flagiter = pChar->flags.begin(); flagiter != pChar->flags.end(); ++flagiter)
     {
-        ch->Send(Character::flag_table[(*flagiter)].flag_name + " ");
+        ch->Send(NPCIndex::flag_table[(*flagiter)].flag_name + " ");
     }
     ch->Send("\n\r");
 
     ch->Send("Drops:\n\r");
-    std::list<Character::DropData>::iterator dropiter;
+    std::list<NPCIndex::DropData>::iterator dropiter;
     int ctr = 1;
     for(dropiter = pChar->drops.begin(); dropiter != pChar->drops.end(); ++dropiter)
     {
@@ -1542,7 +1510,7 @@ void npcEditCmd_show(Character * ch, string argument)
     ch->Send("\n\r");
 
     ch->Send("Skills:\n\r");
-    std::map<string, Skill *>::iterator iter;
+    std::map<std::string, Skill *>::iterator iter;
     for(iter = pChar->knownSkills.begin(); iter != pChar->knownSkills.end(); ++iter)
     {
         ch->Send("Spell: " + (*iter).second->long_name + " Name: " + (*iter).second->name 
@@ -1560,9 +1528,9 @@ void npcEditCmd_show(Character * ch, string argument)
     }
 }
 
-void npcEditCmd_name(Character * ch, string argument)
+void npcEditCmd_name(Player * ch, std::string argument)
 {
-    Character * pChar = (Character*)ch->editData;
+    NPCIndex * pChar = (NPCIndex*)ch->editData;
 
     if(argument.empty())
     {
@@ -1575,9 +1543,9 @@ void npcEditCmd_name(Character * ch, string argument)
     ch->Send("name set.\n\r");
 }
 
-void npcEditCmd_title(Character * ch, string argument)
+void npcEditCmd_title(Player * ch, std::string argument)
 {
-    Character * pChar = (Character*)ch->editData;
+	NPCIndex * pChar = (NPCIndex*)ch->editData;
 
     if(argument.empty())
     {
@@ -1590,11 +1558,11 @@ void npcEditCmd_title(Character * ch, string argument)
     ch->Send("title set.\n\r");
 }
 
-void npcEditCmd_flag(Character * ch, string argument)
+void npcEditCmd_flag(Player * ch, std::string argument)
 {
-    Character * pChar = (Character *)ch->editData;
+	NPCIndex * pChar = (NPCIndex *)ch->editData;
 
-    string arg1;
+    std::string arg1;
     argument = Utilities::one_argument(argument, arg1);
 
     if(arg1.empty())
@@ -1605,18 +1573,18 @@ void npcEditCmd_flag(Character * ch, string argument)
 
     arg1 = Utilities::ToLower(arg1);
 
-    for(int i = 0; Character::flag_table[i].flag != -1; i++)
+    for(int i = 0; NPCIndex::flag_table[i].flag != -1; i++)
     {
-        if(!Utilities::str_cmp(Character::flag_table[i].flag_name, arg1))
+        if(!Utilities::str_cmp(NPCIndex::flag_table[i].flag_name, arg1))
         {
-            if(Utilities::FlagIsSet(pChar->flags, Character::flag_table[i].flag))
+            if(Utilities::FlagIsSet(pChar->flags, NPCIndex::flag_table[i].flag))
             {
-                Utilities::FlagUnSet(pChar->flags, Character::flag_table[i].flag);
+                Utilities::FlagUnSet(pChar->flags, NPCIndex::flag_table[i].flag);
                 ch->Send(arg1 + " flag removed.\n\r");
             }
             else
             {
-                Utilities::FlagSet(pChar->flags, Character::flag_table[i].flag);
+                Utilities::FlagSet(pChar->flags, NPCIndex::flag_table[i].flag);
                 ch->Send(arg1 + " flag set.\n\r");
             }
             pChar->changed = true;
@@ -1626,9 +1594,9 @@ void npcEditCmd_flag(Character * ch, string argument)
     ch->Send("flags: friendly neutral aggressive trainer guild repair\n\r");
 }
 
-void npcEditCmd_drop(Character * ch, string argument)
+void npcEditCmd_drop(Player * ch, std::string argument)
 {
-    Character * pChar = (Character *)ch->editData;
+	NPCIndex * pChar = (NPCIndex *)ch->editData;
 
     //drop add percent
     //drop remove #
@@ -1642,7 +1610,7 @@ void npcEditCmd_drop(Character * ch, string argument)
         ch->Send("        drop <#> add||remove <#>\n\r");
         return;
     }
-    string arg1,arg2,arg3;
+    std::string arg1,arg2,arg3;
     argument = Utilities::one_argument(argument, arg1);
     argument = Utilities::one_argument(argument, arg2);
     argument = Utilities::one_argument(argument, arg3);
@@ -1657,7 +1625,7 @@ void npcEditCmd_drop(Character * ch, string argument)
                 ch->Send("Percent must be from 1 to 100.\n\r");
                 return;
             }
-            Character::DropData dd;
+			NPCIndex::DropData dd;
             dd.percent = percent;
             pChar->drops.push_back(dd);
             ch->Send("Added drop with " + Utilities::itos(percent) + "% chance.\n\r");
@@ -1680,7 +1648,7 @@ void npcEditCmd_drop(Character * ch, string argument)
                 return;
             }
             int ctr = 1;
-            for(std::list<Character::DropData>::iterator iter = pChar->drops.begin(); iter != pChar->drops.end(); ++iter)
+            for(std::list<NPCIndex::DropData>::iterator iter = pChar->drops.begin(); iter != pChar->drops.end(); ++iter)
             {
                 if(ctr++ == remove)
                 {
@@ -1712,15 +1680,15 @@ void npcEditCmd_drop(Character * ch, string argument)
             return;
         }
         Item * item;
-        if((item = Game::GetGame()->GetItem(itemid)) == NULL)
+        if((item = Game::GetGame()->GetItem(itemid)) == nullptr)
         {
             ch->Send("That item does not exist.\n\r");
             return;
         }
 
-        Character::DropData * dd = NULL;
+		NPCIndex::DropData * dd = nullptr;
         int ctr = 1;
-        for(std::list<Character::DropData>::iterator iter = pChar->drops.begin(); iter != pChar->drops.end(); ++iter)
+        for(std::list<NPCIndex::DropData>::iterator iter = pChar->drops.begin(); iter != pChar->drops.end(); ++iter)
         {
             if(ctr++ == modify)
             {
@@ -1754,11 +1722,11 @@ void npcEditCmd_drop(Character * ch, string argument)
     ch->Send("        drop <#> add||remove <#>\n\r");
 }
 
-void npcEditCmd_level(Character * ch, string argument)
+void npcEditCmd_level(Player * ch, std::string argument)
 {
-    Character * pChar = (Character *)ch->editData;
+	NPCIndex * pChar = (NPCIndex *)ch->editData;
 
-    string arg1;
+    std::string arg1;
     argument = Utilities::one_argument(argument, arg1);
 
     if(arg1.empty() || !Utilities::IsNumber(arg1))
@@ -1776,11 +1744,11 @@ void npcEditCmd_level(Character * ch, string argument)
     pChar->level = level;
 }
 
-void npcEditCmd_gender(Character * ch, string argument)
+void npcEditCmd_gender(Player * ch, std::string argument)
 {
-    Character * pChar = (Character *)ch->editData;
+	NPCIndex * pChar = (NPCIndex *)ch->editData;
 
-    string arg1;
+    std::string arg1;
     argument = Utilities::one_argument(argument, arg1);
 
     if(arg1.empty() || !Utilities::IsNumber(arg1))
@@ -1798,143 +1766,11 @@ void npcEditCmd_gender(Character * ch, string argument)
     pChar->gender = gender;
 }
 
-void npcEditCmd_agility(Character * ch, string argument)
+void npcEditCmd_health(Player * ch, std::string argument)
 {
-    Character * pChar = (Character *)ch->editData;
+	NPCIndex * pChar = (NPCIndex *)ch->editData;
 
-    string arg1;
-    argument = Utilities::one_argument(argument, arg1);
-
-    if(arg1.empty() || !Utilities::IsNumber(arg1))
-    {
-        ch->Send("agility <#>\n\r");
-        return;
-    }
-    int agility = Utilities::atoi(arg1);
-    if(agility < 0)
-    {
-        ch->Send("Agility must be >= 0.\n\r");
-        return;
-    }
-    pChar->changed = true;
-    pChar->agility = agility;
-}
-
-void npcEditCmd_intellect(Character * ch, string argument)
-{
-    Character * pChar = (Character *)ch->editData;
-
-    string arg1;
-    argument = Utilities::one_argument(argument, arg1);
-
-    if(arg1.empty() || !Utilities::IsNumber(arg1))
-    {
-        ch->Send("intellect <#>\n\r");
-        return;
-    }
-    int intellect = Utilities::atoi(arg1);
-    if(intellect < 0)
-    {
-        ch->Send("Intellect must be >= 0.\n\r");
-        return;
-    }
-    pChar->changed = true;
-    pChar->intellect = intellect;
-}
-
-void npcEditCmd_strength(Character * ch, string argument)
-{
-    Character * pChar = (Character *)ch->editData;
-
-    string arg1;
-    argument = Utilities::one_argument(argument, arg1);
-
-    if(arg1.empty() || !Utilities::IsNumber(arg1))
-    {
-        ch->Send("strength <#>\n\r");
-        return;
-    }
-    int strength = Utilities::atoi(arg1);
-    if(strength < 0)
-    {
-        ch->Send("Strength must be >= 0.\n\r");
-        return;
-    }
-    pChar->changed = true;
-    pChar->strength = strength;
-}
-
-void npcEditCmd_stamina(Character * ch, string argument)
-{
-    Character * pChar = (Character *)ch->editData;
-
-    string arg1;
-    argument = Utilities::one_argument(argument, arg1);
-
-    if(arg1.empty() || !Utilities::IsNumber(arg1))
-    {
-        ch->Send("stamina <#>\n\r");
-        return;
-    }
-    int stamina = Utilities::atoi(arg1);
-    if(stamina < 0)
-    {
-        ch->Send("Stamina must be >= 0.\n\r");
-        return;
-    }
-    pChar->changed = true;
-    pChar->stamina = stamina;
-}
-
-void npcEditCmd_wisdom(Character * ch, string argument)
-{
-    Character * pChar = (Character *)ch->editData;
-
-    string arg1;
-    argument = Utilities::one_argument(argument, arg1);
-
-    if(arg1.empty() || !Utilities::IsNumber(arg1))
-    {
-        ch->Send("wisdom <#>\n\r");
-        return;
-    }
-    int wisdom = Utilities::atoi(arg1);
-    if(wisdom < 0)
-    {
-        ch->Send("Wisdom must be >= 0.\n\r");
-        return;
-    }
-    pChar->changed = true;
-    pChar->wisdom = wisdom;
-}
-
-void npcEditCmd_spirit(Character * ch, string argument)
-{
-	Character * pChar = (Character *)ch->editData;
-
-	string arg1;
-	argument = Utilities::one_argument(argument, arg1);
-
-	if (arg1.empty() || !Utilities::IsNumber(arg1))
-	{
-		ch->Send("spirit <#>\n\r");
-		return;
-	}
-	int spirit = Utilities::atoi(arg1);
-	if (spirit < 0)
-	{
-		ch->Send("Spirit must be >= 0.\n\r");
-		return;
-	}
-	pChar->changed = true;
-	pChar->spirit = spirit;
-}
-
-void npcEditCmd_health(Character * ch, string argument)
-{
-    Character * pChar = (Character *)ch->editData;
-
-    string arg1;
+    std::string arg1;
     argument = Utilities::one_argument(argument, arg1);
 
     if(arg1.empty() || !Utilities::IsNumber(arg1))
@@ -1949,14 +1785,14 @@ void npcEditCmd_health(Character * ch, string argument)
         return;
     }
     pChar->changed = true;
-    pChar->SetMaxHealth(health);
+    pChar->maxHealth = health;
 }
 
-void npcEditCmd_mana(Character * ch, string argument)
+void npcEditCmd_mana(Player * ch, std::string argument)
 {
-    Character * pChar = (Character *)ch->editData;
+	NPCIndex * pChar = (NPCIndex *)ch->editData;
 
-    string arg1;
+    std::string arg1;
     argument = Utilities::one_argument(argument, arg1);
 
     if(arg1.empty() || !Utilities::IsNumber(arg1))
@@ -1971,14 +1807,14 @@ void npcEditCmd_mana(Character * ch, string argument)
         return;
     }
     pChar->changed = true;
-	pChar->SetMaxMana(mana);
+	pChar->maxMana = mana;
 }
 
-void npcEditCmd_attackSpeed(Character * ch, string argument)
+void npcEditCmd_attackSpeed(Player * ch, std::string argument)
 {
-    Character * pChar = (Character *)ch->editData;
+	NPCIndex * pChar = (NPCIndex *)ch->editData;
 
-    string arg1;
+    std::string arg1;
     argument = Utilities::one_argument(argument, arg1);
 
     if(arg1.empty() || !Utilities::IsNumber(arg1))
@@ -1996,11 +1832,11 @@ void npcEditCmd_attackSpeed(Character * ch, string argument)
     pChar->npcAttackSpeed = attackSpeed;
 }
 
-void npcEditCmd_damageLow(Character * ch, string argument)
+void npcEditCmd_damageLow(Player * ch, std::string argument)
 {
-    Character * pChar = (Character *)ch->editData;
+	NPCIndex * pChar = (NPCIndex *)ch->editData;
 
-    string arg1;
+    std::string arg1;
     argument = Utilities::one_argument(argument, arg1);
 
     if(arg1.empty() || !Utilities::IsNumber(arg1))
@@ -2018,11 +1854,11 @@ void npcEditCmd_damageLow(Character * ch, string argument)
     pChar->npcDamageLow = damage_low;
 }
 
-void npcEditCmd_damageHigh(Character * ch, string argument)
+void npcEditCmd_damageHigh(Player * ch, std::string argument)
 {
-    Character * pChar = (Character *)ch->editData;
+	NPCIndex * pChar = (NPCIndex *)ch->editData;
 
-    string arg1;
+    std::string arg1;
     argument = Utilities::one_argument(argument, arg1);
 
     if(arg1.empty() || !Utilities::IsNumber(arg1))
@@ -2040,9 +1876,9 @@ void npcEditCmd_damageHigh(Character * ch, string argument)
     pChar->npcDamageHigh = damage_high;
 }
 
-void npcEditCmd_speechText(Character * ch, string argument)
+void npcEditCmd_speechText(Player * ch, std::string argument)
 {
-	Character * pChar = (Character *)ch->editData;
+	NPCIndex * pChar = (NPCIndex *)ch->editData;
 
 	if (argument.empty())
 	{
@@ -2055,11 +1891,11 @@ void npcEditCmd_speechText(Character * ch, string argument)
 	ch->Send("speechText set.\n\r");
 }
 
-void npcEditCmd_skill(Character * ch, string argument)
+void npcEditCmd_skill(Player * ch, std::string argument)
 {
-    Character * pChar = (Character *)ch->editData;
-    string arg1;
-    string skill_name;
+	NPCIndex * pChar = (NPCIndex *)ch->editData;
+    std::string arg1;
+    std::string skill_name;
     argument = Utilities::one_argument(argument, arg1);
     argument = Utilities::one_argument(argument, skill_name);
 
@@ -2071,7 +1907,7 @@ void npcEditCmd_skill(Character * ch, string argument)
             if(!Utilities::str_cmp((*skilliter).second->long_name, skill_name))
             {
                 Skill * dupe;
-                if((dupe = pChar->GetSkillShortName((*skilliter).second->name)) != NULL)
+                if((dupe = pChar->GetSkillShortName((*skilliter).second->name)) != nullptr)
                 {
                     ch->Send("NPC already has a skill with the same name.\n\r");
                     return;
@@ -2099,11 +1935,11 @@ void npcEditCmd_skill(Character * ch, string argument)
     ch->Send("skill add||remove <name>\n\r");
 }
 
-void npcEditCmd_trigger(Character * ch, string argument)
+void npcEditCmd_trigger(Player * ch, std::string argument)
 {
-    Character * pChar = (Character *)ch->editData;
+	NPCIndex * pChar = (NPCIndex *)ch->editData;
 
-    string arg1, arg2, arg3;
+    std::string arg1, arg2, arg3;
 
     argument = Utilities::one_argument(argument, arg1);
 	argument = Utilities::one_argument(argument, arg2);
@@ -2115,7 +1951,7 @@ void npcEditCmd_trigger(Character * ch, string argument)
     {
         int trignum = Utilities::atoi(arg1);
         Trigger * t = pChar->GetTrigger(trignum);
-        if(t == NULL)
+        if(t == nullptr)
         {
             ch->Send("Trigger " + Utilities::itos(trignum) + " not found.\n\r");
             return;
@@ -2146,9 +1982,9 @@ void npcEditCmd_trigger(Character * ch, string argument)
         }
         else if(!Utilities::str_cmp(arg2, "script"))
         {
-            if(ch->player && ch->player->user)
+            if(ch && ch->user)
             {
-                StringEdit::string_append( ch->player->user, &t->GetScript() );
+                StringEdit::string_append( ch->user, &t->GetScript() );
                 pChar->changed = true;
             }
             return;
@@ -2185,7 +2021,7 @@ void npcEditCmd_trigger(Character * ch, string argument)
         }
         int delid = Utilities::atoi(arg2);
         Trigger * deleteme = pChar->GetTrigger(delid);
-        if(deleteme != NULL)
+        if(deleteme != nullptr)
         {
             if(!deleteme->removeme)
             {
@@ -2214,13 +2050,13 @@ void npcEditCmd_trigger(Character * ch, string argument)
     }
 }
 
-void itemEditCmd_show(Character * ch, string argument)
+void itemEditCmd_show(Player * ch, std::string argument)
 {
     Item * pItem = (Item *)ch->editData;
 
     if(!pItem)
 	{
-        LogFile::Log("error", "itemEditCmd_show : user->editData == NULL");
+        LogFile::Log("error", "itemEditCmd_show : user->editData == nullptr");
 		return;
 	}
 
@@ -2249,7 +2085,7 @@ void itemEditCmd_show(Character * ch, string argument)
     ch->Send("value:          [" + Utilities::itos(pItem->value) + "]\n\r");
 }
 
-void itemEditCmd_name(Character * ch, string argument)
+void itemEditCmd_name(Player * ch, std::string argument)
 {
     Item * pItem = (Item *)ch->editData;
 
@@ -2264,7 +2100,7 @@ void itemEditCmd_name(Character * ch, string argument)
     ch->Send("name set.\n\r");
 }
 
-void itemEditCmd_keywords(Character * ch, string argument)
+void itemEditCmd_keywords(Player * ch, std::string argument)
 {
 	Item * pItem = (Item *)ch->editData;
 
@@ -2279,7 +2115,7 @@ void itemEditCmd_keywords(Character * ch, string argument)
 	ch->Send("keywords set.\n\r");
 }
 
-void itemEditCmd_inroom_name(Character * ch, string argument)
+void itemEditCmd_inroom_name(Player * ch, std::string argument)
 {
 	Item * pItem = (Item *)ch->editData;
 
@@ -2294,11 +2130,11 @@ void itemEditCmd_inroom_name(Character * ch, string argument)
 	ch->Send("inroom_name set.\n\r");
 }
 
-void itemEditCmd_item_level(Character * ch, string argument)
+void itemEditCmd_item_level(Player * ch, std::string argument)
 {
     Item * pItem = (Item *)ch->editData;
 
-    string arg1;
+    std::string arg1;
     argument = Utilities::one_argument(argument, arg1);
 
     if(arg1.empty() || !Utilities::IsNumber(arg1))
@@ -2316,11 +2152,11 @@ void itemEditCmd_item_level(Character * ch, string argument)
     pItem->itemLevel = item_level;
 }
 
-void itemEditCmd_char_level(Character * ch, string argument)
+void itemEditCmd_char_level(Player * ch, std::string argument)
 {
     Item * pItem = (Item *)ch->editData;
 
-    string arg1;
+    std::string arg1;
     argument = Utilities::one_argument(argument, arg1);
 
     if(arg1.empty() || !Utilities::IsNumber(arg1))
@@ -2338,11 +2174,11 @@ void itemEditCmd_char_level(Character * ch, string argument)
     pItem->charLevel = char_level;
 }
 
-void itemEditCmd_quality(Character * ch, string argument)
+void itemEditCmd_quality(Player * ch, std::string argument)
 {
     Item * pItem = (Item *)ch->editData;
 
-    string arg1;
+    std::string arg1;
     argument = Utilities::one_argument(argument, arg1);
 
     if(arg1.empty() || !Utilities::IsNumber(arg1))
@@ -2360,11 +2196,11 @@ void itemEditCmd_quality(Character * ch, string argument)
     pItem->quality = quality;
 }
 
-void itemEditCmd_equip_location(Character * ch, string argument)
+void itemEditCmd_equip_location(Player * ch, std::string argument)
 {
     Item * pItem = (Item *)ch->editData;
 
-    string arg1;
+    std::string arg1;
     argument = Utilities::one_argument(argument, arg1);
 
     if(arg1.empty() || !Utilities::IsNumber(arg1))
@@ -2384,11 +2220,11 @@ void itemEditCmd_equip_location(Character * ch, string argument)
     pItem->equipLocation = wear_location;
 }
 
-void itemEditCmd_binds(Character * ch, string argument)
+void itemEditCmd_binds(Player * ch, std::string argument)
 {
     Item * pItem = (Item *)ch->editData;
 
-    string arg1;
+    std::string arg1;
     argument = Utilities::one_argument(argument, arg1);
 
     if(arg1.empty() || !Utilities::IsNumber(arg1))
@@ -2406,11 +2242,11 @@ void itemEditCmd_binds(Character * ch, string argument)
     pItem->binds = binds;
 }
 
-void itemEditCmd_type(Character * ch, string argument)
+void itemEditCmd_type(Player * ch, std::string argument)
 {
     Item * pItem = (Item *)ch->editData;
 
-    string arg1;
+    std::string arg1;
     argument = Utilities::one_argument(argument, arg1);
 
     if(arg1.empty() || !Utilities::IsNumber(arg1))
@@ -2432,11 +2268,11 @@ void itemEditCmd_type(Character * ch, string argument)
     pItem->type = type;
 }
 
-void itemEditCmd_skillid(Character * ch, string argument)
+void itemEditCmd_skillid(Player * ch, std::string argument)
 {
 	Item * pItem = (Item *)ch->editData;
 
-	string arg1;
+	std::string arg1;
 	argument = Utilities::one_argument(argument, arg1);
 
 	if (arg1.empty() || !Utilities::IsNumber(arg1))
@@ -2454,11 +2290,11 @@ void itemEditCmd_skillid(Character * ch, string argument)
 	pItem->useSkillID = skillid;
 }
 
-void itemEditCmd_quest(Character * ch, string argument)
+void itemEditCmd_quest(Player * ch, std::string argument)
 {
     Item * pItem = (Item *)ch->editData;
 
-    string arg1;
+    std::string arg1;
     argument = Utilities::one_argument(argument, arg1);
 
     if(arg1.empty() || !Utilities::IsNumber(arg1))
@@ -2476,11 +2312,11 @@ void itemEditCmd_quest(Character * ch, string argument)
     pItem->quest = quest;
 }
 
-void itemEditCmd_unique(Character * ch, string argument)
+void itemEditCmd_unique(Player * ch, std::string argument)
 {
     Item * pItem = (Item *)ch->editData;
 
-    string arg1;
+    std::string arg1;
     argument = Utilities::one_argument(argument, arg1);
 
     if(arg1.empty() || !Utilities::IsNumber(arg1))
@@ -2498,11 +2334,11 @@ void itemEditCmd_unique(Character * ch, string argument)
     pItem->unique = unique;
 }
 
-void itemEditCmd_armor(Character * ch, string argument)
+void itemEditCmd_armor(Player * ch, std::string argument)
 {
     Item * pItem = (Item *)ch->editData;
 
-    string arg1;
+    std::string arg1;
     argument = Utilities::one_argument(argument, arg1);
 
     if(arg1.empty() || !Utilities::IsNumber(arg1))
@@ -2520,11 +2356,11 @@ void itemEditCmd_armor(Character * ch, string argument)
     pItem->armor = armor;
 }
 
-void itemEditCmd_durability(Character * ch, string argument)
+void itemEditCmd_durability(Player * ch, std::string argument)
 {
     Item * pItem = (Item *)ch->editData;
 
-    string arg1;
+    std::string arg1;
     argument = Utilities::one_argument(argument, arg1);
 
     if(arg1.empty() || !Utilities::IsNumber(arg1))
@@ -2542,11 +2378,11 @@ void itemEditCmd_durability(Character * ch, string argument)
     pItem->durability = durability;
 }
 
-void itemEditCmd_damageLow(Character * ch, string argument)
+void itemEditCmd_damageLow(Player * ch, std::string argument)
 {
     Item * pItem = (Item *)ch->editData;
 
-    string arg1;
+    std::string arg1;
     argument = Utilities::one_argument(argument, arg1);
 
     if(arg1.empty() || !Utilities::IsNumber(arg1))
@@ -2564,11 +2400,11 @@ void itemEditCmd_damageLow(Character * ch, string argument)
     pItem->damageLow = damage_low;
 }
 
-void itemEditCmd_damageHigh(Character * ch, string argument)
+void itemEditCmd_damageHigh(Player * ch, std::string argument)
 {
     Item * pItem = (Item *)ch->editData;
 
-    string arg1;
+    std::string arg1;
     argument = Utilities::one_argument(argument, arg1);
 
     if(arg1.empty() || !Utilities::IsNumber(arg1))
@@ -2586,11 +2422,11 @@ void itemEditCmd_damageHigh(Character * ch, string argument)
     pItem->damageHigh = damage_high;
 }
 
-void itemEditCmd_speed(Character * ch, string argument)
+void itemEditCmd_speed(Player * ch, std::string argument)
 {
     Item * pItem = (Item *)ch->editData;
 
-    string arg1;
+    std::string arg1;
     argument = Utilities::one_argument(argument, arg1);
 
     if(arg1.empty() || !Utilities::IsNumber(arg1))
@@ -2608,11 +2444,11 @@ void itemEditCmd_speed(Character * ch, string argument)
     pItem->speed = speed;
 }
 
-void itemEditCmd_value(Character * ch, string argument)
+void itemEditCmd_value(Player * ch, std::string argument)
 {
     Item * pItem = (Item *)ch->editData;
 
-    string arg1;
+    std::string arg1;
     argument = Utilities::one_argument(argument, arg1);
 
     if(arg1.empty() || !Utilities::IsNumber(arg1))
@@ -2630,12 +2466,12 @@ void itemEditCmd_value(Character * ch, string argument)
     pItem->value = value;
 }
 
-void itemEditCmd_stats(Character * ch, string argument)
+void itemEditCmd_stats(Player * ch, std::string argument)
 {
 	Item * pItem = (Item *)ch->editData;
 
-	string arg1;
-	string arg2;
+	std::string arg1;
+	std::string arg2;
 	argument = Utilities::one_argument(argument, arg1);
 	argument = Utilities::one_argument(argument, arg2);
 
@@ -2685,13 +2521,13 @@ void itemEditCmd_stats(Character * ch, string argument)
 	ch->Send("stats agility/intellect/strength/stamina/wisdom/spirit <val>\n\r");
 }
 
-void questEditCmd_show(Character * ch, string argument)
+void questEditCmd_show(Player * ch, std::string argument)
 {
     Quest * pQuest = (Quest *)ch->editData;
 
 	if(!pQuest)
 	{
-        LogFile::Log("error", "questEditCmd_show : user->editData == NULL");
+        LogFile::Log("error", "questEditCmd_show : user->editData == nullptr");
 		return;
 	}
 
@@ -2701,8 +2537,8 @@ void questEditCmd_show(Character * ch, string argument)
     ch->Send("level_requirement: [" + Utilities::itos(pQuest->levelRequirement) + "]\n\r");
     ch->Send("quest_requirement: [" + Utilities::itos(pQuest->questRequirement) + "]\n\r");
     ch->Send("quest_restriction: [" + Utilities::itos(pQuest->questRestriction) + "]\n\r");
-    ch->Send("start id:     [" + (pQuest->start == NULL ? "none" : Utilities::itos(pQuest->start->id)) + "]\n\r");
-    ch->Send("end id:       [" + (pQuest->end == NULL ? "none" : Utilities::itos(pQuest->end->id)) + "]\n\r");
+    ch->Send("start id:     [" + Utilities::itos(pQuest->start) + "]\n\r");
+    ch->Send("end id:       [" + Utilities::itos(pQuest->end) + "]\n\r");
     ch->Send("exp_reward:   [" + Utilities::itos(pQuest->experienceReward) + "]\n\r");
     ch->Send("money_reward: [" + Utilities::itos(pQuest->moneyReward) + "]\n\r");
 	std::string itemrewards = "item_reward:  [";
@@ -2714,15 +2550,6 @@ void questEditCmd_show(Character * ch, string argument)
 	ch->Send(itemrewards);
     ch->Send("shareable:    [" + Utilities::itos(pQuest->shareable) + "]\n\r");
 
-    /*
-    enum ObjectiveType { OBJECTIVE_ROOM, OBJECTIVE_VISITNPC, OBJECTIVE_KILLNPC, OBJECTIVE_ITEM };
-    struct QuestObjective
-    {
-        ObjectiveType type;
-        int count;
-        void * objective; //visit a room, visit npc, kill npc, retrieve item
-    };
-    */
     ch->Send("Objectives:\n\r");
     int ctr = 1;
     std::vector<Quest::QuestObjective>::iterator objiter;
@@ -2733,7 +2560,7 @@ void questEditCmd_show(Character * ch, string argument)
         {
             case Quest::OBJECTIVE_ROOM: objid = ((Room*)((*objiter).objective))->id; break;
             case Quest::OBJECTIVE_KILLNPC:
-            case Quest::OBJECTIVE_VISITNPC: objid = ((Character*)((*objiter).objective))->id; break;
+            case Quest::OBJECTIVE_VISITNPC: objid = ((NPCIndex*)((*objiter).objective))->id; break;
             case Quest::OBJECTIVE_ITEM: objid = ((Item*)((*objiter).objective))->id; break;
         }
         ch->Send(Utilities::itos(ctr) + ". Type: " + Utilities::itos((*objiter).type) + " Count: " + Utilities::itos((*objiter).count) 
@@ -2747,13 +2574,13 @@ void questEditCmd_show(Character * ch, string argument)
     ch->Send("completion_msg: " + pQuest->completionMessage + "\n\r");
 }
 
-void questEditCmd_objective(Character * ch, string argument)
+void questEditCmd_objective(Player * ch, std::string argument)
 {
     Quest * pQuest = (Quest*)ch->editData;
     //objective add room|npc|item id count
     //          remove #
 
-    string arg1,arg2,arg3,arg4;
+    std::string arg1,arg2,arg3,arg4;
 
     if(argument.empty())
     {
@@ -2768,7 +2595,7 @@ void questEditCmd_objective(Character * ch, string argument)
         argument = Utilities::one_argument(argument, arg3);
         argument = Utilities::one_argument(argument, arg4);
         
-        string description = argument;
+        std::string description = argument;
         if(description.empty())
         {
             ch->Send("empty description\n\r");
@@ -2848,7 +2675,7 @@ void questEditCmd_objective(Character * ch, string argument)
     ch->Send("          remove #\n\r");
 }
 
-void questEditCmd_name(Character * ch, string argument)
+void questEditCmd_name(Player * ch, std::string argument)
 {
     Quest * pQuest = (Quest *)ch->editData;
 
@@ -2863,7 +2690,7 @@ void questEditCmd_name(Character * ch, string argument)
     pQuest->changed = true;
 }
 
-void questEditCmd_shortdesc(Character * ch, string argument)
+void questEditCmd_shortdesc(Player * ch, std::string argument)
 {
     Quest * pQuest = (Quest *)ch->editData;
 
@@ -2878,44 +2705,35 @@ void questEditCmd_shortdesc(Character * ch, string argument)
     pQuest->changed = true;
 }
 
-void questEditCmd_longdesc(Character * ch, string argument)
+void questEditCmd_longdesc(Player * ch, std::string argument)
 {
     Quest * pQuest = (Quest *)ch->editData;
 
-    if(ch->player)
-    {
-        StringEdit::string_append( ch->player->user, &pQuest->longDescription );
+        StringEdit::string_append( ch->user, &pQuest->longDescription );
         pQuest->changed = true;
-    }
 }
 
-void questEditCmd_progressmsg(Character * ch, string argument)
+void questEditCmd_progressmsg(Player * ch, std::string argument)
 {
     Quest * pQuest = (Quest *)ch->editData;
 
-    if(ch->player)
-    {
-        StringEdit::string_append( ch->player->user, &pQuest->progressMessage );
+        StringEdit::string_append( ch->user, &pQuest->progressMessage );
         pQuest->changed = true;
-    }
 }
 
-void questEditCmd_completionmsg(Character * ch, string argument)
+void questEditCmd_completionmsg(Player * ch, std::string argument)
 {
     Quest * pQuest = (Quest *)ch->editData;
 
-    if(ch->player)
-    {
-        StringEdit::string_append( ch->player->user, &pQuest->completionMessage );
+        StringEdit::string_append( ch->user, &pQuest->completionMessage );
         pQuest->changed = true;
-    }
 }
 
-void questEditCmd_level(Character * ch, string argument)
+void questEditCmd_level(Player * ch, std::string argument)
 {
     Quest * pQuest = (Quest *)ch->editData;
 
-    string arg1;
+    std::string arg1;
     argument = Utilities::one_argument(argument, arg1);
 
     if(!Utilities::IsNumber(arg1))
@@ -2934,11 +2752,11 @@ void questEditCmd_level(Character * ch, string argument)
     ch->Send("level set.\n\r");
 }
 
-void questEditCmd_levelrequirement(Character * ch, string argument)
+void questEditCmd_levelrequirement(Player * ch, std::string argument)
 {
     Quest * pQuest = (Quest *)ch->editData;
 
-    string arg1;
+    std::string arg1;
     argument = Utilities::one_argument(argument, arg1);
 
     if(!Utilities::IsNumber(arg1))
@@ -2957,11 +2775,11 @@ void questEditCmd_levelrequirement(Character * ch, string argument)
     ch->Send("level_requirement set.\n\r");
 }
 
-void questEditCmd_questrequirement(Character * ch, string argument)
+void questEditCmd_questrequirement(Player * ch, std::string argument)
 {
     Quest * pQuest = (Quest *)ch->editData;
 
-    string arg1;
+    std::string arg1;
     argument = Utilities::one_argument(argument, arg1);
 
     if(!Utilities::IsNumber(arg1))
@@ -2983,7 +2801,7 @@ void questEditCmd_questrequirement(Character * ch, string argument)
 		return;
 	}
     Quest * q = Game::GetGame()->GetQuest(requirement);
-    if(q == NULL)
+    if(q == nullptr)
     {
         ch->Send("A quest with that id does not exist.\n\r");
         return;
@@ -2993,11 +2811,11 @@ void questEditCmd_questrequirement(Character * ch, string argument)
     ch->Send("quest_requirement set.\n\r");
 }
 
-void questEditCmd_questrestriction(Character * ch, string argument)
+void questEditCmd_questrestriction(Player * ch, std::string argument)
 {
     Quest * pQuest = (Quest *)ch->editData;
 
-    string arg1;
+    std::string arg1;
     argument = Utilities::one_argument(argument, arg1);
 
     if(!Utilities::IsNumber(arg1))
@@ -3019,7 +2837,7 @@ void questEditCmd_questrestriction(Character * ch, string argument)
 		return;
 	}
     Quest * q = Game::GetGame()->GetQuest(restriction);
-    if(q == NULL)
+    if(q == nullptr)
     {
         ch->Send("A quest with that id does not exist.\n\r");
         return;
@@ -3029,11 +2847,11 @@ void questEditCmd_questrestriction(Character * ch, string argument)
     ch->Send("quest_restriction set.\n\r");
 }
 
-void questEditCmd_start(Character * ch, string argument)
+void questEditCmd_start(Player * ch, std::string argument)
 {
     Quest * pQuest = (Quest *)ch->editData;
 
-    string arg1;
+    std::string arg1;
     argument = Utilities::one_argument(argument, arg1);
 
     if(!Utilities::IsNumber(arg1))
@@ -3047,36 +2865,36 @@ void questEditCmd_start(Character * ch, string argument)
         ch->Send("start npc id must be > 0\n\r");
         return;
     }
-    Character * tch = Game::GetGame()->GetCharacterIndex(start);
-    if(tch == NULL)
+    NPCIndex * tch = Game::GetGame()->GetNPCIndex(start);
+    if(tch == nullptr)
     {
         ch->Send("An npc with that id does not exist.\n\r");
         return;
     }
     //remove this quest from our current pQuest->start's questStart vector
-    if(pQuest->start)
+    if(pQuest->start != 0)
     {
-        std::vector<Quest*>::iterator iter;
-        for(iter = pQuest->start->questStart.begin(); iter != pQuest->start->questStart.end(); ++iter)
+		NPCIndex * remove = Game::GetGame()->GetNPCIndex(pQuest->start);
+        for(auto iter = remove->questStart.begin(); iter != remove->questStart.end(); ++iter)
         {
             if((*iter)->id == pQuest->id)
             {
-                pQuest->start->questStart.erase(iter);
+				remove->questStart.erase(iter);
                 break;
             }
         }
     }
     tch->questStart.push_back(pQuest);
-    pQuest->start = tch;
+    pQuest->start = tch->id;
     pQuest->changed = true;
     ch->Send("start npc set.\n\r");
 }
 
-void questEditCmd_end(Character * ch, string argument)
+void questEditCmd_end(Player * ch, std::string argument)
 {
     Quest * pQuest = (Quest *)ch->editData;
 
-    string arg1;
+    std::string arg1;
     argument = Utilities::one_argument(argument, arg1);
 
     if(!Utilities::IsNumber(arg1))
@@ -3090,35 +2908,35 @@ void questEditCmd_end(Character * ch, string argument)
         ch->Send("end npc id must be > 0\n\r");
         return;
     }
-    Character * tch = Game::GetGame()->GetCharacterIndex(end);
-    if(tch == NULL)
+    NPCIndex * tch = Game::GetGame()->GetNPCIndex(end);
+    if(tch == nullptr)
     {
         ch->Send("An npc with that id does not exist.\n\r");
         return;
     }
-    if(pQuest->end)
+    if(pQuest->end != 0)
     {
-        std::vector<Quest*>::iterator iter;
-        for(iter = pQuest->end->questEnd.begin(); iter != pQuest->end->questEnd.end(); ++iter)
+		NPCIndex * remove = Game::GetGame()->GetNPCIndex(pQuest->end);
+		for(auto iter = remove->questEnd.begin(); iter != remove->questEnd.end(); ++iter)
         {
             if((*iter)->id == pQuest->id)
             {
-                pQuest->end->questEnd.erase(iter);
+				remove->questEnd.erase(iter);
                 break;
             }
         }
     }
     tch->questEnd.push_back(pQuest);
-    pQuest->end = tch;
+    pQuest->end = tch->id;
     pQuest->changed = true;
     ch->Send("end npc set.\n\r");
 }
 
-void questEditCmd_expreward(Character * ch, string argument)
+void questEditCmd_expreward(Player * ch, std::string argument)
 {
     Quest * pQuest = (Quest *)ch->editData;
 
-    string arg1;
+    std::string arg1;
     argument = Utilities::one_argument(argument, arg1);
 
     if(!Utilities::IsNumber(arg1))
@@ -3137,11 +2955,11 @@ void questEditCmd_expreward(Character * ch, string argument)
     ch->Send("exp_reward set.\n\r");
 }
 
-void questEditCmd_moneyreward(Character * ch, string argument)
+void questEditCmd_moneyreward(Player * ch, std::string argument)
 {
     Quest * pQuest = (Quest *)ch->editData;
 
-    string arg1;
+    std::string arg1;
     argument = Utilities::one_argument(argument, arg1);
 
     if(!Utilities::IsNumber(arg1))
@@ -3160,11 +2978,11 @@ void questEditCmd_moneyreward(Character * ch, string argument)
     ch->Send("money_reward set.\n\r");
 }
 
-void questEditCmd_itemreward(Character * ch, string argument)
+void questEditCmd_itemreward(Player * ch, std::string argument)
 {
 	Quest * pQuest = (Quest *)ch->editData;
 
-	string arg1;
+	std::string arg1;
 	argument = Utilities::one_argument(argument, arg1);
 
 	if (!Utilities::IsNumber(arg1))
@@ -3197,11 +3015,11 @@ void questEditCmd_itemreward(Character * ch, string argument)
 	ch->Send("Item reward added\n\r");
 }
 
-void questEditCmd_shareable(Character * ch, string argument)
+void questEditCmd_shareable(Player * ch, std::string argument)
 {
     Quest * pQuest = (Quest *)ch->editData;
 
-    string arg1;
+    std::string arg1;
     argument = Utilities::one_argument(argument, arg1);
 
     if(!Utilities::IsNumber(arg1))
@@ -3220,7 +3038,7 @@ void questEditCmd_shareable(Character * ch, string argument)
     ch->Send("shareable set.\n\r");
 }
 
-void classEditCmd_show(Character * ch, string argument)
+void classEditCmd_show(Player * ch, std::string argument)
 {
     Class * pClass = (Class *)ch->editData;
 	if (pClass == nullptr)
@@ -3228,7 +3046,7 @@ void classEditCmd_show(Character * ch, string argument)
 
     ch->Send("Name:      [" + pClass->name + "]\n\r");
     ch->Send("ID:        [" + Utilities::itos(pClass->id) + "]\n\r");
-    ch->Send("Color string: [|" + pClass->color + "]\n\r");
+    ch->Send("Color std::string: [|" + pClass->color + "]\n\r");
 
     ch->Send("Skills (Level, Skill ID, long_name):\n\r");
     std::list<Class::SkillData>::iterator iter;
@@ -3238,15 +3056,15 @@ void classEditCmd_show(Character * ch, string argument)
     }
 }
 
-void classEditCmd_skill(Character * ch, string argument)
+void classEditCmd_skill(Player * ch, std::string argument)
 {
 	Class * pClass = (Class *)ch->editData;
 	if (pClass == nullptr)
 		return;
 
-	string arg1;
-	string arg2;
-	string arg3;
+	std::string arg1;
+	std::string arg2;
+	std::string arg3;
 	argument = Utilities::one_argument(argument, arg1);
 	argument = Utilities::one_argument(argument, arg2);
 	argument = Utilities::one_argument(argument, arg3);
@@ -3291,10 +3109,10 @@ void classEditCmd_skill(Character * ch, string argument)
 	return;
 }
 
-void helpEditCmd_show(Character * ch, string argument)
+void helpEditCmd_show(Player * ch, std::string argument)
 {
     Help * pHelp = (Help *)ch->editData;
-	if(pHelp == NULL)
+	if(pHelp == nullptr)
 		return;
 
 	ch->Send("ID:			[" + Utilities::itos(pHelp->id) + "]\n\r");
@@ -3304,10 +3122,10 @@ void helpEditCmd_show(Character * ch, string argument)
     ch->Send(pHelp->text + "\n\r");
 }
 
-void helpEditCmd_title(Character * ch, string argument)
+void helpEditCmd_title(Player * ch, std::string argument)
 {
 	Help * pHelp = (Help *)ch->editData;
-	if(pHelp == NULL)
+	if(pHelp == nullptr)
 		return;
 
 	if(argument.empty())
@@ -3324,13 +3142,13 @@ void helpEditCmd_title(Character * ch, string argument)
 	ch->Send("Title changed.\n\r");
 }
 
-void helpEditCmd_text(Character * ch, string argument)
+void helpEditCmd_text(Player * ch, std::string argument)
 {
     Help * pHelp = (Help *)ch->editData;
 
-    if(argument.empty() && ch->player && ch->player->user)
+    if(argument.empty() && ch->user)
     {
-        StringEdit::string_append( ch->player->user, &pHelp->text );
+        StringEdit::string_append( ch->user, &pHelp->text );
         pHelp->changed = true;
         return;
     }
@@ -3338,7 +3156,7 @@ void helpEditCmd_text(Character * ch, string argument)
     ch->Send( "Syntax:  text\n\r" );
 }
 
-void helpEditCmd_delete(Character * ch, string argument)
+void helpEditCmd_delete(Player * ch, std::string argument)
 {
     Help * pHelp = (Help *)ch->editData;
 
@@ -3355,29 +3173,29 @@ void helpEditCmd_delete(Character * ch, string argument)
 }
 
 
-void playerEditCmd_show(Character * ch, string argument)
+void playerEditCmd_show(Player * ch, std::string argument)
 {
 
 }
 
-void playerEditCmd_name(Character * ch, string argument)
+void playerEditCmd_name(Player * ch, std::string argument)
 {
 
 }
 
 //Sets level but NOT experience
-void playerEditCmd_level(Character * ch, string argument)
+void playerEditCmd_level(Player * ch, std::string argument)
 {
-    string * name = (string*)ch->editData;
-    Character * vch = Game::GetGame()->GetCharacterByPCName(*name);
+    std::string * name = (std::string*)ch->editData;
+    Player * vch = Game::GetGame()->GetPlayerByName(*name);
 
-	if(!vch || !vch->player)
+	if(!vch)
 	{
         ch->Send("Error: Editing a null character. Target offline?\n\r");
 		return;
 	}
 
-    string arg1;
+    std::string arg1;
     Utilities::one_argument(argument, arg1);
     if(!Utilities::IsNumber(arg1))
     {
@@ -3385,7 +3203,7 @@ void playerEditCmd_level(Character * ch, string argument)
         return;
     }
     int newlevel = Utilities::atoi(arg1);
-    if(vch->level == newlevel)
+    if(vch->GetLevel() == newlevel)
     {
         ch->Send("Level is already " + arg1 + "\n\r");
         return;
@@ -3400,18 +3218,18 @@ void playerEditCmd_level(Character * ch, string argument)
     ch->Send("Level set to " + arg1 + "\n\r");
 }
 
-void playerEditCmd_exp(Character * ch, string argument)
+void playerEditCmd_exp(Player * ch, std::string argument)
 {
 
 }
 
-void areaEditCmd_show(Character * ch, string argument)
+void areaEditCmd_show(Player * ch, std::string argument)
 {
     Area * pArea = (Area *)ch->editData;
 
 	if(!pArea)
 	{
-        LogFile::Log("error", "areaEditCmd_show : user->editData == NULL");
+        LogFile::Log("error", "areaEditCmd_show : user->editData == nullptr");
 		return;
 	}
 
@@ -3423,7 +3241,7 @@ void areaEditCmd_show(Character * ch, string argument)
 	ch->Send("death_room:       [" + Utilities::itos(pArea->death_room) + "]\n\r");
 }
 
-void areaEditCmd_name(Character * ch, string argument)
+void areaEditCmd_name(Player * ch, std::string argument)
 {
     Area * pArea = (Area *)ch->editData;
 
@@ -3445,11 +3263,11 @@ void areaEditCmd_name(Character * ch, string argument)
 	ch->Send("Name set.\n\r");
 }
 
-void areaEditCmd_pvp(Character * ch, string argument)
+void areaEditCmd_pvp(Player * ch, std::string argument)
 {
     Area * pArea = (Area *)ch->editData;
 
-    string arg1;
+    std::string arg1;
     argument = Utilities::one_argument(argument, arg1);
 
     if(!Utilities::IsNumber(arg1))
@@ -3468,11 +3286,11 @@ void areaEditCmd_pvp(Character * ch, string argument)
     ch->Send("pvp set.\n\r");
 }
 
-void areaEditCmd_death_room(Character * ch, string argument)
+void areaEditCmd_death_room(Player * ch, std::string argument)
 {
 	Area * pArea = (Area *)ch->editData;
 
-	string arg1;
+	std::string arg1;
 	argument = Utilities::one_argument(argument, arg1);
 
 	if (!Utilities::IsNumber(arg1))
@@ -3491,11 +3309,11 @@ void areaEditCmd_death_room(Character * ch, string argument)
 	ch->Send("death_room set.\n\r");
 }
 
-void areaEditCmd_levelRangeLow(Character * ch, string argument)
+void areaEditCmd_levelRangeLow(Player * ch, std::string argument)
 {
 	Area * pArea = (Area *)ch->editData;
 
-	string arg1;
+	std::string arg1;
 	argument = Utilities::one_argument(argument, arg1);
 
 	if (!Utilities::IsNumber(arg1))
@@ -3514,11 +3332,11 @@ void areaEditCmd_levelRangeLow(Character * ch, string argument)
 	ch->Send("level_range_low set.\n\r");
 }
 
-void areaEditCmd_levelRangeHigh(Character * ch, string argument)
+void areaEditCmd_levelRangeHigh(Player * ch, std::string argument)
 {
 	Area * pArea = (Area *)ch->editData;
 
-	string arg1;
+	std::string arg1;
 	argument = Utilities::one_argument(argument, arg1);
 
 	if (!Utilities::IsNumber(arg1))

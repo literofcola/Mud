@@ -1,33 +1,7 @@
-#include "stdafx.h"
-#include "CSubscriber.h"
 #include "CSubscriberManager.h"
-#include "CmySQLQueue.h"
-#include "CLogFile.h"
-#include "CHighResTimer.h"
-#include "CHelp.h"
-#include "CTrigger.h"
-#include "CClient.h"
-#include "CItem.h"
-#include "CSkill.h"
-#include "CClass.h"
-#include "CExit.h"
-#include "CReset.h"
-#include "CArea.h"
-#include "CRoom.h"
-#include "CQuest.h"
-#include "CPlayer.h"
+#include "CSubscriber.h"
 #include "CCharacter.h"
-#include "CSpellAffect.h"
-#include "CUser.h"
-#include "CGame.h"
-#include "CServer.h"
-#include "CCommand.h"
-#include "utils.h"
-#include "mud.h"
-
-class Character;
-class Reset;
-class SpellAffect;
+#include <string>
 
 SubscriberManager::~SubscriberManager()
 {
@@ -107,7 +81,7 @@ bool SubscriberManager::HasSubscriber(Subscriber * l)
 std::string SubscriberManager::DebugPrintSubscribers()
 {
 	//handling the case where the manager is a Character, and we print all the subscribers that are characters
-	string mysubscribers;
+	std::string mysubscribers;
 	Character * submanager_as_char;
 	if (submanager_as_char = dynamic_cast<Character*>(this))
 	{
@@ -116,7 +90,7 @@ std::string SubscriberManager::DebugPrintSubscribers()
 			Character * subscriber_as_char;
 			if (subscriber_as_char = dynamic_cast<Character*>(iter->subscriber))
 			{
-				mysubscribers += subscriber_as_char->name + " ";
+				mysubscribers += subscriber_as_char->GetName() + " ";
 			}
 		}
 	}

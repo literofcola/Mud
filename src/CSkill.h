@@ -1,7 +1,10 @@
 #ifndef CSKILL_H
 #define CSKILL_H
 
-class Server;
+#include <bitset>
+#include <string>
+#include <vector>
+#include <map>
 
 class Skill
 {

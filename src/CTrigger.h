@@ -1,6 +1,8 @@
 #ifndef CTRIGGER_H
 #define CTRIGGER_H
 
+#include <string>
+
 class Trigger
 {
 public:

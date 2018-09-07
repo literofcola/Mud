@@ -1,6 +1,14 @@
 #ifndef CSPELLAFFECT_H
 #define CSPELLAFFECT_H
 
+#include "CSubscriber.h"
+#include <string>
+#include <map>
+#include <list>
+
+class Character;
+class Skill;
+
 class SpellAffect : public Subscriber
 {
 public:

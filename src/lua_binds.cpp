@@ -1,36 +1,33 @@
-#include "stdafx.h"
+#include "CGame.h"
 #include "CSubscriber.h"
 #include "CSubscriberManager.h"
-#include "CmySQLQueue.h"
-#include "CLogFile.h"
-#include "CClient.h"
-#include "CHighResTimer.h"
-#include "CHelp.h"
-#include "CTrigger.h"
-#include "CItem.h"
-#include "CSkill.h"
-#include "CClass.h"
-#include "CExit.h"
-#include "CReset.h"
-#include "CArea.h"
-#include "CRoom.h"
-#include "CQuest.h"
-#include "CPlayer.h"
 #include "CCharacter.h"
-#include "CSpellAffect.h"
+#include "CPlayer.h"
 #include "CUser.h"
-#include "CGame.h"
-#include "CServer.h"
+#include "CSpellAffect.h"
+#include "CRoom.h"
+#include "CSkill.h"
 #include "utils.h"
 #include "mud.h"
+
+#define SOL_CHECK_ARGUMENTS 1
+#define SOL_USING_CXX_LUA
+#include <sol.hpp>
+
+extern "C"
+{
+#include "lua.h"
+#include "lualib.h"
+#include "lauxlib.h"
+}
 
 void Lua_DefineFunctions(sol::state * lua)
 {
 	(*lua)["ExperienceForLevel"] = Game::ExperienceForLevel; //static int ExperienceForLevel(int level);
 	lua->set("LevelDifficulty", Game::LevelDifficulty); //static int LevelDifficulty(int level1, int level2);
 	lua->set_function("LoadNPCRoom", Game::LoadNPCRoom); //LoadNPCRoom(int id, Room * toroom);
-	lua->set_function("cmd_cast", cmd_cast); //cmd_cast(Character * ch, string argument);
-	lua->set_function("cmd_look", cmd_look); //cmd_look(Character * ch, string argument);
+	lua->set_function("cmd_cast", cmd_cast); //cmd_cast(Player * ch, string argument);
+	lua->set_function("cmd_look", cmd_look); //cmd_look(Player * ch, string argument);
 	lua->set_function("FlagIsSet", Utilities::FlagIsSet); //bool FlagIsSet(std::vector<int> & flags, const int flag)
 }
 
@@ -61,15 +58,12 @@ void Lua_DefineClasses(sol::state * lua)
 
 		(*lua).new_usertype<Character>("Character",
 			//sol::base_classes, sol::bases<Subscriber, SubscriberManager>(),
-			sol::constructors<Character(), Character(std::string, User*)>(),
+			//sol::constructors<Character(), Character(std::string, User*)>(),
 			"GetLevel",  &Character::GetLevel,
-			"SetLevel",  &Character::SetLevel,
 			"Send", (void(Character::*)(std::string)) &Character::Send,
 			"Message", &Character::Message,
 			"AddSpellAffect", &Character::AddSpellAffect,
 			"CleanseSpellAffect", &Character::CleanseSpellAffect,
-			"GetIntellect", &Character::GetIntellect,
-			"GetStrength", &Character::GetStrength,
 			"GetHealth", &Character::GetHealth,
 			"GetMana", &Character::GetMana,
 			"GetMaxMana", &Character::GetMaxMana,
@@ -102,12 +96,11 @@ void Lua_DefineClasses(sol::state * lua)
 			"UpdateThreat", &Character::UpdateThreat,
 			"SetCooldown", &Character::SetCooldown,
 			"ChangeRoomsID", &Character::ChangeRoomsID,
-			"GetPlayer", &Character::GetPlayer,
 			"GetAuraModifier", &Character::GetAuraModifier,
 			"GetTarget", &Character::GetTarget,
-			"GetRoom", &Character::GetRoom,
-			"level", &Character::level,
-			"flags", &Character::flags
+			"GetRoom", &Character::GetRoom
+			//"level", &Character::level,
+			//"flags", &Character::flags
 			);
 
 		(*lua).new_usertype<Room>("Room",
@@ -119,7 +112,10 @@ void Lua_DefineClasses(sol::state * lua)
 
 		(*lua).new_usertype<Player>("Player",
 			"GetClassLevel", &Player::GetClassLevel,
-			"recall", &Player::recall
+			"recall", &Player::recall,
+			"GetIntellect", &Player::GetIntellect,
+			"GetStrength", &Player::GetStrength,
+			"SetLevel", &Player::SetLevel
 			);
 
 		(*lua).new_usertype<Skill>("Skill",

@@ -1,29 +1,13 @@
-#include "stdafx.h"
+#include "CSpellAffect.h"
+#include "CServer.h"
+#include "CGame.h"
+#include "CSkill.h"
+#include "CCharacter.h"
 #include "CSubscriber.h"
 #include "CSubscriberManager.h"
-#include "CmySQLQueue.h"
 #include "CLogFile.h"
-#include "CHighResTimer.h"
-#include "CHelp.h"
-#include "CTrigger.h"
-#include "CClient.h"
-#include "CItem.h"
-#include "CSkill.h"
-#include "CClass.h"
-#include "CExit.h"
-#include "CReset.h"
-#include "CArea.h"
-#include "CRoom.h"
-#include "CQuest.h"
-#include "CPlayer.h"
-#include "CCharacter.h"
-#include "CSpellAffect.h"
-#include "CUser.h"
-#include "CGame.h"
-#include "CServer.h"
-#include "CCommand.h"
+#include "CmySQLQueue.h"
 #include "utils.h"
-#include "mud.h"
 
 const struct SpellAffect::AuraTable aura_table[] = 
 {
@@ -52,8 +36,8 @@ SpellAffect::SpellAffect()
     debuff = hidden = stackable = false;
     id = ticks = ticksRemaining = 0;
     duration = appliedTime = 0;
-    caster = NULL;
-    skill = NULL;
+    caster = nullptr;
+    skill = nullptr;
     affectCategory = SpellAffect::AFFECT_NONE;
     remove_me = false;
 }
@@ -68,7 +52,7 @@ SpellAffect::~SpellAffect()
     auraAffects.clear();
 }
 
-void SpellAffect::ApplyAura(string affectName, int modifier)
+void SpellAffect::ApplyAura(std::string affectName, int modifier)
 {
     bool found = false;
     int i;
@@ -132,8 +116,8 @@ void SpellAffect::ApplyAura(int auraID, int modifier)
 
 std::string SpellAffect::GetCasterName()
 {
-    if(caster != NULL)
-        return caster->name;
+    if(caster != nullptr)
+        return caster->GetName();
     return casterName;
 }
 
@@ -154,7 +138,7 @@ void SpellAffect::SaveDataDouble(std::string tag, double val)
     affectDataDouble[tag] = val;
 }
 
-void SpellAffect::SaveDataString(std::string tag, string val)
+void SpellAffect::SaveDataString(std::string tag, std::string val)
 {
     affectDataString[tag] = val;
 }
@@ -177,7 +161,7 @@ std::string SpellAffect::GetDataString(std::string tag)
 void SpellAffect::Notify(SubscriberManager * lm)
 {
     //caster about to be deleted... player quit, npc killed etc. At least save the name
-    casterName = caster->name;
+    casterName = caster->GetName();
 	caster->RemoveSubscriber(this);
     caster = nullptr;
 }
@@ -186,7 +170,7 @@ void SpellAffect::Save(std::string charname)
 {
     double timeleft = (appliedTime + duration) - Game::currentTime;
 
-	string affectsql = "INSERT INTO player_spell_affects (player, caster, skill, ticks, duration, timeleft, stackable, hidden, debuff, ";
+	std::string affectsql = "INSERT INTO player_spell_affects (player, caster, skill, ticks, duration, timeleft, stackable, hidden, debuff, ";
 	affectsql += "category, auras, data) ";
 	affectsql += "values ('" + charname + "','" + casterName + "',";
 	if (skill)
@@ -227,7 +211,7 @@ void SpellAffect::Save(std::string charname)
 
 void SpellAffect::Load(Character * ch)
 {
-    StoreQueryResult affectres = Server::sqlQueue->Read("select * from player_spell_affects where player='" + ch->name + "'");
+    StoreQueryResult affectres = Server::sqlQueue->Read("select * from player_spell_affects where player='" + ch->GetName() + "'");
     if(affectres.empty())
         return;
 
@@ -238,7 +222,7 @@ void SpellAffect::Load(Character * ch)
         row = *i;
 
         Skill * sk = Game::GetGame()->GetSkill(row["skill"]);
-        if(sk == NULL)
+        if(sk == nullptr)
         {
             LogFile::Log("error", "SpellAffect::Load, bad skill id");
             continue;
@@ -255,7 +239,7 @@ void SpellAffect::Load(Character * ch)
         sa->appliedTime = Utilities::GetTime() - ((double)row["duration"] - row["timeleft"]); //Game::currentTime isn't initialized until after one update...
         sa->skill = sk;
         sa->debuff = row["debuff"];
-        sa->caster = NULL;
+        sa->caster = nullptr;
         sa->casterName = row["caster"];
         sa->affectCategory = row["category"];
         double tick_interval = (double)row["duration"] / row["ticks"];
@@ -271,13 +255,13 @@ void SpellAffect::Load(Character * ch)
             sa->id = (int)ch->buffs.size() + 1;
             ch->buffs.push_front(sa);
         }
-        string affect_data = (row["data"]).c_str();
+		std::string affect_data = (row["data"]).c_str();
         int first = 0, second = 0;
         while(first < (int)affect_data.length())
         {
             char data_type = affect_data[first];
             second = (int)affect_data.find(',', first+2);
-            string data_name = affect_data.substr(first+2, second - (first+2));
+			std::string data_name = affect_data.substr(first+2, second - (first+2));
             first = second+1;
             second = (int)affect_data.find(';', first);
             switch(data_type)
@@ -301,7 +285,7 @@ void SpellAffect::Load(Character * ch)
             first = second + 1;
         }
 
-        string aurastring = row["auras"].c_str();
+		std::string aurastring = row["auras"].c_str();
         first = second = 0;
         while(first < (int)aurastring.length())
         {
@@ -316,7 +300,7 @@ void SpellAffect::Load(Character * ch)
             sa->ApplyAura(affectid, modifier);
         }
     }
-    string affectsql = "DELETE FROM player_spell_affects WHERE player = '" + ch->name + "'";
+	std::string affectsql = "DELETE FROM player_spell_affects WHERE player = '" + ch->GetName() + "'";
     Server::sqlQueue->Write(affectsql);
 }
 

@@ -1,29 +1,12 @@
-#include "stdafx.h"
-#include "CSubscriber.h"
-#include "CSubscriberManager.h"
-#include "CmySQLQueue.h"
-#include "CLogFile.h"
-#include "CHighResTimer.h"
-#include "CHelp.h"
-#include "CTrigger.h"
-#include "CClient.h"
-#include "CItem.h"
-#include "CSkill.h"
 #include "CClass.h"
-#include "CExit.h"
-#include "CReset.h"
-#include "CArea.h"
-#include "CRoom.h"
-#include "CQuest.h"
-#include "CPlayer.h"
-#include "CCharacter.h"
-#include "CSpellAffect.h"
-#include "CUser.h"
-#include "CGame.h"
 #include "CServer.h"
-#include "CCommand.h"
+#include "CGame.h"
+#include "CSkill.h"
+#include "CLogFile.h"
 #include "utils.h"
-#include "mud.h"
+#include <string>
+
+using std::string;
 
 Class::Class()
 {

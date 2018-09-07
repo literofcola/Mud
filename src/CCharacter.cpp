@@ -1,22 +1,31 @@
-#include "stdafx.h"
+#include "CCharacter.h"
+#include "CSubscriber.h"
+#include "CSubscriberManager.h"
+#include "CRoom.h"
+#include "CGroup.h"
+#include "CNPC.h"
+#include "CGame.h"
+#include "CItem.h"
+#include "CServer.h"
+#include "CSkill.h"
+#include "CClass.h"
+#include "CSpellAffect.h"
+#include "CPlayer.h"
+#include "CNPCIndex.h"
+#include "CTrigger.h"
+#include "CQuest.h"
+#include "CArea.h"
+#include "utils.h"
+#include "CLogFile.h"
+#include "mud.h"
+#include "json.hpp"
+// for convenience
+using json = nlohmann::json;
+#include <string>
 
+class Subscriber;
 
-extern "C" 
-{
-#include "lua.h"
-#include "lualib.h"
-#include "lauxlib.h"
-}
-
-#define DB_INVENTORY_EQUIPPED 0
-#define DB_INVENTORY_INVENTORY 1
-#define DB_INVENTORY_BANK 2
-
-using namespace std;
-
-//in rooms per second
-//const double Character::NORMAL_MOVE_SPEED = 2.5;
-//const double Character::COMBAT_MOVE_SPEED = 0.5;
+using std::string;
 
 //TODO: racial skills?
 Character::RaceType Character::race_table[] = 
@@ -33,214 +42,27 @@ Character::RaceType Character::race_table[] =
 	{-1, ""			}
 };
 
-Character::flag_type Character::flag_table[] = 
-{
-    { Character::FLAG_FRIENDLY, "friendly" },
-    { Character::FLAG_NEUTRAL, "neutral" },
-    { Character::FLAG_AGGRESSIVE, "aggressive" },
-    { Character::FLAG_GUILD, "guild" },
-    { Character::FLAG_VENDOR, "vendor" },
-    { Character::FLAG_REPAIR, "repair" },
-    { Character::FLAG_TRAINER, "trainer" },
-    { -1, "" }
-};
-
 Character::Character()
 {
-    name = "NPC";
-    id = 0;
-    player = NULL;
-    SetDefaults();
-}
-
-Character::Character(string name_, int id_)
-{
-    name = name_;
-    id = id_;
-    player = NULL;
-    SetDefaults();
-}
-
-Character::Character(string name_, User * user_)
-{
-    name = name_;
-    id = 0;
-    player = new Player(user_);
-    SetDefaults();
-}
-
-Character::Character(const Character & copy)
-{
-    SetDefaults();
-    name = copy.name;
-	keywords = copy.keywords;
-    id = copy.id;
-    title = copy.title;
-    player = NULL;
-    level = copy.level;
-    gender = copy.gender;
-	race = copy.race;
-    agility = copy.agility;
-    intellect = copy.intellect;
-    strength = copy.strength;
-    stamina = copy.stamina;
-    wisdom = copy.wisdom;
-	spirit = copy.spirit;
-    health = maxHealth = copy.maxHealth;
-    mana = maxMana = copy.maxMana;
-	energy = maxEnergy = copy.maxEnergy;
-	rage = 0;
-	maxRage = copy.maxRage;
-	speechText = copy.speechText;
-    npcAttackSpeed = copy.npcAttackSpeed;
-    npcDamageLow = copy.npcDamageLow;
-    npcDamageHigh = copy.npcDamageHigh;
-    delay_active = false;
-    combat = false;
-    meleeActive = false;
-    movementSpeed = NORMAL_MOVE_SPEED;
-	position = copy.position;
-    lastMoveTime = 0;
+	room = nullptr;
+	movementSpeed = Character::NORMAL_MOVE_SPEED;
+	lastMoveTime = 0;
+	meleeActive = false;
+	delay = 0;
+	delay_active = false;
+	delayFunction = nullptr;
+	lastSpellCast = 0;
+	target = nullptr;
+	health = mana = energy = rage = 1;
+	combat = false;
 	isCorpse = false;
-    changed = false;
-
-    std::map<std::string, Skill *>::const_iterator skilliter;
-    for(skilliter = copy.knownSkills.begin(); skilliter != copy.knownSkills.end(); ++skilliter)
-    {
-        knownSkills[(*skilliter).second->name] = (*skilliter).second;
-    }
-
-    std::vector<int>::const_iterator flagiter;
-    for(flagiter = copy.flags.begin(); flagiter != copy.flags.end(); ++flagiter)
-    {
-        flags.push_back((*flagiter));
-    }
-
-    std::vector<Quest *>::const_iterator questiter;
-    for(questiter = copy.questStart.begin(); questiter != copy.questStart.end(); ++questiter)
-    {
-        questStart.push_back((*questiter));
-    }
-    for(questiter = copy.questEnd.begin(); questiter != copy.questEnd.end(); ++questiter)
-    {
-        questEnd.push_back((*questiter));
-    }
-
-    std::list<DropData>::const_iterator dropiter;
-    for(dropiter = copy.drops.begin(); dropiter != copy.drops.end(); ++dropiter)
-    {
-        drops.push_back(*dropiter);
-    }
-
-    std::map<int, Trigger>::const_iterator triggeriter;
-    for(triggeriter = copy.triggers.begin(); triggeriter != copy.triggers.end(); ++triggeriter)
-    {
-        triggers[(*triggeriter).second.id] = (*triggeriter).second;
-    }
-}
-
-void Character::SetDefaults()
-{
-    remove = false;
-    room = NULL;
-    target = NULL;
-    level = 1;
-    gender = 1;
-    agility = intellect = strength = stamina = wisdom = spirit = 5;
-	energy = maxEnergy = 100;
-	rage = 0;
-	maxRage = 100;
-	comboPoints = 0;
-	maxComboPoints = 5;
-    health = maxHealth = stamina * Character::HEALTH_FROM_STAMINA;
-    mana = maxMana = wisdom * Character::MANA_FROM_WISDOM;
-    npcAttackSpeed = 2.0;
-    npcDamageLow = npcDamageHigh = 1;
-    delay_active = false;
-    combat = false;
-    meleeActive = false;
-    movementSpeed = NORMAL_MOVE_SPEED;
-	position = Character::Position::POSITION_STANDING;
-    lastMoveTime = 0;
-    changed = false;
-    reset = NULL;
-    editState = ED_NONE;
-    editData = NULL;
-    hasQuery = false;
-    queryData = NULL;
-    queryFunction = NULL;
-    buffs_invalid = false;
-    debuffs_invalid = false;
-    movementQueue.clear();
-
-    stringTable["name"] = &name;
-	stringTable["keywords"] = &keywords;
-    intTable["id"] = &id;
-    intTable["level"] = &level;
-    intTable["gender"] = &gender;
-	intTable["race"] = &race;
-    intTable["agility"] = &agility;
-    intTable["intellect"] = &intellect;
-    intTable["strength"] = &strength;
-    intTable["stamina"] = &stamina;
-    intTable["wisdom"] = &wisdom;
-	intTable["spirit"] = &spirit;
-    intTable["health"] = &health;
-    intTable["mana"] = &mana;
-    doubleTable["attack_speed"] = &npcAttackSpeed;
-    intTable["damage_low"] = &npcDamageLow;
-    intTable["damage_high"] = &npcDamageHigh;
+	deathTime = 0;
+	remove = false;
 }
 
 Character::~Character()
 {
-    if(player != NULL)
-        delete player;
-
-    player = NULL;
-    room = NULL;
-    threatList.clear();
     RemoveAllSpellAffects();
-    knownSkills.clear();
-    cooldowns.clear();
-    triggers.clear();
-
-    /*if(reset)
-    {
-        this->RemoveSubscriber(reset);
-    }*/
-}
-
-void Character::SendBW(std::string str)
-{
-	if (player == NULL || player->user == NULL)
-		return;
-
-	player->user->SendBW(str);
-}
-
-void Character::Send(std::string str)
-{
-    if(player == NULL || player->user == NULL)
-        return;
-
-    player->user->Send(str);
-}
-
-void Character::Send(char * str)
-{
-    if(player == NULL || player->user == NULL)
-        return;
-
-    player->user->Send(str);
-}
-
-void Character::SendGMCP(std::string str)
-{
-    if(player == NULL || player->user == NULL || !player->user->gmcp)
-        return;
-
-    player->user->SendGMCP(str);
 }
 
 void Character::SendTargetSubscriberGMCP(std::string str)
@@ -281,14 +103,6 @@ void Character::SendTargetTargetSubscriberGMCP(std::string str)
 			}
 		}
 	}
-}
-
-void Character::SendGMCP(char * str)
-{
-    if(player == NULL || player->user == NULL)
-        return;
-
-    player->user->SendGMCP(str);
 }
 
 void Character::Message(const string & txt, MessageType msg_type, Character * vict)
@@ -368,13 +182,13 @@ void Character::Message(const string & txt, MessageType msg_type, Character * vi
 
 		case MSG_GROUP:
 		{
-			if (!group)
+			if (!HasGroup())
 				return;
 			for (int i = 0; i < Group::MAX_RAID_SIZE; i++)
 			{
-				if (group->members[i] != nullptr)
+				if (GetGroup()->members[i] != nullptr)
 				{
-					group->members[i]->Send(txt + "\n\r");
+					GetGroup()->members[i]->Send(txt + "\n\r");
 				}
 			}
 			break;
@@ -382,13 +196,13 @@ void Character::Message(const string & txt, MessageType msg_type, Character * vi
 
 		case MSG_GROUP_NOTCHAR:
 		{
-			if (!group)
+			if (!HasGroup())
 				return;
 			for (int i = 0; i < Group::MAX_RAID_SIZE; i++)
 			{
-				if (group->members[i] != nullptr && group->members[i] != this)
+				if (GetGroup()->members[i] != nullptr && GetGroup()->members[i] != this)
 				{
-					group->members[i]->Send(txt + "\n\r");
+					GetGroup()->members[i]->Send(txt + "\n\r");
 				}
 			}
 			break;
@@ -405,455 +219,46 @@ void Character::Message(const string & txt, MessageType msg_type, Character * vi
 	}
 }
 
-void Character::QueryClear()
-{
-	queryData = NULL;
-	queryFunction = NULL;
-	queryPrompt = "";
-	hasQuery = false;
-}
-
-void Character::SetQuery(std::string prompt, void * data, bool(*func)(Character *, std::string))
-{
-	hasQuery = true;
-	queryFunction = func;
-	queryData = data;
-	queryPrompt = prompt;
-}
-
-void * Character::GetQueryData()
-{
-	return queryData;
-}
-
-bool Character::HasQuery()
-{
-	return hasQuery;
-}
-
-bool (*Character::GetQueryFunc())(Character *, std::string)
-{
-	return queryFunction;
-}
-
-void Character::ResetMaxStats()
-{
-	//todo: check equipment bonuses
-	SetMaxHealth(stamina * Character::HEALTH_FROM_STAMINA);
-	SetMaxMana(wisdom * Character::MANA_FROM_WISDOM);
-	//todo: these might be higher based on skills or talents?
-	SetMaxEnergy(100);
-	SetMaxRage(100);
-	maxComboPoints = 5;
-}
-
-void Character::AddEquipmentStats(Item * add)
-{
-	agility += add->agility;
-	intellect += add->intellect;
-	strength += add->strength;
-	stamina += add->stamina;
-	wisdom += add->wisdom;
-	spirit += add->spirit;
-	ResetMaxStats();
-}
-
-void Character::RemoveEquipmentStats(Item * remove)
-{
-	agility -= remove->agility;
-	intellect -= remove->intellect;
-	strength -= remove->strength;
-	stamina -= remove->stamina;
-	wisdom -= remove->wisdom;
-	spirit -= remove->spirit;
-	ResetMaxStats();
-}
-
-void Character::GeneratePrompt(double currentTime)
-{
-	string prompt = "\n\r";
-
-	if(editState != ED_NONE)
-	{
-		switch(editState)
-		{
-            case ED_ROOM:
-				prompt += "|G(Room)|X";
-				break;
-            case ED_SKILL:
-                prompt += "|G(Skill)|X";
-                break;
-			case ED_PLAYER:
-				prompt += "|G(Player)|X";
-				break;
-            case ED_NPC:
-                prompt += "|G(NPC)|X";
-                break;
-            case ED_ITEM:
-                prompt += "|G(Item)|X";
-                break;
-            case ED_QUEST:
-                prompt += "|G(Quest)|X";
-                break;
-			case ED_HELP:
-                prompt += "|G(Help)|X";
-                break;
-            case ED_AREA:
-                prompt += "|G(Area)|X";
-                break;
-            case ED_CLASS:
-                prompt += "|G(Class)|X";
-                break;
-			default:
-				prompt += "|G(ED_?)|X";
-				break;
-		}
-	}
-    prompt += "|B<";
-
-    int percent;
-    string statColor;
-    if(!IsGhost())
-    {
-        //Health
-        if(health > 0 && maxHealth > 0)
-            percent = (health * 100)/maxHealth;
-        else
-            percent = 0;
-
-        if(percent >= 75)
-            statColor = "|x";
-        else if(percent >= 50)
-            statColor = "|G";
-        else if(percent >= 25)
-            statColor = "|Y";
-        else
-            statColor = "|R";
-
-        prompt += statColor + Utilities::itos(health) + "/|X" + Utilities::itos(maxHealth) + "|Bh ";
-
-        //Mana
-        if(mana > 0 && maxMana > 0)
-            percent = (mana * 100)/maxMana;
-        else
-            percent = 0;
-
-        if(percent >= 75)
-            statColor = "|x";
-        else if(percent >= 50)
-            statColor = "|G";
-        else if(percent >= 25)
-            statColor = "|Y";
-        else
-            statColor = "|R";
-
-        prompt += statColor + Utilities::itos(mana) + "/|X" + Utilities::itos(maxMana) + "|Bm ";
-
-		//Energy
-		prompt += "|X" + Utilities::itos(energy) + "/" + Utilities::itos(maxEnergy) + "|Be ";
-
-		//Rage
-		prompt += "|X" + Utilities::itos(rage) + "/|X" + Utilities::itos(maxRage) + "|Br";
-    }
-    else
-    {
-        prompt += "|xGhost";
-    }
-    prompt += "|B>|x";
-
-    //Combat flag
-    if(combat)
-    {
-        prompt += "|B<|RX|B>|X";
-    }
-    //Cast timer
-    if(delay_active)
-    {
-        double timeleft = delay - currentTime;
-        prompt += "|Y[" + Utilities::dtos(timeleft, 1) + "s]|X";
-    }
-    
-    //Target
-	if(GetTarget() != NULL)
-	{
-		int jsonvitals[5]; //level, health, mana, energy, rage as %'s
-		string targetPrompt = "";
-
-		//Combo points
-		if (comboPoints > 0 && GetTarget() == comboPointTarget)
-		{
-			targetPrompt += "|R(" + Utilities::itos(comboPoints) + ")|X";
-			json combos = { { "points", comboPoints } };
-			SendGMCP("target.combo " + combos.dump());
-		}
-		else if (GetTarget() != comboPointTarget)
-		{
-			json combos = { { "points", 0 } };
-			SendGMCP("target.combo " + combos.dump());
-		}
-		
-		string targetLevel = Game::LevelDifficultyColor(Game::LevelDifficulty(level, GetTarget()->level));
-		if (GetTarget()->IsNPC() && !Utilities::FlagIsSet(GetTarget()->flags, Character::FLAG_FRIENDLY)
-			&& Game::LevelDifficulty(level, GetTarget()->level) == 5) //NPC >= 10 levels
-		{
-			targetLevel += "??";
-			jsonvitals[0] = 0;
-		}
-		else
-		{
-			targetLevel += Utilities::itos(GetTarget()->level);
-			jsonvitals[0] = GetTarget()->level;
-		}
-
-		targetPrompt += "|B<" + targetLevel + " ";
-		if (GetTarget() == this || Utilities::FlagIsSet(GetTarget()->flags, FLAG_FRIENDLY))
-			targetPrompt += "|G";
-		else if (GetTarget()->IsPlayer())
-			targetPrompt += "|C";
-		else if (Utilities::FlagIsSet(GetTarget()->flags, FLAG_NEUTRAL))
-			targetPrompt += "|Y";
-		else
-			targetPrompt += "|R";
-		targetPrompt += GetTarget()->name + "|X ";
-
-		if (!GetTarget()->IsCorpse())
-		{
-			//Health
-			if (GetTarget()->health > 0 && GetTarget()->maxHealth > 0)
-				percent = (GetTarget()->health * 100) / GetTarget()->maxHealth;
-			else
-				percent = 0;
-
-			if (percent >= 75 || GetTarget()->maxHealth == 0)
-				statColor = "|x";
-			else if (percent >= 50)
-				statColor = "|G";
-			else if (percent >= 25)
-				statColor = "|Y";
-			else
-				statColor = "|R";
-
-			targetPrompt += statColor + Utilities::itos(percent) + "|B%h ";
-			jsonvitals[1] = percent;
-
-			//Mana
-			if (GetTarget()->mana > 0 && GetTarget()->maxMana > 0)
-				percent = (GetTarget()->mana * 100) / GetTarget()->maxMana;
-			else
-				percent = 0;
-
-			if (percent >= 75 || GetTarget()->maxMana == 0)
-				statColor = "|x";
-			else if (percent >= 50)
-				statColor = "|G";
-			else if (percent >= 25)
-				statColor = "|Y";
-			else
-				statColor = "|R";
-
-			targetPrompt += statColor + Utilities::itos(percent) + "|B%m ";
-			jsonvitals[2] = percent;
-
-			//Energy
-			if (GetTarget()->GetEnergy() > 0 && GetTarget()->maxEnergy > 0)
-				percent = (GetTarget()->GetEnergy() * 100) / GetTarget()->maxEnergy;
-			else
-				percent = 0;
-			targetPrompt += "|X" + Utilities::itos(percent) + "|B%e ";
-			jsonvitals[3] = percent;
-
-			//Rage
-			if (GetTarget()->GetRage() > 0 && GetTarget()->GetMaxRage() > 0)
-				percent = (GetTarget()->GetRage() * 100) / GetTarget()->GetMaxRage();
-			else
-				percent = 0;
-			targetPrompt += "|X" + Utilities::itos(percent) + "|B%r>|X";
-			jsonvitals[4] = percent;
-		}
-		else
-		{
-			targetPrompt += "Corpse|B>|X";
-			jsonvitals[1] = 0;
-			jsonvitals[2] = 0;
-			jsonvitals[3] = 0;
-			jsonvitals[4] = 0;
-		}
-		prompt += targetPrompt;
-		json vitals = { { "name", GetTarget()->GetName() },{ "level", jsonvitals[0] },{ "hppercent", jsonvitals[1] },{ "mppercent", jsonvitals[2] },
-		{ "enpercent", jsonvitals[3] },{ "ragepercent", jsonvitals[4] } };
-		SendGMCP("target.vitals " + vitals.dump());
-	}
-
-    //Target of target (changed to display name, level, health only)
-	if(GetTarget() != NULL && GetTarget()->GetTarget() != NULL)
-	{
-        Character * targettarget = GetTarget()->GetTarget();
-		string gmcplevel = "";
-		string targetLevel = Game::LevelDifficultyColor(Game::LevelDifficulty(level, targettarget->level));
-        if(player == NULL && Game::LevelDifficulty(level, targettarget->level) == 5) //NPC >= 10 levels
-        {
-            targetLevel += "??";
-			gmcplevel = "??";
-        }
-        else
-        {
-            targetLevel += Utilities::itos(targettarget->level);
-			gmcplevel = Utilities::itos(targettarget->level);
-        }
-
-        //TODO: Target name coloring based on pvp/attack status
-		string targetPrompt = "|B<" + targetLevel + " ";
-        if(targettarget == this || Utilities::FlagIsSet(targettarget->flags, FLAG_FRIENDLY))
-            targetPrompt += "|G";
-		else if (targettarget->IsPlayer())
-			targetPrompt += "|C";
-        else if(Utilities::FlagIsSet(targettarget->flags, FLAG_NEUTRAL))
-            targetPrompt += "|Y";
-        else
-            targetPrompt += "|R";
-        targetPrompt += targettarget->name + "|X ";
-
-        //Health
-        if(targettarget->health > 0 && targettarget->maxHealth > 0)
-            percent = (targettarget->health * 100)/targettarget->maxHealth;
-        else
-            percent = 0;
-
-        if(percent >= 75 || targettarget->maxHealth == 0)
-            statColor = "|x";
-        else if(percent >= 50)
-            statColor = "|G";
-        else if(percent >= 25)
-            statColor = "|Y";
-        else
-            statColor = "|R";
-
-        targetPrompt += statColor + Utilities::itos(percent) + "|B%h>|X";
-
-		prompt += targetPrompt;
-
-		json targettargetvitals = { { "name", targettarget->GetName() },{ "level", gmcplevel },{ "hppercent", percent } };
-		SendGMCP("targettarget.vitals " + targettargetvitals.dump());
-	}
-    
-	if(HasGroup())
-	{
-		int firstingroup = group->FindFirstSlotInSubgroup(this);
-		if(group->GetSubgroupCount(firstingroup) > 1)
-		{
-			prompt += "\n\r";
-			int gmcpslot = 1;
-			for(int i = 0; i < Group::MAX_GROUP_SIZE; i++)
-			{
-				Character * current_member = group->members[firstingroup + i];
-				if(current_member && current_member != this)
-				{
-					prompt += "|B<";
-
-					if(current_member->InCombat())
-						prompt += "|R(X)|X";
-					if(current_member == group->leader)
-						prompt += "|Y*|X";
-
-					prompt += "|C" + current_member->name + "|X ";
-
-					//Health
-					int percent;
-					string statColor;
-					if (current_member->GetHealth() > 0 && current_member->GetMaxHealth() > 0)
-						percent = (current_member->GetHealth() * 100) / current_member->GetMaxHealth();
-					else
-						percent = 0;
-
-					if (percent >= 75)
-						statColor = "|x";
-					else if (percent >= 50)
-						statColor = "|G";
-					else if (percent >= 25)
-						statColor = "|Y";
-					else
-						statColor = "|R";
-
-					prompt += statColor + Utilities::itos(current_member->GetHealth()) + "|X/" + Utilities::itos(current_member->GetMaxHealth());
-					prompt += "|B>|X";
-
-					json vitals = { { "name", current_member->GetName() }, { "combat", current_member->InCombat() ? 1 : 0 },
-					                { "hp", current_member->GetHealth() }, { "hpmax", current_member->GetMaxHealth() },
-					                { "mp", current_member->GetMana() },{ "mpmax", current_member->GetMaxMana() } };
-					SendGMCP("group.vitals " + vitals.dump());
-				}
-			}
-		}
-	}
-    
-	//todo: We could block the entire function at the top, but then we lose a lot of GMCP data. We need to structure this differently
-	if (player && player->prompt) 
-	{
-		prompt += "\n\r";
-		Send(prompt);
-	}
-
-	if (hasQuery)
-	{
-		Send(queryPrompt + "\n\r");
-	}
-}
-
-Character * Character::GetCharacterRoom(string name)
-{
-    if(name.empty())
-        return NULL;
-
-    int count = 0;
-	string tempname = name;
-    int number = Utilities::number_argument(tempname);
-
-    if(!Utilities::str_cmp(tempname, "self") || !Utilities::str_cmp(tempname, "me"))
-		return this;
-    std::list<Character *>::iterator iter;
-    for(iter = room->characters.begin(); iter != room->characters.end(); ++iter)
-    {
-        if(!Utilities::IsName(tempname, (*iter)->name))
-		    continue;
-		if(++count == number)
-		    return (*iter);
-    }
-    return NULL;
-}
-
 Item * Character::GetItemRoom(string name)
 {
-	if (name.empty())
-		return NULL;
+	if (name.empty() || GetRoom() == nullptr)
+		return nullptr;
 
-	int count = 0;
-	string tempname = name;
-	int number = Utilities::number_argument(tempname);
-
-	for (auto iter = room->items.begin(); iter != room->items.end(); ++iter)
-	{
-		if (!Utilities::IsName(tempname, iter->first->name) && !Utilities::IsName(tempname, iter->first->keywords))
-			continue;
-		if (++count == number)
-			return iter->first;
-	}
-	return NULL;
+	return GetRoom()->GetItem(name);
 }
 
 bool Character::IsItemInRoom(Item * i)
 {
 	if (i == nullptr)
 		return false;
-
-	for (auto iter = room->items.begin(); iter != room->items.end(); ++iter)
-	{
-		if (iter->first == i)
-			return true;
-	}
+	if (GetRoom())
+		return GetRoom()->HasItem(i);
 	return false;
 }
 
+Character * Character::GetCharacterRoom(string name)
+{
+	if (name.empty() || GetRoom() == nullptr)
+		return nullptr;
+
+	if (!Utilities::str_cmp(name, "self") || !Utilities::str_cmp(name, "me"))
+		return this;
+
+	return GetRoom()->GetCharacter(name);
+}
+
+Character * Character::GetCharacterRoom(Character * target)
+{
+	if (!target)
+		return nullptr;
+	if (target == this)
+		return target;
+
+	return GetRoom()->GetCharacter(target);
+}
+
 //Find a character in this room or any adjacent room. takes an optional direction argument
+//todo: most of this should be a CRoom function
 Character * Character::GetCharacterAdjacentRoom(string name, string direction)
 {
     if(name.empty())
@@ -885,7 +290,7 @@ Character * Character::GetCharacterAdjacentRoom(string name, string direction)
 		{
 			for (iter = room->exits[exitNum]->to->characters.begin(); iter != room->exits[exitNum]->to->characters.end(); ++iter)
 			{
-				if (!Utilities::IsName(tempname, (*iter)->name))
+				if (!Utilities::IsName(tempname, (*iter)->GetName()))
 					continue;
 				if (++count == number)
 					return (*iter);
@@ -896,7 +301,7 @@ Character * Character::GetCharacterAdjacentRoom(string name, string direction)
 
     for(iter = room->characters.begin(); iter != room->characters.end(); ++iter)
     {
-        if(!Utilities::IsName(tempname, (*iter)->name))
+        if(!Utilities::IsName(tempname, (*iter)->GetName()))
 	        continue;
 	    if(++count == number)
 	        return (*iter);
@@ -907,7 +312,7 @@ Character * Character::GetCharacterAdjacentRoom(string name, string direction)
         {
             for(iter = room->exits[i]->to->characters.begin(); iter != room->exits[i]->to->characters.end(); ++iter)
             {
-                if(!Utilities::IsName(tempname, (*iter)->name))
+                if(!Utilities::IsName(tempname, (*iter)->GetName()))
 		            continue;
 		        if(++count == number)
 		            return (*iter);
@@ -917,27 +322,14 @@ Character * Character::GetCharacterAdjacentRoom(string name, string direction)
     return nullptr;
 }
 
-Character * Character::GetCharacterRoom(Character * target)
-{
-    if(!target)
-        return NULL;
-    if(target == this)
-        return target;
 
-    std::list<Character *>::iterator iter;
-    for(iter = room->characters.begin(); iter != room->characters.end(); ++iter)
-    {
-        if((*iter) == target)
-            return (*iter);
-    }
-    return NULL;
-}
 
 //Find a character in this room or any adjacent room
+//todo: most of this should be a CRoom function
 Character * Character::GetCharacterAdjacentRoom(Character * target)
 {
     if(!target)
-        return NULL;
+        return nullptr;
     if(target == this)
         return target;
 
@@ -958,14 +350,14 @@ Character * Character::GetCharacterAdjacentRoom(Character * target)
             }
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 void Character::Move(int direction)
 {
-    if(room == NULL)
+    if(GetRoom() == nullptr)
     {
-        LogFile::Log("error", "Character::Move, room == NULL");
+        LogFile::Log("error", "Character::Move, room == nullptr");
 		return;
     }
 
@@ -985,38 +377,8 @@ void Character::Move(int direction)
     
 	Room * toroom;
 
-    //Terrainmap
-	/*if(in_room->area->terrainmap && playerData && direction != EXIT_UP && direction != EXIT_DOWN)
-	{
-		Message(this, name + " leaves " + directionName[direction] + ".", MSG_NOTCHAR, POS_SITTING);
-
-		int cx = 0; int cy = 0;
-		DirectionCoordChange(direction, cx, cy);
-
-		TerrainExit * exreal;
-		//if(flagset(real exit))
-		//cout << direction << " " << x << " " << y << endl;
-		//cout << playerData->atx + cx << " " << playerData->aty + cy << endl;
-		//cout << (int)playerData->map[playerData->aty + cy][playerData->atx + cx].rgbtGreen << endl;
-		if((int)playerData->map[playerData->aty + cy][playerData->atx + cx].rgbtGreen == 1
-			&& (exreal = in_room->area->terrainmap->GetExit(direction, x, y)) != NULL)
-		{
-			//cout << "here" << endl;
-			toroom = exreal->exit->toroom;
-		}
-		else
-		{
-			toroom = in_room;
-		}
-		CharFromRoom();
-		CharToRoom(toroom, x + cx, y + cy);
-		Message(this, name + " has arrived from the " + revdirectionName[direction] + ".", MSG_NOTCHAR, POS_SITTING);
-		cmd_look(this, "");
-		return;
-	}*/
-
     //Regular rooms
-	if(room->exits[direction] == NULL || room->exits[direction]->to == NULL)
+	if(room->exits[direction] == nullptr || room->exits[direction]->to == nullptr)
 	{
 		Send("You cannot move in that direction.\n\r");
 		return;
@@ -1024,461 +386,35 @@ void Character::Move(int direction)
 
 	if (IsAlive())
 	{
-		Message(name + " leaves " + Exit::exitNames[direction] + ".", MSG_ROOM_NOTCHAR);
+		Message(GetName() + " leaves " + Exit::exitNames[direction] + ".", MSG_ROOM_NOTCHAR);
 	}
 	toroom = room->exits[direction]->to;
 
-	//need to search the TerrainExit list
-	/*if(toroom->area->terrainmap)
-	{
-		for(TerrainExit * te = toroom->area->terrainmap->realExits; te; te = te->next)
-		{
-			if(te->exit->toroom == in_room)
-			{
-				CharFromRoom();
-				CharToRoom(toroom, te->ex_x, te->ex_y);
-				break;
-			}
-		}
-	}
-	else
-	{*/
-        ChangeRooms(toroom);
-	//}
+    ChangeRooms(toroom);
 
     //TODO: move the checks for movement triggers here
 	if (IsAlive())
 	{
-		Message(name + " has arrived from " + ((direction != Exit::DIR_UP && direction != Exit::DIR_DOWN) ? "the " : "") + Exit::reverseExitNames[direction] + ".", MSG_ROOM_NOTCHAR);
+		Message(GetName() + " has arrived from " + ((direction != Exit::DIR_UP && direction != Exit::DIR_DOWN) ? "the " : "") + Exit::reverseExitNames[direction] + ".", MSG_ROOM_NOTCHAR);
 	}
 
-    cmd_look(this, "");
+	if(IsPlayer())					 //ew
+		cmd_look((Player*)this, ""); //eww
 
     //check npc aggro
 	if (IsAlive())
 	{
 		for (std::list<Character*>::iterator iter = room->characters.begin(); iter != room->characters.end(); ++iter)
 		{
-			if ((*iter)->IsNPC() && (*iter)->IsAlive() && Utilities::FlagIsSet((*iter)->flags, Character::FLAG_AGGRESSIVE) && !(*iter)->InCombat() && player && !player->IMMORTAL())
+			if ((*iter)->IsNPC() && (*iter)->IsAlive() && (*iter)->FlagIsSet(NPCIndex::FLAG_AGGRESSIVE) && !(*iter)->InCombat() && !IsImmortal())
 			{
 				(*iter)->EnterCombat(this);
 				EnterCombat(*iter);
-				Send((*iter)->name + " begins attacking you!\n\r");
+				Send((*iter)->GetName() + " begins attacking you!\n\r");
 				(*iter)->AutoAttack(this);
 			}
 		}
 	}
-}
-
-void Character::Sit()
-{
-	if (position == Position::POSITION_SITTING)
-		return;
-
-	Send("You sit down.\n\r");
-	position = Position::POSITION_SITTING;
-}
-
-void Character::Stand()
-{
-	if (position == Position::POSITION_STANDING)
-		return;
-
-	bool removed = false;
-	while (RemoveSpellAffectsByAura(false, SpellAffect::Auras::AURA_EATING)) //true if we removed a spell affect
-	{
-		removed = true;
-	}
-	if (removed)
-	{
-		Send("You stop eating or drinking.\n\r");
-	}
-
-	Send("You stand up.\n\r");
-	position = Position::POSITION_STANDING;
-}
-
-Character * Character::LoadPlayer(std::string name, User * user)
-{
-    StoreQueryResult characterres = Server::sqlQueue->Read("select * from players where name='" + name + "'");
-    if(characterres.empty())
-        return NULL;
-
-    Row row = *characterres.begin();
-
-    Character * loaded = Game::GetGame()->NewCharacter(name, user);
-
-    loaded->name = row["name"];
-    loaded->gender = row["gender"];
-	loaded->race = row["race"];
-    loaded->title = row["title"];
-    loaded->level = row["level"];
-    loaded->agility = row["agility"];
-    loaded->intellect = row["intellect"];
-    loaded->strength = row["strength"];
-    loaded->stamina = row["stamina"];
-    loaded->wisdom = row["wisdom"];
-	loaded->spirit = row["spirit"];
-    loaded->health = row["health"];
-    loaded->mana = row["mana"];
-
-    loaded->room = Game::GetGame()->GetRoom(row["room"]); 
-
-	if(!loaded->player)
-		loaded->player = new Player(user);
-    loaded->player->currentClass = Game::GetGame()->GetClass(row["class"]);
-    loaded->player->password = row["password"];
-    loaded->player->immlevel = row["immlevel"];
-    loaded->player->experience = row["experience"];
-	loaded->player->recall = row["recall"];
-	if (row["ghost"])
-	{
-		loaded->SetGhost();
-		loaded->player->corpse_room = row["corpse_room"];
-		loaded->player->graveyard_room = row["room"];
-		loaded->deathTime = row["ghost"];
-		loaded->player->death_timer = Player::DEFAULT_DEATH_TIME;
-		loaded->player->death_timer_runback = Player::DEFAULT_DEATH_TIME_RUNBACK;
-	}
-	loaded->player->statPoints = row["stat_points"];
-
-	StoreQueryResult playerclassres = Server::sqlQueue->Read("SELECT * FROM player_class_data where player='" + loaded->name + "'");
-	StoreQueryResult::iterator iter;
-	for (iter = playerclassres.begin(); iter != playerclassres.end(); ++iter)
-	{
-		Row classrow = *iter;
-		int id = classrow["class"];
-		int level = classrow["level"];
-		loaded->player->AddClass(id, level);
-	}
-
-	//Skills saved with a player no longer a thing, determine skills from classes. Still load them for the session with AddSkill
-	loaded->AddClassSkills();
-	//For imms also add every skill there is...
-	if (loaded->player && loaded->player->IMMORTAL())
-	{
-		for (auto iter = Game::GetGame()->skills.begin(); iter != Game::GetGame()->skills.end(); ++iter)
-		{
-			loaded->AddSkill(iter->second);
-		}
-	}
-
-	StoreQueryResult playerinventoryres = Server::sqlQueue->Read("SELECT * FROM player_inventory where player='" + loaded->name + "'");
-	for (iter = playerinventoryres.begin(); iter != playerinventoryres.end(); ++iter)
-	{
-		Row invrow = *iter;
-		int id = invrow["item"];
-		int count = invrow["count"];
-		int location = invrow["location"]; //Location means equipped, in inventory, in bank...
-		switch (location)
-		{
-			case DB_INVENTORY_EQUIPPED:
-			{
-				Item * equip = Game::GetGame()->GetItem(id);
-				loaded->player->EquipItem(equip);
-				//do NOT add equipment stats here, since a player is saved while wearing said equipment
-				break;
-			}
-
-			case DB_INVENTORY_INVENTORY:
-			{
-				for (int i = 0; i < count; i++)
-				{
-					loaded->player->AddItemInventory(Game::GetGame()->GetItem(id));
-				}
-				break;
-			}
-
-			case DB_INVENTORY_BANK:
-			{
-				//todo
-				break;
-			}
-		}
-	}
-
-	loaded->ResetMaxStats(); //Set maxhealth/mana/energy/rage/combos based on post equipment stats
-
-	StoreQueryResult playerqcres = Server::sqlQueue->Read("SELECT * FROM player_completed_quests where player='" + loaded->name + "'");
-	for (iter = playerqcres.begin(); iter != playerqcres.end(); ++iter)
-	{
-		Row qcrow = *iter;
-		int id = qcrow["quest"];
-		loaded->player->completedQuests.insert(id);
-	}
-
-	StoreQueryResult playerqares = Server::sqlQueue->Read("SELECT * FROM player_active_quests where player='" + loaded->name + "'");
-	int i = 0;
-	for (iter = playerqares.begin(); iter != playerqares.end(); ++iter)
-	{
-		Row qarow = *iter;
-		int id = qarow["quest"];
-		string objectives = (string)qarow["objectives"];
-		
-		Quest * q;
-		if ((q = Game::GetGame()->GetQuest(id)) != NULL)
-		{
-			loaded->player->questLog.push_back(q);
-			std::vector<int> playerObjectives;
-			loaded->player->questObjectives.push_back(playerObjectives);
-
-			int count;
-			int first = 0;
-			for (int last = (int)objectives.find(","); last != std::string::npos; last = (int)objectives.find(",", first))
-			{
-				count = Utilities::atoi(objectives.substr(first, last - first));
-				loaded->player->questObjectives[i].push_back(count);
-				first = last + 1;
-			}
-			count = Utilities::atoi(objectives.substr(first, objectives.length() - first));
-			loaded->player->questObjectives[i].push_back(count);
-			i++;
-		}
-	}
-
-	StoreQueryResult playeraliasres = Server::sqlQueue->Read("SELECT * FROM player_alias where player='" + loaded->name + "'");
-	for (iter = playeraliasres.begin(); iter != playeraliasres.end(); ++iter)
-	{
-		Row aliasrow = *iter;
-		string word = (string)aliasrow["word"];
-		string substitution = (string)aliasrow["substitution"];
-		loaded->player->alias[word] = substitution;
-	}
-	
-    return loaded;
-}
-
-void Character::Save()
-{
-    string sql;
-    if(player) //save players
-    {
-        string password = Utilities::SQLFixQuotes(player->password);
-        string fixtitle = Utilities::SQLFixQuotes(title);
-
-        sql = "INSERT INTO players (name, password, immlevel, title, experience, room, level, gender, race, agility, intellect, strength, stamina, ";
-        sql += "wisdom, spirit, health, mana, class, recall, ghost, corpse_room, stat_points) values ('";
-        sql += name + "','" + password + "'," + Utilities::itos(player->immlevel);
-        sql += ",'" + fixtitle + "'," + Utilities::itos(player->experience) + "," + Utilities::itos(room->id);
-        sql += "," + Utilities::itos(level) + "," + Utilities::itos(gender) + "," + Utilities::itos(race) + ",";
-        sql += Utilities::itos(agility) + "," + Utilities::itos(intellect) + "," + Utilities::itos(strength) + ",";
-        sql += Utilities::itos(stamina) + "," + Utilities::itos(wisdom) + "," + Utilities::itos(spirit) + ",";
-        sql += Utilities::itos(health) + "," + Utilities::itos(mana);
-		sql += "," + Utilities::itos(player->currentClass->id) + "," + Utilities::itos(player->recall) + ", ";
-		if (IsGhost() || IsCorpse())
-		{
-			sql += Utilities::dtos(deathTime, 0) + "," + Utilities::itos(player->corpse_room) + ",";
-		}
-		else
-		{
-			sql += "0,0,";
-		}
-		sql += Utilities::itos(player->statPoints) + ")";
-
-        sql += " ON DUPLICATE KEY UPDATE name=VALUES(name), password=VALUES(password), immlevel=VALUES(immlevel), title=VALUES(title), ";
-        sql += "experience=VALUES(experience), room=VALUES(room), level=VALUES(level), gender=VALUES(gender), race=VALUES(race), agility=VALUES(agility), ";
-        sql += "intellect=VALUES(intellect), strength=VALUES(strength), stamina=VALUES(stamina), wisdom=VALUES(wisdom), spirit=VALUES(spirit), ";
-        sql += "health=VALUES(health), mana=VALUES(mana), ";
-        sql += "class=VALUES(class), ";
-        sql += "recall=VALUES(recall), ghost=VALUES(ghost), corpse_room=VALUES(corpse_room),stat_points=VALUES(stat_points)";
-
-		//player_completed_quests
-		std::set<int>::iterator questiter;
-		for (questiter = player->completedQuests.begin(); questiter != player->completedQuests.end(); ++questiter)
-		{
-			string qcsql = "INSERT IGNORE INTO player_completed_quests (player, quest) values ";
-			qcsql += "('" + name + "', " + Utilities::itos(*questiter) + ")";
-			Server::sqlQueue->Write(qcsql);
-		}
-		
-		//player_active_quests
-		Server::sqlQueue->Write("DELETE FROM player_active_quests where player='" + name + "'");
-		for (int i = 0; i < (int)player->questLog.size(); i++)
-		{
-			string qasql = "INSERT INTO player_active_quests (player, quest, objectives) values ('" + name + "',";
-			qasql += Utilities::itos(player->questLog[i]->id) + ",'";
-			for (int j = 0; j < (int)player->questObjectives[i].size();)
-			{
-				qasql += Utilities::itos(player->questObjectives[i][j]);
-				j++;
-				if (j < (int)player->questObjectives[i].size())
-					qasql += ",";
-			}
-			qasql += "')";
-			Server::sqlQueue->Write(qasql);
-		}
-
-		//player_inventory
-		Server::sqlQueue->Write("DELETE FROM player_inventory where player='" + name + "'");
-		for (int i = 0; i < (int)player->equipped.size(); i++)
-		{
-			if (player->equipped[i] != NULL)
-			{
-				string equippedsql = "INSERT INTO player_inventory (player, item, count, location) values ('" + name + "',";
-				equippedsql += Utilities::itos(player->equipped[i]->id) + ",1," + Utilities::itos(DB_INVENTORY_EQUIPPED) + ")";
-				Server::sqlQueue->Write(equippedsql);
-			}
-		}
-		for (auto inviter = player->inventory.begin(); inviter != player->inventory.end(); ++inviter)
-		{
-			string equippedsql = "INSERT INTO player_inventory (player, item, count, location) values ('" + name + "',";
-			equippedsql += Utilities::itos(inviter->first->id) + "," + Utilities::itos(inviter->second) + "," + Utilities::itos(DB_INVENTORY_INVENTORY) + ")";
-			Server::sqlQueue->Write(equippedsql);
-		}
-		
-		//player_class_data
-		Server::sqlQueue->Write("DELETE FROM player_class_data where player='" + name + "'");
-		std::list<Player::ClassData>::iterator classiter;
-		for (classiter = player->classList.begin(); classiter != player->classList.end(); ++classiter)
-		{
-			string classsql = "INSERT INTO player_class_data (player, class, level) values ('" + name + "',";
-			classsql += Utilities::itos((*classiter).id) + "," + Utilities::itos((*classiter).level) + ")";
-			Server::sqlQueue->Write(classsql);
-		}
-
-		//player aliases
-		Server::sqlQueue->Write("DELETE FROM player_alias where player='" + name + "'");
-		for (auto aliasiter = player->alias.begin(); aliasiter != player->alias.end(); ++aliasiter)
-		{
-			string aliassql = "INSERT INTO player_alias (player, word, substitution) values ('" + name + "','";
-			aliassql += Utilities::SQLFixQuotes(aliasiter->first) + "','" + Utilities::SQLFixQuotes(aliasiter->second) + "')";
-			Server::sqlQueue->Write(aliassql);
-		}
-
-        player->saved = (int)Game::GetGame()->currentTime;
-    }
-    else //save npcs
-    {
-        string fixtitle = Utilities::SQLFixQuotes(title);
-
-        sql = "INSERT INTO npcs (id, name, keywords, level, gender, race, agility, intellect, strength, stamina, ";
-        sql += "wisdom, spirit, health, mana, energy, rage, title, attack_speed, damage_low, damage_high, flags, speechtext) values (";
-        sql += Utilities::itos(id) + ", '";
-        sql += name + "', '" + keywords + "', " + Utilities::itos(level) + "," + Utilities::itos(gender) + "," + Utilities::itos(race) + ",";
-        sql += Utilities::itos(agility) + "," + Utilities::itos(intellect) + "," + Utilities::itos(strength) + ",";
-        sql += Utilities::itos(stamina) + "," + Utilities::itos(wisdom) + "," + Utilities::itos(spirit) + ",";
-        sql += Utilities::itos(maxHealth) + "," + Utilities::itos(maxMana) + "," + Utilities::itos(maxEnergy) + "," + Utilities::itos(maxRage);
-        sql += ", '" + fixtitle + "', " + Utilities::dtos(npcAttackSpeed, 2) + ", " + Utilities::itos(npcDamageLow) + ", ";
-        sql += Utilities::itos(npcDamageHigh) + ",'";
-
-		std::vector<int>::iterator flagiter;
-		for (flagiter = flags.begin(); flagiter != flags.end(); ++flagiter)
-		{
-			sql += Utilities::itos((*flagiter)) + ";";
-		}
-		sql += "','" + Utilities::SQLFixQuotes(speechText) + "')";
-
-        sql += " ON DUPLICATE KEY UPDATE id=VALUES(id), name=VALUES(name), level=VALUES(level), gender=VALUES(gender), race=VALUES(race), agility=VALUES(agility), ";
-        sql += "intellect=VALUES(intellect), strength=VALUES(strength), stamina=VALUES(stamina), wisdom=VALUES(wisdom), ";
-        sql += "health=VALUES(health), mana=VALUES(mana), energy=VALUES(energy), rage=VALUES(rage),";
-        sql += "title=VALUES(title), attack_speed=VALUES(attack_speed), damage_low=VALUES(damage_low), ";
-        sql += "damage_high=VALUES(damage_high), flags=VALUES(flags), speechtext=VALUES(speechtext)";
-
-		//save skills
-		Server::sqlQueue->Write("DELETE FROM npc_skills where npc=" + Utilities::itos(id));
-		std::map<std::string, Skill *>::iterator skilliter;
-		for (skilliter = knownSkills.begin(); skilliter != knownSkills.end(); ++skilliter)
-		{
-			string skillsql = "INSERT INTO npc_skills (npc, id) values ";
-			skillsql += "(" + Utilities::itos(id) + ", " + Utilities::itos((*skilliter).second->id) + ")";
-			skillsql += " ON DUPLICATE KEY UPDATE npc=VALUES(npc), id=VALUES(id)";
-			Server::sqlQueue->Write(skillsql);
-		}
-
-		//save drops
-		Server::sqlQueue->Write("DELETE FROM npc_drops where npc=" + Utilities::itos(id));
-		std::list<DropData>::iterator dropsiter;
-		for(dropsiter = drops.begin(); dropsiter != drops.end(); ++dropsiter)
-		{
-			string dropsql = "INSERT INTO npc_drops (npc, items, percent) values ";
-			dropsql += "(" + Utilities::itos(id) + ", '";
-			for(int i = 0; i < (int)(*dropsiter).id.size(); i++)
-			{
-				dropsql += Utilities::itos((*dropsiter).id[i]) + ";";
-			}
-			
-			
-			dropsql += "', " + Utilities::itos((*dropsiter).percent) + ")";
-			dropsql += " ON DUPLICATE KEY UPDATE npc=VALUES(npc), items=VALUES(items), percent=VALUES(percent)";
-			Server::sqlQueue->Write(dropsql);
-
-		}
-
-        //save Triggers
-        std::map<int, Trigger>::iterator trigiter = triggers.begin();
-        while(trigiter != triggers.end())
-        {
-            Trigger * t = &((*trigiter).second);
-            ++trigiter;
-            if(t->removeme)
-            {
-                string triggersql = "DELETE FROM triggers where triggers.parent_type="+Utilities::itos(Trigger::PARENT_NPC)
-                                    +" and triggers.parent_id="+Utilities::itos(id)+" and triggers.id="+Utilities::itos(t->id);
-                Server::sqlQueue->Write(triggersql);
-                triggers.erase(t->id);
-                t = NULL;
-            }
-            else
-            {
-                string triggersql = "INSERT INTO triggers (parent_id, id, parent_type, type, argument, script, function) values ";
-                triggersql += "(" + Utilities::itos(id) + ", " + Utilities::itos(t->id) + ", " + Utilities::itos(Trigger::PARENT_NPC) + ", ";
-                triggersql += Utilities::itos(t->GetType()) + ", '" + Utilities::SQLFixQuotes(t->GetArgument()) + "', '";
-                triggersql += Utilities::SQLFixQuotes(t->GetScript()) + "', '" + Utilities::SQLFixQuotes(t->GetFunction()) + "')";
-
-                triggersql += " ON DUPLICATE KEY UPDATE parent_id=VALUES(parent_id), id=VALUES(id), parent_type=VALUES(parent_type), ";
-                triggersql += "type=VALUES(type), argument=VALUES(argument), script=VALUES(script), function=VALUES(function)";
-
-                Server::sqlQueue->Write(triggersql);
-            }
-        }
-    }
-    Server::sqlQueue->Write(sql);
-}
-
-void Character::SetLevel(int newlevel)
-{
-    if(level == newlevel || newlevel > Game::MAX_LEVEL || newlevel < 1)
-        return;
-
-	Send("|W***You have reached level " + Utilities::itos(newlevel) + "!***|X\n\r");
-
-    if(player)
-    {
-        player->SetClassLevel(player->currentClass->id, 
-                              Utilities::MAX(0, player->GetClassLevel(player->currentClass->id) + (newlevel - level)));
-	
-		player->statPoints += Player::STATS_PER_LEVEL;
-		Send("|WYou gain " + Utilities::itos(Player::STATS_PER_LEVEL) + " attribute points. Assign attribute points with the \"train\" command.|X\n\r");
-		
-		std::list<Class::SkillData>::iterator newskills;
-		for (newskills = player->currentClass->classSkills.begin(); newskills != player->currentClass->classSkills.end(); newskills++)
-		{
-			if (newskills->level == player->GetClassLevel(player->currentClass->id) && !HasSkill(newskills->skill)) //Found a new skill to add
-			{
-				AddSkill(newskills->skill);
-				Send("|WYou have learned the skill \"" + newskills->skill->long_name + "\"|X\n\r");
-			}
-		}
-	}
-	level = newlevel;
-	SetHealth(maxHealth);
-	SetMana(maxMana);
-	SetEnergy(maxEnergy);
-}
-
-int Character::GetLevel()
-{
-    return level;
-}
-
-string Character::GetName()
-{
-    return name;
-}
-
-Player * Character::GetPlayer()
-{
-	return player;
 }
 
 SpellAffect * Character::AddSpellAffect(int isDebuff, Character * caster, string name,
@@ -1502,7 +438,7 @@ SpellAffect * Character::AddSpellAffect(int isDebuff, Character * caster, string
 				//Found it, refresh the duration
 				(*iter)->ticksRemaining = (*iter)->ticks;
 				(*iter)->appliedTime = Game::currentTime;
-				return NULL;
+				return nullptr;
 			}
 		}
     }
@@ -1523,7 +459,7 @@ SpellAffect * Character::AddSpellAffect(int isDebuff, Character * caster, string
     {
         sa->caster->AddSubscriber(sa);
 		//cout << "AddSpellAffect ADD" << endl;
-        sa->casterName = caster->name;
+        sa->casterName = caster->GetName();
     }
     sa->ticksRemaining = ticks;
 
@@ -1538,7 +474,7 @@ SpellAffect * Character::AddSpellAffect(int isDebuff, Character * caster, string
         buffs.push_front(sa);
     }
 
-    if(sk != NULL)
+    if(sk != nullptr)
     {
         string func = sk->function_name + "_apply";
         try
@@ -1549,8 +485,8 @@ SpellAffect * Character::AddSpellAffect(int isDebuff, Character * caster, string
 		catch(const std::runtime_error & e)
 		{
 			LogFile::Log("error", e.what());
-			/*const char * logstring = lua_tolstring(Server::luaState, -1, NULL);
-			if(logstring != NULL)
+			/*const char * logstring = lua_tolstring(Server::luaState, -1, nullptr);
+			if(logstring != nullptr)
 				LogFile::Log("error", logstring);*/
 		}
     }
@@ -1754,83 +690,7 @@ void Character::RemoveAllSpellAffects()
     buffs.clear();
 }
 
-void Character::SaveCooldowns()
-{
-    string sql = "DELETE FROM player_cooldowns WHERE player='" + name + "';";
-    Server::sqlQueue->Write(sql);
 
-    std::map<string, Skill *>::iterator iter;
-    for(iter = knownSkills.begin(); iter != knownSkills.end(); ++iter)
-    {
-        std::map<int, double>::iterator iter2;
-        iter2 = cooldowns.find((*iter).second->id);
-        if(iter2 == cooldowns.end()) //not on cooldown
-            continue;
-        if((*iter2).second <= Game::currentTime) //not on cooldown
-            continue;
-        
-        sql = "INSERT INTO player_cooldowns (player_cooldowns.player, player_cooldowns.skill, player_cooldowns.timestamp) VALUES ('";
-        sql += name + "', " + Utilities::itos((*iter).second->id) + ", " + Utilities::dtos((*iter2).second, 2) + ");";
-        Server::sqlQueue->Write(sql);
-    }
-}
-
-void Character::LoadCooldowns()
-{
-	StoreQueryResult cooldownres;
-	try {
-		cooldownres = Server::sqlQueue->Read("SELECT * FROM player_cooldowns WHERE player='" + name + "';");
-		if (!cooldownres || cooldownres.empty())
-			return;
-	}
-	catch (std::exception e)
-	{
-		LogFile::Log("error", e.what());
-		return;
-	}
-
-    Row row;
-    StoreQueryResult::iterator i;
-    for(i = cooldownres.begin(); i != cooldownres.end(); i++)
-    {
-        row = *i;
-        Skill * sk = Game::GetGame()->GetSkill(row["skill"]);
-        if(sk != NULL)
-        {
-            cooldowns[sk->id] = row["timestamp"];
-        }
-    }
-
-    string sql = "DELETE FROM player_cooldowns WHERE player='" + name + "';";
-    Server::sqlQueue->Write(sql);
-}
-
-void Character::SaveSpellAffects()
-{
-    if(!player)
-        return;
-
-    string deletesql = "DELETE FROM player_spell_affects WHERE player = '" + name + "';";
-    Server::sqlQueue->Write(deletesql);
-
-    std::list<SpellAffect*>::iterator iter;
-    for(iter = buffs.begin(); iter != buffs.end(); ++iter)
-    {
-        (*iter)->Save(name);
-    }
-    for(iter = debuffs.begin(); iter != debuffs.end(); ++iter)
-    {
-        (*iter)->Save(name);
-    }
-}
-
-void Character::LoadSpellAffects()
-{
-    if(!player)
-        return;
-
-    SpellAffect::Load(this);
-}
 
 int Character::GetAuraModifier(int aura_id, int whatModifier)
 {
@@ -2014,13 +874,13 @@ void Character::EnterCombat(Character * victim)
 		return;
 	}
 
-    if(target == NULL || target == victim)
+    if(target == nullptr || target == victim)
     {
         SetTarget(victim);
         meleeActive = true;
     }
-    //if(victim->target == NULL || victim->target == this)
-    if((victim->IsNPC() && victim->meleeActive == false) || victim->target == NULL || victim->target == this)
+    //if(victim->target == nullptr || victim->target == this)
+    if((victim->IsNPC() && victim->meleeActive == false) || victim->target == nullptr || victim->target == this)
     {
         victim->SetTarget(this);
         victim->meleeActive = true;
@@ -2028,10 +888,10 @@ void Character::EnterCombat(Character * victim)
     combat = true;
     victim->combat = true;
 
-    if(player)
-        player->lastCombatAction = Game::currentTime;
-    if(victim->player)
-        victim->player->lastCombatAction = Game::currentTime;
+    if(IsPlayer())
+        ((Player*)(this))->lastCombatAction = Game::currentTime;
+    if(victim->IsPlayer())
+		((Player*)(victim))->lastCombatAction = Game::currentTime;
 
 	if (IsNPC() || victim->IsNPC()) //Keep track of threat unless BOTH are players
 	{
@@ -2051,12 +911,12 @@ void Character::EnterCombat(Character * victim)
 	if (HasGroup())
 	{
 		combat = { { "name", GetName() },{ "combat", 1 } };
-		int first_slot = group->FindFirstSlotInSubgroup(this);
+		int first_slot = GetGroup()->FindFirstSlotInSubgroup((Player*)this);
 		for (int i = first_slot; i < first_slot + Group::MAX_GROUP_SIZE; i++)
 		{
-			if (group->members[i] != nullptr && group->members[i] != this)
+			if (GetGroup()->members[i] != nullptr && GetGroup()->members[i] != this)
 			{
-				group->members[i]->SendGMCP("group.vitals " + combat.dump());
+				GetGroup()->members[i]->SendGMCP("group.vitals " + combat.dump());
 			}
 		}
 	}
@@ -2079,8 +939,8 @@ void Character::EnterCombatAssist(Character * friendly)
 	}
 
 	combat = true;
-    if(player)
-        player->lastCombatAction = Game::currentTime;
+    if(IsPlayer())
+		((Player*)(this))->lastCombatAction = Game::currentTime;
 
 	//go through friendly's threat list, add "zero" threat to everybody there
 	for (auto threatiter = friendly->threatList.begin(); threatiter != friendly->threatList.end(); threatiter++)
@@ -2102,12 +962,12 @@ void Character::EnterCombatAssist(Character * friendly)
 	if (HasGroup())
 	{
 		combat = { { "name", GetName() },{ "combat", 1 } };
-		int first_slot = group->FindFirstSlotInSubgroup(this);
+		int first_slot = GetGroup()->FindFirstSlotInSubgroup((Player*)this);
 		for (int i = first_slot; i < first_slot + Group::MAX_GROUP_SIZE; i++)
 		{
-			if (group->members[i] != nullptr && group->members[i] != this)
+			if (GetGroup()->members[i] != nullptr && GetGroup()->members[i] != this)
 			{
-				group->members[i]->SendGMCP("group.vitals " + combat.dump());
+				GetGroup()->members[i]->SendGMCP("group.vitals " + combat.dump());
 			}
 		}
 	}
@@ -2117,7 +977,7 @@ void Character::ExitCombat()
 {
     combat = false;
     meleeActive = false;
-    RemoveThreat(NULL, true);
+    RemoveThreat(nullptr, true);
     movementSpeed = Character::NORMAL_MOVE_SPEED;
 	json combat = { { "combat", 0 } };
 	SendGMCP("char.vitals " + combat.dump());
@@ -2127,12 +987,12 @@ void Character::ExitCombat()
 	if (HasGroup())
 	{
 		combat = { { "name", GetName() },{ "combat", 0 } };
-		int first_slot = group->FindFirstSlotInSubgroup(this);
+		int first_slot = GetGroup()->FindFirstSlotInSubgroup((Player*)this);
 		for (int i = first_slot; i < first_slot + Group::MAX_GROUP_SIZE; i++)
 		{
-			if (group->members[i] != nullptr && group->members[i] != this)
+			if (GetGroup()->members[i] != nullptr && GetGroup()->members[i] != this)
 			{
-				group->members[i]->SendGMCP("group.vitals " + combat.dump());
+				GetGroup()->members[i]->SendGMCP("group.vitals " + combat.dump());
 			}
 		}
 	}
@@ -2147,7 +1007,7 @@ bool Character::InCombat()
 
 void Character::AutoAttack(Character * victim)
 {
-    if(victim == NULL)
+    if(victim == nullptr)
         return;
 
     //unarmed
@@ -2159,54 +1019,56 @@ void Character::AutoAttack(Character * victim)
     bool attack_oh = false; //weapon required for offhand attack (no unarmed)
 
 	//NPC autoattack
-    if(player == NULL && lastAutoAttack_main + npcAttackSpeed <= Game::currentTime)
+    if(IsNPC() && lastAutoAttack_main + ((NPC*)(this))->GetNPCIndex()->npcAttackSpeed <= Game::currentTime)
     {
-        if(victim->target == NULL) //Force a target on our victim
+		NPC * thisnpc = (NPC*)this;
+        if(victim->target == nullptr) //Force a target on our victim
         {
             victim->SetTarget(this);
             //Have the victim retaliate when attacked with no target set
             victim->meleeActive = true;
         }
-        if(victim->player)
-            victim->player->lastCombatAction = Game::currentTime;
+        if(victim->IsPlayer())
+            ((Player*)(victim))->lastCombatAction = Game::currentTime;
         lastAutoAttack_main = Game::currentTime;
 
-        int damage = npcDamageLow;
-        if(npcDamageHigh != npcDamageLow)
-            damage = (Server::rand() % (npcDamageHigh - npcDamageLow)) + npcDamageLow;
-		if (victim->player)
-			victim->GenerateRageOnTakeDamage(damage);
+        int damage = thisnpc->GetNPCIndex()->npcDamageLow;
+        if(thisnpc->GetNPCIndex()->npcDamageHigh != thisnpc->GetNPCIndex()->npcDamageLow)
+            damage = (Server::rand() % (thisnpc->GetNPCIndex()->npcDamageHigh - thisnpc->GetNPCIndex()->npcDamageLow)) + thisnpc->GetNPCIndex()->npcDamageLow;
+		if (victim->IsPlayer())
+			((Player*)(victim))->GenerateRageOnTakeDamage(damage);
 
-		victim->Send("|Y" + name + " hits you for " + Utilities::itos(damage) + " damage.|X\n\r");
+		victim->Send("|Y" + GetName() + " hits you for " + Utilities::itos(damage) + " damage.|X\n\r");
 		//Message("|G" + name + "'s attack hits " + victim->name + " for " + Utilities::itos(damage) + " damage.|X", Character::MSG_ROOM_NOTCHARVICT, victim);
 
         OneHit(victim, damage); //TODO fancy damage calculations, block miss hit crit 
         //victim may be invalid here if it was killed!
     }
-    else if(player != NULL) //Player autoattack
+    else if(IsPlayer()) //Player autoattack
     {
-		weaponSpeed_main = GetMainhandWeaponSpeed();
-		damage_main = GetMainhandDamageRandomHit();
+		Player * thisplayer = (Player*)this;
+		weaponSpeed_main = thisplayer->GetMainhandWeaponSpeed();
+		damage_main = thisplayer->GetMainhandDamageRandomHit();
 		if(damage_main == 0)
 			attack_mh = false; //no mainhand attack if we're holding a non weapon
 
-		weaponSpeed_off = GetOffhandWeaponSpeed();
-		damage_off = GetOffhandDamageRandomHit();
+		weaponSpeed_off = thisplayer->GetOffhandWeaponSpeed();
+		damage_off = thisplayer->GetOffhandDamageRandomHit();
 		if(damage_off == 0)
 			attack_oh = false;
 
-        if(attack_mh && lastAutoAttack_main + weaponSpeed_main <= Game::currentTime)
+        if(attack_mh && thisplayer->lastAutoAttack_main + weaponSpeed_main <= Game::currentTime)
         {
-			damage_main += (int)ceil((strength * Character::STRENGTH_DAMAGE_MODIFIER) / weaponSpeed_main);
-            if(victim->target == NULL) //Force a target on our victim
+			damage_main += (int)ceil((thisplayer->GetStrength() * Player::STRENGTH_DAMAGE_MODIFIER) / weaponSpeed_main);
+            if(victim->target == nullptr) //Force a target on our victim
             {     
                 victim->SetTarget(this);
                 //Have the victim retaliate when attacked with no target set
                 victim->meleeActive = true;
             }
-            player->lastCombatAction = Game::currentTime;
-            if(victim->player)
-                victim->player->lastCombatAction = Game::currentTime;
+			thisplayer->lastCombatAction = Game::currentTime;
+            if(victim->IsPlayer())
+				((Player*)(victim))->lastCombatAction = Game::currentTime;
             lastAutoAttack_main = Game::currentTime;
 			GenerateRageOnAttack(damage_main, weaponSpeed_main, true, false);
 
@@ -2216,26 +1078,26 @@ void Character::AutoAttack(Character * victim)
 			{
 				tapcolor = "|D";
 			}
-			Send(tapcolor + "You hit " + victim->name + " for " + Utilities::itos(damage_main) + " damage.|X\n\r");
-			victim->Send("|Y" + name + " hits you for " + Utilities::itos(damage_main) + " damage.|X\n\r");
+			Send(tapcolor + "You hit " + victim->GetName() + " for " + Utilities::itos(damage_main) + " damage.|X\n\r");
+			victim->Send("|Y" + GetName() + " hits you for " + Utilities::itos(damage_main) + " damage.|X\n\r");
 			//Message("|G" + name + "'s attack hits " + victim->name + " for " + Utilities::itos(damage_main) + " damage.|X", Character::MSG_ROOM_NOTCHARVICT, victim);
 
             OneHit(victim, damage_main); //TODO fancy damage calculations, block miss hit crit 
             //victim may be invalid if it was killed!
         }
-        if(attack_oh && lastAutoAttack_off + weaponSpeed_off <= Game::currentTime)
+        if(attack_oh && thisplayer->lastAutoAttack_off + weaponSpeed_off <= Game::currentTime)
         {
-			damage_off += (int)ceil((strength * Character::STRENGTH_DAMAGE_MODIFIER) / weaponSpeed_off);
-            if(victim->target == NULL) //Force a target on our victim
+			damage_off += (int)ceil((thisplayer->strength * Player::STRENGTH_DAMAGE_MODIFIER) / weaponSpeed_off);
+            if(victim->target == nullptr) //Force a target on our victim
             {     
                 victim->SetTarget(this);
                 //Have the victim retaliate when attacked with no target set
                 victim->meleeActive = true;
             }
-            player->lastCombatAction = Game::currentTime;
-            if(victim->player)
-                victim->player->lastCombatAction = Game::currentTime;
-            lastAutoAttack_off = Game::currentTime;
+			thisplayer->lastCombatAction = Game::currentTime;
+            if(victim->IsPlayer())
+                ((Player*)victim)->lastCombatAction = Game::currentTime;
+			thisplayer->lastAutoAttack_off = Game::currentTime;
 			GenerateRageOnAttack(damage_off, weaponSpeed_off, false, false);
 
 			string tapcolor = "|G";
@@ -2244,8 +1106,8 @@ void Character::AutoAttack(Character * victim)
 			{
 				tapcolor = "|D";
 			}
-			Send(tapcolor + "You hit " + victim->name + " for " + Utilities::itos(damage_off) + " damage.|X\n\r");
-			victim->Send("|Y" + name + " hits you for " + Utilities::itos(damage_off) + " damage.|X\n\r");
+			Send(tapcolor + "You hit " + victim->GetName() + " for " + Utilities::itos(damage_off) + " damage.|X\n\r");
+			victim->Send("|Y" + GetName() + " hits you for " + Utilities::itos(damage_off) + " damage.|X\n\r");
 			//Message("|G" + name + "'s attack hits " + victim->name + " for " + Utilities::itos(damage_off) + " damage.|X", Character::MSG_ROOM_NOTCHARVICT, victim);
 
             OneHit(victim, damage_off); //TODO fancy damage calculations, block miss hit crit 
@@ -2256,7 +1118,7 @@ void Character::AutoAttack(Character * victim)
 
 void Character::OneHit(Character * victim, int damage) 
 {
-    if(victim == NULL)
+    if(victim == nullptr)
         return;
     if(victim->remove)
     {
@@ -2278,7 +1140,7 @@ void Character::OneHit(Character * victim, int damage)
 
 void Character::OneHeal(Character * victim, int heal)
 {
-	if (victim == NULL)
+	if (victim == nullptr)
 		return;
 	if (victim->remove)
 	{
@@ -2296,133 +1158,6 @@ void Character::OneHeal(Character * victim, int heal)
 	victim->AdjustHealth(this, heal);
 }
 
-double Character::GetMainhandWeaponSpeed()
-{
-	if (player == NULL)	//These checks probably mean this should be a CPlayer function
-		return 0;
-
-	if (player->equipped[Player::EQUIP_MAINHAND] != NULL
-		&& player->equipped[Player::EQUIP_MAINHAND]->speed > 0)
-	{
-		return player->equipped[Player::EQUIP_MAINHAND]->speed;
-	}
-	return 0;
-}
-
-double Character::GetOffhandWeaponSpeed()
-{
-	if (player == NULL)	//These checks probably mean this should be a CPlayer function
-		return 0;
-
-	if (player->equipped[Player::EQUIP_OFFHAND] != NULL
-		&& player->equipped[Player::EQUIP_OFFHAND]->speed > 0)
-	{
-		return player->equipped[Player::EQUIP_OFFHAND]->speed;
-	}
-	return 0;
-}
-
-int Character::GetMainhandDamageRandomHit()
-{
-	if (player == NULL) //should be a player function, obviously
-		return 1;
-
-	int damage = 1;
-	if (player->equipped[Player::EQUIP_MAINHAND] != NULL
-		&& player->equipped[Player::EQUIP_MAINHAND]->speed > 0
-		&& player->equipped[Player::EQUIP_MAINHAND]->damageHigh > 0)
-	{
-		int high = player->equipped[Player::EQUIP_MAINHAND]->damageHigh;
-		int low = player->equipped[Player::EQUIP_MAINHAND]->damageLow;
-		if (high != low)
-			damage = (Server::rand() % (high+1 - low)) + low;
-		else
-			damage = low;
-	}
-	else
-	{
-		return 0;
-	}
-	return damage;
-}
-
-double Character::GetMainhandDamagePerSecond()
-{
-	if (player == NULL) //should be a player function, obviously
-		return 1;
-
-	double dps = 1;
-	if (player->equipped[Player::EQUIP_MAINHAND] != NULL
-		&& player->equipped[Player::EQUIP_MAINHAND]->speed > 0 
-		&& player->equipped[Player::EQUIP_MAINHAND]->damageHigh > 0)
-	{
-		double weaponSpeed_main = player->equipped[Player::EQUIP_MAINHAND]->speed;
-		int high = player->equipped[Player::EQUIP_MAINHAND]->damageHigh;
-		int low = player->equipped[Player::EQUIP_MAINHAND]->damageLow;
-		dps = ((low + high) / 2.0) / weaponSpeed_main;
-	}
-	else
-	{
-		return 0;
-	}
-	return dps;
-}
-
-int Character::GetOffhandDamageRandomHit()
-{
-	if (player == NULL) //should be a player function, obviously
-		return 1;
-
-	int damage = 1;
-	if (player->equipped[Player::EQUIP_OFFHAND] != NULL
-		&& player->equipped[Player::EQUIP_OFFHAND]->speed > 0
-		&& player->equipped[Player::EQUIP_OFFHAND]->damageHigh > 0)
-	{
-		int high = player->equipped[Player::EQUIP_OFFHAND]->damageHigh;
-		int low = player->equipped[Player::EQUIP_OFFHAND]->damageLow;
-		if (high != low)
-			damage = (Server::rand() % (high + 1 - low)) + low;
-		else
-			damage = low;
-	}
-	else
-	{
-		return 0;
-	}
-	return damage;
-}
-
-double Character::GetOffhandDamagePerSecond()
-{
-	if (player == NULL) //should be a player function, obviously
-		return 1;
-
-	double dps = 1;
-	if (player->equipped[Player::EQUIP_OFFHAND] != NULL
-		&& player->equipped[Player::EQUIP_OFFHAND]->speed > 0
-		&& player->equipped[Player::EQUIP_OFFHAND]->damageHigh > 0)
-	{
-		double weaponSpeed_main = player->equipped[Player::EQUIP_OFFHAND]->speed;
-		int high = player->equipped[Player::EQUIP_OFFHAND]->damageHigh;
-		int low = player->equipped[Player::EQUIP_OFFHAND]->damageLow;
-		dps = ((low + high) / 2.0) / weaponSpeed_main;
-	}
-	else
-	{
-		return 0;
-	}
-	return dps;
-}
-
-int Character::GetIntellect()
-{
-	return intellect;
-}
-
-int Character::GetStrength()
-{
-	return strength;
-}
 
 bool Character::IsFighting(Character * target)
 {
@@ -2438,19 +1173,9 @@ int Character::GetHealth()
     return health;
 }
 
-int Character::GetMaxHealth()
-{
-	return maxHealth;
-}
-
 int Character::GetMana()
 {
     return mana;
-}
-
-int Character::GetMaxMana()
-{
-	return maxMana;
 }
 
 int Character::GetEnergy()
@@ -2458,25 +1183,15 @@ int Character::GetEnergy()
 	return energy;
 }
 
-int Character::GetMaxEnergy()
-{
-	return maxEnergy;
-}
-
 int Character::GetRage()
 {
 	return rage;
 }
 
-int Character::GetMaxRage()
-{
-	return maxRage;
-}
-
 void Character::GenerateRageOnAttack(int damage, double weapon_speed, bool mainhand, bool wascrit)
 {
 	//Rage generation stuff, inspired by wow, for now
-	double conversionvalue = (.008 * level * level) + 4;
+	double conversionvalue = (.008 * GetLevel() * GetLevel()) + 4;
 	double hitfactor = 1.75;
 	if (mainhand)
 		hitfactor *= 2;
@@ -2493,13 +1208,8 @@ void Character::GenerateRageOnAttack(int damage, double weapon_speed, bool mainh
 void Character::GenerateRageOnTakeDamage(int damage)
 {
 	//Rage generation stuff, inspired by wow, for now
-	double conversionvalue = (.008 * level * level) + 4;
+	double conversionvalue = (.008 * GetLevel() * GetLevel()) + 4;
 	AdjustRage(this, (int)ceil((5 * damage) / (2 * conversionvalue)));
-}
-
-int Character::GetComboPoints()
-{
-	return comboPoints;
 }
 
 void Character::OnDeath()
@@ -2530,7 +1240,7 @@ void Character::OnDeath()
 	if (!IsNPC()) //player killed... doesn't matter by who, no rewards yet for doing so
 	{
 		ExitCombat();			//Removes our threat list
-		SetQuery("Release spirit? ('release') ", NULL, releaseSpiritQuery);
+		SetQuery("Release spirit? ('release') ", nullptr, releaseSpiritQuery);
 	}
 	else if (IsNPC()) //NPC killed, figure out by who...
 	{
@@ -2649,355 +1359,8 @@ void Character::OnDeath()
 	SetCorpse();
 }
 
-Character::OneLoot * Character::GetCorpseLoot(int corpse_id)
-{
-	for (auto iter = begin(loot); iter != end(loot); ++iter)
-	{
-		if (iter->id == corpse_id)
-			return &(*iter);
-	}
-	return nullptr;
-}
 
-int Character::AddLootRoll(int corpse_id, Character * corpse)
-{
-	LootRoll lr;
-	lr.corpse = corpse;
-	lr.corpse_id = corpse_id;
-	
-	int empty_id = 1;
-	for (auto iter = begin(pending_loot_rolls); iter != end(pending_loot_rolls); ++iter)
-	{
-		if (iter->my_id != empty_id)
-			break;
-		empty_id++;
-	}
-	lr.my_id = empty_id;
-	pending_loot_rolls.push_back(lr);
-	corpse->AddSubscriber(this);
-	return empty_id;
-}
 
-bool Character::HasLootRoll(Character * corpse, int corpse_id)
-{
-	for (auto iter = pending_loot_rolls.begin(); iter != pending_loot_rolls.end(); ++iter)
-	{
-		if (iter->corpse == corpse && iter->corpse_id == corpse_id)
-			return true;
-	}
-	return false;
-}
-
-void Character::RemoveLootRoll(int my_id)
-{
-	for (auto iter = begin(pending_loot_rolls); iter != end(pending_loot_rolls);)
-	{
-		if (iter->my_id == my_id)
-		{
-			iter->corpse->RemoveSubscriber(this);
-			iter = pending_loot_rolls.erase(iter);
-			break;
-		}
-		else
-		{
-			++iter;
-		}
-	}
-}
-
-void Character::RemoveLootRoll(Character * corpse)
-{
-	for (auto iter = begin(pending_loot_rolls); iter != end(pending_loot_rolls);)
-	{
-		if (iter->corpse == corpse)
-		{
-			corpse->RemoveSubscriber(this);
-			iter = pending_loot_rolls.erase(iter);
-		}
-		else
-		{
-			++iter;
-		}
-	}
-}
-
-void Character::RemoveLootRoll(Character * corpse, int corpse_id)
-{
-	for (auto iter = begin(pending_loot_rolls); iter != end(pending_loot_rolls);)
-	{
-		if (iter->corpse == corpse && iter->corpse_id == corpse_id)
-		{
-			corpse->RemoveSubscriber(this);
-			iter = pending_loot_rolls.erase(iter);
-			//break; //a corpse/corpse_id combo should be unique, but continue looping just in case
-		}
-		else
-		{
-			++iter;
-		}
-	}
-}
-
-void Character::RemoveAllLootRolls() //for subscriber/subscribermanager considerations
-{
-	for (auto iter = begin(pending_loot_rolls); iter != end(pending_loot_rolls);)
-	{
-		iter->corpse->RemoveSubscriber(this);
-		iter = pending_loot_rolls.erase(iter);
-	}
-	pending_loot_rolls.clear();
-}
-
-void Character::RemoveLooter(Character * ch)
-{
-	for (auto iter = loot.begin(); iter != loot.end(); ++iter)
-	{
-		for (auto iter2 = iter->looters.begin(); iter2 != iter->looters.end();)
-		{
-			if (iter2->ch == ch)
-			{
-				iter2 = iter->looters.erase(iter2);
-				ch->RemoveSubscriber(this);
-			}
-			else
-			{
-				++iter2;
-			}
-		}
-	}
-}
-
-void Character::RemoveAllLooters() //for subscriber/subscribermanager considerations
-{
-	for (auto iter = loot.begin(); iter != loot.end(); ++iter)
-	{
-		for (auto iter2 = iter->looters.begin(); iter2 != iter->looters.end();)
-		{
-			iter2->ch->RemoveSubscriber(this);
-			iter2 = iter->looters.erase(iter2);
-		}
-		iter->looters.clear();
-	}
-}
-
-void Character::RemoveLoot(OneLoot * removeme)
-{
-	for (auto iter = begin(loot); iter != end(loot); ++iter)
-	{
-		if (&(*iter) == removeme)
-		{
-			for (auto iter2 = iter->looters.begin(); iter2 != iter->looters.end();)
-			{
-				iter2->ch->RemoveSubscriber(this);
-				iter2 = iter->looters.erase(iter2);
-			}
-			iter->looters.clear();
-			loot.erase(iter);
-			return;
-		}
-	}
-}
-
-void Character::SetRollType(Character * who, int corpse_id, Looter::RollType type)
-{
-	OneLoot * oneloot = nullptr;
-	for (auto iter = who->loot.begin(); iter != who->loot.end(); ++iter)
-	{
-		if (iter->id == corpse_id)
-		{
-			oneloot = &(*iter);
-			break;
-		}
-	}
-	if (oneloot == nullptr)
-	{
-		LogFile::Log("error", "Character::SetRollType: could not find loot with corpse_id on this Character");
-		return;
-	}
-	string roll_msg;
-	switch (type)
-	{
-	case Looter::ROLL_NEED:
-		roll_msg = " selected Need for: ";
-		break;
-	case Looter::ROLL_GREED:
-		roll_msg = " selected Greed for: ";
-		break;
-	case Looter::ROLL_PASS:
-		roll_msg = " passed on: ";
-		break;
-	}
-	for (auto looter_iter = oneloot->looters.begin(); looter_iter != oneloot->looters.end(); ++looter_iter)
-	{
-		if (looter_iter->ch == this)
-		{
-			looter_iter->roll_type = type;
-			looter_iter->ch->RemoveLootRoll(who, oneloot->id);
-
-			//tell everyone else our choice
-			for (auto looter_iter2 = oneloot->looters.begin(); looter_iter2 != oneloot->looters.end(); ++looter_iter2)
-			{
-				if (looter_iter2->ch != looter_iter->ch)
-				{
-					looter_iter2->ch->Send(looter_iter->ch->GetName() + " has" + roll_msg + (string)Item::quality_strings[oneloot->item->quality] + oneloot->item->name + "|X\n\r");
-				}
-				else if (looter_iter2->ch == looter_iter->ch)
-				{
-					looter_iter2->ch->Send("You have" + roll_msg + (string)Item::quality_strings[oneloot->item->quality] + oneloot->item->name + "|X\n\r");
-				}
-			}
-		}
-	}
-
-	for (auto looter_iter = oneloot->looters.begin(); looter_iter != oneloot->looters.end(); ++looter_iter)
-	{
-		//check the status of everyone's choice to see if it's time to roll
-		if (looter_iter->roll_type == Looter::ROLL_UNDECIDED)
-			return;
-	}
-	who->DoLootRoll(oneloot);
-}
-
-void Character::DoLootRoll(OneLoot * oneloot) 
-{
-	int which_roll = Looter::ROLL_PASS;
-	for (auto looter_iter = oneloot->looters.begin(); looter_iter != oneloot->looters.end(); ++looter_iter)
-	{
-		if (looter_iter->roll_type == Looter::ROLL_UNDECIDED)
-		{
-			looter_iter->roll_type = Looter::ROLL_PASS;
-			looter_iter->ch->RemoveLootRoll(this, oneloot->id);
-
-			//tell everyone else we passed
-			for (auto looter_iter2 = oneloot->looters.begin(); looter_iter2 != oneloot->looters.end(); ++looter_iter2)
-			{
-				if (looter_iter2->ch != looter_iter->ch)
-				{
-					looter_iter2->ch->Send(looter_iter->ch->GetName() + " has passed on " + (string)Item::quality_strings[oneloot->item->quality] + oneloot->item->name + "|X\n\r");
-				}
-				else if (looter_iter2->ch == looter_iter->ch)
-				{
-					looter_iter2->ch->Send("You passed on " + (string)Item::quality_strings[oneloot->item->quality] + oneloot->item->name + "|X\n\r");
-				}
-			}
-		}
-		if (looter_iter->roll_type == Looter::ROLL_NEED)
-		{
-			which_roll = Looter::ROLL_NEED;
-		}
-		else if (which_roll != Looter::ROLL_NEED && looter_iter->roll_type == Looter::ROLL_GREED)
-		{
-			which_roll = Looter::ROLL_GREED;
-		}
-	}
-	string roll_msg;
-	switch (which_roll)
-	{
-		case Looter::ROLL_NEED:
-			roll_msg = "Need Roll";
-			break;
-		case Looter::ROLL_GREED:
-			roll_msg = "Greed Roll";
-			break;
-		case Looter::ROLL_PASS:
-			oneloot->roll_timer = 0;
-			for (auto looter_iter = oneloot->looters.begin(); looter_iter != oneloot->looters.end(); ++looter_iter)
-			{
-				looter_iter->ch->Send("Everyone passed on " + (string)Item::quality_strings[oneloot->item->quality] + oneloot->item->name + "|X\n\r");
-			}
-			return;
-	}
-	int highest_roll = 0;
-	for (auto looter_iter = oneloot->looters.begin(); looter_iter != oneloot->looters.end(); ++looter_iter)
-	{
-		if (looter_iter->roll_type == which_roll)
-		{
-			looter_iter->final_roll = Server::rand() % 100;
-			if (looter_iter->final_roll > highest_roll)
-			{
-				highest_roll = looter_iter->final_roll;
-			}
-			//tell everyone about the roll
-			for (auto looter_iter2 = oneloot->looters.begin(); looter_iter2 != oneloot->looters.end(); ++looter_iter2)
-			{
-				looter_iter2->ch->Send(roll_msg + " - " + Utilities::itos(looter_iter->final_roll) + " for " +
-					(string)Item::quality_strings[oneloot->item->quality] + oneloot->item->name + "|X by " + looter_iter->ch->GetName() + "\n\r");
-			}
-		}
-	}
-	//Check ties
-	std::list<std::pair<Character *, int>> highest_rollers;
-	for (auto looter_iter = oneloot->looters.begin(); looter_iter != oneloot->looters.end(); ++looter_iter)
-	{
-		if (looter_iter->final_roll == highest_roll)
-		{
-			highest_rollers.push_back(std::make_pair(looter_iter->ch, 0));
-		}
-	}
-	while (highest_rollers.size() > 1)
-	{
-		highest_roll = 0;
-		for (auto tieiter = begin(highest_rollers); tieiter != end(highest_rollers); ++tieiter)
-		{
-			tieiter->second = Server::rand() % 100;
-			if (tieiter->second > highest_roll)
-			{
-				highest_roll = tieiter->second;
-			}
-		}
-		for (auto tieiter = begin(highest_rollers); tieiter != end(highest_rollers);)
-		{
-			if (tieiter->second != highest_roll)
-				tieiter = highest_rollers.erase(tieiter);
-			else
-				++tieiter;
-		}
-	}
-
-	Character * winner = highest_rollers.front().first;
-	for (auto looter_iter = oneloot->looters.begin(); looter_iter != oneloot->looters.end(); ++looter_iter)
-	{
-		if (looter_iter->ch != winner)
-		{
-			looter_iter->ch->Send(winner->GetName() + " receives loot: " + (string)Item::quality_strings[oneloot->item->quality] + oneloot->item->name + "|X\n\r");
-		}
-	}
-	winner->Send("You receive loot: " + (string)Item::quality_strings[oneloot->item->quality] + oneloot->item->name + "|X\n\r");
-	if(!winner->player->AddItemInventory(oneloot->item)) //if additeminventory fails, leave it in the corpse for cmd_loot
-	{
-		winner->Send("Your inventory is full.\n\r");
-		oneloot->roll_timer = 0;
-	}
-	else
-	{
-		this->RemoveLoot(oneloot);
-	}
-}
-
-void Character::HandleNPCKillRewards(Character * killed)
-{
-	int exp = Game::CalculateExperience(this, killed);
-	Send("|BYou have gained |Y" + Utilities::itos(exp) + "|B experience.|X\n\r");
-	ApplyExperience(exp);
-	player->QuestCompleteObjective(Quest::OBJECTIVE_KILLNPC, (void*)killed);
-}
-
-bool Character::CanWearArmor(int armortype)
-{
-	if (!player)
-		return false;
-
-	std::list<Player::ClassData>::iterator iter;
-	for (iter = player->classList.begin(); iter != player->classList.end(); ++iter)
-	{
-		Class * curr = Game::GetGame()->GetClass(iter->id);
-		int armorlevel = curr->GetArmorLevel(armortype);
-
-		if (curr && armorlevel != 0 && armorlevel <= GetLevel())
-			return true;
-	}
-	return false;
-}
 
 void Character::MakeCorpse()
 {
@@ -3087,7 +1450,7 @@ void Character::AdjustHealth(Character * source, int amount)
 		LogFile::Log("error", "AdjustHealth() called on !IsAlive() character");
 		return;
 	}
-	if (source == NULL)
+	if (source == nullptr)
 	{
 		//a possibility
 		source = this; //self damage!?
@@ -3096,8 +1459,8 @@ void Character::AdjustHealth(Character * source, int amount)
 
 	if (GetHealth() == 0)
 	{
-		Message("|R" + name + " has been slain!|X", Character::MSG_ROOM_NOTCHARVICT, source);
-		source->Send("|R" + name + " has been slain!|X\n\r");
+		Message("|R" + GetName() + " has been slain!|X", Character::MSG_ROOM_NOTCHARVICT, source);
+		source->Send("|R" + GetName() + " has been slain!|X\n\r");
 		Send("|RYou have been slain!|X\n\r");
 
 		OnDeath(); //The source of damage shouldn't matter except where cases of "killing blow" matters (none so far?)
@@ -3108,14 +1471,14 @@ void Character::SetHealth(int amount)
 {
 	if (amount <= 0)
 	{
-		if (player && player->IMMORTAL())
+		if (IsImmortal())
 			health = 1;
 		else
 			health = 0;
 	}
-	else if (amount > maxHealth)
+	else if (amount > GetMaxHealth())
 	{
-		health = maxHealth;
+		health = GetMaxHealth();
 	}
 	else
 	{
@@ -3125,21 +1488,21 @@ void Character::SetHealth(int amount)
 	json vitals = { { "hp", health } };
 	SendGMCP("char.vitals " + vitals.dump());
 	int percent = 0;
-	if (maxHealth > 0)
-		percent = (health * 100) / maxHealth;
+	if (GetMaxHealth() > 0)
+		percent = (health * 100) / GetMaxHealth();
 	vitals = { { "hppercent", percent } };
 	SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
 	SendTargetTargetSubscriberGMCP("targettarget.vitals " + vitals.dump());
 
 	if (HasGroup())
 	{
-		int first_slot = group->FindFirstSlotInSubgroup(this);
+		int first_slot = GetGroup()->FindFirstSlotInSubgroup(this);
 		for (int i = first_slot; i < first_slot + Group::MAX_GROUP_SIZE; i++)
 		{
-			if (group->members[i] != nullptr && group->members[i] != this)
+			if (GetGroup()->members[i] != nullptr && GetGroup()->members[i] != this)
 			{
 				vitals = { { "name", GetName() }, { "hp", GetHealth() } };
-				group->members[i]->SendGMCP("group.vitals " + vitals.dump());
+				GetGroup()->members[i]->SendGMCP("group.vitals " + vitals.dump());
 			}
 		}
 	}
@@ -3174,9 +1537,9 @@ void Character::SetMana(int amount)
 	{
 		mana = 0;
 	}
-	else if (amount > maxMana)
+	else if (amount > GetMaxMana())
 	{
-		mana = maxMana;
+		mana = GetMaxMana();
 	}
 	else
 	{
@@ -3187,20 +1550,20 @@ void Character::SetMana(int amount)
 	SendGMCP("char.vitals " + vitals.dump());
 
 	int percent = 0;
-	if (maxMana > 0)
-		percent = (mana * 100) / maxMana;
+	if (GetMaxMana() > 0)
+		percent = (mana * 100) / GetMaxMana();
 	vitals = { { "mppercent", percent } };
 	SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
 
 	if (HasGroup())
 	{
-		int first_slot = group->FindFirstSlotInSubgroup(this);
+		int first_slot = GetGroup()->FindFirstSlotInSubgroup(this);
 		for (int i = first_slot; i < first_slot + Group::MAX_GROUP_SIZE; i++)
 		{
-			if (group->members[i] != nullptr && group->members[i] != this)
+			if (GetGroup()->members[i] != nullptr && GetGroup()->members[i] != this)
 			{
 				vitals = { { "name", GetName() },{ "mp", GetMana() } };
-				group->members[i]->SendGMCP("group.vitals " + vitals.dump());
+				GetGroup()->members[i]->SendGMCP("group.vitals " + vitals.dump());
 			}
 		}
 	}
@@ -3228,9 +1591,9 @@ void Character::SetEnergy(int amount)
 	{
 		energy = 0;
 	}
-	else if (amount > maxEnergy)
+	else if (amount > GetMaxEnergy())
 	{
-		energy = maxEnergy;
+		energy = GetMaxEnergy();
 	}
 	else
 	{
@@ -3240,8 +1603,8 @@ void Character::SetEnergy(int amount)
 	SendGMCP("char.vitals " + vitals.dump());
 
 	int percent = 0;
-	if (maxEnergy > 0)
-		percent = (energy * 100) / maxEnergy;
+	if (GetMaxEnergy() > 0)
+		percent = (energy * 100) / GetMaxEnergy();
 	vitals = { { "enpercent", percent } };
 	SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
 }
@@ -3268,9 +1631,9 @@ void Character::SetRage(int amount)
 	{
 		rage = 0;
 	}
-	else if (amount > maxRage)
+	else if (amount > GetMaxRage())
 	{
-		rage = maxRage;
+		rage = GetMaxRage();
 	}
 	else
 	{
@@ -3280,75 +1643,13 @@ void Character::SetRage(int amount)
 	SendGMCP("char.vitals " + vitals.dump());
 
 	int percent = 0;
-	if (maxRage > 0)
-		percent = (rage * 100) / maxRage;
+	if (GetMaxRage() > 0)
+		percent = (rage * 100) / GetMaxRage();
 	vitals = { { "ragepercent", percent } };
 	SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
 }
 
-void Character::SetMaxHealth(int amount)
-{
-	maxHealth = amount;
-	if (IsPlayer())
-	{
-		json vitals = { { "hpmax", maxHealth } };
-		SendGMCP("char.vitals " + vitals.dump());
 
-		int percent = 0;
-		if (maxHealth > 0)
-			percent = (health * 100) / maxHealth;
-		vitals = { { "hppercent", percent } };
-		SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
-	}
-}
-
-void Character::SetMaxMana(int amount)
-{
-	maxMana = amount;
-	if (IsPlayer())
-	{
-		json vitals = { { "mpmax", maxMana } };
-		SendGMCP("char.vitals " + vitals.dump());
-
-		int percent = 0;
-		if (maxMana > 0)
-			percent = (mana * 100) / maxMana;
-		vitals = { { "mppercent", percent } };
-		SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
-	}
-}
-
-void Character::SetMaxEnergy(int amount)
-{
-	maxEnergy = amount;
-	if (IsPlayer())
-	{
-		json vitals = { { "enmax", maxEnergy } };
-		SendGMCP("char.vitals " + vitals.dump());
-
-		int percent = 0;
-		if (maxEnergy > 0)
-			percent = (energy * 100) / maxEnergy;
-		vitals = { { "enpercent", percent } };
-		SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
-	}
-}
-
-void Character::SetMaxRage(int amount)
-{
-	maxRage = amount;
-	if (IsPlayer())
-	{
-		json vitals = { { "ragemax", maxRage } };
-		SendGMCP("char.vitals " + vitals.dump());
-
-		int percent = 0;
-		if (maxRage > 0)
-			percent = (rage * 100) / maxRage;
-		vitals = { { "ragepercent", percent } };
-		SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
-	}
-}
 
 void Character::SetComboPoints(int howmany)
 {
@@ -3572,21 +1873,6 @@ bool Character::CheckThreatCombat()
 	return false;
 }
 
-std::string Character::HisHer()
-{
-    return (gender == 1 ? "his" : "her");
-}
-
-std::string Character::HimHer()
-{
-	return (gender == 1 ? "him" : "her");
-}
-
-std::string Character::HisHers()
-{
-	return (gender == 1 ? "his" : "hers");
-}
-
 bool Character::CancelActiveDelay()
 {
 	if (delay_active)
@@ -3595,9 +1881,9 @@ bool Character::CancelActiveDelay()
 		{
 			delayData.charTarget->RemoveSubscriber(delayData.caster);
 		}
-		if (global > Game::currentTime) //If we're canceling a cast and gcd is active, reset it
+		if (GetGlobalCooldown() > Game::currentTime) //If we're canceling a cast and gcd is active, reset it
 		{
-			global = Game::currentTime;
+			SetGlobalCooldown(Game::currentTime);
 		}
 		json casttime = { { "time", 0 } };
 		SendGMCP("char.casttime " + casttime.dump());
@@ -3632,15 +1918,15 @@ std::string Character::AggressionColor(Character * target)
 	{
 		return "|D";
 	}
-	else if (Utilities::FlagIsSet(target->flags, Character::Flags::FLAG_FRIENDLY))
+	else if (target->FlagIsSet(NPCIndex::FLAG_FRIENDLY))
 	{
 		return "|G";
 	}
-	else if (Utilities::FlagIsSet(target->flags, Character::Flags::FLAG_NEUTRAL))
+	else if (target->FlagIsSet(NPCIndex::FLAG_NEUTRAL))
 	{
 		return "|Y";
 	}
-	else// if (Utilities::FlagIsSet(target->flags, Character::Flags::FLAG_AGGRESSIVE))
+	else// if (target->FlagIsSet(NPCIndex::FLAG_AGGRESSIVE))
 	{
 		return "|R";
 	}
@@ -3661,23 +1947,38 @@ std::string Character::AggressionLightColor(Character * target)
 	{
 		return "|D";
 	}
-	else if (Utilities::FlagIsSet(target->flags, Character::Flags::FLAG_FRIENDLY))
+	else if (target->FlagIsSet(NPCIndex::FLAG_FRIENDLY))
 	{
 		return "|g";
 	}
-	else if (Utilities::FlagIsSet(target->flags, Character::Flags::FLAG_NEUTRAL))
+	else if (target->FlagIsSet(NPCIndex::FLAG_NEUTRAL))
 	{
 		return "|y";
 	}
-	else// if (Utilities::FlagIsSet(target->flags, Character::Flags::FLAG_AGGRESSIVE))
+	else// if (target->FlagIsSet(NPCIndex::FLAG_AGGRESSIVE))
 	{
 		return "|r";
 	}
 }
 
+std::string Character::HisHer()
+{
+	return (GetGender() == 1 ? "his" : "her");
+}
+
+std::string Character::HimHer()
+{
+	return (GetGender() == 1 ? "him" : "her");
+}
+
+std::string Character::HisHers()
+{
+	return (GetGender() == 1 ? "his" : "hers");
+}
+
 bool Character::CanAttack(Character * victim)
 {
-	if ((victim->IsNPC() && Utilities::FlagIsSet(victim->flags, Character::FLAG_FRIENDLY))
+	if ((victim->IsNPC() && victim->FlagIsSet(NPCIndex::FLAG_FRIENDLY))
 		|| (!victim->IsNPC() && room->pvp == 0)
 		|| (!victim->IsAlive()))
 	{
@@ -3688,7 +1989,7 @@ bool Character::CanAttack(Character * victim)
 
 bool Character::CanMove()
 {
-    if(player && player->IMMORTAL())
+    if(IsImmortal())
         return true;
 
 	double movespeedPercent = GetMoveSpeed();
@@ -3716,72 +2017,6 @@ double Character::GetMoveSpeed()
     return newspeed / 100;
 }
 
-void Character::AddSkill(Skill * newskill)
-{
-    if(newskill == NULL)
-        return;
-    knownSkills[newskill->name] = newskill;
-}
-
-void Character::RemoveSkill(Skill * sk)
-{
-    std::map<string, Skill*>::iterator iter;
-
-    iter = knownSkills.find(sk->name);
-    if(iter != knownSkills.end() && (*iter).second->id == sk->id)
-    {
-        knownSkills.erase(iter);
-    }
-}
-
-void Character::RemoveSkill(string name)
-{
-    std::map<string, Skill*>::iterator iter;
-
-    iter = knownSkills.find(name);
-    if(iter != knownSkills.end())
-    {
-        knownSkills.erase(iter);
-    }
-}
-
-Skill * Character::GetSkillShortName(string name)
-{
-    std::map<string, Skill*>::iterator iter;
-
-    name = Utilities::ToLower(name);
-    iter = knownSkills.find(name);
-    if(iter != knownSkills.end())
-    {
-        return (*iter).second;
-    }
-    return NULL;
-}
-
-bool Character::HasSkill(Skill * sk)
-{
-    std::map<string, Skill*>::iterator iter;
-
-    iter = knownSkills.find(sk->name);
-    if(iter != knownSkills.end() && (*iter).second->id == sk->id)
-    {
-        return true;
-    }
-    return false;
-}
-
-bool Character::HasSkillByName(string name) //Not guaranteed to be the same skill id, just the same name
-{
-    std::map<string, Skill*>::iterator iter;
-
-    iter = knownSkills.find(name);
-    if(iter != knownSkills.end())
-    {
-        return true;
-    }
-    return false;
-}
-
 void Character::StartGlobalCooldown()
 {
 	global = Game::currentTime + 1.5;
@@ -3792,7 +2027,7 @@ void Character::SetCooldown(Skill * sk, double length) //USE LENGTH -1 TO USE SK
     if(length == 0)
         return;
 
-    if(sk != NULL)
+    if(sk != nullptr)
     {
         if(length < 0) //if length default argument == -1, use sk->cooldown
             length = sk->cooldown;
@@ -3802,10 +2037,10 @@ void Character::SetCooldown(Skill * sk, double length) //USE LENGTH -1 TO USE SK
 
 double Character::GetCooldownRemaining(Skill * sk)
 {
-    if(sk == NULL)
+    if(sk == nullptr)
         return 0;
 
-    if(player && player->IMMORTAL())
+    if(player && player->IsImmortal())
         return 0;
 
 	//Global cooldown in progress
@@ -3825,30 +2060,20 @@ double Character::GetCooldownRemaining(Skill * sk)
 	return remaining_cd;
 }
 
-bool Character::IsNPC()
-{
-    return (player == NULL);
-}
-
-bool Character::IsPlayer()
-{
-	return (player != NULL);
-}
-
-//room == NULL to remove from room only
+//room == nullptr to remove from room only
 bool Character::ChangeRooms(Room * toroom)
 {
-    if(room != NULL)
+    if(room != nullptr)
         room->characters.remove(this);
-    if(toroom != NULL)
+    if(toroom != nullptr)
     {
-		if (player != NULL && player->user != NULL)
+		if (player != nullptr && player->user != nullptr)
 		{
 			//Send GMCP room.info
 			json roominfo;
 			roominfo["name"] = toroom->name;
 			roominfo["num"] = toroom->id;
-			if(toroom->area != 0 && Game::GetGame()->GetArea(toroom->area) != NULL)
+			if(toroom->area != 0 && Game::GetGame()->GetArea(toroom->area) != nullptr)
 			{
 				roominfo["zone"] = Game::GetGame()->GetArea(toroom->area)->name;
 			}
@@ -3873,7 +2098,7 @@ bool Character::ChangeRooms(Room * toroom)
             player->QuestCompleteObjective(Quest::OBJECTIVE_ROOM, (void*)toroom);
         }
         //Check for room movement triggers
-        Trigger * trig = NULL;
+        Trigger * trig = nullptr;
         int ctr = 0;
         Trigger::TriggerType tt;
 
@@ -3883,7 +2108,7 @@ bool Character::ChangeRooms(Room * toroom)
         else
             tt = Trigger::ENTER_NPC;
 
-        while((trig = toroom->GetTrigger(ctr, tt)) != NULL)
+        while((trig = toroom->GetTrigger(ctr, tt)) != nullptr)
         {
             ctr++;
             string func = trig->GetFunction();
@@ -3898,7 +2123,7 @@ bool Character::ChangeRooms(Room * toroom)
             catch(const std::exception & e)
 			{
 				LogFile::Log("error", e.what());
-				/*if(logstring != NULL)
+				/*if(logstring != nullptr)
 					LogFile::Log("error", logstring);*/
 			}
             catch(...)
@@ -3909,7 +2134,7 @@ bool Character::ChangeRooms(Room * toroom)
 
         //ENTER_CHAR
         tt = Trigger::ENTER_CHAR;
-        while((trig = toroom->GetTrigger(ctr, tt)) != NULL)
+        while((trig = toroom->GetTrigger(ctr, tt)) != nullptr)
         {
             ctr++;
             string func = trig->GetFunction();
@@ -3924,7 +2149,7 @@ bool Character::ChangeRooms(Room * toroom)
             catch(const std::exception & e)
 			{
 				LogFile::Log("error", e.what());
-				/*if(logstring != NULL)
+				/*if(logstring != nullptr)
 					LogFile::Log("error", logstring);*/
 			}
             catch(...)
@@ -3946,56 +2171,23 @@ bool Character::ChangeRoomsID(int roomid)
             return false;
         return ChangeRooms(iter->second);
     }
-    return ChangeRooms(NULL);
-}
-
-bool Character::IsAlive()
-{
-	if (IsNPC() && !IsCorpse())
-		return true;
-	if (!IsNPC() && !IsCorpse() && !player->IsGhost())
-		return true;
-	return false;
+    return ChangeRooms(nullptr);
 }
 
 void Character::SetCorpse()
 {
 	isCorpse = true;
-	if (!IsNPC())
-	{
-		player->UnsetGhost();
-		player->death_timer = Player::DEFAULT_DEATH_TIME;
-		player->death_timer_runback = Player::DEFAULT_DEATH_TIME_RUNBACK;
-	}
-
 	deathTime = Utilities::GetTime();
-}
-
-void Character::SetGhost()
-{
-	if (IsNPC())
-		return;
-	player->SetGhost();
-	isCorpse = false;
 }
 
 void Character::SetAlive()
 {
 	isCorpse = false;
-	if(!IsNPC())
-		player->UnsetGhost();
 }
 
 bool Character::IsCorpse()
 {
 	return isCorpse;
-}
-
-bool Character::IsGhost()
-{
-	if (IsNPC())
-		return false;
-	return player->IsGhost();
 }
 
 int Character::TimeSinceDeath()
@@ -4026,7 +2218,7 @@ void Character::SetTarget(Character * t)
 {
     if(target == t)
         return;
-    if(target != NULL)
+    if(target != nullptr)
     {
         ClearTarget();
     }
@@ -4046,7 +2238,7 @@ void Character::ClearTarget()
 		//}
         target->RemoveSubscriber(this);
 		//cout << "ClearTarget REMOVE" << endl;
-        target = NULL;
+        target = nullptr;
 		json vitals = { { "name", "" },{ "level", 0 },{ "hppercent", 0 },{ "mppercent", 0 }, { "enpercent", 0 },{ "ragepercent", 0 } };
 		SendGMCP("target.vitals " + vitals.dump());
     }
@@ -4066,14 +2258,14 @@ void Character::Notify(SubscriberManager * lm)
 		//ClearTarget();
         target->RemoveSubscriber(this);
 		//cout << "Character::Notify target REMOVE" << endl;
-        target = NULL;
+        target = nullptr;
     }
 
     if(delay_active && delayData.charTarget == lm)
     {
         delayData.charTarget->RemoveSubscriber(this);
 		//cout << "Character::Notify delaydata REMOVE" << endl;
-        delayData.charTarget = NULL;
+        delayData.charTarget = nullptr;
 		delay_active = false;
     }
 
@@ -4085,7 +2277,7 @@ void Character::Notify(SubscriberManager * lm)
 	if (comboPointTarget && lm == comboPointTarget)
 	{
 		comboPointTarget->RemoveSubscriber(this);
-		comboPointTarget = NULL;
+		comboPointTarget = nullptr;
 	}
 
 	if (delay_active && delayData.itemTarget == lm)
@@ -4105,51 +2297,6 @@ void Character::Notify(SubscriberManager * lm)
 	RemoveLootRoll((Character *)lm);
 }
 
-void Character::AddTrigger(Trigger & trig)
-{
-    int ctr = 1;
-    std::map<int, Trigger>::iterator iter;
-    for(iter = triggers.begin(); iter != triggers.end(); ++iter)
-    {
-        if(ctr != iter->second.id)
-        {
-            //found the first integer not in the map
-            break;
-        }
-        ctr++;
-    }
-    trig.id = ctr;
-    changed = true;
-    triggers.insert(std::pair<int, Trigger>(trig.id, trig));
-}
-
-//If default argument type = -1, search for trigger id
-//Otherwise search for id-th trigger of type
-Trigger * Character::GetTrigger(int id, int type)
-{
-    if(type == -1)
-    {
-        std::map<int,Trigger>::iterator it = triggers.find(id);
-        if(it != triggers.end())
-            return &(it->second);
-        return NULL;
-    }
-    else
-    {
-        std::map<int,Trigger>::iterator it;
-        int count = 0;
-        for(it = triggers.begin(); it != triggers.end(); ++it)
-        {
-            if(it->second.GetType() == type && count++ >= id)
-            {
-                return &(it->second);
-            }
-        }
-        return NULL;
-    }
-    return NULL;
-}
-
 void Character::AddClassSkills()
 {
 	if (!player)
@@ -4162,7 +2309,7 @@ void Character::AddClassSkills()
 		std::list<Class::SkillData>::iterator csiter;
 		for (csiter = iclass->classSkills.begin(); csiter != iclass->classSkills.end(); csiter++) //For every skill players of that class get...
 		{
-			if (csiter->level <= iter->level || player->IMMORTAL()) //if that skill's level < our level of the class, add it
+			if (csiter->level <= iter->level || player->IsImmortal()) //if that skill's level < our level of the class, add it
 			{
 				AddSkill(csiter->skill);
 			}
@@ -4170,18 +2317,11 @@ void Character::AddClassSkills()
 	}
 }
 
-bool Character::HasGroup()
-{
-	if (group != nullptr)
-		return true;
-	return false;
-}
-
 bool Character::InSameGroup(Character * ch)
 {
 	if (ch == this)
 		return true;
-	if (HasGroup() && ch->HasGroup() && group == ch->group)
+	if (HasGroup() && ch->HasGroup() && GetGroup() == ch->GetGroup())
 		return true;
 	return false;
 }

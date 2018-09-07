@@ -1,12 +1,26 @@
 #ifndef CSERVER_H
 #define CSERVER_H
 
+#include "CmySQLQueue.h"
+
+#define SOL_CHECK_ARGUMENTS 1
+#define SOL_USING_CXX_LUA
+#include <sol.hpp>
+
 extern "C" 
 {
 #include "lua.h"
 #include "lualib.h"
 #include "lauxlib.h"
 }
+
+#include <winsock2.h>
+#include <WS2tcpip.h>
+#include <windows.h>
+#include <string>
+#include <memory>
+#include <vector>
+#include <random>
 
 #define MXP_OPEN        "\033[0z" //Open 	Only open commands (eg. <B>) will be interpreted.
 #define MXP_SECURE      "\033[1z" //Secure 	All MXP tags are interpreted.
@@ -33,6 +47,9 @@ struct IPBanInfo
 	std::string address;
 	double banTimestamp;
 };
+
+class Game;
+class Client;
 
 class Server
 {
@@ -67,6 +84,7 @@ public:
 	WSAEVENT hAcceptEvent;
 	HANDLE hIOCompletionPort;
     CRITICAL_SECTION clientListCS;
+	bool acceptReady;
 	
     static mySQLQueue * sqlQueue;
 	static sol::state lua;

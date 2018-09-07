@@ -1,6 +1,8 @@
 #ifndef CHIGHRESTIMER_H
 #define CHIGHRESTIMER_H
 
+#include <Windows.h>
+
 class HighResTimer
 {
 public:

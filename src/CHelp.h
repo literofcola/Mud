@@ -1,6 +1,8 @@
 #ifndef CHELP_H
 #define CHELP_H
 
+#include <string>
+
 class Help
 {
 public:

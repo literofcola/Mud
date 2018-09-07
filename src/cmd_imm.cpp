@@ -1,33 +1,22 @@
-#include "stdafx.h"
-#include "CSubscriber.h"
-#include "CSubscriberManager.h"
+#include "mud.h"
+#include "CPlayer.h"
+#include "CServer.h"
+#include "CGame.h"
+#include "CCharacter.h"
+#include "CUser.h"
+#include "CClient.h"
+#include "CNPC.h"
+#include "CNPCIndex.h"
+#include "CItem.h"
+#include "CRoom.h"
+#include "utils.h"
 #include "CLogFile.h"
 #include "CmySQLQueue.h"
-#include "CHighResTimer.h"
-#include "CHelp.h"
-#include "CTrigger.h"
-#include "CClient.h"
-#include "CItem.h"
-#include "CSkill.h"
-#include "CClass.h"
-#include "CExit.h"
-#include "CReset.h"
-#include "CArea.h"
-#include "CRoom.h"
-#include "CQuest.h"
-#include "CPlayer.h"
-#include "CCharacter.h"
-#include "CSpellAffect.h"
-#include "CUser.h"
-#include "CGame.h"
-#include "CServer.h"
-#include "CCommand.h"
-#include "utils.h"
-#include "mud.h"
+#include <string>
 
-using namespace std;
+using std::string;
 
-void cmd_goto(Character * ch, string argument)
+void cmd_goto(Player * ch, string argument)
 {
     if(argument.empty())
     {
@@ -44,19 +33,19 @@ void cmd_goto(Character * ch, string argument)
 
     int rnum = Utilities::atoi(arg1);
 
-    if(Game::GetGame()->GetRoom(rnum) != NULL)
-        ch->Message(ch->name + " disappears in a puff of smoke.", Character::MSG_ROOM_NOTCHAR);
+    if(Game::GetGame()->GetRoom(rnum) != nullptr)
+        ch->Message(ch->GetName() + " disappears in a puff of smoke.", Character::MSG_ROOM_NOTCHAR);
 
     if(rnum <= 0 || !ch->ChangeRoomsID(rnum))
     {
         ch->Send("Room " + arg1 + " does not exist.\n\r");
         return;
     }
-    ch->Message(ch->name + " appears in a puff of smoke.", Character::MSG_ROOM_NOTCHAR);
+    ch->Message(ch->GetName() + " appears in a puff of smoke.", Character::MSG_ROOM_NOTCHAR);
     cmd_look(ch, "");
 }
 
-void cmd_restore(Character * ch, string argument)
+void cmd_restore(Player * ch, string argument)
 {
     if(!Utilities::str_cmp(argument, "cooldown"))
     {
@@ -84,13 +73,13 @@ void cmd_restore(Character * ch, string argument)
             u->character->SetMana(u->character->GetMaxMana());
 			u->character->SetEnergy(u->character->GetMaxEnergy());
 			u->character->SetRage(u->character->GetMaxRage());
-            if(u->character->player)
-                u->character->player->SetResurrectTime(0);
+            if(u->character)
+                u->character->SetResurrectTime(0);
         }
     }
 }
 
-void cmd_sockets(Character * ch, string argument)
+void cmd_sockets(Player * ch, string argument)
 {
     std::list<User *>::iterator iter;
     for(iter = Game::GetGame()->users.begin(); iter != Game::GetGame()->users.end(); iter++)
@@ -99,7 +88,7 @@ void cmd_sockets(Character * ch, string argument)
         {
             if((*iter)->character)
             {
-                ch->Send((*iter)->character->name + " ");
+                ch->Send((*iter)->character->GetName() + " ");
             }
             else
             {
@@ -111,18 +100,18 @@ void cmd_sockets(Character * ch, string argument)
     }
 }
 
-void cmd_disconnect(Character * ch, string argument)
+void cmd_disconnect(Player * ch, string argument)
 {
     ch->Send("cmd_disconnect\n\r");
 }
 
-void cmd_shutdown(Character * ch, string argument)
+void cmd_shutdown(Player * ch, string argument)
 {
     Game::GetGame()->GlobalMessage("Server shutdown.");
     Game::GetGame()->shutdown = true;
 }
 
-void cmd_load(Character * ch, string argument)
+void cmd_load(Player * ch, string argument)
 {
     if(argument.empty())
     {
@@ -143,16 +132,16 @@ void cmd_load(Character * ch, string argument)
             return;
         }
         int id = Utilities::atoi(arg2);
-        Character * charIndex = Game::GetGame()->GetCharacterIndex(id);
-        if(charIndex == NULL)
+        NPCIndex * charIndex = Game::GetGame()->GetNPCIndex(id);
+        if(charIndex == nullptr)
         {
             ch->Send("NPC " + arg2 + " does not exist.\n\r");
             return;
         }
-        Character * newChar = Game::GetGame()->NewCharacter(charIndex);
+        NPC * newChar = Game::GetGame()->NewNPC(charIndex);
 		newChar->leashOrigin = ch->room;
         newChar->ChangeRooms(ch->room);
-		ch->Send(newChar->name + " loaded into room.\n\r");
+		ch->Send(newChar->GetName() + " loaded into room.\n\r");
     }
     else if(!Utilities::str_cmp(arg1, "item"))
     {
@@ -163,12 +152,12 @@ void cmd_load(Character * ch, string argument)
         }
         int id = Utilities::atoi(arg2);
         Item * itemIndex = Game::GetGame()->GetItem(id);
-        if(itemIndex == NULL)
+        if(itemIndex == nullptr)
         {
             ch->Send("Item " + arg2 + " does not exist.\n\r");
             return;
         }
-        ch->player->AddItemInventory(itemIndex);
+        ch->AddItemInventory(itemIndex);
 		ch->Send(itemIndex->name + " loaded into inventory.\n\r");
     }
     else
@@ -178,7 +167,7 @@ void cmd_load(Character * ch, string argument)
     }
 }
 
-void cmd_purge(Character * ch, string argument)
+void cmd_purge(Player * ch, string argument)
 {
     if(!ch || !ch->room)
         return;
@@ -200,14 +189,14 @@ void cmd_purge(Character * ch, string argument)
 	}
 }
 
-void cmd_transfer(Character * ch, string argument)
+void cmd_transfer(Player * ch, string argument)
 {
     string arg1;	//transfer who
 	string arg2;
 	string arg3;
-	//Area * getarea = NULL;
-	Room * getroom = NULL;
-	Character * chtran = NULL;
+	//Area * getarea = nullptr;
+	Room * getroom = nullptr;
+	Player * chtran = nullptr;
 
     argument = Utilities::one_argument(argument, arg1);
 	argument = Utilities::one_argument(argument, arg2);
@@ -216,13 +205,13 @@ void cmd_transfer(Character * ch, string argument)
 	// transfer <player name> (to ch->in_room)
     if(!arg1.empty() && ((arg2.empty() && arg3.empty()) || !Utilities::IsNumber(arg2)))
 	{
-		if(ch == NULL || ch->room == NULL)
+		if(ch == nullptr || ch->room == nullptr)
 		{
-            LogFile::Log("error", "cmd_transfer: ch == NULL || ch->room == NULL");
+            LogFile::Log("error", "cmd_transfer: ch == nullptr || ch->room == nullptr");
 			return;
 		}
 
-		if((chtran = Game::GetGame()->GetPlayerWorld(ch, arg1)) == NULL)
+		if((chtran = Game::GetGame()->GetPlayerWorld(ch, arg1)) == nullptr)
 		{
 			ch->Send("They aren't here.\n\r");
 			return;
@@ -244,15 +233,15 @@ void cmd_transfer(Character * ch, string argument)
 		return;
 	}
 
-    chtran->Message(chtran->name + " disappears in a puff of smoke.", Character::MSG_ROOM_NOTCHAR);
+    chtran->Message(chtran->GetName() + " disappears in a puff of smoke.", Character::MSG_ROOM_NOTCHAR);
     chtran->Send("You have been transferred!\n\r");
     chtran->ChangeRoomsID(getroom->id);
-    chtran->Message(chtran->name + " appears in a puff of smoke.", Character::MSG_ROOM_NOTCHAR);
+    chtran->Message(chtran->GetName() + " appears in a puff of smoke.", Character::MSG_ROOM_NOTCHAR);
     
     cmd_look(chtran, "");
 }
 
-void cmd_advance(Character * ch, string argument)
+void cmd_advance(Player * ch, string argument)
 {
     string player_target_arg;
 	string new_level_arg;
@@ -267,16 +256,16 @@ void cmd_advance(Character * ch, string argument)
     }
     int new_level = Utilities::atoi(new_level_arg);
 
-    Character * player_target = Game::GetGame()->GetCharacterByPCName(player_target_arg);
-    if(player_target == NULL || player_target->player == NULL)
+    Player * player_target = Game::GetGame()->GetPlayerByName(player_target_arg);
+    if(player_target == nullptr)
     {
         ch->Send("Player not found.\n\r");
         return;
     }
-    player_target->ApplyExperience(Game::ExperienceForLevel(new_level) - player_target->player->experience);
+    player_target->ApplyExperience(Game::ExperienceForLevel(new_level) - player_target->experience);
 }
 
-void cmd_threat(Character * ch, string argument)
+void cmd_threat(Player * ch, string argument)
 {
 	if (!ch)
 		return;
@@ -285,14 +274,14 @@ void cmd_threat(Character * ch, string argument)
 	int ctr = 1;
 	for (auto iter = ch->threatList.begin(); iter != ch->threatList.end(); ++iter)
 	{
-		ch->Send(Utilities::itos(ctr) + ". " + iter->ch->name + ", " + Utilities::dtos(iter->damage, 2) + "/" +
+		ch->Send(Utilities::itos(ctr) + ". " + iter->ch->GetName() + ", " + Utilities::dtos(iter->damage, 2) + "/" +
 			Utilities::dtos(iter->healing, 2) + "/" + Utilities::dtos(iter->threat, 2) + "\n\r");
 		ch->Send("    Subscribers: " + iter->ch->DebugPrintSubscribers() + "\n\r");
 		if (!iter->ch->threatList.empty())
 		{
 			for (auto iter2 = iter->ch->threatList.begin(); iter2 != iter->ch->threatList.end(); ++iter2)
 			{
-				ch->Send("    " + iter2->ch->name + ", " + Utilities::dtos(iter2->damage, 2) + "/" + Utilities::dtos(iter2->healing, 2) + "/" + Utilities::dtos(iter2->threat, 2) + "\n\r");
+				ch->Send("    " + iter2->ch->GetName() + ", " + Utilities::dtos(iter2->damage, 2) + "/" + Utilities::dtos(iter2->healing, 2) + "/" + Utilities::dtos(iter2->threat, 2) + "\n\r");
 			}
 		}
 	}
@@ -301,7 +290,7 @@ void cmd_threat(Character * ch, string argument)
 	ch->Send(ch->DebugPrintSubscribers() + "\n\r");
 }
 
-void cmd_sql(Character * ch, string argument)
+void cmd_sql(Player * ch, string argument)
 {
     if(argument.empty())
     {
@@ -357,7 +346,7 @@ void cmd_sql(Character * ch, string argument)
     }
 }
 
-void cmd_systeminfo(Character * ch, string argument)
+void cmd_systeminfo(Player * ch, string argument)
 {
     ch->Send("|MThere are currently |X" + Utilities::itos((int)Game::GetGame()->rooms.size()) + " |Munique locations, |X" +
         Utilities::itos((int)Game::GetGame()->characters.size() - (int)Game::GetGame()->users.size()) + "|M non player characters and |X" +
@@ -400,7 +389,7 @@ Game::SearchInfo search_table[] =
 };
 */
 
-void cmd_search(Character * ch, string argument)
+void cmd_search(Player * ch, string argument)
 {
     string table_name;
     string field_name;
@@ -461,7 +450,7 @@ void cmd_search(Character * ch, string argument)
     return;
 }
 
-void cmd_peace(Character * ch, string argument)
+void cmd_peace(Player * ch, string argument)
 {
     for(std::list<Character*>::iterator iter = ch->room->characters.begin(); iter != ch->room->characters.end(); ++iter)
     {

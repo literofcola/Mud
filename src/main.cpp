@@ -1,6 +1,19 @@
-#include "stdafx.h"
 #include "vld.h"
 
+#include "CGame.h"
+#include "CServer.h"
+#include "CHighResTimer.h"
+#include "CLogFile.h"
+
+#define SOL_CHECK_ARGUMENTS 1
+#define SOL_USING_CXX_LUA
+#include <sol.hpp>
+extern "C"
+{
+#include "lua.h"
+#include "lualib.h"
+#include "lauxlib.h"
+}
 
 extern void Lua_DefineClasses(sol::state * lua);
 extern void Lua_DefineFunctions(sol::state * lua);
@@ -10,7 +23,7 @@ Server	* theserver;
 
 int main(int argc, char * argv[])
 {
-	Server::rand.seed((unsigned)time(NULL));
+	Server::rand.seed((unsigned)time(nullptr));
 
     //Init timer
     if(!HighResTimer::Init())
@@ -59,7 +72,7 @@ int main(int argc, char * argv[])
 
 	theserver->DeInitialize();
     thegame->SaveGameStats();
-    if(theserver->sqlQueue != NULL)
+    if(theserver->sqlQueue != nullptr)
     {
         theserver->sqlQueue->Close();
 		theserver->sqlQueue->Disconnect();

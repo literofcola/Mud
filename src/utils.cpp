@@ -1,34 +1,40 @@
-#include "stdafx.h"
-#include "CLogFile.h"
 #include "utils.h"
-
-using namespace std;
+#include "CLogFile.h"
+#include <string>
+#include <vector>
+#include <sstream>
+#include <iomanip>
+#include <winsock2.h>
+#include <WS2tcpip.h>
+#include <windows.h>
+#include <sys/timeb.h>
+#include <time.h>
 
 namespace Utilities
 {
 
-string itos(const int & i)
+std::string itos(const int & i)
 {
-    thread_local stringstream ss;
+    thread_local std::stringstream ss;
     ss.str("");
     ss.clear();
     ss << i;
     return ss.str();
 }
 
-string dtos(const double & i, int precision)
+std::string dtos(const double & i, int precision)
 {
-	thread_local stringstream ss;
+	thread_local std::stringstream ss;
 	ss.str("");
 	ss.clear();
-	ss << setprecision(precision) << setiosflags(ios::fixed);
+	ss << std::setprecision(precision) << std::setiosflags(std::ios::fixed);
 	ss << i;
 	return ss.str();
 }
 
-string i64tos(const __int64 & i)
+std::string i64tos(const __int64 & i)
 {
-	thread_local stringstream ss;
+	thread_local std::stringstream ss;
 	ss.str("");
 	ss.clear();
 	ss << i;
@@ -64,7 +70,7 @@ void TimeStamp(char * time_buffer)
     size_t len;
     time_t now;
 
-    now = time ( NULL );
+    now = time ( nullptr );
     if(localtime_s (&tm, &now ) != 0)
     {
         LogFile::Log("error", "Utilities::TimeStamp; localtime_s failed");
@@ -86,7 +92,7 @@ double GetTime()
  * Pick off one argument from a string and return the rest.
  * Understands quotes.
  */
-string one_argument(const string & argument, string & one_arg)
+std::string one_argument(const std::string & argument, std::string & one_arg)
 {
 	//remove leading spaces
 	int index;
@@ -117,7 +123,7 @@ string one_argument(const string & argument, string & one_arg)
 /*
  * Given a string like 14.foo, return 14 and 'foo'
  */
-int number_argument(string & arg)
+int number_argument(std::string & arg)
 {
 	int number;
 
@@ -136,7 +142,7 @@ int number_argument(string & arg)
 /*
  * Return true if an argument is completely numeric.
  */
-bool IsNumber(string arg)
+bool IsNumber(std::string arg)
 {
     if(arg.empty())
         return false;
@@ -159,7 +165,7 @@ bool IsNumber(string arg)
     return true;
 }
 
-bool IsAlpha(string arg)
+bool IsAlpha(std::string arg)
 {
     if(arg.empty())
         return false;
@@ -177,7 +183,7 @@ bool IsAlpha(string arg)
  * Return TRUE if different
  *   (compatibility with historical functions).
  */
-bool str_cmp(const string & astr, const string & bstr)
+bool str_cmp(const std::string & astr, const std::string & bstr)
 {
 	if(astr.length() != bstr.length())
 		return true;
@@ -194,7 +200,7 @@ bool str_cmp(const string & astr, const string & bstr)
  * Return TRUE if astr not a prefix of bstr
  *   (compatibility with historical functions).
  */
-bool str_prefix(const string & astr, const string & bstr)
+bool str_prefix(const std::string & astr, const std::string & bstr)
 {
 	if(astr.empty() || bstr.empty())
 	{
@@ -214,7 +220,7 @@ bool str_prefix(const string & astr, const string & bstr)
  * Return TRUE if astr not found in bstr
  *   (compatibility with historical functions).
  */
-bool str_str(const string & astr, const string & bstr)
+bool str_str(const std::string & astr, const std::string & bstr)
 {
     if(astr.empty() || bstr.empty())
     {
@@ -242,12 +248,12 @@ bool str_str(const string & astr, const string & bstr)
 /*
  * See if a string is one of the names of an object. (ie. is str found in namelist)
  */
-bool IsName(string str, string namelist)
+bool IsName(std::string str, std::string namelist)
 {
 	if(namelist.empty() || str.empty())
 		return false;
 
-	string part;
+	std::string part;
 
 	namelist = one_argument(namelist, part);
 	while(!part.empty())
@@ -266,7 +272,7 @@ bool IsName(string str, string namelist)
     int i;
     int o;
 
-    if(str == NULL)
+    if(str == nullptr)
         return '\0';
 
     for(o = i = 0; str[i+o] != '\0'; i++ )
@@ -284,7 +290,7 @@ char * AddCR(const char * str)
 	static char strfix[MAX_STRING_LENGTH * 2];
     int i, j;
 
-    if(str == NULL)
+    if(str == nullptr)
         return '\0';
 
     for(i = j = 0; str[i] != '\0'; i++, j++)
@@ -301,17 +307,17 @@ char * AddCR(const char * str)
     return strfix;
 }*/
 
-int atoi(const string & str)
+int atoi(const std::string & str)
 {
 	return ::atoi(str.c_str());
 }
 
-double atof(const string & str)
+double atof(const std::string & str)
 {
 	return ::atof(str.c_str());
 }
 
-string ColorString(char type)
+std::string ColorString(char type)
 {
     switch(type)
     {
@@ -356,9 +362,9 @@ string ColorString(char type)
     }
 }
 
-string SQLFixQuotes(string replace)
+std::string SQLFixQuotes(std::string replace)
 {
-    string ret = "";
+	std::string ret = "";
     for(int i = 0; i < (int)replace.length(); i++)
     {
         if(replace[i] == '\'')
@@ -371,7 +377,7 @@ string SQLFixQuotes(string replace)
     return ret;
 }
 
-string ToLower(string arg)
+std::string ToLower(std::string arg)
 {
     for(int i = 0; i < (int)arg.length(); i++)
     {
@@ -380,7 +386,7 @@ string ToLower(string arg)
     return arg;
 }
 
-string ToUpper(string arg)
+std::string ToUpper(std::string arg)
 {	
 	for(int i = 0; i < (int)arg.length(); i++)
 	{
@@ -437,7 +443,7 @@ std::string GetLastErrorAsString()
 
     LPSTR messageBuffer = nullptr;
     size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                                 NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+                                 nullptr, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, nullptr);
 
     std::string message(messageBuffer, size);
 

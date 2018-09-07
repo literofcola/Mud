@@ -1,29 +1,6 @@
-#include "stdafx.h"
-#include "CSubscriber.h"
-#include "CSubscriberManager.h"
-#include "CmySQLQueue.h"
-#include "CLogFile.h"
-#include "CClient.h"
-#include "CHighResTimer.h"
-#include "CHelp.h"
-#include "CTrigger.h"
-#include "CItem.h"
 #include "CSkill.h"
-#include "CClass.h"
-#include "CExit.h"
-#include "CReset.h"
-#include "CArea.h"
-#include "CRoom.h"
-#include "CQuest.h"
-#include "CPlayer.h"
-#include "CCharacter.h"
-#include "CSpellAffect.h"
-#include "CUser.h"
-#include "CGame.h"
 #include "CServer.h"
 #include "utils.h"
-
-using namespace std;
 
 Skill::flag_type Skill::flag_table[] =
 {
@@ -78,10 +55,10 @@ void Skill::Save()
     if(!changed)
         return;
 
-    string fixname = Utilities::SQLFixQuotes(name);
-    string fixfname = Utilities::SQLFixQuotes(function_name);
+	std::string fixname = Utilities::SQLFixQuotes(name);
+	std::string fixfname = Utilities::SQLFixQuotes(function_name);
 
-    string skillsql = "INSERT INTO skills (id, name, cast_script, cast_time, interrupt_flags, function_name, apply_script, ";
+	std::string skillsql = "INSERT INTO skills (id, name, cast_script, cast_time, interrupt_flags, function_name, apply_script, ";
     skillsql += "tick_script, remove_script, target_type, description, cost_description, long_name, cooldown, cost_script, flags) values ";
     skillsql += "(" + Utilities::itos(id) + ", '" + fixname + "', '" + Utilities::SQLFixQuotes(castScript) + "', ";
 	skillsql += Utilities::dtos(castTime, 2) + ",'";

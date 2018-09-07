@@ -1,29 +1,14 @@
-#include "stdafx.h"
-#include "CSubscriber.h"
-#include "CSubscriberManager.h"
-#include "CmySQLQueue.h"
-#include "CLogFile.h"
-#include "CHighResTimer.h"
-#include "CHelp.h"
-#include "CTrigger.h"
-#include "CClient.h"
-#include "CItem.h"
-#include "CSkill.h"
-#include "CClass.h"
-#include "CExit.h"
-#include "CReset.h"
-#include "CArea.h"
-#include "CRoom.h"
-#include "CQuest.h"
-#include "CPlayer.h"
-#include "CCharacter.h"
-#include "CSpellAffect.h"
-#include "CUser.h"
-#include "CGame.h"
-#include "CServer.h"
 #include "CCommand.h"
-#include "mud.h"
+#include "CPlayer.h"
+#include "CClient.h"
+#include "CCharacter.h"
 #include "utils.h"
+#include "CGame.h"
+#include "CLogFile.h"
+#include "mud.h"
+#include <string>
+
+using std::string;
 
 /*
  * Command table
@@ -34,135 +19,135 @@ class Command cmd_table[] =
 {
 	// Common movement commands.
 	//name, function, level, isMovement, whileCorpse, whileGhost, position
-	{ "north",		cmd_north,		1, 1, 0, 1, Character::POSITION_STANDING },
-	{ "east",		cmd_east,		1, 1, 0, 1, Character::POSITION_STANDING },
-	{ "south",		cmd_south,		1, 1, 0, 1, Character::POSITION_STANDING },
-	{ "west",		cmd_west,		1, 1, 0, 1, Character::POSITION_STANDING },
-	{ "ne",			cmd_northeast,	1, 1, 0, 1, Character::POSITION_STANDING },
-	{ "se",			cmd_southeast, 	1, 1, 0, 1, Character::POSITION_STANDING },
-	{ "sw",			cmd_southwest, 	1, 1, 0, 1, Character::POSITION_STANDING },
-	{ "nw",			cmd_northwest, 	1, 1, 0, 1, Character::POSITION_STANDING },
-	{ "up",			cmd_up,			1, 1, 0, 1, Character::POSITION_STANDING },
-	{ "down",		cmd_down,		1, 1, 0, 1, Character::POSITION_STANDING },
-	{ "northeast",	cmd_northeast,	1, 1, 0, 1, Character::POSITION_STANDING },
-	{ "southeast",  cmd_southeast,	1, 1, 0, 1, Character::POSITION_STANDING },
+	{ "north",		cmd_north,		1, 1, 0, 1, Player::POSITION_STANDING },
+	{ "east",		cmd_east,		1, 1, 0, 1, Player::POSITION_STANDING },
+	{ "south",		cmd_south,		1, 1, 0, 1, Player::POSITION_STANDING },
+	{ "west",		cmd_west,		1, 1, 0, 1, Player::POSITION_STANDING },
+	{ "ne",			cmd_northeast,	1, 1, 0, 1, Player::POSITION_STANDING },
+	{ "se",			cmd_southeast, 	1, 1, 0, 1, Player::POSITION_STANDING },
+	{ "sw",			cmd_southwest, 	1, 1, 0, 1, Player::POSITION_STANDING },
+	{ "nw",			cmd_northwest, 	1, 1, 0, 1, Player::POSITION_STANDING },
+	{ "up",			cmd_up,			1, 1, 0, 1, Player::POSITION_STANDING },
+	{ "down",		cmd_down,		1, 1, 0, 1, Player::POSITION_STANDING },
+	{ "northeast",	cmd_northeast,	1, 1, 0, 1, Player::POSITION_STANDING },
+	{ "southeast",  cmd_southeast,	1, 1, 0, 1, Player::POSITION_STANDING },
 	{ "southwest",  cmd_southwest,  1, 1, 0, 1 },
 	{ "northwest",  cmd_northwest,  1, 1, 0, 1 },
 
 	//Common other commands.
 	//Placed here so one and two letter abbreviations work.
-	{ "cast",		cmd_cast,		1, 0, 0, 0, Character::POSITION_STANDING },
-    { "cancel",     cmd_cancel,     1, 0, 0, 0, Character::POSITION_ANY },
+	{ "cast",		cmd_cast,		1, 0, 0, 0, Player::POSITION_STANDING },
+    { "cancel",     cmd_cancel,     1, 0, 0, 0, Player::POSITION_ANY },
     /*{ "auction",    cmd_auction,	POS_RESTING,	1 },
     { "channels",   cmd_channels,	POS_DEAD,       1,		LOG_NORMAL, 1 },*/
-    { "goto",       cmd_goto,		-1, 0, 1, 1, Character::POSITION_ANY },
-    { "inventory",	cmd_inventory,	1, 0, 1, 1, Character::POSITION_ANY },
-    { "attack",     cmd_attack,     1, 0, 0, 0, Character::POSITION_STANDING },
-    { "kill",		cmd_attack,		1, 0, 0, 0, Character::POSITION_STANDING },
-    { "look",		cmd_look,		1, 0, 1, 1, Character::POSITION_ANY },
-	{ "loot",		cmd_loot,		1, 0, 0, 0, Character::POSITION_STANDING },
+    { "goto",       cmd_goto,		-1, 0, 1, 1, Player::POSITION_ANY },
+    { "inventory",	cmd_inventory,	1, 0, 1, 1, Player::POSITION_ANY },
+    { "attack",     cmd_attack,     1, 0, 0, 0, Player::POSITION_STANDING },
+    { "kill",		cmd_attack,		1, 0, 0, 0, Player::POSITION_STANDING },
+    { "look",		cmd_look,		1, 0, 1, 1, Player::POSITION_ANY },
+	{ "loot",		cmd_loot,		1, 0, 0, 0, Player::POSITION_STANDING },
     /*{ "gt",		cmd_clantalk,	POS_DEAD,		1,		LOG_NORMAL, 1 },
     { "guild",		cmd_clan,		POS_DEAD,		1,		LOG_NORMAL, 1 },*/
-    { "learn",      cmd_learn,	    -1, 0, 0, 0, Character::POSITION_ANY },
-	{ "rest",		cmd_sit,		1, 0, 0, 1, Character::POSITION_ANY },
-    { "sit",		cmd_sit,		1, 0, 0, 1, Character::POSITION_ANY },
-    { "sockets",    cmd_sockets,	-3, 0, 1, 1, Character::POSITION_ANY },
-    { "stand",		cmd_stand,		1, 0, 0, 1, Character::POSITION_ANY },
-	{ "target",		cmd_target,		1, 0, 0, 1, Character::POSITION_ANY },
-    { "tell",		cmd_tell, 1, 0, 1, 1, Character::POSITION_ANY },
-    { "track",      cmd_track, 1, 0, 0, 0, Character::POSITION_STANDING },
+    //{ "learn",      cmd_learn,	    -1, 0, 0, 0, Player::POSITION_ANY },
+	{ "rest",		cmd_sit,		1, 0, 0, 1, Player::POSITION_ANY },
+    { "sit",		cmd_sit,		1, 0, 0, 1, Player::POSITION_ANY },
+    { "sockets",    cmd_sockets,	-3, 0, 1, 1, Player::POSITION_ANY },
+    { "stand",		cmd_stand,		1, 0, 0, 1, Player::POSITION_ANY },
+	{ "target",		cmd_target,		1, 0, 0, 1, Player::POSITION_ANY },
+    { "tell",		cmd_tell, 1, 0, 1, 1, Player::POSITION_ANY },
+    { "track",      cmd_track, 1, 0, 0, 0, Player::POSITION_STANDING },
 
     /*
      * Informational commands.
      */
-    { "affects",	cmd_affects, 1, 0, 1, 1, Character::POSITION_ANY },
+    { "affects",	cmd_affects, 1, 0, 1, 1, Player::POSITION_ANY },
     /*{ "ban",		cmd_ban,			POS_DEAD,		L1, LOG_ALWAYS, 1 },
 	{ "bank",		cmd_bank,		POS_RESTING,	1,	LOG_NORMAL, 1 },
     { "bug",		cmd_bug,			POS_DEAD,		1,  LOG_NORMAL, 1 },
     { "changes",	cmd_changes,		POS_DEAD,		1,  LOG_NORMAL, 1 },*/
-    { "commands",	cmd_commands,	1, 0, 1, 1, Character::POSITION_ANY },
+    { "commands",	cmd_commands,	1, 0, 1, 1, Player::POSITION_ANY },
     //{ "compare",	cmd_compare,		POS_RESTING,	1,  LOG_NORMAL, 1 },
-    { "cooldowns",	cmd_cooldowns,	1, 0, 1, 1, Character::POSITION_ANY },
-    { "equipment",	cmd_equipment,	1, 0, 1, 1, Character::POSITION_ANY },
+    { "cooldowns",	cmd_cooldowns,	1, 0, 1, 1, Player::POSITION_ANY },
+    { "equipment",	cmd_equipment,	1, 0, 1, 1, Player::POSITION_ANY },
     /*{ "examine",	cmd_examine,		POS_RESTING,	1,  LOG_NORMAL, 1 },*/
-    { "help",		cmd_help,		1, 0, 1, 1, Character::POSITION_ANY },
-	{ "levels",     cmd_levels,		1, 0, 1, 1, Character::POSITION_ANY },
+    { "help",		cmd_help,		1, 0, 1, 1, Player::POSITION_ANY },
+	{ "levels",     cmd_levels,		1, 0, 1, 1, Player::POSITION_ANY },
     /*{ "motd",		cmd_motd,		POS_DEAD,       1,  LOG_NORMAL, 1 },
     { "news",		cmd_news,		POS_DEAD,		1,  LOG_NORMAL, 1 },*/
-    { "quest",		cmd_quest, 1, 0, 0, 0, Character::POSITION_ANY },
+    { "quest",		cmd_quest, 1, 0, 0, 0, Player::POSITION_ANY },
     /*{ "read",		cmd_read,		POS_RESTING,	1,  LOG_NORMAL, 1 },
     { "report",		cmd_report,		POS_RESTING,	1,  LOG_NORMAL, 1 },*/
-    { "score",		cmd_score,		1, 0, 1, 1, Character::POSITION_ANY },
-    { "scan",		cmd_scan,		1, 0, 1, 1, Character::POSITION_ANY },
-    { "skills",		cmd_skills,		1, 0, 1, 1, Character::POSITION_ANY },
+    { "score",		cmd_score,		1, 0, 1, 1, Player::POSITION_ANY },
+    { "scan",		cmd_scan,		1, 0, 1, 1, Player::POSITION_ANY },
+    { "skills",		cmd_skills,		1, 0, 1, 1, Player::POSITION_ANY },
     /*{ "socials",	cmd_socials,		POS_DEAD,		1,  LOG_NORMAL, 1 },
     { "time",		cmd_time,		POS_DEAD,		1,  LOG_NORMAL, 1 },
     { "typo",		cmd_typo,		POS_DEAD,		1,  LOG_NORMAL, 1 },
     { "weather",	cmd_weather,		POS_RESTING,	1,  LOG_NORMAL, 1 },*/
-    { "who",		cmd_who,		1, 0, 1, 1, Character::POSITION_ANY },
+    { "who",		cmd_who,		1, 0, 1, 1, Player::POSITION_ANY },
 
     /*
      * Configuration commands.
      */
-    { "alias",		cmd_alias,		1, 0, 1, 1, Character::POSITION_ANY },
+    { "alias",		cmd_alias,		1, 0, 1, 1, Player::POSITION_ANY },
     /*{ "chat", 		cmd_chat, 		POS_STANDING,	1,  LOG_NORMAL, 1 },
     { "description",cmd_description,	POS_DEAD,		1,  LOG_NORMAL, 1 },*/
-    { "set",		cmd_set,		1, 0, 1, 1, Character::POSITION_ANY },
-    { "title",		cmd_title,		1, 0, 1, 1, Character::POSITION_ANY },
-	{ "unalias",	cmd_unalias,	1, 0, 1, 1, Character::POSITION_ANY },
+    { "set",		cmd_set,		1, 0, 1, 1, Player::POSITION_ANY },
+    { "title",		cmd_title,		1, 0, 1, 1, Player::POSITION_ANY },
+	{ "unalias",	cmd_unalias,	1, 0, 1, 1, Player::POSITION_ANY },
 
     /*
      * Communication commands.
      */
     /*{ "afk",		cmd_afk,			POS_DEAD,		1,  LOG_NORMAL, 1 },
     { "emote",		cmd_emote,		POS_RESTING,	1,  LOG_NORMAL, 1 },*/
-    { ".",			cmd_shout,		1, 0, 0, 1, Character::POSITION_ANY },
+    { ".",			cmd_shout,		1, 0, 0, 1, Player::POSITION_ANY },
     /*{ ",",			cmd_emote,		POS_RESTING,	1,  LOG_NORMAL, 0 },
 	*/
-	{ "group",		cmd_group,		1, 0, 1, 1, Character::POSITION_ANY },
+	{ "group",		cmd_group,		1, 0, 1, 1, Player::POSITION_ANY },
 	/*
     { ";",		  	cmd_formtalk,	POS_DEAD,		1,  LOG_NORMAL, 0 },
     { "notify",		cmd_notify,		POS_DEAD,		1, 	LOG_NORMAL, 1 },
     { "note",		cmd_note,		POS_SLEEPING,	1,  LOG_NORMAL, 1 },
     { "pray",		cmd_pray,		POS_DEAD,		1,	LOG_NORMAL, 1 },*/
-    { "reply",		cmd_reply,		1, 0, 1, 1, Character::POSITION_ANY },
-    { "say",		cmd_say,		1, 0, 0, 0, Character::POSITION_ANY },
-    { "'",		    cmd_say,		1, 0, 0, 0, Character::POSITION_ANY },
-    { "shout",		cmd_shout,		1, 0, 0, 1, Character::POSITION_ANY },
-    { "yell",		cmd_yell,		1, 0, 0, 0, Character::POSITION_ANY },
+    { "reply",		cmd_reply,		1, 0, 1, 1, Player::POSITION_ANY },
+    { "say",		cmd_say,		1, 0, 0, 0, Player::POSITION_ANY },
+    { "'",		    cmd_say,		1, 0, 0, 0, Player::POSITION_ANY },
+    { "shout",		cmd_shout,		1, 0, 0, 1, Player::POSITION_ANY },
+    { "yell",		cmd_yell,		1, 0, 0, 0, Player::POSITION_ANY },
 
     /*
      * Object manipulation commands.
      */
-	{ "drink",		cmd_drink,		1, 0, 0, 0, Character::POSITION_ANY },
-    { "drop",		cmd_drop,		1, 0, 0, 0, Character::POSITION_ANY },
-    { "eat",		cmd_eat,		1, 0, 0, 0, Character::POSITION_ANY },
-    { "hold",		cmd_wear,		1, 0, 0, 0, Character::POSITION_ANY },
-    { "remove",		cmd_remove,		1, 0, 0, 0, Character::POSITION_ANY },
-    { "wear",		cmd_wear,		1, 0, 0, 0, Character::POSITION_ANY },
-	{ "get",		cmd_take,		1, 0, 0, 0, Character::POSITION_ANY },
-	{ "take",		cmd_take,		1, 0, 0, 0, Character::POSITION_ANY },
-	{ "gather",		cmd_take,		1, 0, 0, 0, Character::POSITION_ANY },
+	{ "drink",		cmd_drink,		1, 0, 0, 0, Player::POSITION_ANY },
+    { "drop",		cmd_drop,		1, 0, 0, 0, Player::POSITION_ANY },
+    { "eat",		cmd_eat,		1, 0, 0, 0, Player::POSITION_ANY },
+    { "hold",		cmd_wear,		1, 0, 0, 0, Player::POSITION_ANY },
+    { "remove",		cmd_remove,		1, 0, 0, 0, Player::POSITION_ANY },
+    { "wear",		cmd_wear,		1, 0, 0, 0, Player::POSITION_ANY },
+	{ "get",		cmd_take,		1, 0, 0, 0, Player::POSITION_ANY },
+	{ "take",		cmd_take,		1, 0, 0, 0, Player::POSITION_ANY },
+	{ "gather",		cmd_take,		1, 0, 0, 0, Player::POSITION_ANY },
 
     /*
      * Miscellaneous commands.
      */
-    { "class",      cmd_class,		1, 0, 0, 0, Character::POSITION_ANY },
+    { "class",      cmd_class,		1, 0, 0, 0, Player::POSITION_ANY },
     /*{ "enter", 		cmd_enter, 		POS_STANDING,	1,  LOG_NORMAL, 1 },
     { "follow",		cmd_follow,		POS_STANDING,	1,  LOG_NORMAL, 1 },
     //{ "freport",    cmd_freport,	POS_RESTING,    1,  LOG_NORMAL, 1 },
     { "hide",		cmd_hide,		POS_STANDING,	1,  LOG_NORMAL, 1 },
     { "play",		cmd_play,		POS_STANDING,	1,  LOG_NORMAL, 1 },*/
-    { "quit",		cmd_quit,		1, 0, 0, 1, Character::POSITION_ANY },
-    { "recall",		cmd_recall,		1, 0, 0, 0, Character::POSITION_ANY },
+    { "quit",		cmd_quit,		1, 0, 0, 1, Player::POSITION_ANY },
+    { "recall",		cmd_recall,		1, 0, 0, 0, Player::POSITION_ANY },
     /*{ "/",			cmd_chat,		POS_STANDING,	1,  LOG_NORMAL, 0 },
     { "save",		cmd_save,		POS_DEAD,	 	IM, LOG_NORMAL, 1 },*/
-    { "search",		cmd_search,		-2, 1, 1, 1, Character::POSITION_ANY },
+    { "search",		cmd_search,		-2, 1, 1, 1, Player::POSITION_ANY },
     /*
     { "sleep",		cmd_sleep,		1, 0, 0, 1 },
 	*/
-	{ "train",		cmd_train,		1, 0, 0, 0, Character::POSITION_ANY },
-    { "wake",		cmd_wake,		1, 0, 0, 1, Character::POSITION_ANY },
+	{ "train",		cmd_train,		1, 0, 0, 0, Player::POSITION_ANY },
+    { "wake",		cmd_wake,		1, 0, 0, 1, Player::POSITION_ANY },
     /*{ "where",		cmd_where,		POS_RESTING,	1,  LOG_NORMAL, 1 },
     { "write",		cmd_write,		POS_RESTING,	1,	LOG_NORMAL, 1 },*/
 
@@ -171,8 +156,8 @@ class Command cmd_table[] =
      */
     /*
     { "at",         cmd_at,			POS_DEAD,       L6 },*/
-    { "advance",	cmd_advance,	-9, 0, 1, 1, Character::POSITION_ANY },
-    { "threat",		cmd_threat,		-1, 0, 1, 1, Character::POSITION_ANY },
+    { "advance",	cmd_advance,	-9, 0, 1, 1, Player::POSITION_ANY },
+    { "threat",		cmd_threat,		-1, 0, 1, 1, Player::POSITION_ANY },
     /*
     { "disable",    cmd_disable,		POS_DEAD,	L1,  LOG_ALWAYS, 1 },
     { "dump",		cmd_dump,		POS_DEAD,	ML,  LOG_ALWAYS, 0 },
@@ -182,16 +167,16 @@ class Command cmd_table[] =
     { "allow",		cmd_allow,		POS_DEAD,	L2,  LOG_ALWAYS, 1 },
     { "ban",		cmd_ban,			POS_DEAD,	L1,  LOG_ALWAYS, 1 },
     { "deny",		cmd_deny,		POS_DEAD,	ML,  LOG_ALWAYS, 1 },*/
-    { "disconnect",	cmd_disconnect,	-3, 0, 1, 1, Character::POSITION_ANY },
+    { "disconnect",	cmd_disconnect,	-3, 0, 1, 1, Player::POSITION_ANY },
     /*{ "flag",		cmd_flag,		POS_DEAD,	L1,  LOG_ALWAYS, 1 },
     { "freeze",		cmd_freeze,		POS_DEAD,	L4,  LOG_ALWAYS, 1 },
     { "permban",	cmd_permban,		POS_DEAD,	ML,  LOG_ALWAYS, 1 },
     { "protect",	cmd_protect,		POS_DEAD,	L1,  LOG_ALWAYS, 1 },*/
-    { "shutdown",	cmd_shutdown,	-10, 0, 1, 1, Character::POSITION_ANY },
+    { "shutdown",	cmd_shutdown,	-10, 0, 1, 1, Player::POSITION_ANY },
     /*{ "wizlock",	cmd_wizlock,		POS_DEAD,	L2,  LOG_ALWAYS, 1 },
 
     { "force",		cmd_force,		POS_DEAD,	L2,  LOG_ALWAYS, 1 },*/
-    { "load",		cmd_load,		-6, 0, 1, 1, Character::POSITION_ANY },
+    { "load",		cmd_load,		-6, 0, 1, 1, Player::POSITION_ANY },
     /*{ "newlock",	cmd_newlock,		POS_DEAD,	L2,  LOG_ALWAYS, 1 },
     { "nochannels",	cmd_nochannels,	POS_DEAD,	L6,  LOG_ALWAYS, 1 },
     { "noemote",	cmd_noemote,		POS_DEAD,	L3,  LOG_ALWAYS, 1 },
@@ -199,18 +184,18 @@ class Command cmd_table[] =
     { "notell",		cmd_notell,		POS_DEAD,	L3,  LOG_ALWAYS, 1 },
     { "nopray",		cmd_nopray,		POS_DEAD,	L6,	 LOG_ALWAYS, 1 },
     { "pecho",		cmd_pecho,		POS_DEAD,	L4,  LOG_ALWAYS, 1 }, */
-    { "purge",		cmd_purge,		-2,	0, 1, 1, Character::POSITION_ANY },
-    { "restore",	cmd_restore,	-2, 0, 1, 1, Character::POSITION_ANY },
+    { "purge",		cmd_purge,		-2,	0, 1, 1, Player::POSITION_ANY },
+    { "restore",	cmd_restore,	-2, 0, 1, 1, Player::POSITION_ANY },
     /*{ "sla",		cmd_sla,			POS_DEAD,	L3,  LOG_NORMAL, 0 },
     { "slay",		cmd_slay,		POS_DEAD,	L4,  LOG_ALWAYS, 1 },*/
-    { "transfer",	cmd_transfer,	-2, 0, 1, 1, Character::POSITION_ANY },
+    { "transfer",	cmd_transfer,	-2, 0, 1, 1, Player::POSITION_ANY },
 
     /*{ "poofin",		cmd_bamfin,		POS_DEAD,	L8,  LOG_NORMAL, 1 },
     { "poofout",	cmd_bamfout,		POS_DEAD,	L8,  LOG_NORMAL, 1 },
     { "gecho",		cmd_echo,		POS_DEAD,	L4,  LOG_ALWAYS, 1 },
     { "incognito",	cmd_incognito,	POS_DEAD,	IM,  LOG_NORMAL, 1 },
     { "log",		cmd_log,			POS_DEAD,	L1,  LOG_ALWAYS, 1 },*/
-    { "peace",		cmd_peace,		-1,	0, 1, 1, Character::POSITION_ANY },
+    { "peace",		cmd_peace,		-1,	0, 1, 1, Player::POSITION_ANY },
     /*{ "penalty",	cmd_penalty,		POS_DEAD,	L7,  LOG_NORMAL, 1 },
     { "echo",		cmd_recho,		POS_DEAD,	L6,  LOG_ALWAYS, 1 },
     { "return",     cmd_return,		POS_DEAD,   L1,  LOG_NORMAL, 1 },
@@ -228,15 +213,15 @@ class Command cmd_table[] =
     /*
      * OLC
      */
-    { "edit",		cmd_edit,		-1, 0, 1, 1, Character::POSITION_ANY },
+    { "edit",		cmd_edit,		-1, 0, 1, 1, Player::POSITION_ANY },
 
-    { "systeminfo", cmd_systeminfo, -1, 0, 1, 1, Character::POSITION_ANY },
-    { "sql",        cmd_sql,        -10, 0, 1, 1, Character::POSITION_ANY },
+    { "systeminfo", cmd_systeminfo, -1, 0, 1, 1, Player::POSITION_ANY },
+    { "sql",        cmd_sql,        -10, 0, 1, 1, Player::POSITION_ANY },
 
     /*
      * End of list.
      */
-    { "",			0,				0, 0, 0, 0, Character::POSITION_ANY }
+    { "",			0,				0, 0, 0, 0, Player::POSITION_ANY }
 };
 
 // "show" needs to be the FIRST entry
@@ -393,55 +378,55 @@ const class Command areaEditCmd_table[] =
     { "", 0,  0, 0, 1, 1 }
 };
 
-Command * Command::GetCurrentCmdTable(Character * ch)
+Command * Command::GetCurrentCmdTable(Player * ch)
 {
-	if(ch->editState != Character::ED_NONE)
+	if(ch->editState != Player::ED_NONE)
     {
         switch(ch->editState)
         {
-            case Character::ED_ROOM:
+            case Player::ED_ROOM:
                 return (class Command *)&roomEditCmd_table;
                 break;
-            case Character::ED_SKILL:
+            case Player::ED_SKILL:
                 return (class Command *)&skillEditCmd_table;
                 break;
-            case Character::ED_NPC:
+            case Player::ED_NPC:
                 return (class Command *)&npcEditCmd_table;
                 break;
-            case Character::ED_ITEM:
+            case Player::ED_ITEM:
                 return (class Command *)&itemEditCmd_table;
                 break;
-            case Character::ED_QUEST:
+            case Player::ED_QUEST:
                 return (class Command *)&questEditCmd_table;
                 break;
-            case Character::ED_CLASS:
+            case Player::ED_CLASS:
                 return (class Command *)&classEditCmd_table;
                 break;
-			case Character::ED_HELP:
+			case Player::ED_HELP:
                 return (class Command *)&helpEditCmd_table;
                 break;
-            case Character::ED_AREA:
+            case Player::ED_AREA:
                 return (class Command *)&areaEditCmd_table;
                 break;
-            case Character::ED_PLAYER:
+            case Player::ED_PLAYER:
                 return (class Command *)&playerEditCmd_table;
                 break;
             default:
                 LogFile::Log("error", "Character::GetCurrentCmdTable, bad user->editState");
-                return NULL;
+                return nullptr;
         }
 	}
 	else
 	{
 		return (class Command *)&cmd_table;
 	}
-    return NULL;
+    return nullptr;
 }
 
 /*
  * The main entry point for executing commands.
  */
-bool Command::Interpret(Character * ch, string argument)
+bool Command::Interpret(Player * ch, string argument)
 {
     bool found = false;
 
@@ -453,7 +438,7 @@ bool Command::Interpret(Character * ch, string argument)
 	}
 
 	//Alias handling
-	if (!argument.empty() && !ch->IsNPC() && !ch->player->alias.empty()
+	if (!argument.empty() && !ch->IsNPC() && !ch->alias.empty()
 		&& (Utilities::str_prefix("alias", argument) || Utilities::str_prefix("unalias", argument)))
 	{
 		string command_remainder = argument;
@@ -461,8 +446,8 @@ bool Command::Interpret(Character * ch, string argument)
 		string new_command;
 		command_remainder = Utilities::one_argument(command_remainder, possible_alias);
 		
-		auto map_iter = ch->player->alias.find(possible_alias);
-		if (map_iter != ch->player->alias.end())
+		auto map_iter = ch->alias.find(possible_alias);
+		if (map_iter != ch->alias.end())
 		{
 			new_command = map_iter->second;
 			new_command += " " + command_remainder;
@@ -480,7 +465,7 @@ bool Command::Interpret(Character * ch, string argument)
     while(index < (int)argument.length() && iswspace(argument[index]))
 		index++;
 	argument = argument.substr(index, argument.length() - index);
-    if(argument.empty() && ch->editState == Character::ED_NONE)
+    if(argument.empty() && ch->editState == Player::ED_NONE)
 		return true;
 
      //Grab the command word.
@@ -503,11 +488,11 @@ bool Command::Interpret(Character * ch, string argument)
     }
     command = Utilities::ToLower(command);
 
-    void (*whichFunction)(Character * ch, string argument) = NULL;
+    void (*whichFunction)(Player * ch, string argument) = nullptr;
     class Command * whichTable;
 
 	whichTable = GetCurrentCmdTable(ch);
-	if(ch->editState != Character::ED_NONE && command.empty())
+	if(ch->editState != Player::ED_NONE && command.empty())
     {
         found = true;
         whichFunction = whichTable[0].cmd_func; //default is "show"
@@ -519,9 +504,9 @@ bool Command::Interpret(Character * ch, string argument)
     {
         //Check for matching command name and level requirements
 	    if(command[0] == whichTable[cmd].name[0] && !Utilities::str_prefix(command.c_str(), whichTable[cmd].name.c_str())
-            && ((whichTable[cmd].level >= 0 && whichTable[cmd].level <= ch->level) || //mortal
-            (ch->player->IMMORTAL()          							                      //immortal
-            && (whichTable[cmd].level >= 0 || (abs(whichTable[cmd].level) <= ch->player->immlevel)))))
+            && ((whichTable[cmd].level >= 0 && whichTable[cmd].level <= ch->GetLevel()) || //mortal
+            (ch->GetImmLevel() > 0          							                   //immortal
+            && (whichTable[cmd].level >= 0 || (abs(whichTable[cmd].level) <= ch->GetImmLevel())))))
 	    {	
 		    found = true;
             whichFunction = whichTable[cmd].cmd_func;
@@ -538,9 +523,9 @@ bool Command::Interpret(Character * ch, string argument)
         {
             //Check for matching command name and level requirements
 	        if(command[0] == whichTable[cmd].name[0] && !Utilities::str_prefix(command.c_str(), whichTable[cmd].name.c_str())
-                && ((whichTable[cmd].level >= 0 && whichTable[cmd].level <= ch->level) || //mortal
-                (ch->player->IMMORTAL()          							                      //immortal
-                && (whichTable[cmd].level >= 0 || (abs(whichTable[cmd].level) <= ch->player->immlevel)))))
+                && ((whichTable[cmd].level >= 0 && whichTable[cmd].level <= ch->GetLevel()) || //mortal
+                (ch->IsImmortal()          							                      //immortal
+                && (whichTable[cmd].level >= 0 || (abs(whichTable[cmd].level) <= ch->GetImmLevel())))))
 	        {	
 		        found = true;
                 whichFunction = whichTable[cmd].cmd_func;
@@ -548,37 +533,6 @@ bool Command::Interpret(Character * ch, string argument)
 	        }
         }
     }
-
-     //Log and snoop.
-    /*if ( cmd_table[cmd].log == LOG_NEVER )
-		strcpy( logline, "" );
-
-    if ( ( !IS_NPC(ch) && IS_SET(ch->act, PLR_LOG) )
-    ||   fLogAll
-    ||   cmd_table[cmd].log == LOG_ALWAYS )
-    {
-	sprintf( log_buf, "Log %s: %s", ch->name, logline );
-	wiznet(log_buf,ch,NULL,WIZ_SECURE,0,get_trust(ch));
-	log_string( log_buf );
-    }
-
-    if ( ch->desc != NULL && ch->desc->snoop_by != NULL )
-    {
-	write_to_buffer( ch->desc->snoop_by, "% ",    2 );
-	write_to_buffer( ch->desc->snoop_by, logline, 0 );
-	write_to_buffer( ch->desc->snoop_by, "\n\r",  2 );
-    }*/
-
-    /*if ( !found )
-    {
-	//Look for command in socials table.
-	if ( !check_social( ch, command, argument ) )
-	{
-	    //send_to_char( "Huh?\n\r", ch );
-	    not_found(ch); // MG style!
-	}
-	return;
-    }*/
 
 	if(!found)
 	{
@@ -593,7 +547,7 @@ bool Command::Interpret(Character * ch, string argument)
         return true;
     }
 
-	if (whichTable[cmd].position == Character::Position::POSITION_STANDING 
+	if (whichTable[cmd].position == Player::Position::POSITION_STANDING 
 		&& ch->position < whichTable[cmd].position)
 	{
 		ch->Stand();

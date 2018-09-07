@@ -1,46 +1,18 @@
-#include "stdafx.h"
-#include "CSubscriber.h"
-#include "CSubscriberManager.h"
-#include "CmySQLQueue.h"
-#include "CLogFile.h"
-#include "CHighResTimer.h"
-#include "CHelp.h"
-#include "CTrigger.h"
-#include "CClient.h"
-#include "CItem.h"
-#include "CSkill.h"
-#include "CClass.h"
-#include "CExit.h"
-#include "CReset.h"
-#include "CArea.h"
-#include "CRoom.h"
-#include "CQuest.h"
-#include "CPlayer.h"
-#include "CCharacter.h"
-#include "CSpellAffect.h"
-#include "CUser.h"
-#include "CGame.h"
-#include "CServer.h"
-
-#include "utils.h"
 #include "mud.h"
+#include "utils.h"
+#include "CCharacter.h"
+#include "CPlayer.h"
+#include "CExit.h"
+#include "CRoom.h"
+#include "CGame.h"
 
-extern "C" 
-{
-#include "lua.h"
-#include "lualib.h"
-#include "lauxlib.h"
-}
-
-//#include "luabind/luabind.hpp"
-
-using namespace std;
+using std::string;
 
 Exit::Direction FindDirection(Character * ch, Character * target, int depth);
 Exit::Direction FindDirection(Room * start, Room * end, int depth);
 int FindDistance(Room * start, Room * end, int maxSearchDist);
 
-void cmd_track(Character * ch, string argument)
+void cmd_track(Player * ch, string argument)
 {
     string arg1;
 
@@ -54,7 +26,7 @@ void cmd_track(Character * ch, string argument)
 
     Character * target = Game::GetGame()->GetPlayerWorld(ch, arg1);   
 
-    if(target == NULL)
+    if(target == nullptr)
     {
         ch->Send("Player not found.\n\r");
         return;
@@ -102,21 +74,21 @@ Exit::Direction FindDirection(Room * start, Room * end, int depth)
 	}
 
 	searchQ.push_back(start);
-	visited[start->id] = NULL;
-	searchQ.push_back(NULL); //NULL as depth marker
+	visited[start->id] = nullptr;
+	searchQ.push_back(nullptr); //nullptr as depth marker
 	currentDepth++;
 
-	while (/*!searchQ.empty()*/1) //searchQ will always have a room or NULL
+	while (/*!searchQ.empty()*/1) //searchQ will always have a room or nullptr
 	{
 		Room * searchme = searchQ.front();
 		searchQ.pop_front();
 
-		if (searchme == NULL) //depth marker
+		if (searchme == nullptr) //depth marker
 		{
-			if (searchQ.empty()) //if all the queue has is NULL, we couldn't find it
+			if (searchQ.empty()) //if all the queue has is nullptr, we couldn't find it
 				break;
 
-			searchQ.push_back(NULL);
+			searchQ.push_back(nullptr);
 			currentDepth++;
 			if (currentDepth > depth)
 			{
@@ -189,21 +161,21 @@ int FindDistance(Room * start, Room * end, int maxSearchDist)
 	}
 
 	searchQ.push_back(start);
-	visited[start->id] = NULL;
-	searchQ.push_back(NULL); //NULL as depth marker
+	visited[start->id] = nullptr;
+	searchQ.push_back(nullptr); //nullptr as depth marker
 	currentDepth++;
 
-	while (/*!searchQ.empty()*/1) //searchQ will always have a room or NULL
+	while (/*!searchQ.empty()*/1) //searchQ will always have a room or nullptr
 	{
 		Room * searchme = searchQ.front();
 		searchQ.pop_front();
 
-		if (searchme == NULL) //depth marker
+		if (searchme == nullptr) //depth marker
 		{
-			if (searchQ.empty()) //if all the queue has is NULL, we couldn't find it
+			if (searchQ.empty()) //if all the queue has is nullptr, we couldn't find it
 				break;
 
-			searchQ.push_back(NULL);
+			searchQ.push_back(nullptr);
 			currentDepth++;
 			if (currentDepth > maxSearchDist)
 			{

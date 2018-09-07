@@ -1,5 +1,13 @@
-#include "stdafx.h"
-
+#include "CServer.h"
+#include "CUser.h"
+#include "CGame.h"
+#include "CPlayer.h"
+#include "CClient.h"
+#include "mud.h"
+#include "CLogFile.h"
+#include "utils.h"
+#include <random>
+#include <fstream>
 
 //Defines from telnet protocol we need for MXP, MCCP, etc
 const std::string Server::IAC = "\xFF";
@@ -40,11 +48,12 @@ std::mt19937_64 Server::rand;
 
 Server::Server(Game * g, int port) : nPort(port), mygame(g)
 {
-	hShutdownEvent = NULL;
+	hShutdownEvent = nullptr;
 	nThreads = 1;
-	hAcceptThread = NULL;
-	hIOCompletionPort = NULL;
+	hAcceptThread = nullptr;
+	hIOCompletionPort = nullptr;
 	encryptionKey.clear();
+	acceptReady = false;
 }
 
 Server::~Server()
@@ -83,7 +92,7 @@ bool Server::Initialize()
 	InitializeCriticalSection(&clientListCS);
 
 	//Create shutdown event
-	hShutdownEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+	hShutdownEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
 
 	// Initialize Winsock
 	WSADATA wsaData;
@@ -97,9 +106,9 @@ bool Server::Initialize()
 	}
 
 	//Create I/O completion port
-	hIOCompletionPort = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
+	hIOCompletionPort = CreateIoCompletionPort(INVALID_HANDLE_VALUE, nullptr, 0, 0);
 
-	if(NULL == hIOCompletionPort)
+	if(nullptr == hIOCompletionPort)
 	{
 		LogFile::Log("error", "Error occurred while creating IOCP : " + Utilities::itos(WSAGetLastError()));
 		return false;
@@ -112,7 +121,7 @@ bool Server::Initialize()
 		phWorkerThreads[ii] = CreateThread(0, 0, WorkerThread, this, 0, &nThreadID);
 	}
 
-	ListenSocket = WSASocketW(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
+	ListenSocket = WSASocketW(AF_INET, SOCK_STREAM, 0, nullptr, 0, WSA_FLAG_OVERLAPPED);
 
 	if (INVALID_SOCKET == ListenSocket)
 	{
@@ -193,7 +202,7 @@ void Server::DeInitialize()
 			user->character->ExitCombat();
 			user->character->ClearTarget();
 			if (!user->character->IsAlive())
-				user->character->ChangeRooms(Game::GetGame()->GetRoom(user->character->player->graveyard_room));
+				user->character->ChangeRooms(Game::GetGame()->GetRoom(user->character->graveyard_room));
 			user->character->NotifySubscribers();
 
             //if(user->connectedState == User::CONN_PLAYING && user->character->level > 1) //don't save fresh characters
@@ -211,7 +220,7 @@ void Server::DeInitialize()
 	for(int i = 0; i < nThreads; i++)
 	{
 		//Help threads get out of blocking - GetQueuedCompletionStatus()
-		PostQueuedCompletionStatus(hIOCompletionPort, 0, (DWORD)NULL, NULL);
+		PostQueuedCompletionStatus(hIOCompletionPort, 0, (DWORD)nullptr, nullptr);
 	}
 
 	//Let Worker Threads shutdown
@@ -254,7 +263,8 @@ DWORD WINAPI Server::AcceptThread(void * lParam)
 			if ((WSAEvents.lNetworkEvents & FD_ACCEPT) && (0 == WSAEvents.iErrorCode[FD_ACCEPT_BIT]))
 			{
 				//Process it
-				theserver->AcceptConnection(theserver->ListenSocket);
+				if(theserver->acceptReady)
+					theserver->AcceptConnection(theserver->ListenSocket);
 			}
 		}
 	}
@@ -313,7 +323,7 @@ void Server::AcceptConnection(SOCKET ListenSocket)
 
 		//Post initial Recv
 		pClientContext->RefCountAdjust(1);
-		int err = WSARecv(pClientContext->Socket(), &operationData->wsabuf, 1, NULL, &dwFlags, base_overlapped, NULL);
+		int err = WSARecv(pClientContext->Socket(), &operationData->wsabuf, 1, nullptr, &dwFlags, base_overlapped, nullptr);
 
 		if ((SOCKET_ERROR == err) && (WSA_IO_PENDING != WSAGetLastError()))
 		{
@@ -336,7 +346,7 @@ bool Server::AssociateWithIOCP(Client * pClientContext)
 	//Associate the socket with IOCP
 	HANDLE hTemp = CreateIoCompletionPort((HANDLE)pClientContext->Socket(), hIOCompletionPort, (ULONG_PTR)pClientContext, 0);
 
-	if (NULL == hTemp)
+	if (nullptr == hTemp)
 	{
 		LogFile::Log("network", "CreateIoCompletionPort(): " + Utilities::GetLastErrorAsString());
 		if(pClientContext)
@@ -356,9 +366,9 @@ DWORD WINAPI Server::WorkerThread(void * lpParam)
 {
 	Server * thisserver = (Server*)lpParam;
 
-	void *lpContext = NULL;
-	OVERLAPPED       *pOverlapped = NULL;
-	Client   *pClientContext = NULL;
+	void *lpContext = nullptr;
+	OVERLAPPED       *pOverlapped = nullptr;
+	Client   *pClientContext = nullptr;
 	DWORD            dwBytesTransfered = 0;
 	int nBytesRecv = 0;
 	int nBytesSent = 0;
@@ -376,7 +386,7 @@ DWORD WINAPI Server::WorkerThread(void * lpParam)
 
         //LogFile::Log("status", "GQCP worker awake # " );
 
-		if (NULL == lpContext)
+		if (nullptr == lpContext)
 		{
 			//We are shutting down
 			break;
@@ -388,7 +398,7 @@ DWORD WINAPI Server::WorkerThread(void * lpParam)
 		//Get the extended overlapped structure
 		OVERLAPPEDEX * pOverlappedEx = static_cast<OVERLAPPEDEX*>(pOverlapped);
 
-        if(bReturn && WSAGetLastError() == ERROR_SUCCESS && pClientContext != NULL && dwBytesTransfered == 0)
+        if(bReturn && WSAGetLastError() == ERROR_SUCCESS && pClientContext != nullptr && dwBytesTransfered == 0)
         {
 			//WE HIT HERE ON MUSHCLIENT DISCONNECT
             //LogFile::Log("error", "(1)GetQueuedCompletionStatus(): ThreadID:" + Utilities::itos(GetCurrentThreadId()) + " " + Utilities::itos(WSAGetLastError()));// + Utilities::GetLastErrorAsString());
@@ -407,8 +417,8 @@ DWORD WINAPI Server::WorkerThread(void * lpParam)
 			//LogFile::Log("error", "(2)GetQueuedCompletionStatus(): ThreadID:" + Utilities::itos(GetCurrentThreadId()) + " " + Utilities::itos(WSAGetLastError()));// + Utilities::GetLastErrorAsString());
 			if(pClientContext)
             {
-                //if(pOverlapped == NULL)
-                //    LogFile::Log("status", "(!bReturn) && pOverlapped == NULL");
+                //if(pOverlapped == nullptr)
+                //    LogFile::Log("status", "(!bReturn) && pOverlapped == nullptr");
                 //LogFile::Log("status", "(!bReturn) Disconnect from " + pClientContext->GetIPAddress());
 
 				pClientContext->DisconnectServer();
@@ -438,8 +448,8 @@ DWORD WINAPI Server::WorkerThread(void * lpParam)
 
 					//Overlapped send
 					pClientContext->RefCountAdjust(1);
-					//nBytesSent = WSASend(pClientContext->Socket(), &pOverlappedEx->wsabuf, 1, &dwBytes, dwFlags, pOverlapped, NULL);
-					nBytesSent = WSASend(pClientContext->Socket(), &pOverlappedEx->wsabuf, 1, NULL, 0, pOverlapped, NULL);
+					//nBytesSent = WSASend(pClientContext->Socket(), &pOverlappedEx->wsabuf, 1, &dwBytes, dwFlags, pOverlapped, nullptr);
+					nBytesSent = WSASend(pClientContext->Socket(), &pOverlappedEx->wsabuf, 1, nullptr, 0, pOverlapped, nullptr);
 
 					if ((SOCKET_ERROR == nBytesSent) && (WSA_IO_PENDING != WSAGetLastError()))
 					{
@@ -519,7 +529,7 @@ DWORD WINAPI Server::WorkerThread(void * lpParam)
 				pOverlappedEx->totalBytes = pOverlappedEx->sentBytes = 0;
 
 				pClientContext->RefCountAdjust(1);
-				int err = WSARecv(pClientContext->Socket(), &pOverlappedEx->wsabuf, 1, NULL, &dwFlags, pOverlapped, NULL);
+				int err = WSARecv(pClientContext->Socket(), &pOverlappedEx->wsabuf, 1, nullptr, &dwFlags, pOverlapped, nullptr);
 
 				if ((SOCKET_ERROR == err) && (WSA_IO_PENDING != WSAGetLastError()))
 				{
@@ -554,7 +564,7 @@ void Server::deliver(Client * c, const std::string msg)
 	OVERLAPPED * base_overlapped = static_cast<OVERLAPPED*>(olptr);
 
 	c->RefCountAdjust(1);
-	int wsaerr = WSASend(c->Socket(), &olptr->wsabuf, 1, NULL, 0, base_overlapped, NULL);
+	int wsaerr = WSASend(c->Socket(), &olptr->wsabuf, 1, nullptr, 0, base_overlapped, nullptr);
 
 	if(wsaerr == 0)
 	{
@@ -589,7 +599,7 @@ void Server::deliver(Client * c, const unsigned char * msg, int length)
 	OVERLAPPED * base_overlapped = static_cast<OVERLAPPED*>(olptr);
 
 	c->RefCountAdjust(1);
-	int wsaerr = WSASend(c->Socket(), &olptr->wsabuf, 1, NULL, 0, base_overlapped, NULL);
+	int wsaerr = WSASend(c->Socket(), &olptr->wsabuf, 1, nullptr, 0, base_overlapped, nullptr);
 
 	if(wsaerr == 0)
 	{

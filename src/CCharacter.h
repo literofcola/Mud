@@ -1,228 +1,131 @@
 #ifndef CCHARACTER_H
 #define CCHARACTER_H
 
+#include "CSubscriber.h"
+#include "CSubscriberManager.h"
+#include <deque>
+#include <map>
+#include <string>
+
 class Server;
 class User;
 class SpellAffect;
 class Reset;
+class NPC;
+class Skill;
+class Item;
+class Room;
+class NPCIndex;
+class Group;
+class Player;
 
 class Character : public Subscriber, public SubscriberManager
 {
 public:
-    Character();
-    Character(std::string name_, int id_);
-    Character(std::string name_, User * user_);
-    Character(const Character&);
-    ~Character();
-    void SetDefaults();
+	Character();
+    Character(const Character & copy) = delete;
+    virtual ~Character();
+
     void Notify(SubscriberManager *);
 
     enum MessageType
     {
         MSG_CHAR, MSG_CHAR_VICT, MSG_ROOM, MSG_ROOM_NOTCHAR, MSG_ROOM_NOTVICT, MSG_ROOM_NOTCHARVICT, MSG_GROUP, MSG_GROUP_NOTCHAR
     };
-
-    int id;
-    int level;
-    int gender;
-
-    int agility;	//crit chance and avoidance
-    int intellect;  //spell power
-    int strength;	//attack power
-    int stamina;	//health
-    int wisdom;		//mana
-	int spirit;		//mana regen
-
 	enum ResourceType
 	{
 		RESOURCE_HEALTH = 1, RESOURCE_MANA, RESOURCE_ENERGY, RESOURCE_RAGE, RESOURCE_COMBO
 	};
-    
-	Character * comboPointTarget;
-    static const int HEALTH_FROM_STAMINA = 10;
-    static const int MANA_FROM_WISDOM = 10;
-	static constexpr double STRENGTH_DAMAGE_MODIFIER = 0.10;	//auto attack damage increased by 10% of strength
-	static const int GROUP_LOOT_DISTANCE = 10;
-    std::string name;
-    std::string title;
-    Room * room;
-	Group * group;
-    Player * player;
-
-    int race; //index into Character::race_table
 	enum Races
 	{
 		RACE_NONE, RACE_HUMAN, RACE_ELF, RACE_DWARF, RACE_ORC, RACE_GNOME, RACE_GOBLIN, RACE_UNDEAD, RACE_MINOTAUR, RACE_TROLL
 	};
-    //TODO, make this a class? std::list<Skill*> racials? starting stat bonuses?
-    struct RaceType
-    {
-        int id;
-        std::string name;
-    };
-    static RaceType race_table[];
-
-    //npc only stuff
-    struct DropData
-    {
-        std::vector<int> id;
-        int percent;
-    };
-    std::list<DropData> drops; //TODO Random drops
-
-	//Getting a little struct happy
-	struct Looter //A single eligible looter for a piece of loot dropped in a corpse
-	{
-		enum RollType
-		{
-			ROLL_UNDECIDED, ROLL_NEED, ROLL_GREED, ROLL_PASS
-		};
-		Character * ch;
-		RollType roll_type;
-		int final_roll;
-
-		Looter(Character * ch_) : ch(ch_), roll_type(ROLL_UNDECIDED), final_roll(0) {};
-		bool operator == (const Character * c) const
-		{
-			return ch == c;
-		}
-	};
-	struct OneLoot //One item dropped in a corpse
-	{
+	struct RaceType
+	{	
+		//TODO, make this a class? std::list<Skill*> racials? starting stat bonuses?
 		int id;
-		Item * item;
-		std::list<Looter> looters;
-		double roll_timer;
+		std::string name;
 	};
-	std::list<OneLoot> loot; //Loot dropped in a corpse
-
-	struct LootRoll //A piece of loot in a corpse somewhere that we're rolling on
+	struct Threat
 	{
-		int my_id;
-		int corpse_id;
-		Character * corpse;
-	};
-	std::list<LootRoll> pending_loot_rolls; //pointer back to a corpse that has uncommon+ loot we're rolling on
-
-    Reset * reset; //reset that spawned this npc, if any
-    std::vector<Quest *> questStart;
-    std::vector<Quest *> questEnd;
-	std::string speechText;
-	std::string keywords;
-    bool changed;
-    std::vector<int> flags; //a vector of constants to indicate flag is set
-
-	enum Flags
-    {
-        FLAG_FRIENDLY,FLAG_NEUTRAL,FLAG_AGGRESSIVE,FLAG_GUILD,FLAG_VENDOR,FLAG_REPAIR,
-        FLAG_TRAINER
-    };
-    struct flag_type
-    {
-        int flag;
-        std::string flag_name;
-    };
-    static flag_type flag_table[];
-    bool remove;
-
-    //Movement
-    double movementSpeed; 
-    static constexpr double NORMAL_MOVE_SPEED = 1;						//default move speed in rooms per second
-    static constexpr double COMBAT_MOVE_SPEED = NORMAL_MOVE_SPEED * .3; //30% of normal
-    double lastMoveTime;
-    std::deque<void(*)(Character *, std::string)> movementQueue;
-	enum Position
-	{
-		POSITION_ANY, POSITION_SITTING, POSITION_STANDING
-	};
-	int position; //standing, sitting... only used for eating/drinking right now? (flying?)
-
-    //Combat
-    bool meleeActive;
-    double lastAutoAttack_off; //Time stamp for melee swing timer
-    double lastAutoAttack_main;
-    double npcAttackSpeed;
-    int npcDamageLow;
-    int npcDamageHigh;
-
-    struct LeashData //Keep track of wander distance and leash distance
-    { 
-        int type;
-        Room * room;
-        Exit * next;
-    };
-    std::list<LeashData> leashData;
-    std::map<int, Exit*> wanderPath;
-    std::list<std::pair<Room *, int>> leashPath;
-	Room * leashOrigin;
-
-    struct Threat
-    {
-        Character * ch;
+		Character * ch;
 		double threat;
 		double damage;
 		double healing;
 		bool tapped; //This character has a valid "tap" on us
 		enum Type { THREAT_DAMAGE, THREAT_HEALING, THREAT_OTHER };
-    };
+	};
+	struct DelayData
+	{
+		Character * caster;
+		Skill * sk;
+		Character * charTarget;
+		Item * itemTarget;
+	};
+
+	static RaceType race_table[];
+	
+    //Movement
+	Room * room;
+    double movementSpeed; 
+    static constexpr double NORMAL_MOVE_SPEED = 1;						//default move speed in rooms per second
+    static constexpr double COMBAT_MOVE_SPEED = NORMAL_MOVE_SPEED * .3; //30% of normal
+    double lastMoveTime;
+    std::deque<void(*)(Player *, std::string)> movementQueue;
+	
+    //Combat
+    bool meleeActive;
     std::list<Threat> threatList;
 
     //Spells/Skills
-    struct DelayData
-    {
-        Character * caster;
-        Skill * sk;
-        Character * charTarget;
-        Item * itemTarget;
-    };
     double delay;
     DelayData delayData;
     bool delay_active;
     void (*delayFunction)(DelayData);
     std::list<SpellAffect *> buffs;
     std::list<SpellAffect *> debuffs;
-    bool debuffs_invalid;
-    bool buffs_invalid;
-    std::map<std::string, Skill *> knownSkills;
+    //bool debuffs_invalid;
+    //bool buffs_invalid;
     std::map<int, double> cooldowns;
-	double global;
     double lastSpellCast;  //time stamp for mana regen 5 second rule
+	double lastAutoAttack_main;
 
-    std::map<int, Trigger> triggers;
-    void AddTrigger(Trigger & trig);
-    Trigger * GetTrigger(int id, int type = -1);
+	bool remove;
 
-	//this should for sure be in user, right...
-    enum EditState
-    {
-        ED_NONE, ED_ROOM, ED_SKILL, ED_NPC, ED_ITEM, ED_QUEST, ED_CLASS, ED_PLAYER, ED_HELP, ED_AREA
-    };
-    EditState editState;
-    void * editData;
+	//These aren't really in the spirit of inheritance but this whole OO design is bad so who cares
+	virtual bool IsNPC() = 0;
+	virtual bool IsPlayer() = 0;
+	virtual NPCIndex * GetNPCIndex() { return nullptr; };
 
-    //For search  Store a reference to all searchable class data by type
-    std::map<std::string, std::string*> stringTable;
-    std::map<std::string, int*> intTable;
-    std::map<std::string, double*> doubleTable;
-
-    //TODO sort these functions!
-	void ResetMaxStats();
-	void AddEquipmentStats(Item *);
-	void RemoveEquipmentStats(Item *);
-    void GeneratePrompt(double currentTime);
-    void QueryClear();
-	void SetQuery(std::string prompt, void * data, bool(*queryFunction)(Character *, std::string));
-	void * GetQueryData();
-	bool HasQuery();
-	bool(*GetQueryFunc())(Character *, std::string);
-	void SendBW(std::string str);
-    void Send(std::string str);
-	void Send(char * str);
-	void SendGMCP(std::string str);
+	virtual void SendBW(std::string str) {};
+	virtual void Send(std::string str) {};
+	virtual void Send(char * str) {};
+	virtual void SendGMCP(std::string str) {};
+	virtual void SendGMCP(char * str) {};
 	void SendTargetSubscriberGMCP(std::string str);
 	void SendTargetTargetSubscriberGMCP(std::string str);
-	void SendGMCP(char * str);
-    void Message(const std::string & txt, MessageType msg_type, Character * vict = NULL);
+	int GetHealth() { return health; };
+	int GetMana() { return mana; };
+	int GetEnergy() { return energy; };
+	int GetRage() { return rage; };
+	void SetHealth(int amount);
+	void SetMana(int amount);
+	void SetEnergy(int amount);
+	void SetRage(int amount);
+	virtual int GetMaxHealth() = 0;
+	virtual int GetMaxMana() = 0;
+	virtual int GetMaxEnergy() = 0;
+	virtual int GetMaxRage() = 0;
+	virtual void SetMaxHealth(int amount) { };
+	virtual void SetMaxMana(int amount) { };
+	virtual void SetMaxEnergy(int amount) { };
+	virtual void SetMaxRage(int amount) { };
+	//virtual void GetAgility() { };
+
+    void Message(const std::string & txt, MessageType msg_type, Character * vict = nullptr);
+
+	virtual Group * GetGroup() { return nullptr; };
+
     Character * GetCharacterRoom(std::string name);
 	Room * GetRoom() { return room; }
 	Item * GetItemRoom(std::string name);
@@ -230,21 +133,28 @@ public:
     Character * GetCharacterAdjacentRoom(std::string name, std::string direction);
     Character * GetCharacterRoom(Character * target);
     Character * GetCharacterAdjacentRoom(Character * target);
+
+	virtual double GetGlobalCooldown() { return 0; };
+	virtual void SetGlobalCooldown(double time) { };
+
     void SetTarget(Character * t);
     void ClearTarget();
     Character * GetTarget();
     void Move(int direction);
-	void Sit();
-	void Stand();
+	virtual void Stand() { };
+	virtual void Sit() { };
+	virtual bool FlagIsSet(const int flag) { return false; };
+
     bool ChangeRoomsID(int roomid);
     bool ChangeRooms(Room * room);
-    static Character * LoadPlayer(std::string name, User * user);
-    //static Character * LoadNPC(Server_ptr server, int id);
-    void Save();
-    void SetLevel(int level);
-    int GetLevel();
-	Player * GetPlayer();
-    std::string GetName();
+	virtual void Save() { };
+    
+    virtual int GetLevel() = 0;
+	virtual bool IsImmortal() { return false; };
+	virtual int GetImmLevel() { return 0; };
+	virtual std::string GetName() = 0;
+	inline virtual int GetGender() = 0;
+	inline virtual std::string GetTitle() = 0;
 	std::string HisHer();
 	std::string HimHer();
 	std::string HisHers();
@@ -269,33 +179,14 @@ public:
     void AutoAttack(Character * victim);
     void OneHit(Character * victim, int damage);
 	void OneHeal(Character * target, int heal);
-	double GetMainhandWeaponSpeed();
-	double GetMainhandDamagePerSecond();
-	int GetOffhandDamageRandomHit();
-	double GetOffhandDamagePerSecond();
-	double GetOffhandWeaponSpeed();
-	int GetMainhandDamageRandomHit();
-	int GetIntellect();
-	int GetStrength();
-    int GetHealth();
-	int GetMaxHealth();
-    int GetMana();
-	int GetMaxMana();
-	int GetEnergy();
-	int GetMaxEnergy();
-	int GetRage();
-	int GetMaxRage();
-	void SetHealth(int amount);
-	void SetMana(int amount);
-	void SetEnergy(int amount);
-	void SetRage(int amount);
-	void SetMaxHealth(int amount);
-	void SetMaxMana(int amount);
-	void SetMaxEnergy(int amount);
-	void SetMaxRage(int amount);
+	
+	
+
+	
+
 	void GenerateRageOnAttack(int damage, double weapon_speed, bool mainhand, bool wascrit);
 	void GenerateRageOnTakeDamage(int damage);
-	int GetComboPoints();
+	
 	void SetComboPoints(int howmany);
 	void GenerateComboPoint(Character * target);
 	int SpendComboPoints(Character * target);
@@ -305,20 +196,11 @@ public:
 	void ConsumeRage(int amount);
 	void AdjustHealth(Character * source, int amount);
 	void OnDeath();
-	void HandleNPCKillRewards(Character * killed);
-	void DoLootRoll(OneLoot * oneloot);
-	OneLoot * GetCorpseLoot(int corpse_id);
-	int AddLootRoll(int corpse_id, Character * corpse);
-	bool HasLootRoll(Character * corpse, int corpse_id);
-	void RemoveLootRoll(int my_id);	//Remove only one pending roll by roll-ers ID
-	void RemoveLootRoll(Character * corpse); //Remove all pending rolls that point to a specific corpse
-	void RemoveLootRoll(Character * corpse, int corpse_id); //Remove only one pending roll for specific corpse/ID combo
-	void RemoveAllLootRolls();
-	void RemoveLooter(Character * ch);
-	void RemoveAllLooters();
-	void RemoveLoot(OneLoot *);
-	void SetRollType(Character * who, int corpse_id, Looter::RollType type); //Set a looter's roll type in the corpse's loot object
-	bool CanWearArmor(int armortype);
+	//void DoLootRoll(NPC::OneLoot * oneloot);
+	
+	virtual void RemoveAllLootRolls() { };
+	virtual void RemoveAllLooters() { };
+	//void SetRollType(Character * who, int corpse_id, int type); //Set a looter's roll type in the corpse's loot object
 	void MakeCorpse();
 	void RemoveCorpse();
     void AdjustMana(Character * source, int amount);
@@ -335,63 +217,50 @@ public:
     void RemoveSpellAffect(int isDebuff, int id);
     void RemoveSpellAffect(int isDebuff, std::string name);
     void RemoveAllSpellAffects();
-    void SaveSpellAffects();
-    void LoadSpellAffects();
-    void SaveCooldowns();
-    void LoadCooldowns();
+    
     int GetAuraModifier(int aura_id, int whatModifier);
     int GetTotalAuraModifier(int aura_id);
     int GetSmallestAuraModifier(int aura_id);
     int GetLargestAuraModifier(int aura_id);
     bool CanMove();
     double GetMoveSpeed();
-    void AddSkill(Skill * newskill);
-    Skill * GetSkillShortName(std::string name);
-    bool HasSkill(Skill * sk);
-    bool HasSkillByName(std::string name);
-    void RemoveSkill(Skill * sk);
-    void RemoveSkill(std::string name);
+    
+    virtual bool HasSkill(Skill * sk) = 0;
+	virtual bool HasSkillByName(std::string name) = 0;
+	virtual void AddSkill(Skill * newskill) = 0;
+	virtual void RemoveSkill(Skill * sk) = 0;
+	virtual void RemoveSkill(std::string name) = 0;
+	virtual Skill * GetSkillShortName(std::string name) = 0;
+
 	void StartGlobalCooldown();
     void SetCooldown(Skill * sk, double length);
     double GetCooldownRemaining(Skill * sk);
 	void AddClassSkills();
-	bool HasGroup();
+	virtual bool HasGroup() { return false; };
 	bool InSameGroup(Character * ch);
 
-    bool IsNPC();
-	bool IsPlayer();
-
-	void SetCorpse();
-	void SetGhost();
-	void SetAlive();
+	virtual void SetCorpse();
+	virtual void SetGhost() { };
+	virtual void SetAlive();
 	bool IsCorpse();
-	bool IsGhost();
-	bool IsAlive();
+	inline virtual bool IsGhost() { return false; };
+	virtual bool IsAlive() = 0;
 	int TimeSinceDeath();
     
-private:
+protected:
 
     Character * target;
-	int health;     //current health
-	int maxHealth;  //permanent health(stamina*5) + gear and buff bonuses
+	int health;     
 	int mana;
-	int maxMana;
 	int energy;
-	int maxEnergy;
 	int rage;
-	int maxRage;
-	int comboPoints;
-	int maxComboPoints;
+	
 	bool combat;
-
-	bool hasQuery;
-	bool(*queryFunction)(Character *, std::string);
-	void * queryData;
-	std::string queryPrompt;
 
 	bool isCorpse;
 	double deathTime; //timestamp for res timer and npc corpse decay
 
+	
 };
 
 #endif

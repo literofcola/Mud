@@ -1,29 +1,9 @@
-#include "stdafx.h"
-#include "CSubscriber.h"
-#include "CSubscriberManager.h"
-#include "CmySQLQueue.h"
-#include "CLogFile.h"
 #include "CClient.h"
-#include "CHighResTimer.h"
-#include "CHelp.h"
-#include "CTrigger.h"
-#include "CItem.h"
-#include "CSkill.h"
-#include "CClass.h"
-#include "CExit.h"
-#include "CReset.h"
-#include "CArea.h"
-#include "CRoom.h"
-#include "CQuest.h"
-#include "CPlayer.h"
-#include "CCharacter.h"
-#include "CSpellAffect.h"
-#include "CUser.h"
-#include "CGame.h"
-#include "CServer.h"
-#include "utils.h"
-
-using namespace std;
+#include "CCommand.h"
+#include <string>
+#include <winsock2.h>
+#include <WS2tcpip.h>
+#include <windows.h>
 
 Client::Client(SOCKET s, std::string ipaddress) : socket_(s), ipaddress_(ipaddress)
 {
@@ -95,7 +75,7 @@ void Client::FreeOperationData(OVERLAPPEDEX *  ol)
 		if((*iter) == ol)
 		{
 			delete (*iter);
-			(*iter) = NULL;
+			(*iter) = nullptr;
 			overlappedData.erase(iter);
 			break;
 		}

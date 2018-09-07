@@ -1,45 +1,23 @@
-#include "stdafx.h"
-#include "CSubscriber.h"
-#include "CSubscriberManager.h"
-#include "CmySQLQueue.h"
-#include "CLogFile.h"
-#include "CClient.h"
-#include "CHighResTimer.h"
-#include "CHelp.h"
-#include "CTrigger.h"
-#include "CItem.h"
-#include "CSkill.h"
-#include "CClass.h"
-#include "CExit.h"
-#include "CReset.h"
-#include "CArea.h"
-#include "CRoom.h"
-#include "CQuest.h"
-#include "CPlayer.h"
 #include "CUser.h"
-#include "CGame.h"
-#include "CServer.h"
-#include "CCharacter.h"
-#include "CSpellAffect.h"
 #include "utils.h"
-#include "mud.h"
-
-using namespace std;
+#include <string>
+#include <sstream>
+#include <iomanip>
 
 namespace StringEdit
 {
 
-string string_linedel( string, int );
-string string_lineadd( string, string, int );
-string NumberLines(string);
-string first_arg( const string & argument, string & arg_first, bool fCase );
+std::string string_linedel(std::string, int );
+std::string string_lineadd(std::string, std::string, int );
+std::string NumberLines(std::string);
+std::string first_arg( const std::string & argument, std::string & arg_first, bool fCase );
 
 /*****************************************************************************
  Name:		string_edit
  Purpose:	Clears string and puts player into editing mode.
  Called by:	none
  ****************************************************************************/
-void string_edit(User * user, string * pString)
+void string_edit(User * user, std::string * pString)
 {
     user->Send( "-========- Entering EDIT Mode -=========-\n\r");
     user->Send( "    Type .h on a new line for help\n\r");
@@ -55,7 +33,7 @@ void string_edit(User * user, string * pString)
  Purpose:	Puts player into append mode for given string.
  Called by:	(many)olc_act.c
  ****************************************************************************/
-void string_append(User * user, string * pString)
+void string_append(User * user, std::string * pString)
 {
     user->Send( "-=======- Entering APPEND Mode -========-\n\r");
     user->Send( "    Type .h on a new line for help\n\r" );
@@ -76,7 +54,7 @@ void string_append(User * user, string * pString)
  Called by:	string_add(string.c) (aedit_builder)olc_act.c.
  ****************************************************************************/
 //Find old in orig, and replace with replace
-string string_replace( string orig, string old, string replace )
+std::string string_replace(std::string orig, std::string old, std::string replace )
 {
     int pos = (int)orig.find(old);
     if(pos == std::string::npos)
@@ -92,9 +70,9 @@ string string_replace( string orig, string old, string replace )
  Purpose:	Interpreter for string editing.
  Called by:	game_loop_xxxx(comm.c).
  ****************************************************************************/
-void string_add( User * user, string argument )
+void string_add( User * user, std::string argument )
 {
-    string buf;
+	std::string buf;
 
     /*
      * Thanks to James Seng
@@ -103,10 +81,10 @@ void string_add( User * user, string argument )
 
     if (!argument.empty() && argument[0] == '.')
     {
-        string arg1;
-        string arg2;
-        string arg3;
-        string tmparg3;
+		std::string arg1;
+		std::string arg2;
+		std::string arg3;
+		std::string tmparg3;
 
         argument = Utilities::one_argument( argument, arg1 );
         argument = first_arg( argument, arg2, false );
@@ -189,30 +167,9 @@ void string_add( User * user, string argument )
         return;
     }
 
-    if ( /**argument == '~' ||*/ !argument.empty() && argument[0] == '@' )
+    if ( !argument.empty() && argument[0] == '@' )
     {
-	    /*if ( ch->desc->editor == ED_MPCODE )
-	    {
-		    MOB_INDEX_DATA *mob;
-		    int hash;
-		    MPROG_LIST *mpl;
-		    MPROG_CODE *mpc;
-
-		    EDIT_MPCODE(ch, mpc);
-
-		    if ( mpc != NULL )
-			    for ( hash = 0; hash < MAX_KEY_HASH; hash++ )
-				    for ( mob = mob_index_hash[hash]; mob; mob = mob->next )
-					    for ( mpl = mob->mprogs; mpl; mpl = mpl->next )
-						    if ( mpl->vnum == mpc->vnum )
-						    {
-							    sprintf( buf, "Changed mob %d.\n\r", mob->vnum );
-							    send_to_char( buf, ch );
-							    mpl->code = mpc->code;
-						    }
-	    }*/
-
-        user->stringEdit = NULL;
+        user->stringEdit = nullptr;
         return;
     }
 
@@ -227,7 +184,7 @@ void string_add( User * user, string argument )
         user->Send( "String too long, last line skipped.\n\r" );
 
 	/* Force character out of editing mode. */
-        user->stringEdit = NULL;
+        user->stringEdit = nullptr;
         return;
     }
 
@@ -416,7 +373,7 @@ void string_add( User * user, string argument )
  		percentages.
  Called by:	string_add(string.c)
  ****************************************************************************/
-string first_arg( const string & argument, string & arg_first, bool fCase )
+std::string first_arg( const std::string & argument, std::string & arg_first, bool fCase )
 {
     char cEnd;
     int i = 0;
@@ -456,9 +413,6 @@ string first_arg( const string & argument, string & arg_first, bool fCase )
 
     return argument.substr(i, argument.length());
 }
-
-
-
 
 /*
  * Used in olc_act.c for aedit_builders.
@@ -521,7 +475,7 @@ string first_arg( const string & argument, string & arg_first, bool fCase )
     return argument;
 }*/
 
-string string_linedel(string str, int line)
+std::string string_linedel(std::string str, int line)
 {
     int linectr = 1;
     int first = 0, last = 0;
@@ -544,8 +498,7 @@ string string_linedel(string str, int line)
 }
 
 //Inserts stradd into str at line
-//TODO update these functions to use reference parameters
-string string_lineadd(string str, string stradd, int line)
+std::string string_lineadd(std::string str, std::string stradd, int line)
 {
     int linectr = 1;
     int first = 0, last = 0;
@@ -565,16 +518,16 @@ string string_lineadd(string str, string stradd, int line)
     return str;
 }
 
-string NumberLines(string str)
+std::string NumberLines(std::string str)
 {
-    stringstream formatted;
+	std::stringstream formatted;
     int first = 0, last = 0;
     int ctr = 1;
 
     do{
         last = (int)str.find('\n', first);
         if(last != std::string::npos)
-            formatted << setw(2) << ctr << ". " << str.substr(first, last-first) << "\n\r";
+            formatted << std::setw(2) << ctr << ". " << str.substr(first, last-first) << "\n\r";
         first = last+1;
         ++ctr;
     }while(last != std::string::npos);

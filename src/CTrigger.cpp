@@ -1,7 +1,8 @@
-#include "stdafx.h"
 #include "CTrigger.h"
 #include "utils.h"
 #include <string>
+#include <sys/timeb.h>
+#include <time.h>
 
 Trigger::Trigger()
 {

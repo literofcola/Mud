@@ -43,7 +43,7 @@ Room::Room(int id_)
     changed = false;
     for(int i = 0; i < Exit::DIR_LAST; i++)
     {
-        exits[i] = NULL;
+        exits[i] = nullptr;
     }
     stringTable["name"] = &name;
     stringTable["description"] = &description;
@@ -62,7 +62,7 @@ Room::Room(int id_, string name_, string description_)
     changed = false;
     for(int i = 0; i < Exit::DIR_LAST; i++)
     {
-        exits[i] = NULL;
+        exits[i] = nullptr;
     }
     stringTable["name"] = &name;
     stringTable["description"] = &description;
@@ -76,12 +76,12 @@ Room::~Room()
     triggers.clear();
     for(int i = 0; i < Exit::DIR_LAST; i++)
     {
-        if(exits[i] != NULL)
+        if(exits[i] != nullptr)
             delete exits[i];
     }
     for(std::map<int, Reset *>::iterator iter = resets.begin(); iter != resets.end(); ++iter)
     {
-        if((*iter).second != NULL)
+        if((*iter).second != nullptr)
             delete (*iter).second;
     }
 }
@@ -116,7 +116,7 @@ void Room::Save()
             string exitsql = "DELETE FROM exits where exits.from="+Utilities::itos(id)+" and exits.direction="+Utilities::itos(i);
             Server::sqlQueue->Write(exitsql);
             delete exits[i];
-            exits[i] = NULL;
+            exits[i] = nullptr;
         }
 		else if(exits[i] && exits[i]->to)
 		{
@@ -143,7 +143,7 @@ void Room::Save()
                 r->npc->RemoveSubscriber(r);
             }
             delete r;
-            r = NULL;
+            r = nullptr;
         }
         else
         {
@@ -169,7 +169,7 @@ void Room::Save()
                                 +" and triggers.parent_id="+Utilities::itos(id)+" and triggers.id="+Utilities::itos(t->id);
             Server::sqlQueue->Write(triggersql);
             triggers.erase(t->id);
-            t = NULL;
+            t = nullptr;
         }
         else
         {
@@ -210,7 +210,7 @@ Reset * Room::GetReset(int id)
     std::map<int,Reset *>::iterator it = resets.find(id);
     if(it != resets.end())
         return it->second;
-    return NULL;
+    return nullptr;
 }
 
 void Room::AddTrigger(Trigger & trig)
@@ -240,7 +240,7 @@ Trigger * Room::GetTrigger(int id, int type)
         std::map<int,Trigger>::iterator it = triggers.find(id);
         if(it != triggers.end())
             return &(it->second);
-        return NULL;
+        return nullptr;
     }
     else
     {
@@ -253,9 +253,9 @@ Trigger * Room::GetTrigger(int id, int type)
                 return &(it->second);
             }
         }
-        return NULL;
+        return nullptr;
     }
-    return NULL;
+    return nullptr;
 }
 
 void Room::Message(const std::string & text)
@@ -304,6 +304,8 @@ bool Room::HasCharacters()
 
 bool Room::HasItem(Item * i)
 {
+	if (i == nullptr)
+		return false;
 	if (items.empty())
 		return false;
 	for (auto iter = items.begin(); iter != items.end(); iter++)
@@ -356,4 +358,55 @@ void Room::AddItem(Item * i)
 		}
 	}
 	items.push_back(std::make_pair(i, 1));
+}
+
+Item * Room::GetItem(string name)
+{
+	if (name.empty())
+		return nullptr;
+
+	int count = 0;
+	string tempname = name;
+	int number = Utilities::number_argument(tempname);
+
+	for (auto iter = items.begin(); iter != items.end(); ++iter)
+	{
+		if (!Utilities::IsName(tempname, iter->first->name) && !Utilities::IsName(tempname, iter->first->keywords))
+			continue;
+		if (++count == number)
+			return iter->first;
+	}
+	return nullptr;
+}
+
+Character * Room::GetCharacter(string name)
+{
+	if (name.empty())
+		return nullptr;
+
+	int count = 0;
+	string tempname = name;
+	int number = Utilities::number_argument(tempname);
+
+	for (auto iter = characters.begin(); iter != characters.end(); ++iter)
+	{
+		if (!Utilities::IsName(tempname, (*iter)->GetName()))
+			continue;
+		if (++count == number)
+			return (*iter);
+	}
+	return nullptr;
+}
+
+Character * Room::GetCharacter(Character * target)
+{
+	if (!target)
+		return nullptr;
+
+	for (auto iter = characters.begin(); iter != characters.end(); ++iter)
+	{
+		if ((*iter) == target)
+			return (*iter);
+	}
+	return nullptr;
 }

@@ -1,31 +1,33 @@
-#include "stdafx.h"
-#include "CSubscriber.h"
-#include "CSubscriberManager.h"
-#include "CmySQLQueue.h"
-#include "CLogFile.h"
-#include "CHighResTimer.h"
-#include "CHelp.h"
-#include "CTrigger.h"
-#include "CClient.h"
-#include "CItem.h"
-#include "CSkill.h"
-#include "CClass.h"
-#include "CExit.h"
-#include "CReset.h"
-#include "CArea.h"
-#include "CRoom.h"
-#include "CQuest.h"
-#include "CPlayer.h"
-#include "CCharacter.h"
-#include "CSpellAffect.h"
-#include "CUser.h"
 #include "CGame.h"
 #include "CServer.h"
+#include "CClient.h"
+#include "CUser.h"
+#include "CPlayer.h"
+#include "CCharacter.h"
+#include "CNPC.h"
+#include "CRoom.h"
+#include "CTrigger.h"
+#include "CReset.h"
+#include "CSpellAffect.h"
+#include "CClass.h"
+#include "CQuest.h"
+#include "CSkill.h"
+#include "CGroup.h"
+#include "CItem.h"
+#include "CArea.h"
 #include "CCommand.h"
+#include "CNPCIndex.h"
+#include "CHelp.h"
 #include "utils.h"
+#include "CLogFile.h"
 #include "mud.h"
-
-using namespace std;
+#include "json.hpp"
+// for convenience
+using json = nlohmann::json;
+#include <string>
+#include <sys/timeb.h>
+#include <time.h>
+#include <fstream>
 
 extern "C" 
 {
@@ -33,6 +35,8 @@ extern "C"
 #include "lualib.h"
 #include "lauxlib.h"
 }
+
+using std::string;
 
 const std::string login_art = R"(
                                                _   __,----'~~~~~~~~~`-----.__
@@ -57,11 +61,12 @@ const std::string login_art = R"(
 )";
 
 double Game::currentTime = 0;
+extern Game * thegame;
 
 Game * Game::GetGame()
 {
-    /*static Game * theGame = NULL;
-    if(theGame == NULL)
+    /*static Game * theGame = nullptr;
+    if(theGame == nullptr)
     {
         theGame = new Game();
     }
@@ -74,7 +79,7 @@ void Game::DeleteGame()
 {
     Game * deleteme = GetGame();
     delete deleteme;
-    deleteme = NULL;
+    deleteme = nullptr;
 }
 
 Game::Game()
@@ -98,12 +103,12 @@ Game::~Game()
     }
     skills.clear();
 
-    std::map<int, Character *>::iterator iter2;
-    for(iter2 = characterIndex.begin(); iter2 != characterIndex.end(); ++iter2)
+    std::map<int, NPCIndex *>::iterator iter2;
+    for(iter2 = npcIndex.begin(); iter2 != npcIndex.end(); ++iter2)
     {
         delete (*iter2).second;
     }
-    characterIndex.clear();
+	npcIndex.clear();
 
     while(!characters.empty())
     {
@@ -188,6 +193,9 @@ void Game::GameLoop(Server * server)
     LoadHelp(server);
 
     LogFile::Log("status", "GameLoop() start");
+
+	server->acceptReady = true;
+
     std::list<User *>::iterator iter;
     //__int64 duration = 0;
     _timeb time;
@@ -203,13 +211,13 @@ void Game::GameLoop(Server * server)
 			User * user = *iter;
             ++iter;
 
-			if(user == NULL)
+			if(user == nullptr)
 				continue;
 
 			if (user->lastInput + IDLE_TIMEOUT <= Game::currentTime)
 			{
 				if (!user->character
-					|| (user->character && user->character->player && !user->character->player->IMMORTAL()))
+					|| (user->character && !user->character->IsImmortal()))
 				{
 					user->Send("Idle timeout exceeded. Disconnecting.\n\r");
 					user->SetDisconnect();
@@ -342,7 +350,7 @@ void Game::GameLoop(Server * server)
 					//user->Disconnect();
                     delete (*iter);
                     iter = users.erase(iter);
-                    user = NULL;
+                    user = nullptr;
                 }
                 else
                 {
@@ -404,8 +412,8 @@ void Game::GameLoop(Server * server)
                 if(user->character)
                 {
 					if (!user->character->IsAlive())
-						user->character->ChangeRooms(Game::GetGame()->GetRoom(user->character->player->graveyard_room));
-					if (user->connectedState == User::CONN_PLAYING && user->character->level > 1) //don't save fresh characters
+						user->character->ChangeRooms(Game::GetGame()->GetRoom(user->character->graveyard_room));
+					if (user->connectedState == User::CONN_PLAYING && user->character->GetLevel() > 1) //don't save fresh characters
 					{
 						user->character->SaveSpellAffects();
 						user->character->SaveCooldowns();
@@ -416,8 +424,8 @@ void Game::GameLoop(Server * server)
 					user->character->ExitCombat();
 					user->character->ClearTarget();
 					if (!user->character->IsGhost())
-						user->character->Message(user->character->name + " has left the game.", Character::MSG_ROOM_NOTCHAR);
-					user->character->ChangeRooms(NULL);
+						user->character->Message(user->character->GetName() + " has left the game.", Character::MSG_ROOM_NOTCHAR);
+					user->character->ChangeRooms(nullptr);
                     user->character->NotifySubscribers();
                     characters.remove(user->character);
                 }
@@ -478,11 +486,19 @@ void Game::WorldUpdate(Server * server)
     worldupdateCount++;
 
     std::list<Character *>::iterator iter = characters.begin();
-    while(iter != characters.end()) //TODO, is this ridiculous?
+    while(iter != characters.end())
     {
-        Character * curr = (*iter);
+        Character * currChar = (*iter);
+		NPC * currNPC = nullptr;
+		Player * currPlayer = nullptr;
 
-        if(curr->remove)
+		//polymorphism is loosely in effect...
+		if (currChar->IsNPC())
+			currNPC = (NPC*)currChar;
+		else if (currChar->IsPlayer())
+			currPlayer = (Player*)currChar;
+
+        if(currChar->remove)
         {
             delete (*iter);
             iter = characters.erase(iter);
@@ -490,58 +506,58 @@ void Game::WorldUpdate(Server * server)
         }
         ++iter;
 
-        if(!curr->IsAlive())
+        if(!currChar->IsAlive())
         {
 			//todo: release spirit timer
-			if (!curr->IsNPC() && curr->IsGhost())
+			if (!currChar->IsNPC() && currChar->IsGhost())
 			{
 				//I came up with the probably absurd logic here at 5am. I feel like it could be a lot cleaner
 				//if we have a query and its 'acceptres' and we don't meet criteria, clear it
-				if (curr->HasQuery() && curr->GetQueryFunc() == acceptResQuery
-					&& ((!curr->player->CanRes(curr->TimeSinceDeath()) || curr->room->id != curr->player->graveyard_room)
-					&&  (!curr->player->CanResAtCorpse(curr->TimeSinceDeath()) || curr->room->id != curr->player->corpse_room)))
+				if (currPlayer->HasQuery() && currPlayer->GetQueryFunc() == acceptResQuery
+					&& ((!currPlayer->CanRes(currPlayer->TimeSinceDeath()) || currPlayer->room->id != currPlayer->graveyard_room)
+					&&  (!currPlayer->CanResAtCorpse(currPlayer->TimeSinceDeath()) || currPlayer->room->id != currPlayer->corpse_room)))
 				{
-					curr->QueryClear();
+					currPlayer->QueryClear();
 				}
 				//if we have a query and its 'returnToGYQuery' and we don't meet criteria, clear it
-				if (curr->HasQuery() && curr->GetQueryFunc() == returnToGYQuery
-					&& (curr->room->id == curr->player->graveyard_room)
-					|| (curr->room->id == curr->player->corpse_room && curr->player->CanResAtCorpse(curr->TimeSinceDeath())))
+				if (currPlayer->HasQuery() && currPlayer->GetQueryFunc() == returnToGYQuery
+					&& (currPlayer->room->id == currPlayer->graveyard_room)
+					|| (currPlayer->room->id == currPlayer->corpse_room && currPlayer->CanResAtCorpse(currPlayer->TimeSinceDeath())))
 				{
-					curr->QueryClear();
+					currPlayer->QueryClear();
 				}
 
-				if(!curr->HasQuery()
-			      &&((curr->player->CanRes(curr->TimeSinceDeath()) && curr->room->id == curr->player->graveyard_room)
-				  ||(curr->player->CanResAtCorpse(curr->TimeSinceDeath()) && curr->room->id == curr->player->corpse_room)))
+				if(!currPlayer->HasQuery()
+			      &&((currPlayer->CanRes(currPlayer->TimeSinceDeath()) && currPlayer->room->id == currPlayer->graveyard_room)
+				  ||(currPlayer->CanResAtCorpse(currPlayer->TimeSinceDeath()) && currPlayer->room->id == currPlayer->corpse_room)))
 				{
-					curr->SetQuery("Resurrect now? ('accept') ", NULL, acceptResQuery);
+					currPlayer->SetQuery("Resurrect now? ('accept') ", nullptr, acceptResQuery);
 				}
-				else if (!curr->HasQuery() && curr->room->id != curr->player->graveyard_room)
+				else if (!currPlayer->HasQuery() && currPlayer->room->id != currPlayer->graveyard_room)
 				{
-					curr->SetQuery("Return to Graveyard? ('return') ", NULL, returnToGYQuery);
+					currPlayer->SetQuery("Return to Graveyard? ('return') ", nullptr, returnToGYQuery);
 				}
 			}
-			if(curr->IsNPC())
+			if(currChar->IsNPC())
 			{
-				if (!curr->loot.empty())
+				if (!currNPC->loot.empty())
 				{
 					//Check for any roll timers expiring
-					for (auto iter = begin(curr->loot); iter != end(curr->loot);)
+					for (auto iter = begin(currNPC->loot); iter != end(currNPC->loot);)
 					{
-						Character::OneLoot * oneloot = &(*iter);
+						NPC::OneLoot * oneloot = &(*iter);
 						++iter; //incremented here because DoLootRoll might remove this loot item
 						if (oneloot->roll_timer > 0 && oneloot->roll_timer < Game::currentTime) //expired!
-							curr->DoLootRoll(oneloot);
+							currNPC->DoLootRoll(oneloot);
 					}
 				}
 				//Check NPC corpse despawn time
-				if ((curr->loot.empty() && curr->TimeSinceDeath() >= 120) ||
-				   (!curr->loot.empty() && curr->TimeSinceDeath() >= 360)) //todo: variable duration per NPC
+				if ((currNPC->loot.empty() && currNPC->TimeSinceDeath() >= 120) ||
+				   (!currNPC->loot.empty() && currNPC->TimeSinceDeath() >= 360)) //todo: variable duration per NPC
 				{
-					curr->Message(curr->name + "'s corpse crumbles into dust.", Character::MessageType::MSG_ROOM_NOTCHAR);
-					RemoveCharacter(curr);
-					curr->ChangeRooms(NULL);
+					currNPC->Message(currNPC->GetName() + "'s corpse crumbles into dust.", Character::MessageType::MSG_ROOM_NOTCHAR);
+					RemoveCharacter(currNPC);
+					currNPC->ChangeRooms(nullptr);
 				}
 			}
             continue;
@@ -550,32 +566,35 @@ void Game::WorldUpdate(Server * server)
         if(doTwoSecondTick)
         {
 			//Stat regeneration
-			if (!curr->InCombat() && curr->GetHealth() < curr->GetMaxHealth())
+			if (!currChar->InCombat() && currChar->GetHealth() < currChar->GetMaxHealth())
 			{
-				if (curr->IsNPC())
-					curr->SetHealth(curr->GetMaxHealth()); //NPC's heal immediately out of combat
+				if (currChar->IsNPC())
+					currChar->SetHealth(currChar->GetMaxHealth()); //NPC's heal immediately out of combat
 				else
-					curr->AdjustHealth(NULL, (int)ceil(10 * log10(curr->GetLevel()) + 5));
+					currChar->AdjustHealth(nullptr, (int)ceil(10 * log10(currChar->GetLevel()) + 5));
 			}
-			if (curr->GetMana() < curr->GetMaxMana() && curr->lastSpellCast + 5.0 <= Game::currentTime)
+			if (currChar->GetMana() < currChar->GetMaxMana() && currChar->lastSpellCast + 5.0 <= Game::currentTime)
 			{
-				//if more than 5 seconds since last cast, regen 10% of spirit as mana
-				curr->AdjustMana(curr, (int)ceil(curr->spirit * 0.1) + 10);
+				//if more than 5 seconds since last cast, regen 10% of spirit as mana, 1% for npcs
+				if (currChar->IsNPC())
+					currChar->AdjustMana(currChar, (int)ceil(currChar->GetMaxMana() * 0.01));
+				else
+					currPlayer->AdjustMana(currPlayer, (int)ceil(currPlayer->GetSpirit() * 0.1) + 10);
 			}
-			if (curr->GetEnergy() < curr->GetMaxEnergy())
+			if (currChar->GetEnergy() < currChar->GetMaxEnergy())
 			{
-				curr->AdjustEnergy(curr, 20); //1 energy per .1 second regen
+				currChar->AdjustEnergy(currChar, 20); //1 energy per .1 second regen
 			}
 			//Rage decay, 1 per second
-			if (!curr->InCombat() && curr->GetRage() > 0)
+			if (!currChar->InCombat() && currChar->GetRage() > 0)
 			{
-				curr->AdjustRage(curr, -2);
+				currChar->AdjustRage(currChar, -2);
 			}
 
             //Check NPC TIMER triggers
-            Trigger * trig = NULL;
+            Trigger * trig = nullptr;
             int ctr = 0;
-            while((trig = curr->GetTrigger(ctr, Trigger::TIMER)) != NULL)
+            while(currChar->IsNPC() && (trig = currNPC->GetNPCIndex()->GetTrigger(ctr, Trigger::TIMER)) != nullptr)
             {
                 ctr++;
                 if(!trig->IsTimerExpired())
@@ -591,15 +610,15 @@ void Game::WorldUpdate(Server * server)
                     //string nil = trig->GetFunction() + " = nil;";
                     //luaL_dostring(Server::luaState, nil.c_str());
 					Server::lua.script(trig->GetScript().c_str());
-					Server::lua[func.c_str()](curr);
+					Server::lua[func.c_str()](currChar);
                     //luaL_dostring(Server::luaState, trig->GetScript().c_str());
                     //luabind::call_function<void>(Server::luaState, func.c_str(), curr);
                 }
                 catch(const std::exception & e)
 			    {
 				    LogFile::Log("error", e.what());
-				    //const char * logstring = lua_tolstring(Server::luaState, -1, NULL);
-				    /*if(logstring != NULL)
+				    //const char * logstring = lua_tolstring(Server::luaState, -1, nullptr);
+				    /*if(logstring != nullptr)
 					    LogFile::Log("error", logstring);*/
 			    }
                 catch(...)
@@ -608,17 +627,17 @@ void Game::WorldUpdate(Server * server)
 	            }
             }
 			//check npc aggro
-			if (curr->IsNPC() && curr->room && !curr->InCombat() && Utilities::FlagIsSet(curr->flags, Character::FLAG_AGGRESSIVE))
+			if (currChar->IsNPC() && currChar->room && !currChar->InCombat() && currChar->FlagIsSet(NPCIndex::FLAG_AGGRESSIVE))
 			{
-				for (std::list<Character*>::iterator aggroiter = curr->room->characters.begin(); aggroiter != curr->room->characters.end(); ++aggroiter)
+				for (std::list<Character*>::iterator aggroiter = currChar->room->characters.begin(); aggroiter != currChar->room->characters.end(); ++aggroiter)
 				{
 					//todo: decide who to attack in the room based off something else than being first on the list. level at least
-					if (!(*aggroiter)->IsNPC() && (*aggroiter)->IsAlive() && !(*aggroiter)->player->IMMORTAL())
+					if (!(*aggroiter)->IsNPC() && (*aggroiter)->IsAlive() && !(*aggroiter)->IsImmortal())
 					{
-						curr->EnterCombat((*aggroiter));
-						(*aggroiter)->EnterCombat(curr);
-						(*aggroiter)->Send(curr->name + " begins attacking you!\n\r");
-						curr->AutoAttack((*aggroiter));
+						currChar->EnterCombat((*aggroiter));
+						(*aggroiter)->EnterCombat(currChar);
+						(*aggroiter)->Send(currChar->GetName() + " begins attacking you!\n\r");
+						currChar->AutoAttack((*aggroiter));
 						break;
 					}
 				}
@@ -626,125 +645,125 @@ void Game::WorldUpdate(Server * server)
         }
         
         //Delay Update
-        if(curr->delay_active && curr->delay <= currentTime)
+        if(currChar->delay_active && currChar->delay <= currentTime)
         {
-            (*curr->delayFunction)(curr->delayData);
+            (*currChar->delayFunction)(currChar->delayData);
         }
         //Combat update
-        if(curr->InCombat())
+        if(currChar->InCombat())
         {
-			if (curr->IsNPC() && curr->GetTarget() && !curr->GetTarget()->IsAlive())
+			if (currChar->IsNPC() && currChar->GetTarget() && !currChar->GetTarget()->IsAlive())
 			{
-				curr->ClearTarget();
+				currChar->ClearTarget();
 			}
 
-            if(!curr->GetTarget() || curr->GetTarget() == curr)
+            if(!currChar->GetTarget() || currChar->GetTarget() == currChar)
             {  //Turn off auto attack. cmd_target should take care of this, but just in case
-                curr->meleeActive = false;
+				currChar->meleeActive = false;
             }
-            else if(curr->meleeActive && curr->GetTarget()->room == curr->room && !curr->delay_active) //No auto attack while casting
+            else if(currChar->meleeActive && currChar->GetTarget()->room == currChar->room && !currChar->delay_active) //No auto attack while casting
             {
-                curr->AutoAttack(curr->GetTarget());
+				currChar->AutoAttack(currChar->GetTarget());
             }
-            else if(!curr->meleeActive && curr->GetTarget() && curr->GetTarget()->GetTarget() && curr->GetTarget()->GetTarget() == curr
-                && curr->GetTarget()->meleeActive && curr->GetTarget()->room == curr->room)
+            else if(!currChar->meleeActive && currChar->GetTarget() && currChar->GetTarget()->GetTarget() && currChar->GetTarget()->GetTarget() == currChar
+                && currChar->GetTarget()->meleeActive && currChar->GetTarget()->room == currChar->room)
             { //So... If we're not attacking, we have a target, our target's target is us, and is attacking us, and theyre in the same room, start attacking them back
-                curr->AutoAttack(curr->GetTarget());
+				currChar->AutoAttack(currChar->GetTarget());
             }
 
 			//Players exit combat after 5 seconds of no activity AND when we have no npcs on our threat list
-            if(curr->player && curr->player->lastCombatAction + 5 <= currentTime && !curr->CheckThreatCombat())
+            if(currChar->IsPlayer() && currPlayer->lastCombatAction + 5 <= currentTime && !currPlayer->CheckThreatCombat())
             {   
-                curr->ExitCombat();
+				currPlayer->ExitCombat();
             }
 
 			//Threat management, chasing/leashing (NPC's start chasing AFTER movementspeed delay)
-			if (curr->IsNPC() && !curr->GetTopThreat()) //We're a NPC in combat but have noone on our threat list. We must have killed them. Leave combat!
+			if (currChar->IsNPC() && !currNPC->GetTopThreat()) //We're a NPC in combat but have noone on our threat list. We must have killed them. Leave combat!
 			{
-				curr->ExitCombat();
-				curr->ClearTarget();
+				currNPC->ExitCombat();
+				currNPC->ClearTarget();
 				//See if we need to leash
 				std::pair<Room *, int> path;
-				while (!curr->leashPath.empty() && curr->room != curr->leashOrigin)
+				while (!currNPC->leashPath.empty() && currNPC->room != currNPC->leashOrigin)
 				{
-					path = curr->leashPath.back();
-					curr->leashPath.pop_back();
+					path = currNPC->leashPath.back();
+					currNPC->leashPath.pop_back();
 
 					//Fake enter/leave messages. We can't use ->Move() since that tests for valid exits
 					//  among other things (think leashing back through 1 way exits)
-					curr->Message(curr->name + " leaves " + Exit::exitNames[Exit::exitOpposite[path.second]] + ".", Character::MSG_ROOM_NOTCHAR);
-					curr->ChangeRooms(path.first);
-					curr->Message(curr->name + " has arrived from "
+					currNPC->Message(currNPC->GetName() + " leaves " + Exit::exitNames[Exit::exitOpposite[path.second]] + ".", Character::MSG_ROOM_NOTCHAR);
+					currNPC->ChangeRooms(path.first);
+					currNPC->Message(currNPC->GetName() + " has arrived from "
 						+ ((path.second != Exit::DIR_UP && path.second != Exit::DIR_DOWN) ? "the " : "")
 						+ Exit::reverseExitNames[Exit::exitOpposite[path.second]] + ".", Character::MSG_ROOM_NOTCHAR);
 				}
 
 			}
-            else if(curr->IsNPC() && curr->GetTopThreat())
+            else if(currChar->IsNPC() && currNPC->GetTopThreat())
             {
-				if (!curr->movementQueue.empty()) //We have a movement pending, see if we can move...
+				if (!currNPC->movementQueue.empty()) //We have a movement pending, see if we can move...
 				{
-					if(curr->CanMove()) //Move! (checks movespeed auras and movement speed timestamp)
+					if(currNPC->CanMove()) //Move! (checks movespeed auras and movement speed timestamp)
 					{
-						curr->movementQueue.pop_front();
+						currNPC->movementQueue.pop_front();
 						//track target... Give up leashDistance rooms away from target... (todo, separate this from leashdist?)
 						int leashdist = Reset::RESET_LEASH_DEFAULT;
-						if (curr->reset && curr->reset->leashDistance != 0)
-							leashdist = curr->reset->leashDistance;
-						Exit::Direction chasedir = FindDirection(curr, curr->GetTopThreat(), leashdist);
+						if (currNPC->reset && currNPC->reset->leashDistance != 0)
+							leashdist = currNPC->reset->leashDistance;
+						Exit::Direction chasedir = FindDirection(currNPC, currNPC->GetTopThreat(), leashdist);
 						if (chasedir != Exit::DIR_LAST)
 						{
 							//record the path we take for backtracking
-							curr->leashPath.push_back(std::make_pair(curr->room, chasedir));
-							curr->Move(chasedir);
-							if(curr->GetTopThreat()->room == curr->room)
-								curr->EnterCombat(curr->GetTopThreat());
+							currNPC->leashPath.push_back(std::make_pair(currNPC->room, chasedir));
+							currNPC->Move(chasedir);
+							if(currNPC->GetTopThreat()->room == currNPC->room)
+								currNPC->EnterCombat(currNPC->GetTopThreat());
 						}
 						else
 						{
 							//target more than leashDistance rooms away, leash!
 							std::pair<Room *, int> path;
-							curr->ExitCombat();
-							curr->ClearTarget();
-							while (!curr->leashPath.empty() && curr->room != curr->leashOrigin)
+							currNPC->ExitCombat();
+							currNPC->ClearTarget();
+							while (!currNPC->leashPath.empty() && currNPC->room != currNPC->leashOrigin)
 							{
-								path = curr->leashPath.back();
-								curr->leashPath.pop_back();
+								path = currNPC->leashPath.back();
+								currNPC->leashPath.pop_back();
 								
 								//Fake enter/leave messages. We can't use ->Move() since that tests for valid exits
 								//  among other things (think leashing back through 1 way exits)
-								curr->Message(curr->name + " leaves " + Exit::exitNames[Exit::exitOpposite[path.second]] + ".", Character::MSG_ROOM_NOTCHAR);
-								curr->ChangeRooms(path.first);
-								curr->Message(curr->name + " has arrived from " 
+								currNPC->Message(currNPC->GetName() + " leaves " + Exit::exitNames[Exit::exitOpposite[path.second]] + ".", Character::MSG_ROOM_NOTCHAR);
+								currNPC->ChangeRooms(path.first);
+								currNPC->Message(currNPC->GetName() + " has arrived from "
 									+ ((path.second != Exit::DIR_UP && path.second != Exit::DIR_DOWN) ? "the " : "") 
 									+ Exit::reverseExitNames[Exit::exitOpposite[path.second]] + ".", Character::MSG_ROOM_NOTCHAR);
 							}
 						}
 					}
 				}
-                else if(curr->GetTopThreat()->room != curr->room && curr->movementQueue.empty()) //We need to chase threat target, and not already pending a move...
+                else if(currNPC->GetTopThreat()->room != currNPC->room && currNPC->movementQueue.empty()) //We need to chase threat target, and not already pending a move...
                 {
 					//Decide if we should try to chase based on how far we are from our reset
 					int leashdist = Reset::RESET_LEASH_DEFAULT;
-					if (curr->reset && curr->reset->leashDistance != 0)
-						leashdist = curr->reset->leashDistance;
+					if (currNPC->reset && currNPC->reset->leashDistance != 0)
+						leashdist = currNPC->reset->leashDistance;
 
-					int npcDistance = FindDistance(curr->leashOrigin, curr->GetTopThreat()->room, leashdist);
+					int npcDistance = FindDistance(currNPC->leashOrigin, currNPC->GetTopThreat()->room, leashdist);
 					if (npcDistance == -1) //Farther from our origin than leashdist, Leash!
 					{
-						curr->ExitCombat();
-						curr->ClearTarget();
+						currNPC->ExitCombat();
+						currNPC->ClearTarget();
 						std::pair<Room *, int> path;
-						while (!curr->leashPath.empty() && curr->room != curr->leashOrigin)
+						while (!currNPC->leashPath.empty() && currNPC->room != currNPC->leashOrigin)
 						{
-							path = curr->leashPath.back();
-							curr->leashPath.pop_back();
+							path = currNPC->leashPath.back();
+							currNPC->leashPath.pop_back();
 
 							//Fake enter/leave messages. We can't use ->Move() since that tests for valid exits
 							//  among other things (think leashing back through 1 way exits)
-							curr->Message(curr->name + " leaves " + Exit::exitNames[Exit::exitOpposite[path.second]] + ".", Character::MSG_ROOM_NOTCHAR);
-							curr->ChangeRooms(path.first);
-							curr->Message(curr->name + " has arrived from "
+							currNPC->Message(currNPC->GetName() + " leaves " + Exit::exitNames[Exit::exitOpposite[path.second]] + ".", Character::MSG_ROOM_NOTCHAR);
+							currNPC->ChangeRooms(path.first);
+							currNPC->Message(currNPC->GetName() + " has arrived from "
 								+ ((path.second != Exit::DIR_UP && path.second != Exit::DIR_DOWN) ? "the " : "")
 								+ Exit::reverseExitNames[Exit::exitOpposite[path.second]] + ".", Character::MSG_ROOM_NOTCHAR);
 						}
@@ -752,39 +771,39 @@ void Game::WorldUpdate(Server * server)
 					else
 					{
 						//Just push a placeholder that indicates we have a movement pending, since we're going to "track" the target after movespeed delay
-						curr->movementQueue.push_back(nullptr);
-						curr->lastMoveTime = currentTime; //queue up the next move after delay
-						curr->meleeActive = false;		  //target isn't in the room...
+						currNPC->movementQueue.push_back(nullptr);
+						currNPC->lastMoveTime = currentTime; //queue up the next move after delay
+						currNPC->meleeActive = false;		  //target isn't in the room...
 					}
                 }
 				//Check for taunt and highest threat
-				SpellAffect * taunt = curr->GetFirstSpellAffectWithAura(SpellAffect::AURA_TAUNT);
-				Character * topthreat = curr->GetTopThreat();
+				SpellAffect * taunt = currNPC->GetFirstSpellAffectWithAura(SpellAffect::AURA_TAUNT);
+				Character * topthreat = currNPC->GetTopThreat();
 				if (taunt != nullptr && taunt->caster != nullptr)
 				{
-					if (curr->GetTarget() != taunt->caster)
+					if (currNPC->GetTarget() != taunt->caster)
 					{
-						taunt->caster->Send(curr->GetName() + " changes " + curr->HisHer() + " target and begins attacking you!\n\r");
-						taunt->caster->Message(curr->GetName() + " changes " + curr->HisHer() + " target and begins attacking " + taunt->caster->GetName() + "!",
-							Character::MessageType::MSG_ROOM_NOTCHARVICT, curr);
+						taunt->caster->Send(currNPC->GetName() + " changes " + currNPC->HisHer() + " target and begins attacking you!\n\r");
+						taunt->caster->Message(currNPC->GetName() + " changes " + currNPC->HisHer() + " target and begins attacking " + taunt->caster->GetName() + "!",
+							Character::MessageType::MSG_ROOM_NOTCHARVICT, currNPC);
 					}
-					curr->SetTarget(taunt->caster);
+					currNPC->SetTarget(taunt->caster);
 				}
-                else if(topthreat && topthreat != curr->GetTarget() && (curr->GetThreat(curr->GetTarget()) + curr->GetThreat(curr->GetTarget()) * .1) < curr->GetThreat(topthreat))
+                else if(topthreat && topthreat != currNPC->GetTarget() && (currNPC->GetThreat(currNPC->GetTarget()) + currNPC->GetThreat(currNPC->GetTarget()) * .1) < currNPC->GetThreat(topthreat))
                 {
-                    curr->SetTarget(curr->GetTopThreat());
-					curr->GetTarget()->Send(curr->GetName() + " changes " + curr->HisHer() + " target and begins attacking you!\n\r");
-					curr->Message(curr->GetName() + " changes " + curr->HisHer() + " target and begins attacking " + curr->GetTarget()->GetName() + "!",
-						Character::MessageType::MSG_ROOM_NOTCHARVICT, curr->GetTarget());
+					currNPC->SetTarget(currNPC->GetTopThreat());
+					currNPC->GetTarget()->Send(currNPC->GetName() + " changes " + currNPC->HisHer() + " target and begins attacking you!\n\r");
+					currNPC->Message(currNPC->GetName() + " changes " + currNPC->HisHer() + " target and begins attacking " + currNPC->GetTarget()->GetName() + "!",
+						Character::MessageType::MSG_ROOM_NOTCHARVICT, currNPC->GetTarget());
                 }
             }
         }
         
         //Buff/debuff update
-        if(!curr->buffs.empty())
+        if(!currChar->buffs.empty())
         {
-            std::list<SpellAffect*>::iterator buffiter = curr->buffs.begin();
-            while(buffiter != curr->buffs.end())
+            std::list<SpellAffect*>::iterator buffiter = currChar->buffs.begin();
+            while(buffiter != currChar->buffs.end())
             {
                 SpellAffect * sa = (*buffiter);
                 if(sa->ticksRemaining > 0 
@@ -793,19 +812,19 @@ void Game::WorldUpdate(Server * server)
                     string func = sa->skill->function_name + "_tick";
                     if(!sa->caster)
                     {
-                        sa->caster = GetCharacterByPCName(sa->casterName);
+                        sa->caster = GetPlayerByName(sa->casterName);
                     }
                     sa->ticksRemaining--;
                     try
                     {
-						Server::lua[func.c_str()](sa->caster, curr, sa);
+						Server::lua[func.c_str()](sa->caster, currChar, sa);
                         //luabind::call_function<void>(Server::luaState, func.c_str(), sa->caster, curr, sa);
                     }
                     catch(const std::exception & e)
 			        {
 				        LogFile::Log("error", e.what());
-				        /*const char * logstring = lua_tolstring(Server::luaState, -1, NULL);
-				        if(logstring != NULL)
+				        /*const char * logstring = lua_tolstring(Server::luaState, -1, nullptr);
+				        if(logstring != nullptr)
 					        LogFile::Log("error", logstring);*/
 			        }
                     catch(...)
@@ -814,7 +833,7 @@ void Game::WorldUpdate(Server * server)
 	                }
                     
                     //Reset the loop, who knows what happened to our debuffs during the tick
-                    buffiter = curr->buffs.begin();
+                    buffiter = currChar->buffs.begin();
                     continue;
                 }
                 if(!sa->remove_me && sa->duration > 0 && Game::currentTime - sa->appliedTime > sa->duration) //Expired
@@ -823,18 +842,18 @@ void Game::WorldUpdate(Server * server)
                     sa->remove_me = true;
                     if(!sa->caster)
                     {
-                        sa->caster = GetCharacterByPCName(sa->casterName);
+                        sa->caster = GetPlayerByName(sa->casterName);
                     }
                     try
                     {
-						Server::lua[func.c_str()](sa->caster, curr, sa);
+						Server::lua[func.c_str()](sa->caster, currChar, sa);
                         //luabind::call_function<void>(Server::luaState, func.c_str(), sa->caster, curr, sa);
                     }
                     catch(const std::exception & e)
 			        {
 				        LogFile::Log("error", e.what());
-				        /*const char * logstring = lua_tolstring(Server::luaState, -1, NULL);
-				        if(logstring != NULL)
+				        /*const char * logstring = lua_tolstring(Server::luaState, -1, nullptr);
+				        if(logstring != nullptr)
 					        LogFile::Log("error", logstring);*/
 			        }
                     catch(...)
@@ -843,20 +862,20 @@ void Game::WorldUpdate(Server * server)
 	                }
                     //Reset the loop, who knows what happened to our buffs during the remove
                     sa->remove_me = true;
-                    buffiter = curr->buffs.begin();
+                    buffiter = currChar->buffs.begin();
                     continue;
                 } 
                 //else
                 ++buffiter;
             }
             //Loop them again to remove any flagged
-            buffiter = curr->buffs.begin();
-            while(buffiter != curr->buffs.end())
+            buffiter = currChar->buffs.begin();
+            while(buffiter != currChar->buffs.end())
             {
                 if((*buffiter)->remove_me) //Expired
                 {
                     delete (*buffiter);
-                    buffiter = curr->buffs.erase(buffiter);
+                    buffiter = currChar->buffs.erase(buffiter);
                 }
                 else
                 {
@@ -864,10 +883,10 @@ void Game::WorldUpdate(Server * server)
                 }
             }
         }
-        if(!curr->debuffs.empty())
+        if(!currChar->debuffs.empty())
         {
-            std::list<SpellAffect*>::iterator debuffiter = curr->debuffs.begin();
-            while(debuffiter != curr->debuffs.end())
+            std::list<SpellAffect*>::iterator debuffiter = currChar->debuffs.begin();
+            while(debuffiter != currChar->debuffs.end())
             {
                 SpellAffect * sa = (*debuffiter);
 
@@ -878,18 +897,18 @@ void Game::WorldUpdate(Server * server)
                     string func = sa->skill->function_name + "_tick";
                     if(!sa->caster)
                     {
-                        sa->caster = GetCharacterByPCName(sa->casterName);
+                        sa->caster = GetPlayerByName(sa->casterName);
                     }
                     try
                     {
-						Server::lua[func.c_str()](sa->caster, curr, sa);
+						Server::lua[func.c_str()](sa->caster, currChar, sa);
                         //luabind::call_function<void>(Server::luaState, func.c_str(), sa->caster, curr, sa);
                     }
                     catch(const std::exception & e)
 			        {
 				        LogFile::Log("error", e.what());
-				        /*const char * logstring = lua_tolstring(Server::luaState, -1, NULL);
-				        if(logstring != NULL)
+				        /*const char * logstring = lua_tolstring(Server::luaState, -1, nullptr);
+				        if(logstring != nullptr)
 					        LogFile::Log("error", logstring);*/
 			        }
                     catch(...)
@@ -898,7 +917,7 @@ void Game::WorldUpdate(Server * server)
 	                }
                     
                     //Reset the loop, who knows what happened to our debuffs during the tick
-                    debuffiter = curr->debuffs.begin();
+                    debuffiter = currChar->debuffs.begin();
                     continue;
                 }
                 if(!sa->remove_me && sa->duration > 0 && Game::currentTime - sa->appliedTime > sa->duration) //Expired
@@ -907,18 +926,18 @@ void Game::WorldUpdate(Server * server)
                     string func = sa->skill->function_name + "_remove";
                     if(!sa->caster)
                     {
-                        sa->caster = GetCharacterByPCName(sa->casterName);
+                        sa->caster = GetPlayerByName(sa->casterName);
                     }
                     try
                     {
-						Server::lua[func.c_str()](sa->caster, curr, sa);
+						Server::lua[func.c_str()](sa->caster, currChar, sa);
                         //luabind::call_function<void>(Server::luaState, func.c_str(), sa->caster, curr, sa);
                     }
                     catch(const std::exception & e)
 			        {
 				        LogFile::Log("error", e.what());
-				        /*const char * logstring = lua_tolstring(Server::luaState, -1, NULL);
-				        if(logstring != NULL)
+				        /*const char * logstring = lua_tolstring(Server::luaState, -1, nullptr);
+				        if(logstring != nullptr)
 					        LogFile::Log("error", logstring);*/
 			        }
                     catch(...)
@@ -927,20 +946,20 @@ void Game::WorldUpdate(Server * server)
 	                }
                     //Reset the loop, who knows what happened to our debuffs during the remove
                     sa->remove_me = true;
-                    debuffiter = curr->debuffs.begin();
+                    debuffiter = currChar->debuffs.begin();
                     continue;
                 }
                 //else
                 ++debuffiter;
             }
             //Loop them again to remove any flagged
-            debuffiter = curr->debuffs.begin();
-            while(debuffiter != curr->debuffs.end())
+            debuffiter = currChar->debuffs.begin();
+            while(debuffiter != currChar->debuffs.end())
             {
                 if((*debuffiter)->remove_me) //Expired
                 {
                     delete (*debuffiter);
-                    debuffiter = curr->debuffs.erase(debuffiter);
+                    debuffiter = currChar->debuffs.erase(debuffiter);
                 }
                 else
                 {
@@ -949,14 +968,14 @@ void Game::WorldUpdate(Server * server)
             }
         }
         //Target range update
-        if(!(curr->player && curr->player->IMMORTAL()) && curr->GetTarget() && curr->GetTarget()->room != curr->room)
+        if(!currChar->IsImmortal() && currChar->GetTarget() && currChar->GetTarget()->room != currChar->room)
         {
             //Allow target to remain active in same room and up to two rooms away
-			Exit::Direction dir = FindDirection(curr, curr->GetTarget(), 3);
+			Exit::Direction dir = FindDirection(currChar, currChar->GetTarget(), 3);
 			if (dir == Exit::DIR_LAST) //Clear the target
 			{
-				curr->Send("Target out of range.\n\r");
-				curr->ClearTarget();
+				currChar->Send("Target out of range.\n\r");
+				currChar->ClearTarget();
 			}
 				
         }
@@ -973,20 +992,20 @@ void Game::WorldUpdate(Server * server)
                 Reset * currReset = (*resetiter).second;
                 if(currReset->lastReset + currReset->interval <= Game::currentTime && !currReset->removeme)
                 {
-                    if(currReset->type == 1 && currReset->npc == NULL) //npc reset type and npc no longer exists
+                    if(currReset->type == 1 && currReset->npc == nullptr) //npc reset type and npc no longer exists
                     {
                         currReset->lastReset = Game::currentTime;
                         //load it
-                        Character * charIndex = Game::GetGame()->GetCharacterIndex(currReset->targetID);
-                        if(charIndex == NULL)
+                        NPCIndex * charIndex = Game::GetGame()->GetNPCIndex(currReset->targetID);
+                        if(charIndex == nullptr)
                         {
                             LogFile::Log("error", "Reset " + Utilities::itos(currReset->id) + " in room " + Utilities::itos(currRoom->id) + ": npc does not exist.");
                             continue;
                         }
-                        Character * newChar = Game::GetGame()->NewCharacter(charIndex);
+                        NPC * newChar = Game::GetGame()->NewNPC(charIndex);
 						newChar->leashOrigin = currRoom;
                         newChar->ChangeRooms(currRoom);
-                        newChar->Message("|W" + newChar->name + " has arrived.|X", Character::MSG_ROOM_NOTCHAR);
+                        newChar->Message("|W" + newChar->GetName() + " has arrived.|X", Character::MSG_ROOM_NOTCHAR);
                         newChar->reset = currReset;
                         //LogFile::Log("status", "Adding subscriber to " + newChar->name + " of reset id " + Utilities::itos(currReset->id));
                         newChar->AddSubscriber(currReset);
@@ -997,7 +1016,7 @@ void Game::WorldUpdate(Server * server)
 						currReset->lastReset = Game::currentTime;
 						//load it
 						Item * itemindex = Game::GetGame()->GetItem(currReset->targetID);
-						if (itemindex == NULL)
+						if (itemindex == nullptr)
 						{
 							LogFile::Log("error", "Reset " + Utilities::itos(currReset->id) + " in room " + Utilities::itos(currRoom->id) + ": item " + Utilities::itos(currReset->targetID) + " does not exist.");
 							continue;
@@ -1054,39 +1073,39 @@ void Game::LoginHandler(Server * server, User * user, string argument)
             if(!Server::sqlQueue->Read("select name from players where name='" + arg1 + "'").empty())
 			{	//player already exists
 				user->Send("Welcome Back " + arg1 + "!\r\nEnter Password: ");
-                user->character = new Character(arg1, user);
-                user->character->player->password = server->SQLSelectPassword(arg1);
+                user->character = new Player(arg1, user);
+                user->character->password = server->SQLSelectPassword(arg1);
                 user->connectedState = User::CONN_GET_OLD_PASSWORD;
 			}
-			else if((tempUser = Game::GetGame()->GetUserByPCName(arg1)) != NULL 
+			else if((tempUser = Game::GetGame()->GetUserByPCName(arg1)) != nullptr 
                     && tempUser->connectedState >= User::CONN_GET_NEW_PASSWORD
 				    && tempUser->connectedState <= User::CONN_CONFIRM_CLASS)
 			{   //player exists, but hasnt finished creating
 				user->Send("A character is currently being created with that name.\n\r");
-				LogFile::Log("status", "Login attempt on creating character in progress : " + tempUser->character->name);
+				LogFile::Log("status", "Login attempt on creating character in progress : " + tempUser->character->GetName());
 				user->SetDisconnect();
 			}
-            else if(tempUser != NULL && (tempUser->connectedState == User::CONN_PLAYING || tempUser->connectedState > User::CONN_CONFIRM_CLASS))
+            else if(tempUser != nullptr && (tempUser->connectedState == User::CONN_PLAYING || tempUser->connectedState > User::CONN_CONFIRM_CLASS))
 			{   //player exists, but hasnt been saved yet
 				user->Send("Welcome Back " + arg1 + "!\r\nEnter Password: ");
                 user->connectedState = User::CONN_GET_OLD_PASSWORD;
-                user->character = new Character(arg1, user);
-                user->character->player->password = tempUser->character->player->password;
-                LogFile::Log("status", "Reconnecting unsaved character : " + user->character->name);
+                user->character = new Player(arg1, user);
+                user->character->password = tempUser->character->password;
+                LogFile::Log("status", "Reconnecting unsaved character : " + user->character->GetName());
 			}
 			else // user dosn't exist - create and ask for password
 			{
 				user->Send("User " + arg1 + " Does Not Exist - Creating\r\nEnter Password:\r\n");
                 user->connectedState = User::CONN_GET_NEW_PASSWORD;
-                user->character = Game::GetGame()->NewCharacter(arg1, user);
-                LogFile::Log("status", "Creating character : " + user->character->name);
+                user->character = Game::GetGame()->NewPlayer(arg1, user);
+                LogFile::Log("status", "Creating character : " + user->character->GetName());
 			}
 			break;
 		}
 
         case User::CONN_GET_OLD_PASSWORD:
 		{
-            if(server->EncryptDecrypt(arg1) != user->character->player->password) //never decrypt password, just encrypt the input
+            if(server->EncryptDecrypt(arg1) != user->character->password) //never decrypt password, just encrypt the input
             {
 				user->passwordAttempts++;
 				if (user->passwordAttempts >= User::MAX_PASSWORD_TRIES)
@@ -1101,12 +1120,12 @@ void Game::LoginHandler(Server * server, User * user, string argument)
                 break;
             }
 
-            User * existingUser = Game::GetGame()->DuplicatePlayerCheck(user->character->name);
+            User * existingUser = Game::GetGame()->DuplicatePlayerCheck(user->character->GetName());
 
-            if(existingUser == NULL)
+            if(existingUser == nullptr)
             {   //Need to load from the db
-                LogFile::Log("status", "Loading character : " + user->character->name);
-                Character * c = Character::LoadPlayer(user->character->name, user);
+                LogFile::Log("status", "Loading character : " + user->character->GetName());
+                Player * c = Player::LoadPlayer(user->character->GetName(), user);
                 delete user->character;
                 user->character = c;
                 user->Send("|B.|C1 |MEnter world\n\r |C2|B.|MChange password\n\r|B.|C3 |MDelete this character\n\r |C4|B.|MQuit|X\n\r: ");
@@ -1116,8 +1135,8 @@ void Game::LoginHandler(Server * server, User * user, string argument)
             {   //Already loaded player, swap with tempUser
                 delete user->character;
                 user->character = existingUser->character;
-                user->character->player->user = user;
-                existingUser->character = NULL;
+                user->character->user = user;
+                existingUser->character = nullptr;
                 if(existingUser->IsConnected())
                 {
                     existingUser->Send("\n\rMultiple login detected. Disconnecting...\n\r");
@@ -1131,7 +1150,7 @@ void Game::LoginHandler(Server * server, User * user, string argument)
                     user->connectedState = User::CONN_MENU;
                 }
                 user->Send("Reconnecting...\r\n");
-                user->character->Message(user->character->name + " has reconnected.", Character::MSG_ROOM_NOTCHAR);
+                user->character->Message(user->character->GetName() + " has reconnected.", Character::MSG_ROOM_NOTCHAR);
             }
             break;
 		}
@@ -1148,7 +1167,7 @@ void Game::LoginHandler(Server * server, User * user, string argument)
 				user->Send("Too Long (5-15 characters)! Try again...\r\nEnter Password: ");
 				return;
 			}
-            user->character->player->password = server->EncryptDecrypt(arg1);
+            user->character->password = server->EncryptDecrypt(arg1);
             user->connectedState = User::CONN_CONFIRM_NEW_PASSWORD;
             user->Send("Confirm Password: \r\n");
             break;
@@ -1156,7 +1175,7 @@ void Game::LoginHandler(Server * server, User * user, string argument)
 
         case User::CONN_CONFIRM_NEW_PASSWORD:
 		{
-		    if(server->EncryptDecrypt(arg1) == user->character->player->password)
+		    if(server->EncryptDecrypt(arg1) == user->character->password)
             {
 				string raceChoice = "|YChoose your race (";
 				for (int i = 0; Character::race_table[i].id != -1; i++)
@@ -1170,7 +1189,7 @@ void Game::LoginHandler(Server * server, User * user, string argument)
             else // No Match
             {
 				user->Send("Password does not match - try again...\r\nEnter Password: ");
-				user->character->player->password.clear();
+				user->character->password.clear();
                 user->connectedState = User::CONN_GET_NEW_PASSWORD;
             }
             break;
@@ -1253,7 +1272,7 @@ void Game::LoginHandler(Server * server, User * user, string argument)
                 user->Send("|YAre you sure you want this class (y/n):|X ");
                 arg1 = Utilities::ToLower(arg1);
                 arg1[0] = Utilities::UPPER(arg1[0]);
-                user->character->player->currentClass = GetClassByName(arg1);
+                user->character->currentClass = GetClassByName(arg1);
                 user->connectedState = User::CONN_CONFIRM_CLASS;
             }
             else
@@ -1276,10 +1295,10 @@ void Game::LoginHandler(Server * server, User * user, string argument)
 		{
 			if (!Utilities::str_cmp(arg1, "y"))
 			{
-				user->character->player->AddClass(user->character->player->currentClass->id, 1);
+				user->character->AddClass(user->character->currentClass->id, 1);
 				user->character->AddClassSkills();
 				//function-ize the default items (or parse it into a container upon loading...)
-				string classitems = user->character->player->currentClass->items;
+				string classitems = user->character->currentClass->items;
 				int first = 0, last = 0, comma = 0;
 				while (first < (int)classitems.length())
 				{
@@ -1291,17 +1310,17 @@ void Game::LoginHandler(Server * server, User * user, string argument)
 					int count = Utilities::atoi(classitems.substr(comma+1, last - comma+1));
 					first = last + 1;
 					Item * itemIndex = GetItem(id);
-					if (itemIndex == NULL)
+					if (itemIndex == nullptr)
 					{
 						LogFile::Log("error", "Item " + Utilities::itos(id) + " does not exist.");
 						continue;
 					}
 					for (int i = 0; i < count; i++)
 					{
-						user->character->player->AddItemInventory(itemIndex);
+						user->character->AddItemInventory(itemIndex);
 						if (itemIndex->equipLocation != Item::EquipLocation::EQUIP_NONE)
 						{
-							user->character->player->EquipItemFromInventory(itemIndex);
+							user->character->EquipItemFromInventory(itemIndex);
 							user->character->AddEquipmentStats(itemIndex);
 						}
 					}
@@ -1331,12 +1350,12 @@ void Game::LoginHandler(Server * server, User * user, string argument)
 			if (!Utilities::str_cmp(arg1, "m"))
 			{
 				valid = true;
-				user->character->gender = 1;
+				user->character->SetGender(1);
 			}
 			else if (!Utilities::str_cmp(arg1, "f"))
 			{
 				valid = true;
-				user->character->gender = 2;
+				user->character->SetGender(2);
 			}
 			else
 			{
@@ -1354,7 +1373,7 @@ void Game::LoginHandler(Server * server, User * user, string argument)
 
         case User::CONN_CHANGEPW1:
         {
-            if(server->EncryptDecrypt(arg1) == user->character->player->password)
+            if(server->EncryptDecrypt(arg1) == user->character->password)
 			{
                 user->Send("Enter new password: ");
                 user->connectedState = User::CONN_CHANGEPW2;
@@ -1376,7 +1395,7 @@ void Game::LoginHandler(Server * server, User * user, string argument)
                 user->connectedState = User::CONN_CHANGEPW2;
                 return;
             }
-            user->character->player->pwtemp = arg1;
+            user->character->pwtemp = arg1;
             user->Send("Confirm new password: ");
             user->connectedState = User::CONN_CHANGEPW3;
             
@@ -1385,17 +1404,17 @@ void Game::LoginHandler(Server * server, User * user, string argument)
 
         case User::CONN_CHANGEPW3:
         {
-            if(arg1 == user->character->player->pwtemp)
+            if(arg1 == user->character->pwtemp)
             {
                 user->Send("Password changed.\n\r");
-                user->character->player->password = server->EncryptDecrypt(argument);
-				Server::sqlQueue->Write("UPDATE players SET password = '" + user->character->player->password + "' WHERE name='" + user->character->name + "'");
-                user->character->player->pwtemp.clear();
+                user->character->password = server->EncryptDecrypt(argument);
+				Server::sqlQueue->Write("UPDATE players SET password = '" + user->character->password + "' WHERE name='" + user->character->GetName() + "'");
+                user->character->pwtemp.clear();
             }
             else
             {
                 user->Send("Password doesn't match, NOT changed.\n\r");
-                user->character->player->pwtemp.clear();
+                user->character->pwtemp.clear();
             }
             user->Send("|B.|C1 |MEnter world\n\r |C2|B.|MChange password\n\r|B.|C3 |MDelete this character\n\r |C4|B.|MQuit|X\n\r: ");
             user->connectedState = User::CONN_MENU;
@@ -1404,7 +1423,7 @@ void Game::LoginHandler(Server * server, User * user, string argument)
 
         case User::CONN_DELETE1:
         {
-            if(server->EncryptDecrypt(arg1)== user->character->player->password)
+            if(server->EncryptDecrypt(arg1)== user->character->password)
             {
                 user->Send("|RDelete this character? (y/n):|X ");
                 user->connectedState = User::CONN_DELETE2;
@@ -1422,14 +1441,14 @@ void Game::LoginHandler(Server * server, User * user, string argument)
         {
             if(arg1[0] == 'y' || arg1[0] == 'Y')
             {
-                Server::sqlQueue->Write("delete from players where name='" + user->character->name + "';");
-                Server::sqlQueue->Write("delete from player_spell_affects where player='" + user->character->name + "';");
-				Server::sqlQueue->Write("delete from player_class_data where player='" + user->character->name + "';");
-				Server::sqlQueue->Write("delete from player_completed_quests where player='" + user->character->name + "';");
-				Server::sqlQueue->Write("delete from player_cooldowns where player='" + user->character->name + "';");
-				Server::sqlQueue->Write("delete from player_active_quests where player='" + user->character->name + "';");
-				Server::sqlQueue->Write("delete from player_inventory where player='" + user->character->name + "';");
-				Server::sqlQueue->Write("delete from player_alias where player='" + user->character->name + "';");
+                Server::sqlQueue->Write("delete from players where name='" + user->character->GetName() + "';");
+                Server::sqlQueue->Write("delete from player_spell_affects where player='" + user->character->GetName() + "';");
+				Server::sqlQueue->Write("delete from player_class_data where player='" + user->character->GetName() + "';");
+				Server::sqlQueue->Write("delete from player_completed_quests where player='" + user->character->GetName() + "';");
+				Server::sqlQueue->Write("delete from player_cooldowns where player='" + user->character->GetName() + "';");
+				Server::sqlQueue->Write("delete from player_active_quests where player='" + user->character->GetName() + "';");
+				Server::sqlQueue->Write("delete from player_inventory where player='" + user->character->GetName() + "';");
+				Server::sqlQueue->Write("delete from player_alias where player='" + user->character->GetName() + "';");
 				user->SetDisconnect();
             }
             else
@@ -1465,7 +1484,7 @@ void Game::LoginHandler(Server * server, User * user, string argument)
 								{ "en", user->character->GetEnergy() }, { "enmax", user->character->GetMaxEnergy() },{ "rage", user->character->GetRage() } ,{ "ragemax", user->character->GetMaxRage() } };
 				user->SendGMCP("char.vitals " + vitals.dump());
 
-                if(user->character->room == NULL)
+                if(user->character->room == nullptr)
                 {
 					Room * toroom = GetRoom(newplayerRoom);
 					if (!toroom)
@@ -1475,8 +1494,8 @@ void Game::LoginHandler(Server * server, User * user, string argument)
 					else
 					{
 						user->character->ChangeRoomsID(newplayerRoom);
-						if(user->character->player)
-							user->character->player->recall = newplayerRoom;
+						if(user->character)
+							user->character->recall = newplayerRoom;
 					}
                 }
                 else
@@ -1487,7 +1506,7 @@ void Game::LoginHandler(Server * server, User * user, string argument)
                 user->character->LoadSpellAffects();
                 user->character->LoadCooldowns();
                 if(!user->character->IsGhost())
-					user->character->Message(user->character->name + " has entered the game.", Character::MSG_ROOM_NOTCHAR);				
+					user->character->Message(user->character->GetName() + " has entered the game.", Character::MSG_ROOM_NOTCHAR);				
                 cmd_look(user->character, "");
                 break;
             }
@@ -1518,7 +1537,7 @@ void Game::LoginHandler(Server * server, User * user, string argument)
 
 void Game::LoadGameStats(Server * server)
 {
-    ifstream in;
+	std::ifstream in;
     in.open("serverstats.txt");
     if(!in.is_open())
     {
@@ -1531,10 +1550,10 @@ void Game::LoadGameStats(Server * server)
 
 void Game::SaveGameStats()
 {
-    ofstream out;
+    std::ofstream out;
     out.open("serverstats.txt");
-    out << total_past_connections << endl;
-    out << newplayerRoom << endl;
+    out << total_past_connections << std::endl;
+    out << newplayerRoom << std::endl;
 }
 
 void Game::LoadRooms(Server * server)
@@ -1625,15 +1644,15 @@ void Game::LoadTriggers(Server * server)
         if((int)row["parent_type"] == Trigger::PARENT_ROOM)
         {
             Room * pRoom = GetRoom(row["parent_id"]);
-            if(pRoom == NULL)
+            if(pRoom == nullptr)
                 continue;
 
             pRoom->AddTrigger(new_trig);
         }
         if((int)row["parent_type"] == Trigger::PARENT_NPC)
         {
-            Character * charindex = GetCharacterIndex(row["parent_id"]);
-            if(charindex == NULL)
+            NPCIndex * charindex = GetNPCIndex(row["parent_id"]);
+            if(charindex == nullptr)
                 continue;
 
             charindex->AddTrigger(new_trig);
@@ -1654,7 +1673,7 @@ void Game::LoadResets(Server * server)
     {
         row = *i;
         Room * r = Game::GetGame()->GetRoom(row["room_id"]);
-        if(r == NULL)
+        if(r == nullptr)
             continue;
 
         Reset * reset = new Reset();
@@ -1663,7 +1682,7 @@ void Game::LoadResets(Server * server)
         reset->leashDistance = row["leash_dist"];
         reset->type = row["type"];
         reset->wanderDistance = row["wander_dist"];
-        reset->npc = NULL;
+        reset->npc = nullptr;
         reset->targetID = row["target_id"];
 		reset->inroom = r;
         r->resets[reset->id] = reset;
@@ -1748,9 +1767,7 @@ void Game::LoadQuests(Server * server)
     for(i = questres.begin(); i != questres.end(); i++)
     {
         row = *i;
-        Quest * q = new Quest();
-        q->id = row["id"];
-        q->name = (string)row["name"];
+        Quest * q = new Quest((string)row["name"], row["id"]);
         q->shortDescription = (string)row["short_description"];
         q->longDescription = (string)row["long_description"];
         q->progressMessage = (string)row["progress_message"];
@@ -1762,12 +1779,14 @@ void Game::LoadQuests(Server * server)
         q->level = row["level"];
         q->levelRequirement = row["level_requirement"];
         q->shareable = row["shareable"];
-        q->start = GetCharacterIndex(row["start"]);
-        if(q->start != NULL)
-            q->start->questStart.push_back(q);
-        q->end = GetCharacterIndex(row["end"]);
-        if(q->end != NULL)
-            q->end->questEnd.push_back(q);
+        q->start = row["start"];
+		NPCIndex * qstart = GetNPCIndex(q->start);
+        if(qstart != nullptr)
+			qstart->questStart.push_back(q);
+        q->end = row["end"];
+		NPCIndex * qend = GetNPCIndex(q->end);
+		if (qend != nullptr)
+			qend->questEnd.push_back(q);
 
 		StoreQueryResult objectiveres = server->sqlQueue->Read("select * from quest_objectives where quest=" + Utilities::itos(q->id));
 		StoreQueryResult::iterator j;
@@ -1943,10 +1962,9 @@ void Game::SaveSkills()
     }
 }
 
-void Game::SaveCharacterIndex()
+void Game::SaveNPCIndex()
 {
-    std::map<int, Character *>::iterator iter;
-    for(iter = characterIndex.begin(); iter != characterIndex.end(); ++iter)
+    for(auto iter = npcIndex.begin(); iter != npcIndex.end(); ++iter)
     {
         iter->second->Save();
     }
@@ -1992,7 +2010,7 @@ void Game::SaveHelp()
 			Server::sqlQueue->Write(sql);
             helpIndex.erase(h->id);
 			delete h;
-			h = NULL;
+			h = nullptr;
 		}
 		else
 		{
@@ -2012,29 +2030,17 @@ void Game::LoadNPCS(Server * server)
     for(i = characterres.begin(); i != characterres.end(); i++)
     {
         row = *i;
-        Character * loaded = new Character();
+        NPCIndex * loaded = new NPCIndex(row["id"], (string)row["name"]);
 
-        loaded->id = row["id"];
-        loaded->name = row["name"];
 		loaded->keywords = row["keywords"];
         loaded->title = row["title"];
         loaded->gender = row["gender"];
 		loaded->race = row["race"];
         loaded->level = row["level"];
-        loaded->agility = row["agility"];
-        loaded->intellect = row["intellect"];
-        loaded->strength = row["strength"];
-        loaded->stamina = row["stamina"];
-        loaded->wisdom = row["wisdom"];
-		loaded->spirit = row["spirit"];
-		loaded->SetHealth(row["health"]);
-		loaded->SetMaxHealth(row["health"]);
-		loaded->SetMana(row["mana"]);
-		loaded->SetMaxMana(row["mana"]);
-		loaded->SetEnergy(row["energy"]);
-		loaded->SetMaxEnergy(row["energy"]);
-		loaded->SetRage(row["rage"]);
-		loaded->SetMaxRage(row["rage"]);
+		loaded->maxHealth = row["health"];
+		loaded->maxMana = row["mana"];
+		loaded->maxRage = row["energy"];
+		loaded->maxEnergy = row["rage"];
         loaded->npcAttackSpeed = row["attack_speed"];
         loaded->npcDamageHigh = row["damage_high"];
         loaded->npcDamageLow = row["damage_low"];
@@ -2057,7 +2063,9 @@ void Game::LoadNPCS(Server * server)
 		{
 			row = *j;
 			int skillid = row["skill"];
-			loaded->AddSkill(Game::GetGame()->GetSkill(skillid));
+			Skill * newskill = Game::GetGame()->GetSkill(skillid);
+			if (newskill != nullptr)
+				loaded->knownSkills[newskill->name] = newskill;
 		}
 
 		StoreQueryResult npcdropsres = server->sqlQueue->Read("select * from npc_drops where npc=" + Utilities::itos(loaded->id));
@@ -2067,7 +2075,7 @@ void Game::LoadNPCS(Server * server)
 			string drops = (string)row["items"];
 			int percent = row["percent"];
 
-			Character::DropData dd;
+			NPCIndex::DropData dd;
 			dd.percent = percent;
 			
 			first = last = 0;
@@ -2079,7 +2087,7 @@ void Game::LoadNPCS(Server * server)
 			}
 			loaded->drops.push_back(dd);
 		}
-        characterIndex[loaded->id] = loaded;
+        npcIndex[loaded->id] = loaded;
     }
 }
 
@@ -2131,23 +2139,16 @@ void Game::RemoveUser(Client * client)
 	LeaveCriticalSection(&userListCS);
 }
 
-Character * Game::NewCharacter(std::string name, User * user)
+Player * Game::NewPlayer(std::string name, User * user)
 {
-    Character * ch = new Character(name, user);
+    Player * ch = new Player(name, user);
     characters.push_front(ch);
     return ch;
 }
 
-Character * Game::NewCharacter()
+NPC * Game::NewNPC(NPCIndex * index)
 {
-    Character * ch = new Character();
-    characters.push_front(ch);
-    return ch;
-}
-
-Character * Game::NewCharacter(Character * copy)
-{
-    Character * ch = new Character(*copy);
+    NPC * ch = new NPC(index);
     characters.push_front(ch);
     return ch;
 }
@@ -2165,11 +2166,11 @@ User * Game::DuplicatePlayerCheck(string name)
     std::list<User *>::iterator iter;
     for(iter = users.begin(); iter != users.end(); ++iter)
     {
-        if((*iter)->character && !Utilities::str_cmp((*iter)->character->name, name) 
+        if((*iter)->character && !Utilities::str_cmp((*iter)->character->GetName(), name) 
             && ((*iter)->connectedState == User::CONN_PLAYING || (*iter)->connectedState > User::CONN_CONFIRM_NEW_PASSWORD))
             return (*iter);
     }
-    return NULL;
+    return nullptr;
 }
 
 //Not case sensitive
@@ -2178,21 +2179,21 @@ User * Game::GetUserByPCName(string name)
     std::list<User *>::iterator iter;
     for(iter = users.begin(); iter != users.end(); ++iter)
     {
-        if((*iter)->character && !Utilities::str_cmp((*iter)->character->name, name))
+        if((*iter)->character && !Utilities::str_cmp((*iter)->character->GetName(), name))
             return (*iter);
     }
-    return NULL;
+    return nullptr;
 }
 
-Character * Game::GetCharacterByPCName(string name)
+Player * Game::GetPlayerByName(string name)
 {
     std::list<User *>::iterator iter;
     for(iter = users.begin(); iter != users.end(); ++iter)
     {
-        if((*iter)->character && !Utilities::str_cmp((*iter)->character->name, name))
+        if((*iter)->character && !Utilities::str_cmp((*iter)->character->GetName(), name))
             return (*iter)->character;
     }
-    return NULL;
+    return nullptr;
 }
 
 Room * Game::GetRoom(int id)
@@ -2200,7 +2201,7 @@ Room * Game::GetRoom(int id)
     std::map<int,Room *>::iterator it = rooms.find(id);
     if(it != rooms.end())
         return it->second;
-    return NULL;
+    return nullptr;
 }
 
 Skill * Game::GetSkill(int id)
@@ -2208,7 +2209,7 @@ Skill * Game::GetSkill(int id)
     std::map<int,Skill *>::iterator it = skills.find(id);
     if(it != skills.end())
         return (*it).second;
-    return NULL;
+    return nullptr;
 }
 
 Quest * Game::GetQuest(int id)
@@ -2216,7 +2217,7 @@ Quest * Game::GetQuest(int id)
     std::map<int,Quest *>::iterator it = quests.find(id);
     if(it != quests.end())
         return (*it).second;
-    return NULL;
+    return nullptr;
 }
 
 Area * Game::GetArea(int id)
@@ -2224,7 +2225,7 @@ Area * Game::GetArea(int id)
     std::map<int,Area *>::iterator it = areas.find(id);
     if(it != areas.end())
         return (*it).second;
-    return NULL;
+    return nullptr;
 }
 
 Help * Game::GetHelpByName(string name)
@@ -2237,7 +2238,7 @@ Help * Game::GetHelpByName(string name)
             return (*iter).second;
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 Help * Game::GetHelp(int id)
@@ -2245,15 +2246,15 @@ Help * Game::GetHelp(int id)
 	std::map<int,Help *>::iterator it = helpIndex.find(id);
     if(it != helpIndex.end())
         return (*it).second;
-    return NULL;
+    return nullptr;
 }
 
-Character * Game::GetCharacterIndex(int id)
+NPCIndex * Game::GetNPCIndex(int id)
 {
-    std::map<int,Character*>::iterator it = characterIndex.find(id);
-    if(it != characterIndex.end())
+    std::map<int,NPCIndex*>::iterator it = npcIndex.find(id);
+    if(it != npcIndex.end())
         return (*it).second;
-    return NULL;
+    return nullptr;
 }
 
 Item * Game::GetItem(int id)
@@ -2261,7 +2262,7 @@ Item * Game::GetItem(int id)
     std::map<int,Item*>::iterator it = items.find(id);
     if(it != items.end())
         return (*it).second;
-    return NULL;
+    return nullptr;
 }
 
 Room * Game::CreateRoomAnyID()
@@ -2311,11 +2312,10 @@ Skill * Game::CreateSkillAnyID(string arg)
     return pSkill;
 }
 
-Character * Game::CreateNPCAnyID(std::string arg)
+NPCIndex * Game::CreateNPCAnyID(std::string arg)
 {
     int ctr = 1;
-    std::map<int,Character *>::iterator iter;
-    for(iter = characterIndex.begin(); iter != characterIndex.end(); ++iter)
+    for(auto iter = npcIndex.begin(); iter != npcIndex.end(); ++iter)
     {
         if(ctr != iter->second->id)
         {
@@ -2325,9 +2325,9 @@ Character * Game::CreateNPCAnyID(std::string arg)
         ctr++;
     }
 
-    Character * pChar = new Character(arg, ctr);
+    NPCIndex * pChar = new NPCIndex(ctr, arg);
     pChar->changed = true;
-    characterIndex.insert(std::pair<int, Character *>(pChar->id, pChar));
+    npcIndex.insert(std::pair<int, NPCIndex *>(pChar->id, pChar));
     return pChar;
 }
 
@@ -2394,10 +2394,10 @@ Item * Game::CreateItemAnyID(string arg)
 
 Room * Game::CreateRoom(int value)
 {
-    if(GetRoom(value) != NULL)
+    if(GetRoom(value) != nullptr)
     {
         LogFile::Log("error", "CreateRoom, room already exists");
-        return NULL;
+        return nullptr;
     }
     Room * pRoom = new Room(value);
     pRoom->changed = true;
@@ -2439,30 +2439,30 @@ int Game::ExperienceForLevel(int level)
 
 int Game::CalculateExperience(Character * ch, Character * victim)
 {
-	if (ch->HasGroup() && ch->group->IsRaidGroup()) //zero experience in a raid group
+	if (ch->HasGroup() && ch->GetGroup()->IsRaidGroup()) //zero experience in a raid group
 		return 0;
 
-	if (LevelDifficulty(ch->level, victim->level) == 0) //zero experience for "gray" level npcs
+	if (LevelDifficulty(ch->GetLevel(), victim->GetLevel()) == 0) //zero experience for "gray" level npcs
 		return 0;
 	
-	double xp = ch->level * 5 + 45;	//base xp
-	if (victim->level > ch->level)
+	double xp = ch->GetLevel() * 5 + 45;	//base xp
+	if (victim->GetLevel() > ch->GetLevel())
 	{
-		double difference = victim->level - ch->level;
+		double difference = victim->GetLevel() - ch->GetLevel();
 		if (difference > 10)
 			difference = 10.0;
 		xp = xp * (1.0 + 0.05*difference);	//higher level victim, slightly higher exp
 	}
-	else if (victim->level < ch->level)
+	else if (victim->GetLevel() < ch->GetLevel())
 	{
-		double difference = ch->level - victim->level;
+		double difference = ch->GetLevel() - victim->GetLevel();
 		xp = xp * (1.0 - (difference / 7.0));		//lower level victim, less exp
 	}
 
 	//Group adjustment, equal share + 10%
 	if (ch->HasGroup())
 	{
-		int group_size = ch->group->GetMemberCount();
+		int group_size = ch->GetGroup()->GetMemberCount();
 		xp /= group_size;
 		xp += xp * 0.1;
 	}
@@ -2526,18 +2526,18 @@ std::string Game::LevelDifficultyLightColor(int leveldifficulty)
 
 Character * Game::LoadNPCRoom(int id, Room * toroom)
 {
-    Character * charIndex = Game::GetGame()->GetCharacterIndex(id);
-    if(charIndex == NULL)
+    NPCIndex * charIndex = Game::GetGame()->GetNPCIndex(id);
+    if(charIndex == nullptr)
     {
         //ch->Send("NPC " + arg2 + " does not exist.\n\r");
-        return NULL;
+        return nullptr;
     }
-    Character * newChar = Game::GetGame()->NewCharacter(charIndex);
+    Character * newChar = Game::GetGame()->NewNPC(charIndex);
     newChar->ChangeRooms(toroom);
     return newChar;
 }
 
-Character * Game::GetPlayerWorld(Character * ch, string name)
+Player * Game::GetPlayerWorld(Player * ch, string name)
 {
     if(!Utilities::str_cmp(name, "self") || !Utilities::str_cmp(name, "me"))
 		return ch;
@@ -2546,13 +2546,13 @@ Character * Game::GetPlayerWorld(Character * ch, string name)
     std::list<User *>::iterator iter;
 	for(iter = users.begin(); iter != users.end(); ++iter)
 	{
-        if((*iter)->connectedState == User::CONN_PLAYING && (*iter)->character != NULL && !Utilities::str_str(name, (*iter)->character->name))
+        if((*iter)->connectedState == User::CONN_PLAYING && (*iter)->character != nullptr && !Utilities::str_str(name, (*iter)->character->GetName()))
 		{
             if(ctr++ == numberarg)
 			    return (*iter)->character;
 		}
 	}
-	return NULL;
+	return nullptr;
 }
 
 void Game::GlobalMessage(string msg)
@@ -2575,7 +2575,7 @@ Class * Game::GetClassByName(string name)
             return (*iter).second;
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 Class * Game::GetClass(int id)
@@ -2583,7 +2583,7 @@ Class * Game::GetClass(int id)
     std::map<int,Class *>::iterator it = classes.find(id);
     if(it != classes.end())
         return (*it).second;
-    return NULL;
+    return nullptr;
 }
 /*
 //DIDNT WORK  BOOOOOOOOOOO
@@ -2829,22 +2829,22 @@ int Game::Search(string table_name, string field_name, int conditional_type, str
         }
         return results_found;
     }
-    else if(!Utilities::str_cmp(table_name, "characters"))
+    else if(!Utilities::str_cmp(table_name, "npc"))
     {
-		if (characterIndex.begin() == characterIndex.end())
+		if (npcIndex.begin() == npcIndex.end())
 		{
-			result += "No characters in the character list.\n\r";
+			result += "No npcs in the npc list.\n\r";
 			return 0;
 		}
-		if (data_type == 1 && characterIndex.begin()->second->intTable.find(field_name) != characterIndex.begin()->second->intTable.end())
+		if (data_type == 1 && npcIndex.begin()->second->intTable.find(field_name) != npcIndex.begin()->second->intTable.end())
 		{
 			whichtable = 1;
 		}
-		else if (data_type == 1 && characterIndex.begin()->second->doubleTable.find(field_name) != characterIndex.begin()->second->doubleTable.end())
+		else if (data_type == 1 && npcIndex.begin()->second->doubleTable.find(field_name) != npcIndex.begin()->second->doubleTable.end())
 		{
 			whichtable = 2;
 		}
-		else if (data_type == 2 && characterIndex.begin()->second->stringTable.find(field_name) != characterIndex.begin()->second->stringTable.end())
+		else if (data_type == 2 && npcIndex.begin()->second->stringTable.find(field_name) != npcIndex.begin()->second->stringTable.end())
 		{
 			whichtable = 3;
 		}
@@ -2854,8 +2854,8 @@ int Game::Search(string table_name, string field_name, int conditional_type, str
 			return 0;
 		}
 
-		std::map<int, Character *>::iterator iter;
-		for (iter = characterIndex.begin(); iter != characterIndex.end(); iter++)
+		std::map<int, NPCIndex *>::iterator iter;
+		for (iter = npcIndex.begin(); iter != npcIndex.end(); iter++)
 		{
 			switch (whichtable)
 			{

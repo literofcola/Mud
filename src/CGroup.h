@@ -1,7 +1,10 @@
 #ifndef CGROUP_H
 #define CGROUP_H
 
+#include <string>
+
 class Character;
+class Player;
 
 class Group
 {
@@ -9,23 +12,23 @@ public:
 	const static int MAX_GROUP_SIZE = 4;
 	const static int MAX_RAID_SIZE = 24;
 
-	Group(Character * l);
+	Group(Player * l);
 	~Group();
 
-	Character * members[Group::MAX_RAID_SIZE];
-	Character * leader;
+	Player * members[Group::MAX_RAID_SIZE];
+	Player * leader;
 
 	int FindNextEmptySlot();
-	int FindMemberSlot(Character *ch);
-	int FindFirstSlotInSubgroup(Character *ch);
+	int FindMemberSlot(Player *ch);
+	int FindFirstSlotInSubgroup(Player *ch);
 	bool IsSlotEmpty(int slot);
 	bool IsSubgroupEmpty(int slot);
 	int GetSubgroupCount(int slot);
-	bool Add(Character * ch);
-	bool Remove(Character *ch);
-	void Move(Character * ch, int slot);
-	bool IsGroupLeader(Character * ch);
-	Character * FindByName(std::string name);
+	bool Add(Player * ch);
+	bool Remove(Player *ch);
+	void Move(Player * ch, int slot);
+	bool IsGroupLeader(Player * ch);
+	Player * FindByName(std::string name);
 	int GetMemberCount() { return count; };
 	bool IsRaidGroup();
 	void MakeRaidGroup();

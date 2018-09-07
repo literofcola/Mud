@@ -29,7 +29,7 @@ Reset::Reset()
 {
     id = 0;
     type = 1;
-    npc = NULL;
+    npc = nullptr;
     interval = 30;
     wanderDistance = 0;
     leashDistance = 0;
@@ -45,7 +45,7 @@ Reset::Reset(Room * r_, int type_, int targetid_)
 	targetID = targetid_;
 
 	id = 0;
-	npc = NULL;
+	npc = nullptr;
 	interval = 30;
 	wanderDistance = 0;
 	leashDistance = 0;
@@ -62,10 +62,10 @@ Reset::~Reset()
 //Character/Object this reset refers to has been deleted
 void Reset::Notify(SubscriberManager * lm)
 {
-    //LogFile::Log("status", "Reset " + Utilities::itos(id) + " setting npc = NULL");
+    //LogFile::Log("status", "Reset " + Utilities::itos(id) + " setting npc = nullptr");
 	//cout << "RESET Subscriber " << this->id << " removed from manager " << npc->name;
 	//cout << " Count: " << subscribercount-- << endl;
 	npc->RemoveSubscriber(this);
-    npc = NULL;
+    npc = nullptr;
     lastReset = Game::currentTime;
 }

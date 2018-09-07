@@ -1,6 +1,11 @@
 #ifndef CLOGFILE_H
 #define CLOGFILE_H
 
+#include <map>
+#include <winsock2.h>
+#include <WS2tcpip.h>
+#include <windows.h>
+
 class LogFile
 {
 public:

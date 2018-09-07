@@ -1,29 +1,12 @@
-#include "stdafx.h"
-#include "CSubscriber.h"
-#include "CSubscriberManager.h"
-#include "CmySQLQueue.h"
-#include "CLogFile.h"
-#include "CClient.h"
-#include "CHighResTimer.h"
-#include "CHelp.h"
-#include "CTrigger.h"
-#include "CItem.h"
-#include "CSkill.h"
-#include "CClass.h"
-#include "CExit.h"
-#include "CReset.h"
-#include "CArea.h"
-#include "CRoom.h"
-#include "CQuest.h"
-#include "CPlayer.h"
-#include "CCharacter.h"
-#include "CSpellAffect.h"
 #include "CUser.h"
-#include "CGame.h"
+#include "CClient.h"
+#include "CPlayer.h"
 #include "CServer.h"
+#include "CLogFile.h"
 #include "utils.h"
-
-using namespace std;
+#include <memory>
+#include <sys/timeb.h>
+#include <time.h>
 
 User::User(std::shared_ptr<Client> client_)
 {
@@ -31,10 +14,10 @@ User::User(std::shared_ptr<Client> client_)
     commandQueue.clear();
     outputQueue.clear();
 	GMCPQueue.clear();
-	character = NULL;
+	character = nullptr;
     connectedState = CONN_GET_NAME;
     wasInput = false;
-    stringEdit = NULL;
+    stringEdit = nullptr;
     mxp = false;
 	mccp = false;
 	gmcp = false;
@@ -49,14 +32,14 @@ User::User(std::shared_ptr<Client> client_)
 User::~User()
 {
 	client = nullptr; //if we're deleting the user, we should have called ->Disconnect to close the socket and delete client already
-	if(character != NULL)
+	if(character != nullptr)
 	{
 		delete character;
-		character = NULL;
+		character = nullptr;
 	}
 }
 
-void User::SendBW(string str)
+void User::SendBW(std::string str)
 {
 	if (str.empty() || !IsConnected())
 		return;
@@ -64,12 +47,12 @@ void User::SendBW(string str)
 	if (str.length() >= NETWORK_BUFFER_SIZE)
 	{
 		str = str.substr(0, NETWORK_BUFFER_SIZE - 1);
-		LogFile::Log("error", "User::Send(), tried to send single string > NETWORK_BUFFER_SIZE. Truncated");
+		LogFile::Log("error", "User::Send(), tried to send single std::string > NETWORK_BUFFER_SIZE. Truncated");
 	}
 	outputQueue.push_back(str);
 }
 
-void User::Send(string str)
+void User::Send(std::string str)
 {
     if(str.empty() || !IsConnected())
         return;
@@ -81,12 +64,12 @@ void User::Send(string str)
 			if ((int)str.length() > (i + 3) && Utilities::IsNumber(str.substr(i + 1, 3)))
 			{
 				// \033[38; 2; <r>; <g>; <b>m nope!
-				string colorcode = "\033[38;5;" + str.substr(i + 1, 3) + "m";
+				std::string colorcode = "\033[38;5;" + str.substr(i + 1, 3) + "m";
 				str.replace(i, 4, colorcode);
 			}
 			else if ((int)str.length() >= (i + 1))
 			{
-				string colorcode = Utilities::ColorString(str[i + 1]);
+				std::string colorcode = Utilities::ColorString(str[i + 1]);
 				str.replace(i, 2, colorcode);
 			}
         }
@@ -94,38 +77,38 @@ void User::Send(string str)
     if(str.length() >= NETWORK_BUFFER_SIZE)
     {
         str = str.substr(0, NETWORK_BUFFER_SIZE-1);
-        LogFile::Log("error", "User::Send(), tried to send single string > NETWORK_BUFFER_SIZE. Truncated");
+        LogFile::Log("error", "User::Send(), tried to send single std::string > NETWORK_BUFFER_SIZE. Truncated");
     }
 	outputQueue.push_back(str);
 }
 
 void User::Send(char * str)
 {
-	Send(string(str));
+	Send(std::string(str));
 }
 
 Client * User::GetClient()
 {
 	if(client != nullptr)
 		return client.get();
-	return NULL;
+	return nullptr;
 }
 
-void User::SendGMCP(string str)
+void User::SendGMCP(std::string str)
 {
     if(str.empty() || !IsConnected())
         return;
 
-	//string send = "\xFF\xFA" + Game::TELOPT_GMCP + str + "\xFF\xF0";
+	//std::string send = "\xFF\xFA" + Game::TELOPT_GMCP + str + "\xFF\xF0";
 	//IAC SB TELOPT_GMCP str IAC SE
-	string send = Server::IAC + Server::SB + Server::TELOPT_GMCP + str + Server::IAC + Server::SE;
-	//string send = "\xFF\xFA\xC9" + str + "\xFF\xF0";
+	std::string send = Server::IAC + Server::SB + Server::TELOPT_GMCP + str + Server::IAC + Server::SE;
+	//std::string send = "\xFF\xFA\xC9" + str + "\xFF\xF0";
 	GMCPQueue.push_back(send);
 }
 
 void User::SendGMCP(char * str)
 {
-	SendGMCP(string(str));
+	SendGMCP(std::string(str));
 }
 
 bool User::IsConnected()
@@ -148,7 +131,7 @@ void User::ImmediateDisconnect()
 {
 	if (client)
 	{
-		CancelIoEx((HANDLE)client->Socket(), NULL);
+		CancelIoEx((HANDLE)client->Socket(), nullptr);
 		closesocket(client->Socket());
 		client->DisconnectGame();
 	}

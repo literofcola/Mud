@@ -1,67 +1,202 @@
 #ifndef CPLAYER_H
 #define CPLAYER_H
 
-class Server;
+#include "CCharacter.h"
+#include <set>
+#include <vector>
+#include <list>
+
+class Class;
+class Quest;
+class Character;
 class User;
 
-class Player
+class Player : public Character
 {
 public:
-    Player(User * user_);
+	Player() = delete;
+	Player(std::string name_, User * user_);
+	Player(const Player & copy) = delete;
     ~Player();
 
-    enum EquipmentSlot
-    { 
-        EQUIP_HEAD, EQUIP_NECK, EQUIP_SHOULDER, EQUIP_BACK, EQUIP_CHEST, EQUIP_WRIST, EQUIP_HANDS,
-        EQUIP_WAIST, EQUIP_LEGS, EQUIP_FEET, EQUIP_FINGER1, EQUIP_FINGER2, EQUIP_TRINKET1, EQUIP_TRINKET2,
-        EQUIP_OFFHAND, EQUIP_MAINHAND, EQUIP_LAST 
-    };
-
+	static const int HEALTH_FROM_STAMINA = 10;
+	static const int MANA_FROM_WISDOM = 10;
+	static constexpr double STRENGTH_DAMAGE_MODIFIER = 0.10;	//auto attack damage increased by 10% of strength
+	static const int GROUP_LOOT_DISTANCE = 10;
 	static const int DEFAULT_DEATH_TIME = 600;
 	static const int DEFAULT_DEATH_TIME_RUNBACK = 120;
+	static const int STATS_PER_LEVEL = 6;
+	static const int DB_INVENTORY_EQUIPPED = 0;
+	static const int DB_INVENTORY_INVENTORY = 1;
+	static const int DB_INVENTORY_BANK = 2;
+	static const int QUESTLOG_MAX_SIZE = 20;
+
+	enum Position
+	{
+		POSITION_ANY, POSITION_SITTING, POSITION_STANDING
+	};
+	enum EditState
+	{
+		ED_NONE, ED_ROOM, ED_SKILL, ED_NPC, ED_ITEM, ED_QUEST, ED_CLASS, ED_PLAYER, ED_HELP, ED_AREA
+	};
+	enum EquipmentSlot
+	{
+		EQUIP_HEAD, EQUIP_NECK, EQUIP_SHOULDER, EQUIP_BACK, EQUIP_CHEST, EQUIP_WRIST, EQUIP_HANDS,
+		EQUIP_WAIST, EQUIP_LEGS, EQUIP_FEET, EQUIP_FINGER1, EQUIP_FINGER2, EQUIP_TRINKET1, EQUIP_TRINKET2,
+		EQUIP_OFFHAND, EQUIP_MAINHAND, EQUIP_LAST
+	};
+	struct LootRoll //A piece of loot in a corpse somewhere that we're rolling on
+	{
+		int my_id;
+		int corpse_id;
+		NPC * corpse;
+	};
+	struct ClassData
+	{
+		int id;
+		int level;
+	};
+
+	int agility;	//crit chance and avoidance
+	int intellect;  //spell power
+	int strength;	//attack power
+	int stamina;	//health
+	int wisdom;		//mana
+	int spirit;		//mana regen
+	
+	std::string password;
+	std::string pwtemp;
+	User * user;
+	EditState editState;
+	void * editData;
+	int race; //index into Character::race_table
+	Group * group;
+	int position;				//standing, sitting... only used for eating/drinking right now? (flying?)
+	double globalCooldown;
 	int death_timer;
 	int death_timer_runback;
 	int graveyard_room; //graveyard room ID copied from the area death_room. prevent graveyard hopping to other areas
 	int corpse_room; //room our corpse is in
-
-    std::string password;
-    std::string pwtemp;
-    int immlevel;
-    int experience;
 	int statPoints;
-	static const int STATS_PER_LEVEL = 6;
 	int recall; //ID of recall room
-    double lastCombatAction; //Timestamp for pvp combat flag
-    double hoursPlayed;
-    
+	//double hoursPlayed;
 	bool prompt;
-
 	std::map<std::string, std::string> alias;
+	int saved;
+	int experience;
+	std::string title;
 
-    //Inventory and equipment
-    std::vector<Item *> equipped;
+	//Combat
+	Character * comboPointTarget;
+	double lastAutoAttack_off;	//Time stamp for melee swing timer
+	//double lastAutoAttack_main; //moved to Character
+	double lastCombatAction; //Timestamp for pvp combat flag
+
+	//Inventory and equipment
+	std::vector<Item *> equipped;
 	std::list<std::pair<Item *, int>> inventory;	//structured this way to support item stacks
-    int inventorySize;
-    int maxInventorySize; //new players start with 16 slots
+	int inventorySize;
+	int maxInventorySize; //new players start with 16 slots
+	std::list<LootRoll> pending_loot_rolls; //pointer back to a corpse that has uncommon+ loot we're rolling on
 
-    //Class
-    struct ClassData
-    {
-        int id;
-        int level;
-    };
-    Class * currentClass;
-    std::list<ClassData> classList;
+	//Class
+	Class * currentClass;
+	std::list<ClassData> classList;
 
-    //Quest
+	//Quest
 	std::set<int> completedQuests;
-    std::vector<Quest *> questLog;
-    static const int QUESTLOG_MAX_SIZE = 20;
-    std::vector< std::vector<int> > questObjectives; //Maps to questLog[i]->objectives[j]
+	std::vector<Quest *> questLog;
+	
+	std::vector< std::vector<int> > questObjectives; //Maps to questLog[i]->objectives[j]
 
-    int saved;
+	std::map<std::string, Skill *> knownSkills;
 
-    inline bool IMMORTAL() { return (immlevel > 0); }
+	inline bool IsNPC() override { return false; };
+	inline bool IsPlayer() override { return true; };
+
+	void SendBW(std::string str) override;
+	void Send(std::string str) override;
+	void Send(char * str) override;
+	void SendGMCP(std::string str) override;
+	void SendGMCP(char * str) override;
+
+	void QueryClear();
+	void SetQuery(std::string prompt, void * data, bool(*queryFunction)(Player *, std::string));
+	void * GetQueryData();
+	bool HasQuery();
+	bool(*GetQueryFunc())(Player *, std::string);
+	void ResetMaxStats();
+	void AddEquipmentStats(Item * add);
+	void RemoveEquipmentStats(Item * remove);
+	void GeneratePrompt(double currentTime);
+
+	void SetMaxHealth(int amount) override;
+	void SetMaxMana(int amount) override;
+	void SetMaxEnergy(int amount) override;
+	void SetMaxRage(int amount) override;
+	inline int GetMaxHealth() override { return maxHealth; };
+	inline int GetMaxMana() override { return maxMana; };
+	inline int GetMaxEnergy() override { return maxEnergy; };
+	inline int GetMaxRage() override { return maxRage; };
+	inline int GetAgility() { return agility; };
+	inline int GetIntellect() { return intellect; };
+	inline int GetStrength() { return strength; };
+	inline int GetStamina() { return stamina; };
+	inline int GetWisdom() { return wisdom; };
+	inline int GetSpirit() { return spirit; };
+	inline void SetAgility(int val) { agility <= 0 ? agility = val : agility = 1; };
+	inline void SetIntellect(int val) { intellect <= 0 ? intellect = val : intellect = 1; };
+	inline void SetStrength(int val) { strength <= 0 ? strength = val : strength = 1; };
+	inline void SetStamina(int val) { stamina <= 0 ? stamina = val : stamina = 1; };
+	inline void SetWisdom(int val) { wisdom <= 0 ? wisdom = val : wisdom = 1; };
+	inline void SetSpirit(int val) { spirit <= 0 ? spirit = val : spirit = 1; };
+
+	int AddLootRoll(int corpse_id, NPC * corpse);
+	bool HasLootRoll(Character * corpse, int corpse_id);
+	void RemoveLootRoll(int my_id);	//Remove only one pending roll by roll-ers ID
+	void RemoveLootRoll(Character * corpse); //Remove all pending rolls that point to a specific corpse
+	void RemoveLootRoll(Character * corpse, int corpse_id); //Remove only one pending roll for specific corpse/ID combo
+	void RemoveAllLootRolls();
+
+	bool HasSkill(Skill * sk) override;
+	bool HasSkillByName(std::string name) override;
+	void AddSkill(Skill * newskill) override;
+	void RemoveSkill(Skill * sk) override;
+	void RemoveSkill(std::string name) override;
+	Skill * GetSkillShortName(std::string name) override;
+
+	int GetLevel() override;
+	void SetLevel(int level);
+	inline std::string GetName() override { return name; };
+	inline int GetGender() override { return gender; };
+	inline void SetGender(int g_) { gender = g_; };
+	inline virtual std::string GetTitle() override { return title; };
+	int GetComboPoints();
+
+	double GetMainhandWeaponSpeed();
+	double GetOffhandWeaponSpeed();
+	double GetMainhandDamagePerSecond();
+	int GetOffhandDamageRandomHit();
+	double GetOffhandDamagePerSecond();
+
+	int GetMainhandDamageRandomHit();
+
+	bool HasGroup() override;
+	inline Group * GetGroup() override { return group; };
+	
+	void Stand() override;
+	void Sit() override;
+
+	inline double GetGlobalCooldown() override { return globalCooldown; };
+	inline void SetGlobalCooldown(double time) override { globalCooldown = time; };
+
+	void SaveSpellAffects();
+	void LoadSpellAffects();
+	void SaveCooldowns();
+	void LoadCooldowns();
+
+	inline bool IsImmortal() override { return (immlevel > 0); };
+	inline int GetImmLevel() override { return immlevel; };
     //static Player * Load(Server * server, std::string name, User * user);
     void SetExperience(int newexp);
     bool QuestEligible(Quest * quest);
@@ -82,19 +217,50 @@ public:
     Item * RemoveItemEquipped(int index);
     int GetEquippedItemIndex(std::string name);
     Item * GetItemEquipped(std::string name);
+	bool CanWearArmor(int armortype);
     void AddClass(int id, int level);
     int GetClassLevel(int classid);
     void SetClassLevel(int classid, int newlevel);
-	void SetGhost();
+	void SetGhost() override;
+	void SetCorpse() override;
+	void SetAlive() override;
 	void UnsetGhost();
-	bool IsGhost();
+	inline bool IsGhost() override { return isGhost; };
+	bool IsAlive() override;
 	void SetResurrectTime(int seconds);
 	bool CanResAtCorpse(int time_since_death);
 	bool CanRes(int time_since_death);
 
-    User * user; //Talk about circular dependencies... bad design
+	
+	void HandleNPCKillRewards(Character * killed);
+
+	void Save() override;
+	static Player * LoadPlayer(std::string name, User * user);
+
 private:
 
+	std::string name;
+	
+	int immlevel;
+	
+	
+	int level;
+	int gender;
+	
+
+
+
+	int maxHealth;
+	int maxMana;
+	int maxEnergy;
+	int maxRage;
+
+	int comboPoints;
+	int maxComboPoints;
+	bool hasQuery;
+	bool(*queryFunction)(Player *, std::string);
+	void * queryData;
+	std::string queryPrompt;
 	bool isGhost;
 };
 

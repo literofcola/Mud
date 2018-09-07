@@ -1,40 +1,32 @@
-#include "stdafx.h"
-#include "CSubscriber.h"
-#include "CSubscriberManager.h"
-#include "CLogFile.h"
-#include "CmySQLQueue.h"
-#include "CHighResTimer.h"
-#include "CHelp.h"
-#include "CTrigger.h"
-#include "CClient.h"
-#include "CItem.h"
-#include "CSkill.h"
-#include "CClass.h"
-#include "CExit.h"
-#include "CReset.h"
-#include "CArea.h"
-#include "CRoom.h"
-#include "CQuest.h"
-#include "CPlayer.h"
-#include "CCharacter.h"
-#include "CSpellAffect.h"
-#include "CUser.h"
-#include "CGame.h"
-#include "CServer.h"
-#include "utils.h"
 #include "mud.h"
+#include "CCharacter.h"
+#include "CServer.h"
+#include "CPlayer.h"
+#include "CRoom.h"
+#include "utils.h"
+#include "CGame.h"
+#include "CNPC.h"
+#include "CSkill.h"
+#include "CSpellAffect.h"
+#include "CItem.h"
+#include "CLogFile.h"
+#include "json.hpp"
+// for convenience
+using json = nlohmann::json;
+#define SOL_CHECK_ARGUMENTS 1
+#define SOL_USING_CXX_LUA
+#include <sol.hpp>
+#include <sstream>
+#include <iomanip>
 
-using namespace std;
+using std::string;
 
-void cmd_inventory(Character * ch, string argument)
+void cmd_inventory(Player * ch, string argument)
 {
-    if(ch == NULL || ch->player == NULL)
-        return;
-
 	ch->Send("You are carrying:\n\r");
 
 	int total = 0;
-	for (auto i = ch->player->inventory.begin(); i != ch->player->inventory.end(); i++)
+	for (auto i = ch->inventory.begin(); i != ch->inventory.end(); i++)
 	{
 		if (i->second > 1)
 			ch->Send("|M(" + Utilities::itos(i->second) + ") ");
@@ -47,90 +39,84 @@ void cmd_inventory(Character * ch, string argument)
     if(total == 0)
         ch->Send("     Nothing.\n\r");
 
-    ch->Send(Utilities::itos(total) + "/" + Utilities::itos(ch->player->maxInventorySize) + " items\n\r");
+    ch->Send(Utilities::itos(total) + "/" + Utilities::itos(ch->maxInventorySize) + " items\n\r");
 }
 
-void cmd_equipment(Character * ch, string argument)
+void cmd_equipment(Player * ch, string argument)
 {
-    if(!ch || !ch->player)
-        return;
-
-    stringstream equipment;
+    std::stringstream equipment;
     
-    equipment << left << setw(15) << "<|BHead|X>";
-    ch->player->equipped[Player::EQUIP_HEAD] ? 
-        equipment << Item::quality_strings[ch->player->equipped[Player::EQUIP_HEAD]->quality] << ch->player->equipped[Player::EQUIP_HEAD]->name << "|X\n\r"
+    equipment << std::left << std::setw(15) << "<|BHead|X>";
+    ch->equipped[Player::EQUIP_HEAD] ? 
+        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_HEAD]->quality] << ch->equipped[Player::EQUIP_HEAD]->name << "|X\n\r"
         : equipment << "None\n\r";
-    equipment << setw(15) << "<|BNeck|X>";
-    ch->player->equipped[Player::EQUIP_NECK] ? 
-        equipment << Item::quality_strings[ch->player->equipped[Player::EQUIP_NECK]->quality] << ch->player->equipped[Player::EQUIP_NECK]->name << "|X\n\r"
+    equipment << std::setw(15) << "<|BNeck|X>";
+    ch->equipped[Player::EQUIP_NECK] ? 
+        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_NECK]->quality] << ch->equipped[Player::EQUIP_NECK]->name << "|X\n\r"
         : equipment << "None\n\r";
-    equipment << setw(15) << "<|BShoulder|X>";
-    ch->player->equipped[Player::EQUIP_SHOULDER] ? 
-        equipment << Item::quality_strings[ch->player->equipped[Player::EQUIP_SHOULDER]->quality] << ch->player->equipped[Player::EQUIP_SHOULDER]->name << "|X\n\r"
+    equipment << std::setw(15) << "<|BShoulder|X>";
+    ch->equipped[Player::EQUIP_SHOULDER] ? 
+        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_SHOULDER]->quality] << ch->equipped[Player::EQUIP_SHOULDER]->name << "|X\n\r"
         : equipment << "None\n\r";
-    equipment << setw(15) << "<|BBack|X>";
-    ch->player->equipped[Player::EQUIP_BACK] ? 
-        equipment << Item::quality_strings[ch->player->equipped[Player::EQUIP_BACK]->quality] << ch->player->equipped[Player::EQUIP_BACK]->name << "|X\n\r"
+    equipment << std::setw(15) << "<|BBack|X>";
+    ch->equipped[Player::EQUIP_BACK] ? 
+        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_BACK]->quality] << ch->equipped[Player::EQUIP_BACK]->name << "|X\n\r"
         : equipment << "None\n\r";
-    equipment << setw(15) << "<|BChest|X>";
-    ch->player->equipped[Player::EQUIP_CHEST] ? 
-        equipment << Item::quality_strings[ch->player->equipped[Player::EQUIP_CHEST]->quality] << ch->player->equipped[Player::EQUIP_CHEST]->name << "|X\n\r"
+    equipment << std::setw(15) << "<|BChest|X>";
+    ch->equipped[Player::EQUIP_CHEST] ? 
+        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_CHEST]->quality] << ch->equipped[Player::EQUIP_CHEST]->name << "|X\n\r"
         : equipment << "None\n\r";
-    equipment << setw(15) << "<|BWrist|X>";
-    ch->player->equipped[Player::EQUIP_WRIST] ? 
-        equipment << Item::quality_strings[ch->player->equipped[Player::EQUIP_WRIST]->quality] << ch->player->equipped[Player::EQUIP_WRIST]->name << "|X\n\r"
+    equipment << std::setw(15) << "<|BWrist|X>";
+    ch->equipped[Player::EQUIP_WRIST] ? 
+        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_WRIST]->quality] << ch->equipped[Player::EQUIP_WRIST]->name << "|X\n\r"
         : equipment << "None\n\r";
-    equipment << setw(15) << "<|BHands|X>";
-    ch->player->equipped[Player::EQUIP_HANDS] ? 
-        equipment << Item::quality_strings[ch->player->equipped[Player::EQUIP_HANDS]->quality] << ch->player->equipped[Player::EQUIP_HANDS]->name << "|X\n\r"
+    equipment << std::setw(15) << "<|BHands|X>";
+    ch->equipped[Player::EQUIP_HANDS] ? 
+        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_HANDS]->quality] << ch->equipped[Player::EQUIP_HANDS]->name << "|X\n\r"
         : equipment << "None\n\r";
-    equipment << setw(15) << "<|BWaist|X>";
-    ch->player->equipped[Player::EQUIP_WAIST] ? 
-        equipment << Item::quality_strings[ch->player->equipped[Player::EQUIP_WAIST]->quality] << ch->player->equipped[Player::EQUIP_WAIST]->name << "|X\n\r"
+    equipment << std::setw(15) << "<|BWaist|X>";
+    ch->equipped[Player::EQUIP_WAIST] ? 
+        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_WAIST]->quality] << ch->equipped[Player::EQUIP_WAIST]->name << "|X\n\r"
         : equipment << "None\n\r";
-    equipment << setw(15) << "<|BLegs|X>";
-    ch->player->equipped[Player::EQUIP_LEGS] ? 
-        equipment << Item::quality_strings[ch->player->equipped[Player::EQUIP_LEGS]->quality] << ch->player->equipped[Player::EQUIP_LEGS]->name << "|X\n\r"
+    equipment << std::setw(15) << "<|BLegs|X>";
+    ch->equipped[Player::EQUIP_LEGS] ? 
+        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_LEGS]->quality] << ch->equipped[Player::EQUIP_LEGS]->name << "|X\n\r"
         : equipment << "None\n\r";
-    equipment << setw(15) << "<|BFeet|X>";
-    ch->player->equipped[Player::EQUIP_FEET] ? 
-        equipment << Item::quality_strings[ch->player->equipped[Player::EQUIP_FEET]->quality] << ch->player->equipped[Player::EQUIP_FEET]->name << "|X\n\r"
+    equipment << std::setw(15) << "<|BFeet|X>";
+    ch->equipped[Player::EQUIP_FEET] ? 
+        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_FEET]->quality] << ch->equipped[Player::EQUIP_FEET]->name << "|X\n\r"
         : equipment << "None\n\r";
-    equipment << setw(15) << "<|BFinger|X>";
-    ch->player->equipped[Player::EQUIP_FINGER1] ? 
-        equipment << Item::quality_strings[ch->player->equipped[Player::EQUIP_FINGER1]->quality] << ch->player->equipped[Player::EQUIP_FINGER1]->name << "|X\n\r"
+    equipment << std::setw(15) << "<|BFinger|X>";
+    ch->equipped[Player::EQUIP_FINGER1] ? 
+        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_FINGER1]->quality] << ch->equipped[Player::EQUIP_FINGER1]->name << "|X\n\r"
         : equipment << "None\n\r";
-    equipment << setw(15) << "<|BFinger|X>";
-    ch->player->equipped[Player::EQUIP_FINGER2] ? 
-        equipment << Item::quality_strings[ch->player->equipped[Player::EQUIP_FINGER2]->quality] << ch->player->equipped[Player::EQUIP_FINGER2]->name << "|X\n\r"
+    equipment << std::setw(15) << "<|BFinger|X>";
+    ch->equipped[Player::EQUIP_FINGER2] ? 
+        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_FINGER2]->quality] << ch->equipped[Player::EQUIP_FINGER2]->name << "|X\n\r"
         : equipment << "None\n\r";
-    equipment << setw(15) << "<|BTrinket|X>";
-    ch->player->equipped[Player::EQUIP_TRINKET1] ? 
-        equipment << Item::quality_strings[ch->player->equipped[Player::EQUIP_TRINKET1]->quality] << ch->player->equipped[Player::EQUIP_TRINKET1]->name << "|X\n\r"
+    equipment << std::setw(15) << "<|BTrinket|X>";
+    ch->equipped[Player::EQUIP_TRINKET1] ? 
+        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_TRINKET1]->quality] << ch->equipped[Player::EQUIP_TRINKET1]->name << "|X\n\r"
         : equipment << "None\n\r";
-    equipment << setw(15) << "<|BTrinket|X>";
-    ch->player->equipped[Player::EQUIP_TRINKET2] ? 
-        equipment << Item::quality_strings[ch->player->equipped[Player::EQUIP_TRINKET2]->quality] << ch->player->equipped[Player::EQUIP_TRINKET2]->name << "|X\n\r"
+    equipment << std::setw(15) << "<|BTrinket|X>";
+    ch->equipped[Player::EQUIP_TRINKET2] ? 
+        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_TRINKET2]->quality] << ch->equipped[Player::EQUIP_TRINKET2]->name << "|X\n\r"
         : equipment << "None\n\r";
-    equipment << setw(15) << "<|BOffhand|X>";
-    ch->player->equipped[Player::EQUIP_OFFHAND] ? 
-        equipment << Item::quality_strings[ch->player->equipped[Player::EQUIP_OFFHAND]->quality] << ch->player->equipped[Player::EQUIP_OFFHAND]->name << "|X\n\r"
+    equipment << std::setw(15) << "<|BOffhand|X>";
+    ch->equipped[Player::EQUIP_OFFHAND] ? 
+        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_OFFHAND]->quality] << ch->equipped[Player::EQUIP_OFFHAND]->name << "|X\n\r"
         : equipment << "None\n\r";
-    equipment << setw(15) << "<|BMainhand|X>";
-    ch->player->equipped[Player::EQUIP_MAINHAND] ? 
-        equipment << Item::quality_strings[ch->player->equipped[Player::EQUIP_MAINHAND]->quality] << ch->player->equipped[Player::EQUIP_MAINHAND]->name << "|X\n\r"
+    equipment << std::setw(15) << "<|BMainhand|X>";
+    ch->equipped[Player::EQUIP_MAINHAND] ? 
+        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_MAINHAND]->quality] << ch->equipped[Player::EQUIP_MAINHAND]->name << "|X\n\r"
         : equipment << "None\n\r";
     equipment << "\n\r";
 
     ch->Send(equipment.str());
 }
 
-void cmd_remove(Character * ch, string argument)
+void cmd_remove(Player * ch, string argument)
 {
-    if(!ch || !ch->player)
-        return;
-
 	if (ch->InCombat())
 	{
 		ch->Send("You can't do that while in combat!\n\r");
@@ -150,49 +136,46 @@ void cmd_remove(Character * ch, string argument)
     {
         for(int i = 0; i < Player::EQUIP_LAST; i++)
         {
-            if(ch->player->equipped[i] != NULL)
+            if(ch->equipped[i] != nullptr)
             {
-                Item * remove = ch->player->RemoveItemEquipped(i);
+                Item * remove = ch->RemoveItemEquipped(i);
                 if(!remove)
                 {
-                    LogFile::Log("error", "cmd_remove (all), removed a NULL item");
+                    LogFile::Log("error", "cmd_remove (all), removed a nullptr item");
                 }
 				ch->RemoveEquipmentStats(remove);
-                ch->player->AddItemInventory(remove);
+                ch->AddItemInventory(remove);
                 ch->Send("You remove " + remove->name + ".\n\r");
             }
         }
         return;
     }
 
-    int slot = ch->player->GetEquippedItemIndex(arg1);
+    int slot = ch->GetEquippedItemIndex(arg1);
     if(slot == Player::EQUIP_LAST)
     {
         ch->Send("You're not wearing that item.\n\r");
         return;
     }
 
-    if(ch->player->inventorySize >= ch->player->maxInventorySize
-        && !ch->player->IMMORTAL())
+    if(ch->inventorySize >= ch->maxInventorySize
+        && !ch->IsImmortal())
     {
         ch->Send("Your inventory is full.\n\r");
         return;
     }
-    Item * remove = ch->player->RemoveItemEquipped(slot);
+    Item * remove = ch->RemoveItemEquipped(slot);
     if(!remove)
     {
-        LogFile::Log("error", "cmd_remove, removed a NULL item");
+        LogFile::Log("error", "cmd_remove, removed a nullptr item");
     }
 	ch->RemoveEquipmentStats(remove);
-    ch->player->AddItemInventory(remove);
+    ch->AddItemInventory(remove);
     ch->Send("You remove " + remove->name + ".\n\r");
 }   
 
-void cmd_wear(Character * ch, string argument)
+void cmd_wear(Player * ch, string argument)
 {
-    if(!ch || !ch->player)
-        return;
-
 	if (ch->InCombat())
 	{
 		ch->Send("You can't do that while in combat!\n\r");
@@ -210,31 +193,31 @@ void cmd_wear(Character * ch, string argument)
 
     if(!Utilities::str_cmp(arg1, "all"))
     {
-        auto iter = ch->player->inventory.begin();
+        auto iter = ch->inventory.begin();
         
-        while(iter != ch->player->inventory.end())
+        while(iter != ch->inventory.end())
         {
             auto thisiter = iter;
             iter++;
-            int equiploc = ch->player->GetEquipLocation(thisiter->first);
+            int equiploc = ch->GetEquipLocation(thisiter->first);
             if(equiploc != Player::EQUIP_LAST)
             {
                 Item * wear = thisiter->first;
 
                 //don't equip anything that requires something be removed
-                if(ch->player->equipped[equiploc] != NULL)
+                if(ch->equipped[equiploc] != nullptr)
                 {
                     continue;
                 }
-                if(equiploc == Player::EQUIP_MAINHAND && wear->equipLocation == Item::EQUIP_TWOHAND && ch->player->equipped[Player::EQUIP_OFFHAND] != NULL)
+                if(equiploc == Player::EQUIP_MAINHAND && wear->equipLocation == Item::EQUIP_TWOHAND && ch->equipped[Player::EQUIP_OFFHAND] != nullptr)
                 {
                     continue;
                 }
-                if(equiploc == Player::EQUIP_OFFHAND && ch->player->equipped[Player::EQUIP_MAINHAND] != NULL && ch->player->equipped[Player::EQUIP_MAINHAND]->equipLocation == Item::EQUIP_TWOHAND)
+                if(equiploc == Player::EQUIP_OFFHAND && ch->equipped[Player::EQUIP_MAINHAND] != nullptr && ch->equipped[Player::EQUIP_MAINHAND]->equipLocation == Item::EQUIP_TWOHAND)
                 {
                     continue;
                 }
-                ch->player->EquipItemFromInventory(wear);
+                ch->EquipItemFromInventory(wear);
 				ch->AddEquipmentStats(wear);
                 ch->Send("You wear " + wear->name + ".\n\r");
             }
@@ -242,57 +225,54 @@ void cmd_wear(Character * ch, string argument)
         return;
     }
 
-    Item * wear = ch->player->GetItemInventory(arg1);
+    Item * wear = ch->GetItemInventory(arg1);
 
     if(!wear)
     {
         ch->Send("You're not carrying that item.\n\r");
         return;
     }
-    int equiploc = ch->player->GetEquipLocation(wear);
+    int equiploc = ch->GetEquipLocation(wear);
     if(equiploc == Player::EQUIP_LAST)
     {
         ch->Send("You can't equip that item.\n\r");
         return;
     }
 
-    Item * removed = ch->player->RemoveItemEquipped(equiploc);
-    if(removed != NULL) //remove anything already in this slot
+    Item * removed = ch->RemoveItemEquipped(equiploc);
+    if(removed != nullptr) //remove anything already in this slot
     {
 		ch->RemoveEquipmentStats(removed);
-        ch->player->AddItemInventory(removed);
+        ch->AddItemInventory(removed);
         ch->Send("You remove " + removed->name + ".\n\r");
     }
     if(equiploc == Player::EQUIP_MAINHAND && wear->equipLocation == Item::EQUIP_TWOHAND) //remove the offhand when equipping a two hand
     {
-        Item * offhand = ch->player->RemoveItemEquipped(Player::EQUIP_OFFHAND);
-        if(offhand != NULL)
+        Item * offhand = ch->RemoveItemEquipped(Player::EQUIP_OFFHAND);
+        if(offhand != nullptr)
         {
 			ch->RemoveEquipmentStats(offhand);
-            ch->player->AddItemInventory(offhand);
+            ch->AddItemInventory(offhand);
             ch->Send("You remove " + offhand->name + ".\n\r");
         }
     }
     else if(equiploc == Player::EQUIP_OFFHAND) //remove a twohand when equipping an offhand
     {
-        if(ch->player->equipped[Player::EQUIP_MAINHAND] != NULL && ch->player->equipped[Player::EQUIP_MAINHAND]->equipLocation == Item::EQUIP_TWOHAND)
+        if(ch->equipped[Player::EQUIP_MAINHAND] != nullptr && ch->equipped[Player::EQUIP_MAINHAND]->equipLocation == Item::EQUIP_TWOHAND)
         {
-            Item * mh = ch->player->RemoveItemEquipped(Player::EQUIP_MAINHAND);
+            Item * mh = ch->RemoveItemEquipped(Player::EQUIP_MAINHAND);
 			ch->RemoveEquipmentStats(mh);
-            ch->player->AddItemInventory(mh);
+            ch->AddItemInventory(mh);
             ch->Send("You remove " + mh->name + ".\n\r");
         }
     }
-    ch->player->EquipItemFromInventory(wear);
+    ch->EquipItemFromInventory(wear);
 	ch->AddEquipmentStats(wear);
     ch->Send("You wear " + wear->name + ".\n\r");
 }
 
-void cmd_drop(Character * ch, string argument)
+void cmd_drop(Player * ch, string argument)
 {
-    if(!ch || !ch->player)
-        return;
-
     if(ch->HasQuery())
     {
         ch->Send("Answer your current question first.\n\r");
@@ -344,7 +324,7 @@ void cmd_drop(Character * ch, string argument)
     }*/
 
     Item * item;
-    if((item = ch->player->GetItemInventory(arg1)) == NULL)
+    if((item = ch->GetItemInventory(arg1)) == nullptr)
     {
         ch->Send("You're not carrying that item.\n\r");
         return;
@@ -352,9 +332,9 @@ void cmd_drop(Character * ch, string argument)
 	ch->SetQuery("Destroy " + item->name + "? (y/n) ", item, cmd_drop_Query);
 }
 
-bool cmd_drop_Query(Character * ch, string argument)
+bool cmd_drop_Query(Player * ch, string argument)
 {
-    if(!ch || !ch->player)
+    if(!ch)
     {
         ch->QueryClear();
         return true;
@@ -370,21 +350,21 @@ bool cmd_drop_Query(Character * ch, string argument)
     {
         Item * item = (Item*)ch->GetQueryData(); //the query data is the Item Index just in case it got deleted in the meantime
         ch->QueryClear();
-        if((item = ch->player->GetItemInventory(item->id)) == nullptr)
+        if((item = ch->GetItemInventory(item->id)) == nullptr)
         {
             ch->Send("You're not carrying that item.\n\r");
             return true;
         }
-        ch->player->RemoveItemInventory(item->id);
+        ch->RemoveItemInventory(item->id);
         return true;
     }
     ch->QueryClear();
     return true;
 }
 
-void cmd_take(Character * ch, string argument)
+void cmd_take(Player * ch, string argument)
 {
-	if (!ch || !ch->player || !ch->room)
+	if (!ch || !ch->room)
 		return;
 
 	if (ch->delay_active)
@@ -413,7 +393,7 @@ void cmd_take(Character * ch, string argument)
 		ch->Send("You can't take that.\n\r");
 		return;
 	}
-	if (i->quest && !ch->player->ShouldDropQuestItem(i))
+	if (i->quest && !ch->ShouldDropQuestItem(i))
 	{
 		ch->Send("You can't take that.\n\r");
 		return;
@@ -440,7 +420,7 @@ void cmd_takeCallback(Character::DelayData delayData)
 {
 	if (!delayData.caster)
 	{
-		LogFile::Log("error", "cmd_takeCallback: NULL caster");
+		LogFile::Log("error", "cmd_takeCallback: nullptr caster");
 		return;
 	}
 	delayData.caster->delay_active = false;
@@ -448,7 +428,7 @@ void cmd_takeCallback(Character::DelayData delayData)
 	json casttime = { { "time", 0 } };
 	delayData.caster->SendGMCP("char.casttime " + casttime.dump());
 
-	if (delayData.itemTarget == NULL) //target will never be null from cmd_take, only from Subscriber::Notify 
+	if (delayData.itemTarget == nullptr) //target will never be null from cmd_take, only from Subscriber::Notify 
 	{
 		delayData.caster->Send("That item is no longer here.\n\r");
 		return;
@@ -464,17 +444,16 @@ void cmd_takeCallback(Character::DelayData delayData)
 	}
 
 	delayData.caster->room->RemoveItem(delayData.itemTarget);
-	if(delayData.caster->player)
-		delayData.caster->player->AddItemInventory(delayData.itemTarget);
+	if (delayData.caster->IsPlayer())
+	{
+		((Player*)(delayData.caster))->AddItemInventory(delayData.itemTarget);
+	}
 	delayData.caster->Send("You take " + delayData.itemTarget->name + "\n\r");
-	delayData.caster->Message(delayData.caster->name + " takes " + delayData.itemTarget->name, Character::MSG_ROOM_NOTCHAR);
+	delayData.caster->Message(delayData.caster->GetName() + " takes " + delayData.itemTarget->name, Character::MSG_ROOM_NOTCHAR);
 }
 
-void cmd_loot(Character * ch, string argument)
+void cmd_loot(Player * ch, string argument)
 {
-	if (ch->IsNPC())
-		return;
-	
 	string arg1;
 	string arg2;
 	string arg3;
@@ -499,7 +478,7 @@ void cmd_loot(Character * ch, string argument)
 		auto iter = std::begin(ch->pending_loot_rolls);
 		while (iter != std::end(ch->pending_loot_rolls))
 		{
-			Character::OneLoot * loot = iter->corpse->GetCorpseLoot(iter->corpse_id);
+			NPC::OneLoot * loot = iter->corpse->GetCorpseLoot(iter->corpse_id);
 			if (loot == nullptr)
 			{
 				LogFile::Log("error", "Pending loot roll couldn't find corresponding loot on corpse");
@@ -515,7 +494,7 @@ void cmd_loot(Character * ch, string argument)
 
 		if (ch->GetTarget() != nullptr && ch->GetTarget()->IsNPC() && !ch->GetTarget()->IsAlive())
 		{
-			Character * loot_target = ch->GetTarget();
+			NPC * loot_target = (NPC*)ch->GetTarget();
 			bool lootable_items = false;
 			ch->Send("You can loot the following items from " + loot_target->GetName() + ":\n\r");
 			for (auto iter = std::begin(loot_target->loot); iter != std::end(loot_target->loot); ++iter)
@@ -551,16 +530,16 @@ void cmd_loot(Character * ch, string argument)
 		}
 		if (!Utilities::str_cmp(arg2, "all"))
 		{
-			Character * loot_target = ch->GetTarget();
+			NPC * loot_target = (NPC*)ch->GetTarget();
 			for (auto iter = std::begin(loot_target->loot); iter != std::end(loot_target->loot);)
 			{
-				Character::OneLoot * oneloot = &(*iter);
+				NPC::OneLoot * oneloot = &(*iter);
 				++iter;
 				auto can_loot = std::find(oneloot->looters.begin(), oneloot->looters.end(), ch);
 				if (oneloot->roll_timer == 0 && can_loot != std::end(oneloot->looters))
 				{
 					Item * theitem = oneloot->item;
-					if (ch->player->AddItemInventory(theitem))
+					if (ch->AddItemInventory(theitem))
 					{
 						//send to other looters
 						for (auto looter_iter = oneloot->looters.begin(); looter_iter != oneloot->looters.end(); ++looter_iter)
@@ -604,7 +583,7 @@ void cmd_loot(Character * ch, string argument)
 			{
 				if (iter->my_id == lootnum)
 				{
-					ch->Send(iter->corpse->GetCorpseLoot(iter->corpse_id)->item->FormatItemInfo(ch)); //this is fun pointer times
+					ch->Send(iter->corpse->GetCorpseLoot(iter->corpse_id)->item->FormatItemInfo(ch));
 					return;
 				}
 			}
@@ -613,12 +592,12 @@ void cmd_loot(Character * ch, string argument)
 		}
 		if (!Utilities::str_cmp(arg2, "target"))
 		{
-			if (!ch->GetTarget())
+			if (!ch->GetTarget() || !ch->GetTarget()->IsNPC())
 			{
-				ch->Send("You do not have a target.\n\r");
+				ch->Send("You do not have a lootable target.\n\r");
 				return;
 			}
-			Character::OneLoot * oneloot = ch->GetTarget()->GetCorpseLoot(lootnum);
+			NPC::OneLoot * oneloot = ((NPC*)(ch->GetTarget()))->GetCorpseLoot(lootnum);
 			if (oneloot == nullptr)
 			{
 				ch->Send("Could not find loot item " + Utilities::itos(lootnum) + " on your target.\n\r");
@@ -643,7 +622,7 @@ void cmd_loot(Character * ch, string argument)
 		{
 			if (iter->my_id == rollnum)
 			{
-				ch->SetRollType(iter->corpse, iter->corpse_id, Character::Looter::ROLL_NEED);
+				iter->corpse->SetRollType(ch, iter->corpse_id, NPC::Looter::ROLL_NEED);
 				return;
 			}
 		}
@@ -663,7 +642,7 @@ void cmd_loot(Character * ch, string argument)
 		{
 			if (iter->my_id == rollnum)
 			{
-				ch->SetRollType(iter->corpse, iter->corpse_id, Character::Looter::ROLL_GREED);
+				iter->corpse->SetRollType(ch, iter->corpse_id, NPC::Looter::ROLL_GREED);
 				return;
 			}
 		}
@@ -683,7 +662,7 @@ void cmd_loot(Character * ch, string argument)
 		{
 			if (iter->my_id == rollnum)
 			{
-				ch->SetRollType(iter->corpse, iter->corpse_id, Character::Looter::ROLL_PASS);
+				iter->corpse->SetRollType(ch, iter->corpse_id, NPC::Looter::ROLL_PASS);
 				return;
 			}
 		}
@@ -696,16 +675,13 @@ void cmd_loot(Character * ch, string argument)
 	ch->Send("loot info roll||target <loot id>\n\r");
 }
 
-void cmd_drink(Character * ch, string argument)
+void cmd_drink(Player * ch, string argument)
 {
 
 }
 
-void cmd_eat(Character * ch, string argument)
+void cmd_eat(Player * ch, string argument)
 {
-	if (!ch || !ch->player)
-		return;
-
 	if (ch->delay_active)
 	{
 		ch->Send("Another action is in progress!\n\r");
@@ -721,7 +697,7 @@ void cmd_eat(Character * ch, string argument)
 		return;
 	}
 
-	Item * eat = ch->player->GetItemInventory(arg1);
+	Item * eat = ch->GetItemInventory(arg1);
 
 	if (!eat)
 	{
@@ -751,7 +727,7 @@ void cmd_eat(Character * ch, string argument)
 
 
 		ch->Sit();
-		ch->player->RemoveItemInventory(eat);
+		ch->RemoveItemInventory(eat);
 		ch->Send("You start eating " + eat->name + ".\n\r");
 
 		string func = sk->function_name + "_cast";

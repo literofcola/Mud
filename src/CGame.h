@@ -1,9 +1,33 @@
 #ifndef CGAME_H
 #define CGAME_H
 
+#include <string>
+#include <memory>
+#include <map>
+#include <list>
+#include <vector>
+#include <random>
+#include <winsock2.h>
+#include <WS2tcpip.h>
+#include <windows.h>
+#include "CHighResTimer.h"
+
 #define IDLE_TIMEOUT 900
 
 class Server;
+class User;
+class Client;
+class NPC;
+class NPCIndex;
+class Player;
+class Character;
+class Room;
+class Skill;
+class Class;
+class Area;
+class Quest;
+class Item;
+class Help;
 
 class Game
 {
@@ -20,9 +44,9 @@ public:
 	void NewUser(std::shared_ptr<Client> client);
 	void RemoveUser(User * user);
 	void RemoveUser(Client * client);
-    Character * NewCharacter();
-    Character * NewCharacter(std::string name, User * user);
-    Character * NewCharacter(Character * copy);
+    NPC * NewNPC(NPCIndex * index);
+    Player * NewPlayer(std::string name, User * user);
+    //Character * NewCharacter(Character * copy);
     void RemoveCharacter(Character * ch);
     void LoadGameStats(Server * server);
     void LoadRooms(Server * server);
@@ -39,8 +63,8 @@ public:
 
     User * DuplicatePlayerCheck(std::string name);
     User * GetUserByPCName(std::string name);
-    Character * GetCharacterByPCName(std::string name);
-    Character * GetPlayerWorld(Character * ch, std::string name);
+	Player * GetPlayerByName(std::string name);
+    Player * GetPlayerWorld(Player * ch, std::string name);
     void GlobalMessage(std::string);
 
     Room * GetRoom(int id);
@@ -50,8 +74,8 @@ public:
     Skill * GetSkill(int id);
     Quest * CreateQuestAnyID(std::string arg);
     Quest * GetQuest(int id);
-    Character * CreateNPCAnyID(std::string arg);
-    Character * GetCharacterIndex(int id);
+	NPCIndex * CreateNPCAnyID(std::string arg);
+    NPCIndex * GetNPCIndex(int id);
     Item * CreateItemAnyID(std::string arg);
     Item * GetItem(int id);
     Class * GetClass(int id);
@@ -71,7 +95,7 @@ public:
     void SaveGameStats();
     void SaveRooms();
     void SaveSkills();
-    void SaveCharacterIndex();
+    void SaveNPCIndex();
     void SaveQuests();
     void SaveItems();
     void SaveClasses();
@@ -97,9 +121,9 @@ public:
 
     bool shutdown;
 
-    std::list<User *> users;
-    std::list<Character *> characters; //Characters loaded into the world //TODO: boost.multiIndex ???
-    std::map<int, Character *> characterIndex; //Character prototypes
+    std::list<User *> users; //user has a player, player has a user
+    std::list<Character *> characters; //All NPCs and Players currently loaded in the world //TODO: boost.multiIndex ???
+    std::map<int, NPCIndex *> npcIndex; //NPC prototypes
     std::map<int, Room *> rooms;
     std::map<int, Skill *> skills;
     std::map<int, Quest *> quests;

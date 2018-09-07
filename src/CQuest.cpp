@@ -1,57 +1,14 @@
-#include "stdafx.h"
-#include "CSubscriber.h"
-#include "CSubscriberManager.h"
-#include "CmySQLQueue.h"
-#include "CLogFile.h"
-#include "CClient.h"
-#include "CHighResTimer.h"
-#include "CHelp.h"
-#include "CTrigger.h"
-#include "CItem.h"
-#include "CSkill.h"
-#include "CClass.h"
-#include "CExit.h"
-#include "CReset.h"
-#include "CArea.h"
-#include "CRoom.h"
 #include "CQuest.h"
-#include "CPlayer.h"
-#include "CCharacter.h"
-#include "CSpellAffect.h"
-#include "CUser.h"
 #include "CGame.h"
-#include "CServer.h"
+#include "CLogFile.h"
 #include "utils.h"
+#include "CServer.h"
+#include "CRoom.h"
+#include "CNPCIndex.h"
+#include "CItem.h"
+#include <string>
 
-using namespace std;
-
-Quest::Quest()
-{
-    id = 0;
-    level = 1;
-    questRequirement = 0;
-    levelRequirement = 0;
-    questRestriction = 0;
-    start = NULL;
-    end = NULL;
-    experienceReward = 0;
-    moneyReward = 0;
-    shareable = false;
-    changed = false;
-
-    intTable["id"] = &id;
-    intTable["level"] = &level;
-    intTable["questRequirement"] = &questRequirement;
-    intTable["levelRequirement"] = &levelRequirement;
-    intTable["questRestriction"] = &questRestriction;
-    intTable["experienceReward"] = &experienceReward;
-    intTable["moneyReward"] = &moneyReward;
-    stringTable["name"] = &name;
-    stringTable["shortDescription"] = &shortDescription;
-    stringTable["longDescription"] = &longDescription;
-    stringTable["progressMessage"] = &progressMessage;
-    stringTable["completionMessage"] = &completionMessage;
-}
+using std::string;
 
 Quest::Quest(string name_, int id_)
 {
@@ -61,8 +18,8 @@ Quest::Quest(string name_, int id_)
     questRequirement = 0;
     levelRequirement = 0;
     questRestriction = 0;
-    start = NULL;
-    end = NULL;
+    start = 0;
+    end = 0;
     experienceReward = 0;
     moneyReward = 0;
     shareable = false;
@@ -74,6 +31,8 @@ Quest::Quest(string name_, int id_)
     intTable["levelRequirement"] = &levelRequirement;
     intTable["questRestriction"] = &questRestriction;
     intTable["experienceReward"] = &experienceReward;
+	intTable["start"] = &start;
+	intTable["end"] = &end;
     intTable["moneyReward"] = &moneyReward;
     stringTable["name"] = &name;
     stringTable["shortDescription"] = &shortDescription;
@@ -101,7 +60,7 @@ void Quest::AddObjective(int type, int count, int id, string desc)
             
         case Quest::OBJECTIVE_VISITNPC:
         case Quest::OBJECTIVE_KILLNPC:
-            t.objective = Game::GetGame()->GetCharacterIndex(id);
+            t.objective = Game::GetGame()->GetNPCIndex(id);
             break;
 
         case Quest::OBJECTIVE_ITEM:
@@ -206,8 +165,8 @@ void Quest::Save()
     sql += Utilities::itos(id) + ",'" + Utilities::SQLFixQuotes(name) + "','" + Utilities::SQLFixQuotes(shortDescription);
     sql += "','" + Utilities::SQLFixQuotes(longDescription) + "','" + Utilities::SQLFixQuotes(progressMessage);
     sql += "','" + Utilities::SQLFixQuotes(completionMessage) + "','" + Utilities::itos(level) + "',";
-    sql += Utilities::itos(questRequirement) + "," + (start ? Utilities::itos(start->id) : "0") + ",";
-    sql += (end ? Utilities::itos(end->id) : "0") + ",";
+    sql += Utilities::itos(questRequirement) + "," + Utilities::itos(start) + ",";
+    sql += Utilities::itos(end) + ",";
     sql += Utilities::itos(experienceReward) + "," + Utilities::itos(moneyReward) + "," + Utilities::itos(shareable) + ", ";
     sql += Utilities::itos(levelRequirement) + "," + Utilities::itos(questRestriction) + ")";
 
@@ -228,7 +187,7 @@ void Quest::Save()
 		{
 			case Quest::OBJECTIVE_ITEM: saveid = ((Item*)((*iter).objective))->id; break;
 			case Quest::OBJECTIVE_KILLNPC:
-			case Quest::OBJECTIVE_VISITNPC: saveid = ((Character*)((*iter).objective))->id; break;
+			case Quest::OBJECTIVE_VISITNPC: saveid = ((NPCIndex*)((*iter).objective))->id; break;
 			case Quest::OBJECTIVE_ROOM: saveid = ((Room*)((*iter).objective))->id; break;
 		}
 		string objectivesql = "INSERT INTO quest_objectives (quest, type, id, count, description) values (";

@@ -1,15 +1,16 @@
-#include "stdafx.h"
+#include "CGroup.h"
+#include "CPlayer.h"
+#include "CCharacter.h"
+#include "utils.h"
 
-using namespace std;
-
-Group::Group(Character * l)
+Group::Group(Player * l)
 {
 	raid = false;
 	leader = l;
 	count = 1;
 	for (int i = 0; i < MAX_GROUP_SIZE; i++)
 	{
-		members[i] = NULL;
+		members[i] = nullptr;
 	}
 	members[0] = l;
 }
@@ -32,7 +33,7 @@ int Group::FindNextEmptySlot()
 	return -1;
 }
 
-int Group::FindMemberSlot(Character *ch)
+int Group::FindMemberSlot(Player *ch)
 {
 	for (int i = 0; i < MAX_RAID_SIZE; i++)
 	{
@@ -42,7 +43,7 @@ int Group::FindMemberSlot(Character *ch)
 	return -1;
 }
 
-int Group::FindFirstSlotInSubgroup(Character *ch)
+int Group::FindFirstSlotInSubgroup(Player *ch)
 {
 	int i;
 	for (i = 0; i < MAX_RAID_SIZE; i++)
@@ -91,7 +92,7 @@ int Group::GetSubgroupCount(int slot)
 	return count;
 }
 
-bool Group::Add(Character * ch)
+bool Group::Add(Player * ch)
 {
 	int empty_slot = FindNextEmptySlot();
 	if (empty_slot == -1)
@@ -102,7 +103,7 @@ bool Group::Add(Character * ch)
 	return true;
 }
 
-bool Group::Remove(Character *ch)
+bool Group::Remove(Player *ch)
 {
 	int char_slot = FindMemberSlot(ch);
 	if (char_slot == -1)
@@ -113,7 +114,7 @@ bool Group::Remove(Character *ch)
 	return true;
 }
 
-void Group::Move(Character * ch, int slot) //slot is indexed from 1
+void Group::Move(Player * ch, int slot) //slot is indexed from 1
 {
 	int from = FindMemberSlot(ch);
 	if (from == -1 || from == slot || slot < 0 || slot >= MAX_RAID_SIZE)
@@ -123,18 +124,18 @@ void Group::Move(Character * ch, int slot) //slot is indexed from 1
 	members[slot] = ch;
 }
 
-bool Group::IsGroupLeader(Character * ch)
+bool Group::IsGroupLeader(Player * ch)
 {
 	if (ch != nullptr && leader != nullptr && ch == leader)
 		return true;
 	return false;
 }
 
-Character * Group::FindByName(std::string name)
+Player * Group::FindByName(std::string name)
 {
 	for (int i = 0; i < Group::MAX_RAID_SIZE; i++)
 	{
-		if (members[i] != nullptr && !Utilities::str_cmp(members[i]->name, name))
+		if (members[i] != nullptr && !Utilities::str_cmp(members[i]->GetName(), name))
 		{
 			return members[i];
 		}

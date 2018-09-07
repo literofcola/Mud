@@ -1,28 +1,5 @@
-#include "stdafx.h"
-#include "CSubscriber.h"
-#include "CSubscriberManager.h"
-#include "CmySQLQueue.h"
-#include "CLogFile.h"
-#include "CClient.h"
-#include "CHighResTimer.h"
-#include "CHelp.h"
-#include "CTrigger.h"
-#include "CItem.h"
-#include "CSkill.h"
-#include "CClass.h"
 #include "CExit.h"
-#include "CReset.h"
-#include "CArea.h"
-#include "CRoom.h"
-#include "CQuest.h"
-#include "CPlayer.h"
-#include "CCharacter.h"
-#include "CSpellAffect.h"
-#include "CUser.h"
-#include "CGame.h"
-#include "CServer.h"
-#include "utils.h"
-
+#include <string>
 
 std::string Exit::exitNames[Exit::DIR_LAST] = {
     "north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest", "up", "down" };
@@ -34,7 +11,7 @@ int Exit::exitOpposite[Exit::DIR_LAST] = { 4, 5, 6, 7, 0, 1, 2, 3, 9, 8 };
 
 Exit::Exit()
 {
-    from = to = NULL;
+    from = to = nullptr;
     direction = DIR_LAST;
     removeme = false;
 }
