@@ -26,8 +26,8 @@ void Lua_DefineFunctions(sol::state * lua)
 	(*lua)["ExperienceForLevel"] = Game::ExperienceForLevel; //static int ExperienceForLevel(int level);
 	lua->set("LevelDifficulty", Game::LevelDifficulty); //static int LevelDifficulty(int level1, int level2);
 	lua->set_function("LoadNPCRoom", Game::LoadNPCRoom); //LoadNPCRoom(int id, Room * toroom);
-	lua->set_function("cmd_cast", cmd_cast); //cmd_cast(Player * ch, string argument);
-	lua->set_function("cmd_look", cmd_look); //cmd_look(Player * ch, string argument);
+	//lua->set_function("cmd_cast", cmd_cast); //cmd_cast(Player * ch, string argument);
+	//lua->set_function("cmd_look", cmd_look); //cmd_look(Player * ch, string argument);
 	lua->set_function("FlagIsSet", Utilities::FlagIsSet); //bool FlagIsSet(std::vector<int> & flags, const int flag)	
 }
 
@@ -107,7 +107,9 @@ void Lua_DefineClasses(sol::state * lua)
 			"GetMainhandDamagePerSecond", &Character::GetMainhandDamagePerSecond,
 			"GetOffhandDamageRandomHit", &Character::GetOffhandDamageRandomHit,
 			"GetOffhandDamagePerSecond", &Character::GetOffhandDamagePerSecond,
-			"GetMainhandDamageRandomHit", &Character::GetMainhandDamageRandomHit
+			"GetMainhandDamageRandomHit", &Character::GetMainhandDamageRandomHit,
+			"Cast", &Character::Cast,
+			"Look", &Character::Look
 			//"level", &Character::level,
 			//"flags", &Character::flags
 			);

@@ -3,6 +3,7 @@
 
 #include "CCharacter.h"
 #include "CServer.h"
+#include "mud.h"
 #include <set>
 #include <vector>
 #include <list>
@@ -249,6 +250,8 @@ public:
 	bool CanResAtCorpse(int time_since_death);
 	bool CanRes(int time_since_death);
 
+	void Look(std::string argument) override { ::cmd_look(this, argument); };
+	void Cast(std::string argument) override { ::cmd_cast(this, argument); };
 	
 	void HandleNPCKillRewards(Character * killed);
 

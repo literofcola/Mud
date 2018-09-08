@@ -139,9 +139,9 @@ void NPCIndex::Save()
 	std::map<std::string, Skill *>::iterator skilliter;
 	for (skilliter = knownSkills.begin(); skilliter != knownSkills.end(); ++skilliter)
 	{
-		string skillsql = "INSERT INTO npc_skills (npc, id) values ";
+		string skillsql = "INSERT INTO npc_skills (npc, skill) values ";
 		skillsql += "(" + Utilities::itos(id) + ", " + Utilities::itos((*skilliter).second->id) + ")";
-		skillsql += " ON DUPLICATE KEY UPDATE npc=VALUES(npc), id=VALUES(id)";
+		skillsql += " ON DUPLICATE KEY UPDATE npc=VALUES(npc), skill=VALUES(skill)";
 		Server::sqlQueue->Write(skillsql);
 	}
 

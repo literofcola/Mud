@@ -608,12 +608,16 @@ void Game::WorldUpdate(Server * server)
                 {
                     //TODO: dont load the script every time?
                     //LogFile::Log("status", "Loading lua trigger script " + Utilities::itos(trig->id) + " for NPC " + Utilities::itos(curr->id));
-                    //string nil = trig->GetFunction() + " = nil;";
-                    //luaL_dostring(Server::luaState, nil.c_str());
 					Server::lua.script(trig->GetScript().c_str());
-					Server::lua[func.c_str()](currChar);
-                    //luaL_dostring(Server::luaState, trig->GetScript().c_str());
-                    //luabind::call_function<void>(Server::luaState, func.c_str(), curr);
+					sol::function lua_trig_func = Server::lua[func.c_str()];
+					sol::protected_function_result result = lua_trig_func(currChar);
+					if (!result.valid())
+					{
+						// Call failed
+						sol::error err = result;
+						std::string what = err.what();
+						LogFile::Log("error", "NPC TIMER trigger call failed, sol::error::what() is: " + what);
+					}
                 }
                 catch(const std::exception & e)
 			    {

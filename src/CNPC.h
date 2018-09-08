@@ -95,6 +95,8 @@ public:
 	double GetOffhandDamagePerSecond() override;
 	int GetMainhandDamageRandomHit() override;
 
+	void Cast(std::string argument) override;
+
 private:
 	NPCIndex * npcindex;
 };

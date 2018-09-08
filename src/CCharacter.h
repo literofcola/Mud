@@ -188,6 +188,8 @@ public:
     void OneHit(Character * victim, int damage);
 	void OneHeal(Character * target, int heal);
 	
+	virtual void Look(std::string argument) {};
+	virtual void Cast(std::string argument) {};
 	
 	virtual double GetMainhandWeaponSpeed() = 0;
 	virtual double GetOffhandWeaponSpeed() = 0;

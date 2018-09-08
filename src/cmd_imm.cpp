@@ -342,8 +342,9 @@ void cmd_sql(Player * ch, string argument)
     else
     {
         //write
-        string status;
-        Server::sqlQueue->Write(argument);
+        //string status;
+        //Server::sqlQueue->Write(argument);
+		ch->Send("Commands other than select disabled\n\r");
     }
 }
 
