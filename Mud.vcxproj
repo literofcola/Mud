@@ -244,11 +244,12 @@
     <ClCompile Include="src\lua_binds.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\CNPC.cpp" />
-    <ClCompile Include="src\string.cpp" />
-    <ClCompile Include="src\utils.cpp" />
-    <ClCompile Include="stdafx.cpp">
+    <ClCompile Include="src\stdafx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="src\string.cpp" />
+    <ClCompile Include="src\utils.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
