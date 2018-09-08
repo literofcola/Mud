@@ -2,6 +2,7 @@
 #define CPLAYER_H
 
 #include "CCharacter.h"
+#include "CServer.h"
 #include <set>
 #include <vector>
 #include <list>
@@ -113,6 +114,7 @@ public:
 
 	inline bool IsNPC() override { return false; };
 	inline bool IsPlayer() override { return true; };
+	sol::object AsPlayer() override { return sol::make_object(Server::lua, this); };
 
 	void Notify(SubscriberManager * lm);
 
@@ -173,6 +175,7 @@ public:
 	inline int GetGender() override { return gender; };
 	inline void SetGender(int g_) { gender = g_; };
 	inline virtual std::string GetTitle() override { return title; };
+	inline int GetRecall() override { return recall; };
 
 	void SetComboPoints(int howmany);
 	void GenerateComboPoint(Character * target);

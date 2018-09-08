@@ -23,10 +23,8 @@ class Character : public Subscriber, public SubscriberManager
 {
 public:
 	Character();
-    Character(const Character & copy) = delete;
+    Character(const Character & copy) = delete; //I probably don't know the real implications of doing this
     virtual ~Character();
-
-    virtual void Notify(SubscriberManager *);
 
     enum MessageType
     {
@@ -92,9 +90,13 @@ public:
 
 	bool remove;
 
+	virtual void Notify(SubscriberManager *);
+
 	//These aren't really in the spirit of inheritance but this whole OO design is bad so who cares
 	virtual bool IsNPC() = 0;
 	virtual bool IsPlayer() = 0;
+	virtual sol::object AsPlayer() { return nullptr; }; //for lua usertype casting
+	virtual sol::object AsNPC() { return nullptr; };    //for lua usertype casting
 	virtual NPCIndex * GetNPCIndex() { return nullptr; };
 
 	virtual void SendBW(std::string str) {};
@@ -138,6 +140,7 @@ public:
     Character * GetCharacterAdjacentRoom(std::string name, std::string direction);
     Character * GetCharacterRoom(Character * target);
     Character * GetCharacterAdjacentRoom(Character * target);
+	inline virtual int GetRecall() { return 0; };
 
 	virtual double GetGlobalCooldown() { return 0; };
 	virtual void SetGlobalCooldown(double time) { };
@@ -209,11 +212,9 @@ public:
 	void ConsumeRage(int amount);
 	void AdjustHealth(Character * source, int amount);
 	void OnDeath();
-	//void DoLootRoll(NPC::OneLoot * oneloot);
 	
 	virtual void RemoveAllLootRolls() { };
 	virtual void RemoveAllLooters() { };
-	//void SetRollType(Character * who, int corpse_id, int type); //Set a looter's roll type in the corpse's loot object
 
     void AdjustMana(Character * source, int amount);
 	void AdjustEnergy(Character * source, int amount);

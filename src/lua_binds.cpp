@@ -28,7 +28,7 @@ void Lua_DefineFunctions(sol::state * lua)
 	lua->set_function("LoadNPCRoom", Game::LoadNPCRoom); //LoadNPCRoom(int id, Room * toroom);
 	lua->set_function("cmd_cast", cmd_cast); //cmd_cast(Player * ch, string argument);
 	lua->set_function("cmd_look", cmd_look); //cmd_look(Player * ch, string argument);
-	lua->set_function("FlagIsSet", Utilities::FlagIsSet); //bool FlagIsSet(std::vector<int> & flags, const int flag)
+	lua->set_function("FlagIsSet", Utilities::FlagIsSet); //bool FlagIsSet(std::vector<int> & flags, const int flag)	
 }
 
 void Lua_DefineClasses(sol::state * lua)
@@ -92,6 +92,8 @@ void Lua_DefineClasses(sol::state * lua)
 			"InCombat", &Character::InCombat,
 			"IsAlive", &Character::IsAlive,
 			"IsNPC", &Character::IsNPC,
+			"IsPlayer", &Character::IsPlayer,
+			"AsPlayer", &Character::AsPlayer,
 			"GetThreat", &Character::GetThreat,
 			"UpdateThreat", &Character::UpdateThreat,
 			"SetCooldown", &Character::SetCooldown,
@@ -99,6 +101,7 @@ void Lua_DefineClasses(sol::state * lua)
 			"GetAuraModifier", &Character::GetAuraModifier,
 			"GetTarget", &Character::GetTarget,
 			"GetRoom", &Character::GetRoom,
+			"GetRecall", &Character::GetRecall,
 			"GetMainhandWeaponSpeed", &Character::GetMainhandWeaponSpeed,
 			"GetOffhandWeaponSpeed", &Character::GetOffhandWeaponSpeed,
 			"GetMainhandDamagePerSecond", &Character::GetMainhandDamagePerSecond,
@@ -109,22 +112,21 @@ void Lua_DefineClasses(sol::state * lua)
 			//"flags", &Character::flags
 			);
 
-		(*lua).new_usertype<Room>("Room",
-			"characters", &Room::characters,
-			"id", &Room::id,
-			"name", &Room::name,
-			"description", &Room::description
+		(*lua).new_usertype<NPC>("NPC",
+			sol::base_classes, sol::bases<Character>()
 			);
 
 		(*lua).new_usertype<Player>("Player",
 			sol::base_classes, sol::bases<Character>(),
 			"GetClassLevel", &Player::GetClassLevel,
-			"recall", &Player::recall,
 			"SetLevel", &Player::SetLevel
 			);
 
-		(*lua).new_usertype<NPC>("NPC",
-			sol::base_classes, sol::bases<Character>()
+		(*lua).new_usertype<Room>("Room",
+			"characters", &Room::characters,
+			"id", &Room::id,
+			"name", &Room::name,
+			"description", &Room::description
 			);
 
 		(*lua).new_usertype<Skill>("Skill",

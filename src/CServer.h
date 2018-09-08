@@ -73,7 +73,6 @@ public:
 	bool CheckTempBanList(std::string address);
 	std::string EncryptDecrypt(std::string toEncrypt);
 	std::string SQLSelectPassword(std::string name);
-	static void my_panic(sol::optional<std::string> maybe_msg);
 
 	SOCKET ListenSocket;
 	struct sockaddr_in ServerAddress;

@@ -89,33 +89,18 @@ void cmd_castCallback(Character::DelayData delayData)
 
     int lua_ret = 0;
     string cost_func = delayData.sk->function_name + "_cost";
-    try
-    {
-		sol::function lua_cost_func = Server::lua[cost_func.c_str()];
-		lua_ret = lua_cost_func(delayData.caster, delayData.charTarget, delayData.sk);
-        //lua_ret = luabind::call_function<int>(Server::luaState, cost_func.c_str(), delayData.caster, delayData.charTarget, delayData.sk);
-    }
-	/*catch(const std::runtime_error & e)
+	sol::function lua_cost_func = Server::lua[cost_func.c_str()];
+	sol::protected_function_result result = lua_cost_func(delayData.caster, delayData.charTarget, delayData.sk);
+	if (!result.valid())
 	{
-        LogFile::Log("error", e.what());
-		const char * logstring = lua_tolstring(Server::luaState, -1, nullptr);
-		if(logstring != nullptr)
-			LogFile::Log("error", logstring);
-	}*/
-	catch (const sol::error& e) 
-	{
-		LogFile::Log("error", e.what());
+		// Call failed
+		sol::error err = result;
+		std::string what = err.what();
+		LogFile::Log("error", "_cost call failed, sol::error::what() is: " + what);
 	}
-	/*catch(const std::exception & e)
+	else
 	{
-		LogFile::Log("error", e.what());
-		const char * logstring = lua_tolstring(Server::luaState, -1, nullptr);
-		if(logstring != nullptr)
-			LogFile::Log("error", logstring);
-	}*/
-	catch(...)
-	{
-		LogFile::Log("error", "call_function unhandled exception cmd_castcallback _cost");
+		lua_ret = result;
 	}
 
     if(lua_ret == 0)
@@ -131,34 +116,15 @@ void cmd_castCallback(Character::DelayData delayData)
     }
 
     string func = delayData.sk->function_name + "_cast";
-    //try
-    //{
-		sol::function lua_cast_func = Server::lua[func.c_str()];
-		sol::protected_function_result result = lua_cast_func(delayData.caster, delayData.charTarget, delayData.sk);
-    //}
-	if (!result.valid()) 
+	sol::function lua_cast_func = Server::lua[func.c_str()];
+	result = lua_cast_func(delayData.caster, delayData.charTarget, delayData.sk);
+	if (!result.valid())
 	{
 		// Call failed
 		sol::error err = result;
 		std::string what = err.what();
-		std::cout << "call failed, sol::error::what() is " << what << std::endl;
-		// 'what' Should read 
-		// "Handled this message: negative number detected"
+		LogFile::Log("error", "_cast call failed, sol::error::what() is: " + what);
 	}
-
-	/*
-	catch (const sol::error& e)
-	{
-		LogFile::Log("error", e.what());
-	}
-	catch (const std::exception& e)
-	{
-		LogFile::Log("error", e.what());
-	}
-	catch(...)
-	{
-		LogFile::Log("error", "call_function unhandled exception cmd_castcallback _cast");
-	}*/
 	delayData.caster->SetCooldown(delayData.sk, -1);
 }
 

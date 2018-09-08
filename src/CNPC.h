@@ -3,6 +3,7 @@
 
 #include "CNPCIndex.h"
 #include "CCharacter.h"
+#include "CServer.h"
 
 class Player;
 class Exit;
@@ -55,6 +56,7 @@ public:
 
 	inline bool IsNPC() override { return true; };
 	inline bool IsPlayer() override { return false; };
+	sol::object AsNPC() override { return sol::make_object(Server::lua, this); };
 
 	void Notify(SubscriberManager * lm);
 

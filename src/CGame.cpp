@@ -2830,11 +2830,11 @@ int Game::Search(string table_name, string field_name, int conditional_type, str
         }
         return results_found;
     }
-    else if(!Utilities::str_cmp(table_name, "npc"))
+    else if(!Utilities::str_cmp(table_name, "npcs"))
     {
 		if (npcIndex.begin() == npcIndex.end())
 		{
-			result += "No npcs in the npc list.\n\r";
+			result += "No npcs in the npc index list.\n\r";
 			return 0;
 		}
 		if (data_type == 1 && npcIndex.begin()->second->intTable.find(field_name) != npcIndex.begin()->second->intTable.end())

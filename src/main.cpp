@@ -35,7 +35,6 @@ int main(int argc, char * argv[])
     }
 
 	//Init Lua
-	//Server::lua.set_panic(sol::c_call<decltype(&Server::my_panic), &Server::my_panic>);
 	// open some common libraries
 	Server::lua.open_libraries(sol::lib::base, sol::lib::package, sol::lib::math, sol::lib::string);
 	Server::lua.script_file("lua_constants.lua");
