@@ -480,15 +480,19 @@ SpellAffect * Character::AddSpellAffect(int isDebuff, Character * caster, string
         string func = sk->function_name + "_apply";
         try
         {
-			Server::lua[func.c_str()](caster, this, sa);
-            //luabind::call_function<void>(Server::luaState, func.c_str(), caster, this, sa);
+			sol::function lua_apply_func = Server::lua[func.c_str()];
+			sol::protected_function_result result = lua_apply_func(caster, this, sa);
+			if (!result.valid())
+			{
+				// Call failed
+				sol::error err = result;
+				std::string what = err.what();
+				LogFile::Log("error", "_apply call failed, sol::error::what() is: " + what);
+			}
         }
-		catch(const std::runtime_error & e)
+		catch (const std::exception & e)
 		{
 			LogFile::Log("error", e.what());
-			/*const char * logstring = lua_tolstring(Server::luaState, -1, nullptr);
-			if(logstring != nullptr)
-				LogFile::Log("error", logstring);*/
 		}
     }
     return sa;
@@ -1992,20 +1996,22 @@ bool Character::ChangeRooms(Room * toroom)
             {
                 //TODO: dont load the script every time?
                 //LogFile::Log("status", "Loading lua trigger script " + Utilities::itos(trig->id) + " for room " + Utilities::itos(toroom->id));
-                //string nil = trig->GetFunction() + " = nil;";
 				Server::lua.script(trig->GetScript().c_str());
-				Server::lua[func.c_str()](this, toroom);
+				sol::function lua_trig_func = Server::lua[func.c_str()];
+				sol::protected_function_result result = lua_trig_func(this, toroom);
+				if (!result.valid())
+				{
+					// Call failed
+					sol::error err = result;
+					std::string what = err.what();
+					LogFile::Log("error", "room ENTER_PC/ENTER_NPC trigger call failed, sol::error::what() is: " + what);
+				}
+			
             }
             catch(const std::exception & e)
 			{
 				LogFile::Log("error", e.what());
-				/*if(logstring != nullptr)
-					LogFile::Log("error", logstring);*/
 			}
-            catch(...)
-	        {
-		        LogFile::Log("error", "call_function unhandled exception ENTER_PC ENTER_NPC");
-	        }
         }
 
         //ENTER_CHAR
@@ -2014,24 +2020,26 @@ bool Character::ChangeRooms(Room * toroom)
         {
             ctr++;
             string func = trig->GetFunction();
-            try
-            {
-                //TODO: dont load the script every time?
-                //LogFile::Log("status", "Loading lua trigger script " + Utilities::itos(trig->id) + " for room " + Utilities::itos(toroom->id));
-                //string nil = trig->GetFunction() + " = nil;";
+			try
+			{
+				//TODO: dont load the script every time?
+				//LogFile::Log("status", "Loading lua trigger script " + Utilities::itos(trig->id) + " for room " + Utilities::itos(toroom->id));
 				Server::lua.script(trig->GetScript().c_str());
-				Server::lua[func.c_str()](this, toroom);
-            }
-            catch(const std::exception & e)
+				sol::function lua_trig_func = Server::lua[func.c_str()];
+				sol::protected_function_result result = lua_trig_func(this, toroom);
+				if (!result.valid())
+				{
+					// Call failed
+					sol::error err = result;
+					std::string what = err.what();
+					LogFile::Log("error", "room ENTER_CHAR trigger call failed, sol::error::what() is: " + what);
+				}
+
+			}
+			catch (const std::exception & e)
 			{
 				LogFile::Log("error", e.what());
-				/*if(logstring != nullptr)
-					LogFile::Log("error", logstring);*/
 			}
-            catch(...)
-	        {
-		        LogFile::Log("error", "call_function unhandled exception ENTER_CHAR");
-	        }
         }
     }
 

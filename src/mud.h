@@ -162,7 +162,6 @@ void npcEditCmd_damageLow(Player * ch, std::string argument);
 void npcEditCmd_damageHigh(Player * ch, std::string argument);
 void npcEditCmd_speechText(Player * ch, std::string argument);
 void npcEditCmd_trigger(Player * ch, std::string argument);
-void npcEditCmd_skill(Player * ch, std::string argument);
 void itemEditCmd_show(Player * ch, std::string argument);
 void itemEditCmd_name(Player * ch, std::string argument);
 void itemEditCmd_keywords(Player * ch, std::string argument);

@@ -81,13 +81,6 @@ public:
 	void RemoveAllLooters() override;
 	void SetRollType(Player * who, int corpse_id, Looter::RollType type);
 
-	bool HasSkill(Skill * sk) override;
-	bool HasSkillByName(std::string name) override;
-	void AddSkill(Skill * newskill) override;
-	void RemoveSkill(Skill * sk) override;
-	void RemoveSkill(std::string name) override;
-	Skill * GetSkillShortName(std::string name) override;
-
 	double GetMainhandWeaponSpeed() override;
 	double GetOffhandWeaponSpeed() override;
 	double GetMainhandDamagePerSecond() override;

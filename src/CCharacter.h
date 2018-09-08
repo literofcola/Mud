@@ -240,12 +240,12 @@ public:
     bool CanMove();
     double GetMoveSpeed();
     
-    virtual bool HasSkill(Skill * sk) = 0;
-	virtual bool HasSkillByName(std::string name) = 0;
-	virtual void AddSkill(Skill * newskill) = 0;
-	virtual void RemoveSkill(Skill * sk) = 0;
-	virtual void RemoveSkill(std::string name) = 0;
-	virtual Skill * GetSkillShortName(std::string name) = 0;
+	virtual bool HasSkill(Skill * sk) { return true; };
+	virtual bool HasSkillByName(std::string name) { return true; };
+	virtual void AddSkill(Skill * newskill) { };
+	virtual void RemoveSkill(Skill * sk) { };
+	virtual void RemoveSkill(std::string name) { };
+	virtual Skill * GetSkillShortName(std::string name) { return nullptr; };
 
 	
     void SetCooldown(Skill * sk, double length);

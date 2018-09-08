@@ -39,6 +39,12 @@ class Client
  
 		std::string inputBuffer;    //Dump the client receive buffer here, then parse into commandQueue
 		std::deque<std::string> commandQueue;
+		CRITICAL_SECTION overlapped_cs; //synchronize access to overlappedData in worker threads, probably necessary, not sure
+		CRITICAL_SECTION command_cs;	//for access to the Client::commandQueue between game & server threads
+		CRITICAL_SECTION disconnect_cs; //synchronize access to disconnect flags between game & server threads
+		CRITICAL_SECTION refcount_cs;	//synchronize access to IOCPReferenceCount between game (Server::deliver()) & iocp worker threads
+		bool disconnectFromServer;
+		bool disconnectFromGame;
 
 		void SetSocket(SOCKET s);
 		SOCKET Socket();
@@ -48,19 +54,10 @@ class Client
 		bool IsConnected();
 		void RefCountAdjust(const int & i);
 		int GetRefCount();
-
 		OVERLAPPEDEX * NewOperationData(int op_type);
 		void FreeOperationData(OVERLAPPEDEX * ol);
 
-		CRITICAL_SECTION overlapped_cs; //synchronize access to overlappedData in worker threads, probably necessary, not sure
-		CRITICAL_SECTION command_cs;	//for access to the Client::commandQueue between game & server threads
-		CRITICAL_SECTION disconnect_cs; //synchronize access to disconnect flags between game & server threads
-		CRITICAL_SECTION refcount_cs;	//synchronize access to IOCPReferenceCount between game (Server::deliver()) & iocp worker threads
-		bool disconnectFromServer;
-		bool disconnectFromGame;
-
 	private:
-
 		SOCKET socket_;
 		int IOCPReferenceCount;
 		std::string ipaddress_;

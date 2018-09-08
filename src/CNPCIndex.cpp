@@ -134,17 +134,6 @@ void NPCIndex::Save()
 	sql += "title=VALUES(title), attack_speed=VALUES(attack_speed), damage_low=VALUES(damage_low), ";
 	sql += "damage_high=VALUES(damage_high), flags=VALUES(flags), speechtext=VALUES(speechtext)";
 
-	//save skills
-	Server::sqlQueue->Write("DELETE FROM npc_skills where npc=" + Utilities::itos(id));
-	std::map<std::string, Skill *>::iterator skilliter;
-	for (skilliter = knownSkills.begin(); skilliter != knownSkills.end(); ++skilliter)
-	{
-		string skillsql = "INSERT INTO npc_skills (npc, skill) values ";
-		skillsql += "(" + Utilities::itos(id) + ", " + Utilities::itos((*skilliter).second->id) + ")";
-		skillsql += " ON DUPLICATE KEY UPDATE npc=VALUES(npc), skill=VALUES(skill)";
-		Server::sqlQueue->Write(skillsql);
-	}
-
 	//save drops
 	Server::sqlQueue->Write("DELETE FROM npc_drops where npc=" + Utilities::itos(id));
 	std::list<DropData>::iterator dropsiter;
@@ -192,70 +181,4 @@ void NPCIndex::Save()
 		}
 	}
 	Server::sqlQueue->Write(sql);
-}
-
-void NPCIndex::AddSkill(Skill * newskill)
-{
-	if (newskill == nullptr)
-		return;
-	knownSkills[newskill->name] = newskill;
-}
-
-void NPCIndex::RemoveSkill(Skill * sk)
-{
-	std::map<string, Skill*>::iterator iter;
-
-	iter = knownSkills.find(sk->name);
-	if (iter != knownSkills.end() && (*iter).second->id == sk->id)
-	{
-		knownSkills.erase(iter);
-	}
-}
-
-void NPCIndex::RemoveSkill(string name)
-{
-	std::map<string, Skill*>::iterator iter;
-
-	iter = knownSkills.find(name);
-	if (iter != knownSkills.end())
-	{
-		knownSkills.erase(iter);
-	}
-}
-
-Skill * NPCIndex::GetSkillShortName(string name)
-{
-	std::map<string, Skill*>::iterator iter;
-
-	name = Utilities::ToLower(name);
-	iter = knownSkills.find(name);
-	if (iter != knownSkills.end())
-	{
-		return (*iter).second;
-	}
-	return nullptr;
-}
-
-bool NPCIndex::HasSkill(Skill * sk)
-{
-	std::map<string, Skill*>::iterator iter;
-
-	iter = knownSkills.find(sk->name);
-	if (iter != knownSkills.end() && (*iter).second->id == sk->id)
-	{
-		return true;
-	}
-	return false;
-}
-
-bool NPCIndex::HasSkillByName(string name) //Not guaranteed to be the same skill id, just the same name
-{
-	std::map<string, Skill*>::iterator iter;
-
-	iter = knownSkills.find(name);
-	if (iter != knownSkills.end())
-	{
-		return true;
-	}
-	return false;
 }

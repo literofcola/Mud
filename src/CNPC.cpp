@@ -297,36 +297,6 @@ void NPC::RemoveAllLooters() //for subscriber/subscribermanager considerations
 	}
 }
 
-void NPC::AddSkill(Skill * newskill)
-{
-	npcindex->AddSkill(newskill);
-}
-
-void NPC::RemoveSkill(Skill * sk)
-{
-	npcindex->RemoveSkill(sk);
-}
-
-void NPC::RemoveSkill(string name)
-{
-	npcindex->RemoveSkill(name);
-}
-
-Skill * NPC::GetSkillShortName(string name)
-{
-	return npcindex->GetSkillShortName(name);
-}
-
-bool NPC::HasSkill(Skill * sk)
-{
-	return npcindex->HasSkill(sk);
-}
-
-bool NPC::HasSkillByName(string name) //Not guaranteed to be the same skill id, just the same name
-{
-	return npcindex->HasSkillByName(name);
-}
-
 void NPC::Notify(SubscriberManager * lm)
 {
 	Character::Notify(lm);
@@ -425,15 +395,22 @@ void NPC::Cast(std::string argument)
 	try
 	{
 		sol::function lua_cost_func = Server::lua[cost_func.c_str()];
-		lua_ret = lua_cost_func(this, arg_target, spell);
+		sol::protected_function_result result = lua_cost_func(this, arg_target, spell);
+		if (!result.valid())
+		{
+			// Call failed
+			sol::error err = result;
+			std::string what = err.what();
+			LogFile::Log("error", "_cost call failed, sol::error::what() is: " + what);
+		}
+		else
+		{
+			lua_ret = result;
+		}
 	}
-	catch (const sol::error& e)
+	catch (const std::exception & e)
 	{
 		LogFile::Log("error", e.what());
-	}
-	catch (...)
-	{
-		LogFile::Log("error", "call_function unhandled exception cmd_cast _cost");
 	}
 
 	if (lua_ret == 0)

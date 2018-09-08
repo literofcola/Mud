@@ -89,18 +89,25 @@ void cmd_castCallback(Character::DelayData delayData)
 
     int lua_ret = 0;
     string cost_func = delayData.sk->function_name + "_cost";
-	sol::function lua_cost_func = Server::lua[cost_func.c_str()];
-	sol::protected_function_result result = lua_cost_func(delayData.caster, delayData.charTarget, delayData.sk);
-	if (!result.valid())
+	try
 	{
-		// Call failed
-		sol::error err = result;
-		std::string what = err.what();
-		LogFile::Log("error", "_cost call failed, sol::error::what() is: " + what);
+		sol::function lua_cost_func = Server::lua[cost_func.c_str()];
+		sol::protected_function_result result = lua_cost_func(delayData.caster, delayData.charTarget, delayData.sk);
+		if (!result.valid())
+		{
+			// Call failed
+			sol::error err = result;
+			std::string what = err.what();
+			LogFile::Log("error", "_cost call failed, sol::error::what() is: " + what);
+		}
+		else
+		{
+			lua_ret = result;
+		}
 	}
-	else
+	catch (const std::exception & e)
 	{
-		lua_ret = result;
+		LogFile::Log("error", e.what());
 	}
 
     if(lua_ret == 0)
@@ -116,14 +123,21 @@ void cmd_castCallback(Character::DelayData delayData)
     }
 
     string func = delayData.sk->function_name + "_cast";
-	sol::function lua_cast_func = Server::lua[func.c_str()];
-	result = lua_cast_func(delayData.caster, delayData.charTarget, delayData.sk);
-	if (!result.valid())
+	try
 	{
-		// Call failed
-		sol::error err = result;
-		std::string what = err.what();
-		LogFile::Log("error", "_cast call failed, sol::error::what() is: " + what);
+		sol::function lua_cast_func = Server::lua[func.c_str()];
+		sol::protected_function_result result = lua_cast_func(delayData.caster, delayData.charTarget, delayData.sk);
+		if (!result.valid())
+		{
+			// Call failed
+			sol::error err = result;
+			std::string what = err.what();
+			LogFile::Log("error", "_cast call failed, sol::error::what() is: " + what);
+		}
+	}
+	catch (const std::exception & e)
+	{
+		LogFile::Log("error", e.what());
 	}
 	delayData.caster->SetCooldown(delayData.sk, -1);
 }
@@ -215,32 +229,22 @@ void cmd_cast(Player * ch, string argument)
     try
     {
 		sol::function lua_cost_func = Server::lua[cost_func.c_str()];
-		lua_ret = lua_cost_func(ch, arg_target, spell);
-        //lua_ret = luabind::call_function<int>(Server::luaState, cost_func.c_str(), ch, arg_target, spell);
+		sol::protected_function_result result = lua_cost_func(ch, arg_target, spell);
+		if (!result.valid())
+		{
+			// Call failed
+			sol::error err = result;
+			std::string what = err.what();
+			LogFile::Log("error", "_cost call failed, sol::error::what() is: " + what);
+		}
+		else
+		{
+			lua_ret = result;
+		}
     }
-	/*catch(const std::runtime_error & e)
-	{
-        LogFile::Log("error", e.what());
-		const char * logstring = lua_tolstring(Server::luaState, -1, nullptr);
-		if(logstring != nullptr)
-			LogFile::Log("error", logstring);
-	}*/
-	catch (const sol::error& e)
+	catch (const std::exception & e)
 	{
 		LogFile::Log("error", e.what());
-	}
-	/*
-	catch(const std::exception & e)
-	{
-		LogFile::Log("error", e.what());
-		const char * logstring = lua_tolstring(Server::luaState, -1, nullptr);
-		if(logstring != nullptr)
-			LogFile::Log("error", logstring);
-	}
-	*/
-	catch(...)
-	{
-		LogFile::Log("error", "call_function unhandled exception cmd_cast _cost");
 	}
     
     if(lua_ret == 0)

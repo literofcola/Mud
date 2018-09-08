@@ -217,30 +217,6 @@ INSERT INTO `npc_drops` VALUES (1,'1;',100),(1,'2;',100),(1,'3;',100),(1,'10;',1
 UNLOCK TABLES;
 
 --
--- Table structure for table `npc_skills`
---
-
-DROP TABLE IF EXISTS `npc_skills`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `npc_skills` (
-  `npc` int(11) NOT NULL,
-  `skill` int(11) NOT NULL,
-  PRIMARY KEY (`npc`,`skill`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `npc_skills`
---
-
-LOCK TABLES `npc_skills` WRITE;
-/*!40000 ALTER TABLE `npc_skills` DISABLE KEYS */;
-INSERT INTO `npc_skills` VALUES (1,10);
-/*!40000 ALTER TABLE `npc_skills` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `npcs`
 --
 
@@ -274,7 +250,7 @@ CREATE TABLE `npcs` (
 
 LOCK TABLES `npcs` WRITE;
 /*!40000 ALTER TABLE `npcs` DISABLE KEYS */;
-INSERT INTO `npcs` VALUES (1,'The Lurker Below','',240,1,0,10000,50,0,0,'',2.5,10,20,'1;',''),(2,'Diseased Young Wolf','',1,1,0,18,0,0,0,'',2,2,3,'1;',''),(3,'Diseased Timber Wolf','',1,1,0,18,0,0,0,'',2,2,3,'1;',''),(4,'Marshal McBride','',20,1,1,50,50,0,0,'',2,1,1,'0;','Hey, citizen! You look like a stout one. We guards are spread a little thin out here, and I could use your help...'),(5,'Eagan Peltskinner','',3,1,1,50,50,0,0,'',2,1,1,'0;',''),(6,'Deputy Willem','',18,1,1,50,50,0,0,'',2,1,1,'0;','Normally I\'d be out on the beat looking after the folk of Stormwind, but a lot of the Stormwind guards are fighting in the other lands. So here I am, deputized and offering bounties when I\'d rather be on patrol...'),(7,'Milly Osworth','',2,1,1,50,50,0,0,'',2,1,1,'0;',''),(8,'Kobold Vermin','',2,1,0,20,20,0,0,'',2,2,4,'1;',''),(9,'Kobold Worker','',3,1,0,60,20,0,0,'',2,5,7,'1;',''),(10,'Kobold Laborer','',5,1,0,100,20,0,0,'',2,9,11,'1;',''),(11,'Falkhaan Isenstrider','',10,1,1,50,50,0,0,'',2,1,1,'0;',''),(12,'Brother Neals','',50,1,1,50,50,0,0,'',2,1,1,'0;',''),(13,'Janos Hammerknuckle','',5,1,1,50,50,0,0,'Weaponsmith',2,1,1,'0;4;5;',''),(14,'Godric Rothgar','',5,1,1,50,50,0,0,'Armorer & Shieldcrafter',2,1,1,'0;4;5;',''),(15,'Brother Danil','',5,1,1,50,50,0,0,'General Supplies',2,1,1,'0;4;',''),(16,'Dermot Johns','',5,1,1,50,50,0,0,'Cloth & Leather Armor Merchant',2,1,1,'0;4;5;',''),(17,'Marshal Dughan','',1,1,0,50,50,0,100,'',2,1,1,'0;','Ach, it\'s hard enough keeping order around here without all these new troubles popping up! I hope you have good news...'),(18,'Garrick Padfoot','',5,1,0,50,50,0,100,'',2,12,14,'2;',''),(19,'Innkeeper Farley','',30,1,0,50,50,0,100,'',2,1,1,'0;','Welcome to my Inn, weary traveler. What can I do for you?'),(20,'Brother Paxton','',5,1,0,50,50,0,100,'',2,1,1,'0;',''),(21,'Brother Sammuel','',5,1,0,50,50,0,100,'',2,1,1,'0;',''),(22,'Defias Thug','',4,1,0,100,50,0,100,'',2,9,11,'2;',''),(23,'Defias Thug','',3,2,0,60,50,0,100,'',2,6,8,'2;',''),(24,'Anvilrage Overseer','',229,1,0,6500,50,100,100,'',1.26,269,346,'2;',''),(25,'Blazing Fireguard','',233,1,0,5900,3900,100,100,'',1.22,198,256,'2;',''),(26,'Shadowmage Vivian Lagrave','',238,2,0,4484,2289,100,100,'',2,106,136,'0;',''),(27,'Jalinda Sprig','',237,2,0,4356,5340,100,100,'',2,102,131,'0;',''),(28,'Lord Incendius','',235,1,0,15000,50,100,100,'',1.2,449,533,'2;',''),(29,'Anvilrage Soldier','',233,1,0,7300,50,100,100,'',3.2,1000,1100,'2;',''),(30,'Anvilrage Medic','',232,1,0,5000,9000,100,100,'',2.6,441,534,'2;',''),(31,'Anvilrage Officer','',233,1,0,6000,4000,100,100,'',2.6,689,760,'2;',''),(32,'Anvilrage Footman','',232,1,0,6900,50,100,100,'',2,375,462,'2;','');
+INSERT INTO `npcs` VALUES (1,'The Lurker Below','',240,1,0,10000,50,0,0,'',2.5,10,20,'1;',''),(2,'Diseased Young Wolf','',1,1,0,18,0,0,0,'',2,2,3,'1;',''),(3,'Diseased Timber Wolf','',1,1,0,18,0,0,0,'',2,2,3,'1;',''),(4,'Marshal McBride','',20,1,1,50,50,0,0,'',2,1,1,'0;','Hey, citizen! You look like a stout one. We guards are spread a little thin out here, and I could use your help...'),(5,'Eagan Peltskinner','',3,1,1,50,50,0,0,'',2,1,1,'0;',''),(6,'Deputy Willem','',18,1,1,50,50,0,0,'',2,1,1,'0;','Normally I\'d be out on the beat looking after the folk of Stormwind, but a lot of the Stormwind guards are fighting in the other lands. So here I am, deputized and offering bounties when I\'d rather be on patrol...'),(7,'Milly Osworth','',2,1,1,50,50,0,0,'',2,1,1,'0;',''),(8,'Kobold Vermin','',2,1,0,20,20,0,0,'',2,2,4,'1;',''),(9,'Kobold Worker','',3,1,0,60,20,0,0,'',2,5,7,'1;',''),(10,'Kobold Laborer','',5,1,0,100,20,0,0,'',2,9,11,'1;',''),(11,'Falkhaan Isenstrider','',10,1,1,50,50,0,0,'',2,1,1,'0;',''),(12,'Brother Neals','',50,1,1,50,50,0,0,'',2,1,1,'0;',''),(13,'Janos Hammerknuckle','',5,1,1,50,50,0,0,'Weaponsmith',2,1,1,'0;4;5;',''),(14,'Godric Rothgar','',5,1,1,50,50,0,0,'Armorer & Shieldcrafter',2,1,1,'0;4;5;',''),(15,'Brother Danil','',5,1,1,50,50,0,0,'General Supplies',2,1,1,'0;4;',''),(16,'Dermot Johns','',5,1,1,50,50,0,0,'Cloth & Leather Armor Merchant',2,1,1,'0;4;5;',''),(17,'Marshal Dughan','',1,1,0,50,50,100,0,'',2,1,1,'0;','Ach, it\'s hard enough keeping order around here without all these new troubles popping up! I hope you have good news...'),(18,'Garrick Padfoot','',5,1,0,50,50,100,0,'',2,12,14,'2;',''),(19,'Innkeeper Farley','',30,1,0,50,50,100,0,'',2,1,1,'0;','Welcome to my Inn, weary traveler. What can I do for you?'),(20,'Brother Paxton','',5,1,0,50,50,100,0,'',2,1,1,'0;',''),(21,'Brother Sammuel','',5,1,0,50,50,100,0,'',2,1,1,'0;',''),(22,'Defias Thug','',4,1,0,100,50,100,0,'',2,9,11,'2;',''),(23,'Defias Thug','',3,2,0,60,50,100,0,'',2,6,8,'2;',''),(24,'Anvilrage Overseer','',229,1,0,6500,50,100,100,'',1.26,269,346,'2;',''),(25,'Blazing Fireguard','',233,1,0,5900,3900,100,100,'',1.22,198,256,'2;',''),(26,'Shadowmage Vivian Lagrave','',238,2,0,4484,2289,100,100,'',2,106,136,'0;',''),(27,'Jalinda Sprig','',237,2,0,4356,5340,100,100,'',2,102,131,'0;',''),(28,'Lord Incendius','',235,1,0,15000,50,100,100,'',1.2,449,533,'2;',''),(29,'Anvilrage Soldier','',233,1,0,7300,50,100,100,'',3.2,1000,1100,'2;',''),(30,'Anvilrage Medic','',232,1,0,5000,9000,100,100,'',2.6,441,534,'2;',''),(31,'Anvilrage Officer','',233,1,0,6000,4000,100,100,'',2.6,689,760,'2;',''),(32,'Anvilrage Footman','',232,1,0,6900,50,100,100,'',2,375,462,'2;','');
 /*!40000 ALTER TABLE `npcs` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -398,7 +374,7 @@ CREATE TABLE `player_cooldowns` (
 
 LOCK TABLES `player_cooldowns` WRITE;
 /*!40000 ALTER TABLE `player_cooldowns` DISABLE KEYS */;
-INSERT INTO `player_cooldowns` VALUES ('Boris',1,1536388417.89);
+INSERT INTO `player_cooldowns` VALUES ('Boris',9,1536436287.86);
 /*!40000 ALTER TABLE `player_cooldowns` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -424,7 +400,7 @@ CREATE TABLE `player_inventory` (
 
 LOCK TABLES `player_inventory` WRITE;
 /*!40000 ALTER TABLE `player_inventory` DISABLE KEYS */;
-INSERT INTO `player_inventory` VALUES ('Tash',4,1,0),('Tash',5,1,0),('Tash',6,1,0),('Tash',3,1,0),('Tash',19,1,1),('Tash',19,1,1),('Tash',19,1,1),('Tash',19,1,1),('Tash',19,1,1),('Maikeru',12,1,0),('Maikeru',27,1,0),('Maikeru',11,1,0),('Maikeru',13,1,0),('Maikeru',14,1,0),('Maikeru',19,1,1),('Maikeru',19,1,1),('Maikeru',19,1,1),('Maikeru',19,1,1),('Maikeru',19,1,1),('Maikeru',19,1,1),('Maikeru',19,1,1),('Maikeru',19,1,1),('Maikeru',19,1,1),('Maikeru',18,1,1),('Maikeru',18,1,1),('Maikeru',18,1,1),('Maikeru',18,1,1),('Maikeru',18,1,1),('Maikeru',18,1,1),('Maikeru',18,1,1),('Maikeru',18,1,1),('Maikeru',18,1,1),('Maikeru',18,1,1),('Maikeru',21,1,1),('Bob',4,1,0),('Bob',5,1,0),('Bob',6,1,0),('Bob',3,1,0),('Bob',21,8,1),('Bob',20,2,1),('Bob',22,3,1),('Bobo',2,1,0),('Bobo',12,1,0),('Bobo',11,1,0),('Bobo',13,1,0),('Bobo',14,1,0),('Bobo',10,1,1),('Bobo',3,1,1),('Bobo',20,11,1),('Bobo',18,11,1),('Bobo',19,10,1),('Tanktest',2,1,0),('Tanktest',4,1,0),('Tanktest',5,1,0),('Tanktest',6,1,0),('Tanktest',1,1,0),('Tanktest',3,1,0),('Tanktest',10,2,1),('Tanktest',3,2,1),('Tanktest',18,12,1),('Tanktest',20,7,1),('Tanktest',1,1,1),('Tanktest',2,1,1),('Dpstest',8,1,0),('Dpstest',9,1,0),('Dpstest',7,1,0),('Dpstest',10,1,0),('Dpstest',18,10,1),('Dpstest',19,10,1),('Castertest',17,1,0),('Castertest',15,1,0),('Castertest',16,1,0),('Castertest',10,1,0),('Castertest',31,1,1),('Castertest',1,3,1),('Castertest',18,10,1),('Castertest',19,10,1),('Castertest',20,2,1),('Castertest',2,1,1),('Momo',4,1,0),('Momo',5,1,0),('Momo',6,1,0),('Momo',3,1,0),('Momo',18,10,1),('Momo',19,10,1),('Boris',2,1,0),('Boris',1,1,0),('Boris',1,1,0),('Boris',3,1,0),('Boris',30,3,1),('Boris',20,1,1),('Boris',18,5,1);
+INSERT INTO `player_inventory` VALUES ('Tash',4,1,0),('Tash',5,1,0),('Tash',6,1,0),('Tash',3,1,0),('Tash',19,1,1),('Tash',19,1,1),('Tash',19,1,1),('Tash',19,1,1),('Tash',19,1,1),('Maikeru',12,1,0),('Maikeru',27,1,0),('Maikeru',11,1,0),('Maikeru',13,1,0),('Maikeru',14,1,0),('Maikeru',19,1,1),('Maikeru',19,1,1),('Maikeru',19,1,1),('Maikeru',19,1,1),('Maikeru',19,1,1),('Maikeru',19,1,1),('Maikeru',19,1,1),('Maikeru',19,1,1),('Maikeru',19,1,1),('Maikeru',18,1,1),('Maikeru',18,1,1),('Maikeru',18,1,1),('Maikeru',18,1,1),('Maikeru',18,1,1),('Maikeru',18,1,1),('Maikeru',18,1,1),('Maikeru',18,1,1),('Maikeru',18,1,1),('Maikeru',18,1,1),('Maikeru',21,1,1),('Bob',4,1,0),('Bob',5,1,0),('Bob',6,1,0),('Bob',3,1,0),('Bob',21,8,1),('Bob',20,2,1),('Bob',22,3,1),('Bobo',2,1,0),('Bobo',12,1,0),('Bobo',11,1,0),('Bobo',13,1,0),('Bobo',14,1,0),('Bobo',10,1,1),('Bobo',3,1,1),('Bobo',20,11,1),('Bobo',18,11,1),('Bobo',19,10,1),('Tanktest',2,1,0),('Tanktest',4,1,0),('Tanktest',5,1,0),('Tanktest',6,1,0),('Tanktest',1,1,0),('Tanktest',3,1,0),('Tanktest',10,2,1),('Tanktest',3,2,1),('Tanktest',18,12,1),('Tanktest',20,7,1),('Tanktest',1,1,1),('Tanktest',2,1,1),('Dpstest',8,1,0),('Dpstest',9,1,0),('Dpstest',7,1,0),('Dpstest',10,1,0),('Dpstest',18,10,1),('Dpstest',19,10,1),('Castertest',17,1,0),('Castertest',15,1,0),('Castertest',16,1,0),('Castertest',10,1,0),('Castertest',31,1,1),('Castertest',1,3,1),('Castertest',18,10,1),('Castertest',19,10,1),('Castertest',20,2,1),('Castertest',2,1,1),('Momo',4,1,0),('Momo',5,1,0),('Momo',6,1,0),('Momo',3,1,0),('Momo',18,10,1),('Momo',19,10,1),('Boris',2,1,0),('Boris',1,1,0),('Boris',1,1,0),('Boris',3,1,0),('Boris',18,4,1),('Boris',20,1,1),('Boris',30,3,1);
 /*!40000 ALTER TABLE `player_inventory` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -501,7 +477,7 @@ CREATE TABLE `players` (
 
 LOCK TABLES `players` WRITE;
 /*!40000 ALTER TABLE `players` DISABLE KEYS */;
-INSERT INTO `players` VALUES ('Bob','\r\Z',0,'',61309521,35,240,1,0,139,512,118,446,269,102,4460,2690,4,0,0,0,1758),('Bobo','\r\Z',0,'',1245,20,2,1,0,5,5,5,5,5,5,50,50,2,2,0,0,6),('Boris','\r\Z',10,'',61309521,123,240,1,7,251,261,490,729,285,261,7290,2850,2,2,0,0,3815),('Castertest','\r\Z',0,'',61309521,126,240,1,4,5,363,5,363,365,363,3630,3650,3,2,0,0,0),('Dpstest','\r\Z',0,'',61309521,20,240,1,6,5,5,5,209,202,5,2090,2020,2,2,0,0,1033),('Maikeru','\0W',0,'',1356,121,2,1,0,5,5,5,11,5,5,0,50,4,2,1532997372,92,0),('Momo','\r\Z',0,'',300,33,1,1,0,5,5,5,5,5,5,50,50,1,2,0,0,0),('Tanktest','\r\Z',0,'',61309521,126,240,1,7,291,5,489,669,5,5,6466,50,2,2,0,0,72),('Tash','FCU',0,'',1451,3,2,1,2,5,5,5,5,5,0,50,100,1,2,0,0,6);
+INSERT INTO `players` VALUES ('Bob','\r\Z',0,'',61309521,35,240,1,0,139,512,118,446,269,102,4460,2690,4,0,0,0,1758),('Bobo','\r\Z',0,'',1245,20,2,1,0,5,5,5,5,5,5,50,50,2,2,0,0,6),('Boris','\r\Z',10,'',61309521,127,240,1,7,251,261,490,729,285,261,3805,2850,2,2,0,0,3815),('Castertest','\r\Z',0,'',61309521,126,240,1,4,5,363,5,363,365,363,3630,3650,3,2,0,0,0),('Dpstest','\r\Z',0,'',61309521,20,240,1,6,5,5,5,209,202,5,2090,2020,2,2,0,0,1033),('Maikeru','\0W',0,'',1356,121,2,1,0,5,5,5,11,5,5,0,50,4,2,1532997372,92,0),('Momo','\r\Z',0,'',300,33,1,1,0,5,5,5,5,5,5,50,50,1,2,0,0,0),('Tanktest','\r\Z',0,'',61309521,126,240,1,7,291,5,489,669,5,5,6466,50,2,2,0,0,72),('Tash','FCU',0,'',1451,3,2,1,2,5,5,5,5,5,0,50,100,1,2,0,0,6);
 /*!40000 ALTER TABLE `players` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -713,7 +689,7 @@ CREATE TABLE `triggers` (
 
 LOCK TABLES `triggers` WRITE;
 /*!40000 ALTER TABLE `triggers` DISABLE KEYS */;
-INSERT INTO `triggers` VALUES (1,1,1,6,'10','function npc_1_trigger_1(ch)\n\r  ch:Cast(\"11\")\n\rend\n\r','npc_1_trigger_1');
+INSERT INTO `triggers` VALUES (1,1,1,6,'10','function npc_1_trigger_1(ch)\n\r  ch:Cast(\"11\")\n\rblahblahblah\n\rend\n\r','npc_1_trigger_1');
 /*!40000 ALTER TABLE `triggers` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -726,4 +702,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-09-07 23:18:30
+-- Dump completed on 2018-09-08 15:04:41

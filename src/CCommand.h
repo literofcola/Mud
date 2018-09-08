@@ -6,12 +6,11 @@
 class Server;
 class Player;
 
-//Structure for a command in the command lookup table.
+//Structure for a command in the command lookup table. Do not change variable order!
 class Command
 {
 public:
 	std::string name;
-    //void (*cmd_func)(Server_ptr server, User *user, std::string argument);
     void (*cmd_func)(Player * ch, std::string argument);
     int	level = 0;
     int isMovement = 0;

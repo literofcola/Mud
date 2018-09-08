@@ -32,8 +32,8 @@ class Command cmd_table[] =
 	{ "down",		cmd_down,		1, 1, 0, 1, Player::POSITION_STANDING },
 	{ "northeast",	cmd_northeast,	1, 1, 0, 1, Player::POSITION_STANDING },
 	{ "southeast",  cmd_southeast,	1, 1, 0, 1, Player::POSITION_STANDING },
-	{ "southwest",  cmd_southwest,  1, 1, 0, 1 },
-	{ "northwest",  cmd_northwest,  1, 1, 0, 1 },
+	{ "southwest",  cmd_southwest,  1, 1, 0, 1, Player::POSITION_STANDING },
+	{ "northwest",  cmd_northwest,  1, 1, 0, 1, Player::POSITION_STANDING },
 
 	//Common other commands.
 	//Placed here so one and two letter abbreviations work.
@@ -311,7 +311,6 @@ const class Command npcEditCmd_table[] =
     { "damage_low",  npcEditCmd_damageLow, 0, 0, 1, 1 },
     { "damage_high", npcEditCmd_damageHigh, 0, 0, 1, 1 },
 	{ "speechtext", npcEditCmd_speechText, 0, 0, 1, 1 },
-    { "skill",      npcEditCmd_skill, 0, 0, 1, 1 },
     { "trigger",    npcEditCmd_trigger, 0, 0, 1, 1 },
     { "",			0, 0, 0, 1, 1 }
 };

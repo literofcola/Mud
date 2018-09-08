@@ -9,7 +9,7 @@ class Exit
 {
 public:
 
-    Exit();
+    Exit() = delete;
     Exit(Room * from_, Room * to_, int dir);
     ~Exit();
 

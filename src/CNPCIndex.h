@@ -60,8 +60,6 @@ public:
 
 	std::map<int, Trigger> triggers;
 
-	std::map<std::string, Skill *> knownSkills;
-	
 	bool changed;
 	bool remove;
 
@@ -74,13 +72,6 @@ public:
 	void AddTrigger(Trigger & trig);
 	Trigger * GetTrigger(int id, int type = -1);
 	bool FlagIsSet(const int flag);
-
-	bool HasSkill(Skill * sk);
-	bool HasSkillByName(std::string name);
-	void AddSkill(Skill * newskill);
-	void RemoveSkill(Skill * sk);
-	void RemoveSkill(std::string name);
-	Skill * GetSkillShortName(std::string name);
 };
 
 #endif

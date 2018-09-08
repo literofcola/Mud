@@ -622,14 +622,7 @@ void Game::WorldUpdate(Server * server)
                 catch(const std::exception & e)
 			    {
 				    LogFile::Log("error", e.what());
-				    //const char * logstring = lua_tolstring(Server::luaState, -1, nullptr);
-				    /*if(logstring != nullptr)
-					    LogFile::Log("error", logstring);*/
 			    }
-                catch(...)
-	            {
-		            LogFile::Log("error", "call_function unhandled exception ENTER_PC ENTER_NPC");
-	            }
             }
 			//check npc aggro
 			if (currChar->IsNPC() && currChar->room && !currChar->InCombat() && currChar->FlagIsSet(NPCIndex::FLAG_AGGRESSIVE))
@@ -822,20 +815,20 @@ void Game::WorldUpdate(Server * server)
                     sa->ticksRemaining--;
                     try
                     {
-						Server::lua[func.c_str()](sa->caster, currChar, sa);
-                        //luabind::call_function<void>(Server::luaState, func.c_str(), sa->caster, curr, sa);
+						sol::function lua_tick_func = Server::lua[func.c_str()];
+						sol::protected_function_result result = lua_tick_func(sa->caster, currChar, sa);
+						if (!result.valid())
+						{
+							// Call failed
+							sol::error err = result;
+							std::string what = err.what();
+							LogFile::Log("error", "_tick call failed, sol::error::what() is: " + what);
+						}
                     }
                     catch(const std::exception & e)
 			        {
 				        LogFile::Log("error", e.what());
-				        /*const char * logstring = lua_tolstring(Server::luaState, -1, nullptr);
-				        if(logstring != nullptr)
-					        LogFile::Log("error", logstring);*/
 			        }
-                    catch(...)
-	                {
-		                LogFile::Log("error", "call_function unhandled exception _tick");
-	                }
                     
                     //Reset the loop, who knows what happened to our debuffs during the tick
                     buffiter = currChar->buffs.begin();
@@ -849,22 +842,22 @@ void Game::WorldUpdate(Server * server)
                     {
                         sa->caster = GetPlayerByName(sa->casterName);
                     }
-                    try
-                    {
-						Server::lua[func.c_str()](sa->caster, currChar, sa);
-                        //luabind::call_function<void>(Server::luaState, func.c_str(), sa->caster, curr, sa);
-                    }
-                    catch(const std::exception & e)
-			        {
-				        LogFile::Log("error", e.what());
-				        /*const char * logstring = lua_tolstring(Server::luaState, -1, nullptr);
-				        if(logstring != nullptr)
-					        LogFile::Log("error", logstring);*/
-			        }
-                    catch(...)
-	                {
-		                LogFile::Log("error", "call_function unhandled exception _remove");
-	                }
+					try
+					{
+						sol::function lua_remove_func = Server::lua[func.c_str()];
+						sol::protected_function_result result = lua_remove_func(sa->caster, currChar, sa);
+						if (!result.valid())
+						{
+							// Call failed
+							sol::error err = result;
+							std::string what = err.what();
+							LogFile::Log("error", "_remove call failed, sol::error::what() is: " + what);
+						}
+					}
+					catch (const std::exception & e)
+					{
+						LogFile::Log("error", e.what());
+					}
                     //Reset the loop, who knows what happened to our buffs during the remove
                     sa->remove_me = true;
                     buffiter = currChar->buffs.begin();
@@ -904,22 +897,22 @@ void Game::WorldUpdate(Server * server)
                     {
                         sa->caster = GetPlayerByName(sa->casterName);
                     }
-                    try
-                    {
-						Server::lua[func.c_str()](sa->caster, currChar, sa);
-                        //luabind::call_function<void>(Server::luaState, func.c_str(), sa->caster, curr, sa);
-                    }
-                    catch(const std::exception & e)
-			        {
-				        LogFile::Log("error", e.what());
-				        /*const char * logstring = lua_tolstring(Server::luaState, -1, nullptr);
-				        if(logstring != nullptr)
-					        LogFile::Log("error", logstring);*/
-			        }
-                    catch(...)
-	                {
-		                LogFile::Log("error", "call_function unhandled exception _tick");
-	                }
+					try
+					{
+						sol::function lua_tick_func = Server::lua[func.c_str()];
+						sol::protected_function_result result = lua_tick_func(sa->caster, currChar, sa);
+						if (!result.valid())
+						{
+							// Call failed
+							sol::error err = result;
+							std::string what = err.what();
+							LogFile::Log("error", "_tick call failed, sol::error::what() is: " + what);
+						}
+					}
+					catch (const std::exception & e)
+					{
+						LogFile::Log("error", e.what());
+					}
                     
                     //Reset the loop, who knows what happened to our debuffs during the tick
                     debuffiter = currChar->debuffs.begin();
@@ -933,22 +926,22 @@ void Game::WorldUpdate(Server * server)
                     {
                         sa->caster = GetPlayerByName(sa->casterName);
                     }
-                    try
-                    {
-						Server::lua[func.c_str()](sa->caster, currChar, sa);
-                        //luabind::call_function<void>(Server::luaState, func.c_str(), sa->caster, curr, sa);
-                    }
-                    catch(const std::exception & e)
-			        {
-				        LogFile::Log("error", e.what());
-				        /*const char * logstring = lua_tolstring(Server::luaState, -1, nullptr);
-				        if(logstring != nullptr)
-					        LogFile::Log("error", logstring);*/
-			        }
-                    catch(...)
-	                {
-		                LogFile::Log("error", "call_function unhandled exception _remove");
-	                }
+					try
+					{
+						sol::function lua_remove_func = Server::lua[func.c_str()];
+						sol::protected_function_result result = lua_remove_func(sa->caster, currChar, sa);
+						if (!result.valid())
+						{
+							// Call failed
+							sol::error err = result;
+							std::string what = err.what();
+							LogFile::Log("error", "_remove call failed, sol::error::what() is: " + what);
+						}
+					}
+					catch (const std::exception & e)
+					{
+						LogFile::Log("error", e.what());
+					}
                     //Reset the loop, who knows what happened to our debuffs during the remove
                     sa->remove_me = true;
                     debuffiter = currChar->debuffs.begin();
@@ -1300,7 +1293,7 @@ void Game::LoginHandler(Server * server, User * user, string argument)
 		{
 			if (!Utilities::str_cmp(arg1, "y"))
 			{
-				user->character->AddClass(user->character->currentClass->id, 1);
+				user->character->AddClass(user->character->currentClass->GetID(), 1);
 				user->character->AddClassSkills();
 				//function-ize the default items (or parse it into a container upon loading...)
 				string classitems = user->character->currentClass->items;
@@ -1861,11 +1854,11 @@ void Game::LoadClasses(Server * server)
 	if (classres.empty())
 	{
 		LogFile::Log("error", "Warning! No classes loaded from database. Creating default class \"warrior\".");
-		Class * c = new Class();
-		c->id = 1;
+		Class * c = new Class(1);
+		//c->id = 1;
 		c->name = "warrior";
 		c->color = "|M";
-		classes[c->id] = c;
+		classes[c->GetID()] = c;
 		return;
 	}
 
@@ -1874,8 +1867,8 @@ void Game::LoadClasses(Server * server)
     for(iter = classres.begin(); iter != classres.end(); ++iter)
     {
         row = *iter;
-        Class * c = new Class();
-        c->id = row["id"];
+        Class * c = new Class(row["id"]);
+        //c->id = row["id"];
         c->name = (string)row["name"];
         c->color = (string)row["color"];
         c->items = row["items"];
@@ -1894,7 +1887,7 @@ void Game::LoadClasses(Server * server)
 			first = last + 1;
 		}
 
-		StoreQueryResult skillsres = server->sqlQueue->Read("SELECT * from class_skills where class=" + Utilities::itos(c->id));
+		StoreQueryResult skillsres = server->sqlQueue->Read("SELECT * from class_skills where class=" + Utilities::itos(c->GetID()));
 		StoreQueryResult::iterator j;
 		for (j = skillsres.begin(); j != skillsres.end(); j++)
 		{
@@ -1909,7 +1902,7 @@ void Game::LoadClasses(Server * server)
 			skd.level = row["level"];
 			c->classSkills.push_back(skd);
 		}
-        classes[c->id] = c;
+        classes[c->GetID()] = c;
     }
 }
 
@@ -2062,19 +2055,8 @@ void Game::LoadNPCS(Server * server)
 			first = last + 1;
 		}
 
-		StoreQueryResult::iterator j;
-		StoreQueryResult npcskillres = server->sqlQueue->Read("select * from npc_skills where npc=" + Utilities::itos(loaded->id));
-		for (j = npcskillres.begin(); j != npcskillres.end(); j++)
-		{
-			row = *j;
-			int skillid = row["skill"];
-			Skill * newskill = Game::GetGame()->GetSkill(skillid);
-			if (newskill != nullptr)
-				loaded->knownSkills[newskill->name] = newskill;
-		}
-
 		StoreQueryResult npcdropsres = server->sqlQueue->Read("select * from npc_drops where npc=" + Utilities::itos(loaded->id));
-		for (j = npcdropsres.begin(); j != npcdropsres.end(); j++)
+		for (auto j = npcdropsres.begin(); j != npcdropsres.end(); j++)
 		{
 			row = *j;
 			string drops = (string)row["items"];

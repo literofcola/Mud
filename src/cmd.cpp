@@ -379,7 +379,7 @@ void cmd_score(Player * ch, std::string argument)
     ch->Send("Player information for " + ch->GetName() + ":\n\r");
     ch->Send("Level: " + Utilities::itos(ch->GetLevel()) + "\n\r");
     ch->Send("Class: " + ch->currentClass->name + "\n\r");
-    ch->Send("Class Level: " + Utilities::itos(ch->GetClassLevel(ch->currentClass->id)) + "\n\r");
+    ch->Send("Class Level: " + Utilities::itos(ch->GetClassLevel(ch->currentClass->GetID())) + "\n\r");
     ch->Send("Class History: ");
 
     bool found = false;
@@ -631,7 +631,7 @@ void cmd_who(Player * ch, std::string argument)
 					for (classiter = Game::GetGame()->classes.begin(); classiter != Game::GetGame()->classes.end(); classiter++)
 					{
 						myclass = (*classiter).second;
-						sstr << "|B[" << myclass->color << myclass->name << " " << std::right << std::setw(3) << Utilities::itos(wplayer->GetClassLevel(myclass->id)) << "|B]";
+						sstr << "|B[" << myclass->color << myclass->name << " " << std::right << std::setw(3) << Utilities::itos(wplayer->GetClassLevel(myclass->GetID())) << "|B]";
 					}
 				}
 				sstr << "|X\n\r";
@@ -1100,7 +1100,7 @@ void cmd_class(Player * ch, std::string argument)
     if(!Utilities::str_cmp(arg1, "info"))
     {
         ch->Send("Current class: [" + currentClass->name + " " 
-                   + Utilities::itos(ch->GetClassLevel(currentClass->id)) + "]\n\r");
+                   + Utilities::itos(ch->GetClassLevel(currentClass->GetID())) + "]\n\r");
         ch->Send("Class history: ");
         bool found = false;
         std::list<Player::ClassData>::iterator iter;

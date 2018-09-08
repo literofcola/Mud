@@ -741,19 +741,19 @@ void cmd_eat(Player * ch, string argument)
 		try
 		{
 			sol::function lua_cast_func = Server::lua[func.c_str()];
-			lua_cast_func(ch, ch, sk);
+			sol::protected_function_result result = lua_cast_func(ch, ch, sk);
+			if (!result.valid())
+			{
+				// Call failed
+				sol::error err = result;
+				std::string what = err.what();
+				LogFile::Log("error", "cmd_eat _cast call failed, sol::error::what() is: " + what);
+			}
+
 		}
-		catch (const sol::error& e)
+		catch (const std::exception & e)
 		{
 			LogFile::Log("error", e.what());
-		}
-		catch (const std::exception& e)
-		{
-			LogFile::Log("error", e.what());
-		}
-		catch (...)
-		{
-			LogFile::Log("error", "lua unhandled exception cmd_eat _cast");
 		}
 	}
 }

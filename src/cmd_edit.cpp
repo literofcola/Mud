@@ -1510,14 +1510,6 @@ void npcEditCmd_show(Player * ch, std::string argument)
     }
     ch->Send("\n\r");
 
-    ch->Send("Skills:\n\r");
-    std::map<std::string, Skill *>::iterator iter;
-    for(iter = pChar->knownSkills.begin(); iter != pChar->knownSkills.end(); ++iter)
-    {
-        ch->Send("Spell: " + (*iter).second->long_name + " Name: " + (*iter).second->name 
-            + " Cast time: " + Utilities::dtos((*iter).second->castTime, 2) + " Cooldown: " + Utilities::dtos((*iter).second->cooldown, 2) + "\n\r");
-    }
-
     //Triggers
     if(!pChar->triggers.empty())
         ch->Send("Triggers:\n\r");
@@ -1526,6 +1518,7 @@ void npcEditCmd_show(Player * ch, std::string argument)
         Trigger * t = &((*iter).second);
         ch->Send(Utilities::itos(t->id) + ". Type: " + Utilities::itos(t->GetType()) + " Argument: " + t->GetArgument() + 
                   " Function name: " + t->GetFunction() + "\n\r");
+		ch->Send("Script: " + t->GetScript() + "\n\r");
     }
 }
 
@@ -1890,50 +1883,6 @@ void npcEditCmd_speechText(Player * ch, std::string argument)
 	pChar->speechText = argument;
 	pChar->changed = true;
 	ch->Send("speechText set.\n\r");
-}
-
-void npcEditCmd_skill(Player * ch, std::string argument)
-{
-	NPCIndex * pChar = (NPCIndex *)ch->editData;
-    std::string arg1;
-    std::string skill_name;
-    argument = Utilities::one_argument(argument, arg1);
-    argument = Utilities::one_argument(argument, skill_name);
-
-    if(!Utilities::str_cmp(arg1, "add") && !skill_name.empty())
-    {
-        std::map<int, Skill*>::iterator skilliter; //ALL the skills :(
-        for(skilliter = Game::GetGame()->skills.begin(); skilliter != Game::GetGame()->skills.end(); ++skilliter)
-        {
-            if(!Utilities::str_cmp((*skilliter).second->long_name, skill_name))
-            {
-                Skill * dupe;
-                if((dupe = pChar->GetSkillShortName((*skilliter).second->name)) != nullptr)
-                {
-                    ch->Send("NPC already has a skill with the same name.\n\r");
-                    return;
-                }
-                else
-                {
-                    pChar->AddSkill((*skilliter).second);
-                    ch->Send("Skill added: " + (*skilliter).second->long_name + "\n\r");
-                }
-                return;
-            }
-        }
-        ch->Send("Skill not found.\n\r");
-        return;
-    }
-    else if(!Utilities::str_cmp(arg1, "remove") && !skill_name.empty())
-    {
-        if(pChar->HasSkillByName(skill_name))
-        {
-            pChar->RemoveSkill(skill_name);
-        }
-        return;
-    }
-
-    ch->Send("skill add||remove <name>\n\r");
 }
 
 void npcEditCmd_trigger(Player * ch, std::string argument)
@@ -3046,7 +2995,7 @@ void classEditCmd_show(Player * ch, std::string argument)
 		return;
 
     ch->Send("Name:      [" + pClass->name + "]\n\r");
-    ch->Send("ID:        [" + Utilities::itos(pClass->id) + "]\n\r");
+    ch->Send("ID:        [" + Utilities::itos(pClass->GetID()) + "]\n\r");
     ch->Send("Color std::string: [|" + pClass->color + "]\n\r");
 
     ch->Send("Skills (Level, Skill ID, long_name):\n\r");

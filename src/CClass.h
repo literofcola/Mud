@@ -11,31 +11,17 @@ class Class
 {
 public:
 
-    Class();
+    Class() = delete;
+	Class(int id_);
     ~Class();
-
-    int id;
-    std::string name;
-    std::string color;
-    std::string items; //starting items
-	std::map<int, int> armor; //armor type and level gained //TYPE_ARMOR_CLOTH, TYPE_ARMOR_LEATHER, TYPE_ARMOR_MAIL, TYPE_ARMOR_PLATE
 
     struct SkillData
     {
         Skill * skill;
         int level;
     };
-    std::list<SkillData> classSkills;
 
-    bool changed;
-
-    void Save();
-	bool HasSkill(int id);
-	void AddSkill(int id, int level);
-	void RemoveSkill(int id);
-	int GetArmorLevel(int itemtype);
-
-	//Comparison functor
+	//SkillData Comparison functor
 	struct CompareClassSkillBySkillID
 	{
 		CompareClassSkillBySkillID(int val) : value(val) {}
@@ -44,7 +30,22 @@ public:
 		int value;
 	};
     
+	std::string name;
+	std::string color;
+	std::string items; //starting items
+	std::map<int, int> armor; //armor type and level gained //TYPE_ARMOR_CLOTH, TYPE_ARMOR_LEATHER, TYPE_ARMOR_MAIL, TYPE_ARMOR_PLATE
+	std::list<SkillData> classSkills;
+    bool changed;
+
+	int GetID() { return id; };
+    void Save();
+	bool HasSkill(int id);
+	void AddSkill(int id, int level);
+	void RemoveSkill(int id);
+	int GetArmorLevel(int armortype);
+
 private:
+	int id;
 };
     
 #endif

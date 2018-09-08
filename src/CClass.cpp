@@ -9,9 +9,9 @@
 
 using std::string;
 
-Class::Class()
+Class::Class(int id_)
 {
-    id = 0;
+    id = id_;
     name = "";
     color = "";
     items = "";
@@ -21,7 +21,7 @@ Class::Class()
 
 Class::~Class()
 {
-    classSkills.clear();
+
 }
 
 void Class::Save()
@@ -49,14 +49,6 @@ void Class::Save()
     changed = false;
 }
 
-/*
-struct SkillData
-{
-	Skill * skill;
-	int level;
-};
-std::list<SkillData> classSkills;
-*/
 bool Class::HasSkill(int id)
 {
 	auto result = std::find_if(classSkills.begin(), classSkills.end(), CompareClassSkillBySkillID(id));

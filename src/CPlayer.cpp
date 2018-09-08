@@ -204,7 +204,6 @@ bool Player::HasSkillByName(string name) //Not guaranteed to be the same skill i
 
 void Player::ResetMaxStats()
 {
-	//todo: check equipment bonuses
 	SetMaxHealth(stamina * Player::HEALTH_FROM_STAMINA);
 	SetMaxMana(wisdom * Player::MANA_FROM_WISDOM);
 	//todo: these might be higher based on skills or talents?
@@ -1392,7 +1391,7 @@ void Player::Save()
 		sql += Utilities::itos(agility) + "," + Utilities::itos(intellect) + "," + Utilities::itos(strength) + ",";
 		sql += Utilities::itos(stamina) + "," + Utilities::itos(wisdom) + "," + Utilities::itos(spirit) + ",";
 		sql += Utilities::itos(health) + "," + Utilities::itos(mana);
-		sql += "," + Utilities::itos(currentClass->id) + "," + Utilities::itos(recall) + ", ";
+		sql += "," + Utilities::itos(currentClass->GetID()) + "," + Utilities::itos(recall) + ", ";
 		if (IsGhost() || IsCorpse())
 		{
 			sql += Utilities::dtos(deathTime, 0) + "," + Utilities::itos(corpse_room) + ",";
@@ -1575,8 +1574,8 @@ void Player::SetLevel(int newlevel)
 	Send("|W***You have reached level " + Utilities::itos(newlevel) + "!***|X\n\r");
 
 
-		SetClassLevel(currentClass->id,
-			Utilities::MAX(0, GetClassLevel(currentClass->id) + (newlevel - level)));
+		SetClassLevel(currentClass->GetID(),
+			Utilities::MAX(0, GetClassLevel(currentClass->GetID()) + (newlevel - level)));
 
 		statPoints += Player::STATS_PER_LEVEL;
 		Send("|WYou gain " + Utilities::itos(Player::STATS_PER_LEVEL) + " attribute points. Assign attribute points with the \"train\" command.|X\n\r");
@@ -1584,7 +1583,7 @@ void Player::SetLevel(int newlevel)
 		std::list<Class::SkillData>::iterator newskills;
 		for (newskills = currentClass->classSkills.begin(); newskills != currentClass->classSkills.end(); newskills++)
 		{
-			if (newskills->level == GetClassLevel(currentClass->id) && !HasSkill(newskills->skill)) //Found a new skill to add
+			if (newskills->level == GetClassLevel(currentClass->GetID()) && !HasSkill(newskills->skill)) //Found a new skill to add
 			{
 				AddSkill(newskills->skill);
 				Send("|WYou have learned the skill \"" + newskills->skill->long_name + "\"|X\n\r");

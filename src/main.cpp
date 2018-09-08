@@ -57,10 +57,16 @@ int main(int argc, char * argv[])
     if(!theserver->sqlQueue->Connect("mud", "localhost", "root"))
     {
         LogFile::Log("error", "main; Could not connect to mySQL server 'mud'");
-        LogFile::CloseAll();
-        //lua_close(theserver->luaState);
+		theserver->DeInitialize();
+		if (theserver->sqlQueue != nullptr)
+		{
+			theserver->sqlQueue->Close();
+			theserver->sqlQueue->Disconnect();
+			delete theserver->sqlQueue;
+		}
 		delete thegame;
 		delete theserver;
+		LogFile::CloseAll();
         return 0;
     }
 
