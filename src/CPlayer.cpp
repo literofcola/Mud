@@ -769,7 +769,7 @@ void Player::QuestCompleteObjective(int type, void * obj)
                     {
                         Item * founditem = (Item*)obj;
                         Item * questitem = (Item*)((*objiter).objective);
-                        if(founditem && questitem && founditem->id == questitem->id)
+                        if(founditem && questitem && founditem->GetID() == questitem->GetID())
                         {
                             questObjectives[i][j]++;
                             user->Send("|W" + q->name + ": ");
@@ -833,7 +833,7 @@ bool Player::ShouldDropQuestItem(Item * founditem)
 			if (questObjectives[i][j] < (*objiter).count && (*objiter).type == Quest::OBJECTIVE_ITEM)
 			{
 				Item * questitem = (Item*)((*objiter).objective);
-				if (founditem && questitem && founditem->id == questitem->id)
+				if (founditem && questitem && founditem->GetID() == questitem->GetID())
 				{
 					return true;
 				}
@@ -884,7 +884,7 @@ bool Player::AddItemInventory(Item * item)
 	QuestCompleteObjective(Quest::OBJECTIVE_ITEM, (void*)item);
 	for (auto iter = inventory.begin(); iter != inventory.end(); iter++)
 	{
-		if (iter->first->id == item->id)
+		if (iter->first->GetID() == item->GetID())
 		{
 			iter->second++;
 			return true;
@@ -899,7 +899,7 @@ Item * Player::GetItemInventory(int id)
 {
     for(auto iter = inventory.begin(); iter != inventory.end(); ++iter)
     {
-        if(iter->first->id == id)
+        if(iter->first->GetID() == id)
         {
 			return iter->first;
         }
@@ -913,7 +913,7 @@ Item * Player::GetItemInventory(string name)
     int ctr = 1;
     for(auto iter = inventory.begin(); iter != inventory.end(); ++iter)
     {
-        if(Utilities::IsName(name, iter->first->name))
+        if(Utilities::IsName(name, iter->first->GetName()))
         {
             if(ctr == numberarg)
                 return iter->first;
@@ -927,7 +927,7 @@ Item * Player::RemoveItemInventory(int id)
 {
     for(auto iter = inventory.begin(); iter != inventory.end(); ++iter)
     {
-        if(iter->first->id == id)
+        if(iter->first->GetID() == id)
         {
 			Item * ret = iter->first;
 			iter->second--;
@@ -948,7 +948,7 @@ Item * Player::RemoveItemInventory(string name)
     int ctr = 1;
     for(auto iter = inventory.begin(); iter != inventory.end(); ++iter)
     {
-        if(Utilities::IsName(name, iter->first->name))
+        if(Utilities::IsName(name, iter->first->GetName()))
         {
             if(ctr == numberarg)
             {
@@ -989,7 +989,7 @@ int Player::GetEquippedItemIndex(string name)
 {
     for(int i = 0; i < Player::EQUIP_LAST; i++)
     {
-        if(equipped[i] && Utilities::IsName(name, equipped[i]->name))
+        if(equipped[i] && Utilities::IsName(name, equipped[i]->GetName()))
         {
             //return equipped[i];
             return i;
@@ -1002,7 +1002,7 @@ Item * Player::GetItemEquipped(string name)
 {
     for(int i = 0; i < Player::EQUIP_LAST; i++)
     {
-        if(equipped[i] && Utilities::IsName(name, equipped[i]->name))
+        if(equipped[i] && Utilities::IsName(name, equipped[i]->GetName()))
         {
             return equipped[i];
         }
@@ -1442,14 +1442,14 @@ void Player::Save()
 			if (equipped[i] != nullptr)
 			{
 				string equippedsql = "INSERT INTO player_inventory (player, item, count, location) values ('" + name + "',";
-				equippedsql += Utilities::itos(equipped[i]->id) + ",1," + Utilities::itos(DB_INVENTORY_EQUIPPED) + ")";
+				equippedsql += Utilities::itos(equipped[i]->GetID()) + ",1," + Utilities::itos(DB_INVENTORY_EQUIPPED) + ")";
 				Server::sqlQueue->Write(equippedsql);
 			}
 		}
 		for (auto inviter = inventory.begin(); inviter != inventory.end(); ++inviter)
 		{
 			string equippedsql = "INSERT INTO player_inventory (player, item, count, location) values ('" + name + "',";
-			equippedsql += Utilities::itos(inviter->first->id) + "," + Utilities::itos(inviter->second) + "," + Utilities::itos(DB_INVENTORY_INVENTORY) + ")";
+			equippedsql += Utilities::itos(inviter->first->GetID()) + "," + Utilities::itos(inviter->second) + "," + Utilities::itos(DB_INVENTORY_INVENTORY) + ")";
 			Server::sqlQueue->Write(equippedsql);
 		}
 
@@ -1833,7 +1833,8 @@ void Player::MakeCorpse()
 	Item * thecorpse = new Item("The corpse of " + GetName(), 0);
 	thecorpse->keywords = "corpse " + GetName();
 	Utilities::FlagSet(thecorpse->flags, Item::FLAG_ROOMONLY);
-	room->AddItem(thecorpse);
+	//room->AddItem(thecorpse); //cant use this function since it assumes a valid ID and does item stacking!!
+	room->items.push_back(std::make_pair(thecorpse, 1)); //need new room function AddCorpseItem??
 }
 
 void Player::RemoveCorpse()
@@ -1850,7 +1851,9 @@ void Player::RemoveCorpse()
 	{
 		if (itemiter->first->keywords.find(GetName()) != std::string::npos)
 		{
-			corpseroom->RemoveItem(itemiter->first);
+			//corpseroom->RemoveItem(itemiter->first); //cant use this function since it assumes a valid ID and does item stacking!!
+			delete itemiter->first;
+			corpseroom->items.erase(itemiter);
 
 			if (room && room == corpseroom)
 			{

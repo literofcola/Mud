@@ -59,40 +59,38 @@ public:
 		int level;
 	};
 
+	//DATA
+	//Stats
 	int agility;	//crit chance and avoidance
 	int intellect;  //spell power
 	int strength;	//attack power
 	int stamina;	//health
 	int wisdom;		//mana
 	int spirit;		//mana regen
-	
-	std::string password;
-	std::string pwtemp;
-	User * user;
-	EditState editState;
-	void * editData;
-	int race; //index into Character::race_table
-	Group * group;
-	int position;				//standing, sitting... only used for eating/drinking right now? (flying?)
-	double globalCooldown;
-	int death_timer;
-	int death_timer_runback;
-	int graveyard_room; //graveyard room ID copied from the area death_room. prevent graveyard hopping to other areas
-	int corpse_room; //room our corpse is in
 	int statPoints;
-	int recall; //ID of recall room
-	//double hoursPlayed;
-	bool prompt;
-	std::map<std::string, std::string> alias;
-	int saved;
-	int experience;
-	std::string title;
 
 	//Combat
 	Character * comboPointTarget;
 	double lastAutoAttack_off;	//Time stamp for melee swing timer
 	//double lastAutoAttack_main; //moved to Character
 	double lastCombatAction; //Timestamp for pvp combat flag
+
+	//Movement
+	int position;	//standing, sitting... only used for eating/drinking right now? (flying?)
+	int recall; //ID of recall room
+
+	//Skills / Spell Affects
+	double globalCooldown;
+	std::map<std::string, Skill *> knownSkills;
+
+	//Death Handling
+	int death_timer;
+	int death_timer_runback;
+	int graveyard_room; //graveyard room ID copied from the area death_room. prevent graveyard hopping to other areas
+	int corpse_room; //room our corpse is in
+
+	//Group
+	Group * group;
 
 	//Inventory and equipment
 	std::vector<Item *> equipped;
@@ -108,33 +106,130 @@ public:
 	//Quest
 	std::set<int> completedQuests;
 	std::vector<Quest *> questLog;
-	
 	std::vector< std::vector<int> > questObjectives; //Maps to questLog[i]->objectives[j]
 
-	std::map<std::string, Skill *> knownSkills;
+	//Misc data
+	User * user;
+	EditState editState;
+	void * editData;
+	std::string password;
+	std::string pwtemp;
+	bool prompt;
+	std::map<std::string, std::string> alias;
+	int saved;
+	int race; //index into Character::race_table
+	int experience;
+	std::string title;
+	
+	//FUNCTIONS
+	//Stats
+	void ResetMaxStats();
+	void AddEquipmentStats(Item * add);
+	void RemoveEquipmentStats(Item * remove);
+	void SetExperience(int newexp);
+	void ApplyExperience(int amount);
 
-	inline bool IsNPC() override { return false; };
-	inline bool IsPlayer() override { return true; };
-	sol::object AsPlayer() override { return sol::make_object(Server::lua, this); };
+	//Combat
+	void SetComboPoints(int howmany);
+	void GenerateComboPoint(Character * target);
+	int SpendComboPoints(Character * target);
+	void ClearComboPointTarget();
+	int GetComboPoints() override { return comboPoints; };
+	bool HasComboPointTarget() override { return (comboPointTarget != nullptr); };
+	Character * GetComboPointTarget() override { return comboPointTarget; };
+	double GetMainhandWeaponSpeed() override;
+	double GetOffhandWeaponSpeed() override;
+	double GetMainhandDamagePerSecond() override;
+	int GetOffhandDamageRandomHit() override;
+	double GetOffhandDamagePerSecond() override;
+	int GetMainhandDamageRandomHit() override;
+	void HandleNPCKillRewards(Character * killed);
 
-	void Notify(SubscriberManager * lm);
+	//Movement
+	inline int GetRecall() override { return recall; };
+	void Stand() override;
+	void Sit() override;
 
+	//Skills / Spell Affects
+	bool HasSkill(Skill * sk) override;
+	bool HasSkillByName(std::string name) override;
+	void AddSkill(Skill * newskill) override;
+	void RemoveSkill(Skill * sk) override;
+	void RemoveSkill(std::string name) override;
+	Skill * GetSkillShortName(std::string name) override;
+	void StartGlobalCooldown();
+	inline double GetGlobalCooldown() override { return globalCooldown; };
+	inline void SetGlobalCooldown(double time) override { globalCooldown = time; };
+	void SaveSpellAffects();
+	void LoadSpellAffects();
+	void SaveCooldowns();
+	void LoadCooldowns();
+
+	//Death Handling
+	void MakeCorpse();
+	void RemoveCorpse();
+	void SetGhost() override;
+	void SetCorpse() override;
+	void SetAlive() override;
+	void UnsetGhost();
+	inline bool IsGhost() override { return isGhost; };
+	bool IsAlive() override;
+	void SetResurrectTime(int seconds);
+	bool CanResAtCorpse(int time_since_death);
+	bool CanRes(int time_since_death);
+
+	//Group
+	bool HasGroup() override;
+	inline Group * GetGroup() override { return group; };
+
+	//Communication
 	void SendBW(std::string str) override;
 	void Send(std::string str) override;
 	void Send(char * str) override;
 	void SendGMCP(std::string str) override;
 	void SendGMCP(char * str) override;
-
 	void QueryClear();
 	void SetQuery(std::string prompt, void * data, bool(*queryFunction)(Player *, std::string));
 	void * GetQueryData();
 	bool HasQuery();
 	bool(*GetQueryFunc())(Player *, std::string);
-	void ResetMaxStats();
-	void AddEquipmentStats(Item * add);
-	void RemoveEquipmentStats(Item * remove);
-	void GeneratePrompt(double currentTime);
 
+	//Inventory and equipment
+	int AddLootRoll(int corpse_id, NPC * corpse);
+	bool HasLootRoll(Character * corpse, int corpse_id);
+	void RemoveLootRoll(int my_id);	//Remove only one pending roll by roll-ers ID
+	void RemoveLootRoll(Character * corpse); //Remove all pending rolls that point to a specific corpse
+	void RemoveLootRoll(Character * corpse, int corpse_id); //Remove only one pending roll for specific corpse/ID combo
+	void RemoveAllLootRolls();
+	bool AddItemInventory(Item * item);
+	Item * GetItemInventory(int id);
+	Item * GetItemInventory(std::string name);
+	Item * RemoveItemInventory(int id);
+	Item * RemoveItemInventory(std::string name);
+	bool RemoveItemInventory(Item * item);
+	int GetEquipLocation(Item * equip);
+	bool EquipItemFromInventory(Item * wear);
+	bool EquipItem(Item * wear);
+	Item * RemoveItemEquipped(int index);
+	int GetEquippedItemIndex(std::string name);
+	Item * GetItemEquipped(std::string name);
+	bool CanWearArmor(int armortype);
+
+	//Class
+	void AddClass(int id, int level);
+	int GetClassLevel(int classid);
+	void SetClassLevel(int classid, int newlevel);
+	void AddClassSkills();
+
+	//Quest
+	bool QuestEligible(Quest * quest);
+	bool QuestActive(Quest * quest);
+	bool QuestCompleted(Quest * quest);
+	bool QuestObjectivesComplete(Quest * quest);
+	void QuestCompleteObjective(int type, void * obj);
+	bool ShouldDropQuestItem(Item * founditem);
+
+	//Get/Set
 	void SetMaxHealth(int amount) override;
 	void SetMaxMana(int amount) override;
 	void SetMaxEnergy(int amount) override;
@@ -155,127 +250,37 @@ public:
 	inline void SetStamina(int val) { stamina <= 0 ? stamina = val : stamina = 1; };
 	inline void SetWisdom(int val) { wisdom <= 0 ? wisdom = val : wisdom = 1; };
 	inline void SetSpirit(int val) { spirit <= 0 ? spirit = val : spirit = 1; };
-
-	int AddLootRoll(int corpse_id, NPC * corpse);
-	bool HasLootRoll(Character * corpse, int corpse_id);
-	void RemoveLootRoll(int my_id);	//Remove only one pending roll by roll-ers ID
-	void RemoveLootRoll(Character * corpse); //Remove all pending rolls that point to a specific corpse
-	void RemoveLootRoll(Character * corpse, int corpse_id); //Remove only one pending roll for specific corpse/ID combo
-	void RemoveAllLootRolls();
-
-	bool HasSkill(Skill * sk) override;
-	bool HasSkillByName(std::string name) override;
-	void AddSkill(Skill * newskill) override;
-	void RemoveSkill(Skill * sk) override;
-	void RemoveSkill(std::string name) override;
-	Skill * GetSkillShortName(std::string name) override;
-
 	int GetLevel() override;
 	void SetLevel(int level);
 	inline std::string GetName() override { return name; };
 	inline int GetGender() override { return gender; };
 	inline void SetGender(int g_) { gender = g_; };
 	inline virtual std::string GetTitle() override { return title; };
-	inline int GetRecall() override { return recall; };
-
-	void SetComboPoints(int howmany);
-	void GenerateComboPoint(Character * target);
-	int SpendComboPoints(Character * target);
-	void ClearComboPointTarget();
-	int GetComboPoints() override { return comboPoints; };
-	bool HasComboPointTarget() override { return (comboPointTarget != nullptr); };
-	Character * GetComboPointTarget() override { return comboPointTarget; };
-
-	void MakeCorpse();
-	void RemoveCorpse();
-
-	double GetMainhandWeaponSpeed() override;
-	double GetOffhandWeaponSpeed() override;
-	double GetMainhandDamagePerSecond() override;
-	int GetOffhandDamageRandomHit() override;
-	double GetOffhandDamagePerSecond() override;
-	int GetMainhandDamageRandomHit() override;
-
-	bool HasGroup() override;
-	inline Group * GetGroup() override { return group; };
-	
-	void Stand() override;
-	void Sit() override;
-
-	void StartGlobalCooldown();
-	inline double GetGlobalCooldown() override { return globalCooldown; };
-	inline void SetGlobalCooldown(double time) override { globalCooldown = time; };
-
-	void SaveSpellAffects();
-	void LoadSpellAffects();
-	void SaveCooldowns();
-	void LoadCooldowns();
-
 	inline bool IsImmortal() override { return (immlevel > 0); };
 	inline int GetImmLevel() override { return immlevel; };
-    //static Player * Load(Server * server, std::string name, User * user);
-    void SetExperience(int newexp);
-	void ApplyExperience(int amount);
-	
-    bool QuestEligible(Quest * quest);
-    bool QuestActive(Quest * quest);
-    bool QuestCompleted(Quest * quest);
-    bool QuestObjectivesComplete(Quest * quest);
-    void QuestCompleteObjective(int type, void * obj);
-	bool ShouldDropQuestItem(Item * founditem);
-    bool AddItemInventory(Item * item);
-    Item * GetItemInventory(int id);
-    Item * GetItemInventory(std::string name);
-    Item * RemoveItemInventory(int id);
-    Item * RemoveItemInventory(std::string name);
-    bool RemoveItemInventory(Item * item);
-    int GetEquipLocation(Item * equip);
-    bool EquipItemFromInventory(Item * wear);
-	bool EquipItem(Item * wear);
-    Item * RemoveItemEquipped(int index);
-    int GetEquippedItemIndex(std::string name);
-    Item * GetItemEquipped(std::string name);
-	bool CanWearArmor(int armortype);
-    void AddClass(int id, int level);
-    int GetClassLevel(int classid);
-    void SetClassLevel(int classid, int newlevel);
-	void AddClassSkills();
-	void SetGhost() override;
-	void SetCorpse() override;
-	void SetAlive() override;
-	void UnsetGhost();
-	inline bool IsGhost() override { return isGhost; };
-	bool IsAlive() override;
-	void SetResurrectTime(int seconds);
-	bool CanResAtCorpse(int time_since_death);
-	bool CanRes(int time_since_death);
 
+	//Lua friendly "commands"
 	void Look(std::string argument) override { ::cmd_look(this, argument); };
 	void Cast(std::string argument) override { ::cmd_cast(this, argument); };
-	
-	void HandleNPCKillRewards(Character * killed);
 
+	//Utility/Misc
+	inline bool IsNPC() override { return false; };
+	inline bool IsPlayer() override { return true; };
+	sol::object AsPlayer() override { return sol::make_object(Server::lua, this); };
+	void Notify(SubscriberManager * lm);
+	void GeneratePrompt(double currentTime);
 	void Save() override;
 	static Player * LoadPlayer(std::string name, User * user);
 
 private:
-
 	std::string name;
-	
 	int immlevel;
-	
-	
 	int level;
 	int gender;
-	
-
-
-
 	int maxHealth;
 	int maxMana;
 	int maxEnergy;
 	int maxRage;
-
 	int comboPoints;
 	int maxComboPoints;
 	bool hasQuery;

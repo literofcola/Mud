@@ -310,7 +310,7 @@ bool Room::HasItem(Item * i)
 		return false;
 	for (auto iter = items.begin(); iter != items.end(); iter++)
 	{
-		if (iter->first->id == i->id)
+		if (iter->first->GetID() == i->GetID())
 			return true;
 	}
 	return false;
@@ -321,7 +321,7 @@ bool Room::HasItem(int id)
 		return false;
 	for (auto iter = items.begin(); iter != items.end(); iter++)
 	{
-		if (iter->first->id == id)
+		if (iter->first->GetID() == id)
 			return true;
 	}
 	return false;
@@ -351,7 +351,7 @@ void Room::AddItem(Item * i)
 
 	for (auto iter = items.begin(); iter != items.end(); iter++)
 	{
-		if (iter->first->id == i->id)
+		if (iter->first->GetID() == i->GetID())
 		{
 			iter->second++;
 			return;
@@ -371,7 +371,7 @@ Item * Room::GetItem(string name)
 
 	for (auto iter = items.begin(); iter != items.end(); ++iter)
 	{
-		if (!Utilities::IsName(tempname, iter->first->name) && !Utilities::IsName(tempname, iter->first->keywords))
+		if (!Utilities::IsName(tempname, iter->first->GetName()) && !Utilities::IsName(tempname, iter->first->keywords))
 			continue;
 		if (++count == number)
 			return iter->first;

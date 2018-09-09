@@ -186,7 +186,7 @@ void Quest::Save()
 		int saveid = 0;
 		switch((*iter).type)
 		{
-			case Quest::OBJECTIVE_ITEM: saveid = ((Item*)((*iter).objective))->id; break;
+			case Quest::OBJECTIVE_ITEM: saveid = ((Item*)((*iter).objective))->GetID(); break;
 			case Quest::OBJECTIVE_KILLNPC:
 			case Quest::OBJECTIVE_VISITNPC: saveid = ((NPCIndex*)((*iter).objective))->id; break;
 			case Quest::OBJECTIVE_ROOM: saveid = ((Room*)((*iter).objective))->id; break;

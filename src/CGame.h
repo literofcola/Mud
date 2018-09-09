@@ -12,8 +12,6 @@
 #include <windows.h>
 #include "CHighResTimer.h"
 
-#define IDLE_TIMEOUT 900
-
 class Server;
 class User;
 class Client;
@@ -46,7 +44,6 @@ public:
 	void RemoveUser(Client * client);
     NPC * NewNPC(NPCIndex * index);
     Player * NewPlayer(std::string name, User * user);
-    //Character * NewCharacter(Character * copy);
     void RemoveCharacter(Character * ch);
     void LoadGameStats(Server * server);
     void LoadRooms(Server * server);
@@ -60,12 +57,6 @@ public:
     void LoadTriggers(Server * server);
     void LoadAreas(Server * server);
 	void LoadHelp(Server * server);
-
-    User * DuplicatePlayerCheck(std::string name);
-    User * GetUserByPCName(std::string name);
-	Player * GetPlayerByName(std::string name);
-    Player * GetPlayerWorld(Player * ch, std::string name);
-    void GlobalMessage(std::string);
 
     Room * GetRoom(int id);
     Room * CreateRoomAnyID();
@@ -85,42 +76,43 @@ public:
 	Help * CreateHelpAnyID(std::string name);
     Area * CreateAreaAnyID(std::string name);
     Area * GetArea(int id);
+
+	void SaveGameStats();
+	void SaveRooms();
+	void SaveSkills();
+	void SaveNPCIndex();
+	void SaveQuests();
+	void SaveItems();
+	void SaveClasses();
+	void SaveAreas();
+	void SaveHelp();
+
+	User * DuplicatePlayerCheck(std::string name);
+	User * GetUserByPCName(std::string name);
+	Player * GetPlayerByName(std::string name);
+	Player * GetPlayerWorld(Player * ch, std::string name);
     
+	void GlobalMessage(std::string);
+
     static int ExperienceForLevel(int level);
     static int CalculateExperience(Character * ch, Character * victim);
     static int LevelDifficulty(int ch, int vict);
 	static std::string LevelDifficultyColor(int leveldifficulty);
 	static std::string LevelDifficultyLightColor(int leveldifficulty);
     static Character * LoadNPCRoom(int id, Room * toroom);
-    void SaveGameStats();
-    void SaveRooms();
-    void SaveSkills();
-    void SaveNPCIndex();
-    void SaveQuests();
-    void SaveItems();
-    void SaveClasses();
-    void SaveAreas();
-	void SaveHelp();
-
+	
     struct SearchInfo
     {
         std::string name;
         void (*search_func)(Game * g, Character * ch, std::string argument);
     };
     
-    //static void SearchRooms(Game * g, Character * ch, std::string argument);
-    //static void SearchItems(Game * g, Character * ch, std::string argument);
-    //static void SearchCharacters(Game * g, Character * ch, std::string argument);
     bool SearchComparisonInt(int field_value, int search_value, int conditional_type);
     bool SearchComparisonString(std::string field_value, std::string search_value, int conditional_type);
 	bool SearchComparisonDouble(double field_value, double search_value, int conditional_type);
 	int Search(std::string table_name, std::string field_name, int conditional_type, std::string argument, int data_type, std::string & result);
-    /*template <typename T1>
-    int DoSearch(T1 table_name, std::string field_name, std::string argument, int data_type, std::string & result);*/
-
 
     bool shutdown;
-
     std::list<User *> users; //user has a player, player has a user
     std::list<Character *> characters; //All NPCs and Players currently loaded in the world //TODO: boost.multiIndex ???
     std::map<int, NPCIndex *> npcIndex; //NPC prototypes
@@ -132,11 +124,6 @@ public:
     std::map<int, Area *> areas;
 	std::map<int, Help *> helpIndex;
 
-    /*typedef boost::multi_index_container<Room, indexed_by<
-		ordered_unique<member<Room,int,&Room::id> >,    
-        ordered_non_unique<member<Room,std::string,&Room::name> > > > room_set;
-	room_set m_rooms;*/
-
     static double currentTime;
     double worldupdateCount;
     int total_past_connections;
@@ -146,10 +133,10 @@ public:
 	__int64 totalBytesUncompressed; //how many bytes would have been sent
     int newplayerRoom;
     const static int MAX_LEVEL = 240;
+	const static int IDLE_TIMEOUT = 900;
 
 private:
 	
-    //std::map<Player *> players;
     CRITICAL_SECTION userListCS; 
     HighResTimer timer;
 };

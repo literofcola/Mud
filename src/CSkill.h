@@ -9,6 +9,7 @@
 class Skill
 {
 public:
+	Skill() = delete;
     Skill(int id_, std::string long_name_); 
     ~Skill();
 
@@ -64,7 +65,7 @@ public:
 	};
 
 private:
-    Skill();
+
 };
 
 #endif //CSKILL_H

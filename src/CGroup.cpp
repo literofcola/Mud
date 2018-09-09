@@ -143,14 +143,3 @@ Player * Group::FindByName(std::string name)
 	}
 	return nullptr;
 }
-
-bool Group::IsRaidGroup()
-{
-	return raid;
-}
-
-void Group::MakeRaidGroup()
-{
-	raid = true;
-}
-

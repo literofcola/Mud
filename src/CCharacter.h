@@ -61,8 +61,7 @@ public:
 		Item * itemTarget;
 	};
 
-	static RaceType race_table[];
-	
+	//DATA
     //Movement
 	Room * room;
     double movementSpeed; 
@@ -82,23 +81,103 @@ public:
     void (*delayFunction)(DelayData);
     std::list<SpellAffect *> buffs;
     std::list<SpellAffect *> debuffs;
-    //bool debuffs_invalid;
-    //bool buffs_invalid;
     std::map<int, double> cooldowns;
     double lastSpellCast;  //time stamp for mana regen 5 second rule
 	double lastAutoAttack_main;
 
+	//misc
 	bool remove;
+	static RaceType race_table[];
 
-	virtual void Notify(SubscriberManager *);
+	//FUNCTIONS
+	//Movement
+	void Move(int direction);
+	bool CanMove();
+	double GetMoveSpeed();
+	bool ChangeRoomsID(int roomid);
+	bool ChangeRooms(Room * room);
+	virtual void Stand() { };
+	virtual void Sit() { };
+	virtual int GetRecall() { return 0; };
 
-	//These aren't really in the spirit of inheritance but this whole OO design is bad so who cares
-	virtual bool IsNPC() = 0;
-	virtual bool IsPlayer() = 0;
-	virtual sol::object AsPlayer() { return nullptr; }; //for lua usertype casting
-	virtual sol::object AsNPC() { return nullptr; };    //for lua usertype casting
-	virtual NPCIndex * GetNPCIndex() { return nullptr; };
+	//Combat
+	void SetTarget(Character * t);
+	void ClearTarget();
+	Character * GetTarget();
+	virtual double GetMainhandWeaponSpeed() = 0;
+	virtual double GetOffhandWeaponSpeed() = 0;
+	virtual double GetMainhandDamagePerSecond() = 0;
+	virtual int GetOffhandDamageRandomHit() = 0;
+	virtual double GetOffhandDamagePerSecond() = 0;
+	virtual int GetMainhandDamageRandomHit() = 0;
+	void GenerateRageOnAttack(int damage, double weapon_speed, bool mainhand, bool wascrit);
+	void GenerateRageOnTakeDamage(int damage);
+	bool CanAttack(Character * victim);
+	void EnterCombat(Character * victim);
+	void EnterCombatAssist(Character * friendly);
+	void ExitCombat();
+	bool InCombat();
+	bool IsFighting(Character * target);
+	void AutoAttack(Character * victim);
+	void OneHit(Character * victim, int damage);
+	void OneHeal(Character * target, int heal);
+	bool CheckThreatCombat();
+	void UpdateThreat(Character * ch, double value, int type);
+	double GetThreat(Character * ch);
+	Character * GetTopThreat();
+	bool HasThreat(Character * ch);
+	void RemoveThreat(Character * ch, bool removeall);
+	bool HasTap(Character * target);
+	Character * GetTap();
+	std::string AggressionColor(Character * target);
+	std::string AggressionLightColor(Character * target);
 
+	//Skills/Spell Affects
+	virtual bool HasSkill(Skill * sk) { return true; };
+	virtual bool HasSkillByName(std::string name) { return true; };
+	virtual void AddSkill(Skill * newskill) { };
+	virtual void RemoveSkill(Skill * sk) { };
+	virtual void RemoveSkill(std::string name) { };
+	virtual Skill * GetSkillShortName(std::string name) { return nullptr; };
+	bool CancelActiveDelay();
+	bool CancelCastOnHit();
+	void SetCooldown(Skill * sk, double length);
+	double GetCooldownRemaining(Skill * sk);
+	virtual double GetGlobalCooldown() { return 0; };
+	virtual void SetGlobalCooldown(double time) { };
+	SpellAffect * AddSpellAffect(int isDebuff, Character * caster, std::string name,
+		bool hidden, bool stackable, int ticks, double duration, int category, Skill * sk, std::string affect_description);
+	SpellAffect * HasSpellAffect(std::string name);
+	SpellAffect * GetFirstSpellAffectWithAura(int aura_id);
+	int CleanseSpellAffect(Character * cleanser, int category, int howMany = -1);
+	bool RemoveSpellAffectsByAura(int isDebuff, int auraid);
+	void RemoveSpellAffect(int isDebuff, int id);
+	void RemoveSpellAffect(int isDebuff, std::string name);
+	void RemoveAllSpellAffects();
+	int GetAuraModifier(int aura_id, int whatModifier);
+	int GetTotalAuraModifier(int aura_id);
+	int GetSmallestAuraModifier(int aura_id);
+	int GetLargestAuraModifier(int aura_id);
+
+	//Stats
+	void AdjustMana(Character * source, int amount);
+	void AdjustEnergy(Character * source, int amount);
+	void AdjustRage(Character * source, int amount);
+	bool HasResource(int which, int amount);
+	void ConsumeMana(int amount);
+	void ConsumeEnergy(int amount);
+	void ConsumeRage(int amount);
+	void AdjustHealth(Character * source, int amount);
+	virtual void SetComboPoints(int howmany) { };
+	virtual void GenerateComboPoint(Character * target) { };
+	virtual int SpendComboPoints(Character * target) { return 0; };
+	virtual void ClearComboPointTarget() { };
+	virtual bool HasComboPointTarget() { return false; };
+	virtual Character * GetComboPointTarget() { return nullptr; };
+	virtual int GetComboPoints() { return 0; };
+
+	//Communication
+	void Message(const std::string & txt, MessageType msg_type, Character * vict = nullptr);
 	virtual void SendBW(std::string str) {};
 	virtual void Send(std::string str) {};
 	virtual void Send(char * str) {};
@@ -106,6 +185,29 @@ public:
 	virtual void SendGMCP(char * str) {};
 	void SendTargetSubscriberGMCP(std::string str);
 	void SendTargetTargetSubscriberGMCP(std::string str);
+
+	//Group
+	virtual Group * GetGroup() { return nullptr; };
+	virtual bool HasGroup() { return false; };
+	bool InSameGroup(Character * ch);
+
+	//Death handling / Loot
+	virtual void SetCorpse();
+	virtual void SetGhost() { };
+	virtual void SetAlive();
+	bool IsCorpse();
+	virtual bool IsGhost() { return false; };
+	virtual bool IsAlive() = 0;
+	int TimeSinceDeath();
+	void OnDeath();
+	virtual void RemoveAllLootRolls() { };
+	virtual void RemoveAllLooters() { };
+
+	//Lua friendly "commands"
+	virtual void Look(std::string argument) {};
+	virtual void Cast(std::string argument) {};
+
+	//Get/Set
 	int GetHealth() { return health; };
 	int GetMana() { return mana; };
 	int GetEnergy() { return energy; };
@@ -122,146 +224,40 @@ public:
 	virtual void SetMaxMana(int amount) { };
 	virtual void SetMaxEnergy(int amount) { };
 	virtual void SetMaxRage(int amount) { };
-	virtual inline int GetAgility() { return 1; };
-	virtual inline int GetIntellect() { return 1; };
-	virtual inline int GetStrength() { return 1; };
-	virtual inline int GetStamina() { return 1; };
-	virtual inline int GetWisdom() { return 1; };
-	virtual inline int GetSpirit() { return 1; };
-
-    void Message(const std::string & txt, MessageType msg_type, Character * vict = nullptr);
-
-	virtual Group * GetGroup() { return nullptr; };
-
-    Character * GetCharacterRoom(std::string name);
-	Room * GetRoom() { return room; }
-	Item * GetItemRoom(std::string name);
-	bool IsItemInRoom(Item * i);
-    Character * GetCharacterAdjacentRoom(std::string name, std::string direction);
-    Character * GetCharacterRoom(Character * target);
-    Character * GetCharacterAdjacentRoom(Character * target);
-	inline virtual int GetRecall() { return 0; };
-
-	virtual double GetGlobalCooldown() { return 0; };
-	virtual void SetGlobalCooldown(double time) { };
-
-    void SetTarget(Character * t);
-    void ClearTarget();
-    Character * GetTarget();
-    void Move(int direction);
-	virtual void Stand() { };
-	virtual void Sit() { };
-	virtual bool FlagIsSet(const int flag) { return false; };
-
-    bool ChangeRoomsID(int roomid);
-    bool ChangeRooms(Room * room);
-	virtual void Save() { };
-    
-    virtual int GetLevel() = 0;
+	virtual int GetAgility() { return 1; };
+	virtual int GetIntellect() { return 1; };
+	virtual int GetStrength() { return 1; };
+	virtual int GetStamina() { return 1; };
+	virtual int GetWisdom() { return 1; };
+	virtual int GetSpirit() { return 1; };
+	virtual int GetLevel() = 0;
 	virtual bool IsImmortal() { return false; };
 	virtual int GetImmLevel() { return 0; };
 	virtual std::string GetName() = 0;
-	inline virtual int GetGender() = 0;
-	inline virtual std::string GetTitle() = 0;
+	virtual int GetGender() = 0;
+	virtual std::string GetTitle() = 0;
+	Room * GetRoom() { return room; }
+	
+	//Utility/Misc
 	std::string HisHer();
 	std::string HimHer();
 	std::string HisHers();
-	bool CancelActiveDelay();
-	bool CancelCastOnHit();
-	std::string AggressionColor(Character * target);
-	std::string AggressionLightColor(Character * target);
-	bool CanAttack(Character * victim);
-    void EnterCombat(Character * victim);
-	void EnterCombatAssist(Character * friendly);
-    void ExitCombat();
-    bool InCombat();
-    bool IsFighting(Character * target);
-	bool CheckThreatCombat();
-    void UpdateThreat(Character * ch, double value, int type);
-    double GetThreat(Character * ch);
-    Character * GetTopThreat();
-    bool HasThreat(Character * ch);
-	void RemoveThreat(Character * ch, bool removeall);
-	bool HasTap(Character * target);
-	Character * GetTap();
-    void AutoAttack(Character * victim);
-    void OneHit(Character * victim, int damage);
-	void OneHeal(Character * target, int heal);
-	
-	virtual void Look(std::string argument) {};
-	virtual void Cast(std::string argument) {};
-	
-	virtual double GetMainhandWeaponSpeed() = 0;
-	virtual double GetOffhandWeaponSpeed() = 0;
-	virtual double GetMainhandDamagePerSecond() = 0;
-	virtual int GetOffhandDamageRandomHit() = 0;
-	virtual double GetOffhandDamagePerSecond() = 0;
-	virtual int GetMainhandDamageRandomHit() = 0;
+	Item * GetItemRoom(std::string name);
+	bool IsItemInRoom(Item * i);
+	Character * GetCharacterRoom(std::string name);
+	Character * GetCharacterRoom(Character * target);
+	Character * GetCharacterAdjacentRoom(std::string name, std::string direction);
+	Character * GetCharacterAdjacentRoom(Character * target);
+	virtual bool FlagIsSet(const int flag) { return false; };
+	virtual void Save() { };
+	virtual void Notify(SubscriberManager *);
+	//These aren't really in the spirit of inheritance but this whole OO design is bad so who cares
+	virtual bool IsNPC() = 0;
+	virtual bool IsPlayer() = 0;
+	virtual sol::object AsPlayer() { return nullptr; }; //for lua usertype casting
+	virtual sol::object AsNPC() { return nullptr; };    //for lua usertype casting
+	virtual NPCIndex * GetNPCIndex() { return nullptr; };
 
-	void GenerateRageOnAttack(int damage, double weapon_speed, bool mainhand, bool wascrit);
-	void GenerateRageOnTakeDamage(int damage);
-	
-	virtual void SetComboPoints(int howmany) { };
-	virtual void GenerateComboPoint(Character * target) { };
-	virtual int SpendComboPoints(Character * target) { return 0; };
-	virtual void ClearComboPointTarget() { };
-	virtual bool HasComboPointTarget() { return false; };
-	virtual Character * GetComboPointTarget() { return nullptr; };
-	virtual int GetComboPoints() { return 0; };
-
-    void ConsumeMana(int amount);
-	void ConsumeEnergy(int amount);
-	void ConsumeRage(int amount);
-	void AdjustHealth(Character * source, int amount);
-	void OnDeath();
-	
-	virtual void RemoveAllLootRolls() { };
-	virtual void RemoveAllLooters() { };
-
-    void AdjustMana(Character * source, int amount);
-	void AdjustEnergy(Character * source, int amount);
-	void AdjustRage(Character * source, int amount);
-	bool HasResource(int which, int amount);
-    
-    SpellAffect * AddSpellAffect(int isDebuff, Character * caster, std::string name,
-                        bool hidden, bool stackable, int ticks, double duration, int category, Skill * sk, std::string affect_description);
-    SpellAffect * HasSpellAffect(std::string name);
-	SpellAffect * GetFirstSpellAffectWithAura(int aura_id);
-    int CleanseSpellAffect(Character * cleanser, int category, int howMany = -1);
-	bool RemoveSpellAffectsByAura(int isDebuff, int auraid);
-    void RemoveSpellAffect(int isDebuff, int id);
-    void RemoveSpellAffect(int isDebuff, std::string name);
-    void RemoveAllSpellAffects();
-    
-    int GetAuraModifier(int aura_id, int whatModifier);
-    int GetTotalAuraModifier(int aura_id);
-    int GetSmallestAuraModifier(int aura_id);
-    int GetLargestAuraModifier(int aura_id);
-    bool CanMove();
-    double GetMoveSpeed();
-    
-	virtual bool HasSkill(Skill * sk) { return true; };
-	virtual bool HasSkillByName(std::string name) { return true; };
-	virtual void AddSkill(Skill * newskill) { };
-	virtual void RemoveSkill(Skill * sk) { };
-	virtual void RemoveSkill(std::string name) { };
-	virtual Skill * GetSkillShortName(std::string name) { return nullptr; };
-
-	
-    void SetCooldown(Skill * sk, double length);
-    double GetCooldownRemaining(Skill * sk);
-	
-	virtual bool HasGroup() { return false; };
-	bool InSameGroup(Character * ch);
-
-	virtual void SetCorpse();
-	virtual void SetGhost() { };
-	virtual void SetAlive();
-	bool IsCorpse();
-	inline virtual bool IsGhost() { return false; };
-	virtual bool IsAlive() = 0;
-	int TimeSinceDeath();
-    
 protected:
 
     Character * target;
@@ -274,8 +270,6 @@ protected:
 
 	bool isCorpse;
 	double deathTime; //timestamp for res timer and npc corpse decay
-
-	
 };
 
 #endif

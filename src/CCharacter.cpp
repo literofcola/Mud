@@ -412,7 +412,6 @@ void Character::Move(int direction)
 				(*iter)->EnterCombat(this);
 				EnterCombat(*iter);
 				Send((*iter)->GetName() + " begins attacking you!\n\r");
-				(*iter)->AutoAttack(this);
 			}
 		}
 	}
@@ -1319,7 +1318,7 @@ void Character::OnDeath()
 								one_loot.looters.push_back(NPC::Looter(group_member));
 								group_member->AddSubscriber(this);
 
-								group_member->Send(GetName() + " drops loot: " + (string)Item::quality_strings[drop->quality] + drop->name + "|X");
+								group_member->Send(GetName() + " drops loot: " + (string)Item::quality_strings[drop->quality] + drop->GetName() + "|X");
 								if (drop->quality >= Item::QUALITY_UNCOMMON)
 								{
 									int my_id = group_member->AddLootRoll(one_loot.id, thisnpc);
@@ -1335,7 +1334,7 @@ void Character::OnDeath()
 						one_loot.looters.push_back(NPC::Looter(tap_player));
 						tap->AddSubscriber(this);
 
-						tap->Send(GetName() + " drops loot: " + (string)Item::quality_strings[drop->quality] + drop->name + "|X\n\r");
+						tap->Send(GetName() + " drops loot: " + (string)Item::quality_strings[drop->quality] + drop->GetName() + "|X\n\r");
 					}
 					if(!one_loot.looters.empty()) //Don't actually drop this loot if no one can loot it
 						thisnpc->loot.push_back(one_loot);

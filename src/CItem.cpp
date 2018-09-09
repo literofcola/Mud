@@ -43,20 +43,56 @@ Item::flag_type Item::flag_table[] =
 	{ Item::FLAG_ROOMONLY, "room_only" },
 	{ -1, "" }
 };
-
-
+/*
 Item::Item()
 {
     SetDefaults();
 }
-
+*/
 Item::Item(std::string name_, int id_)
 {
-    SetDefaults();
+    //SetDefaults();
     id = id_;
     name = name_;
-}
 
+	itemLevel = 1;
+	charLevel = 1;
+	equipLocation = Item::EQUIP_NONE;
+	quality = Item::QUALITY_POOR;
+	binds = Item::BIND_NONE;
+	type = Item::TYPE_MISC;
+	useSkillID = 0;
+	armor = 0;
+	quest = false;
+	unique = false;
+	durability = 0;
+	damageLow = 0;
+	damageHigh = 0;
+	speed = 0.0;
+	value = 0;
+
+	changed = false;
+
+	intTable["id"] = &id;
+	stringTable["name"] = &name;
+	stringTable["keywords"] = &keywords;
+	stringTable["inroom_name"] = &inroom_name;
+	intTable["itemLevel"] = &itemLevel;
+	intTable["charLevel"] = &charLevel;
+	intTable["binds"] = &binds;
+	intTable["equipLocation"] = &equipLocation;
+	intTable["type"] = &type;
+	intTable["quest"] = &quest;
+	intTable["quality"] = &quality;
+	intTable["unique"] = &unique;
+	intTable["armor"] = &armor;
+	intTable["durability"] = &durability;
+	intTable["damageLow"] = &damageLow;
+	intTable["damageHigh"] = &damageHigh;
+	doubleTable["speed"] = &speed;
+	intTable["value"] = &value;
+}
+/*
 Item::Item(const Item & copy)
 {
     SetDefaults();
@@ -80,7 +116,8 @@ Item::Item(const Item & copy)
     speed = copy.speed;
     value = copy.value;
 }
-
+*/
+/*
 void Item::SetDefaults()
 {
     id = 0;
@@ -123,7 +160,7 @@ void Item::SetDefaults()
 	doubleTable["speed"] = &speed;
 	intTable["value"] = &value;
 }
-
+*/
 Item::~Item()
 {
 

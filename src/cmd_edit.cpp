@@ -2010,10 +2010,10 @@ void itemEditCmd_show(Player * ch, std::string argument)
 		return;
 	}
 
-	ch->Send("Name:           [" + pItem->name + "]\n\r");
+	ch->Send("Name:           [" + pItem->GetName() + "]\n\r");
 	ch->Send("Keywords:       [" + pItem->keywords + "]\n\r");
 	ch->Send("inroom_name:    [" + pItem->inroom_name + "]\n\r");
-    ch->Send("ID:             [" + Utilities::itos(pItem->id) + "]\n\r");
+    ch->Send("ID:             [" + Utilities::itos(pItem->GetID()) + "]\n\r");
     ch->Send("char_level:     [" + Utilities::itos(pItem->charLevel) + "]\n\r");
     ch->Send("item_level:     [" + Utilities::itos(pItem->itemLevel) + "]\n\r");
     ch->Send("quality:        [" + Utilities::itos(pItem->quality) + "]\n\r");
@@ -2511,7 +2511,7 @@ void questEditCmd_show(Player * ch, std::string argument)
             case Quest::OBJECTIVE_ROOM: objid = ((Room*)((*objiter).objective))->id; break;
             case Quest::OBJECTIVE_KILLNPC:
             case Quest::OBJECTIVE_VISITNPC: objid = ((NPCIndex*)((*objiter).objective))->id; break;
-            case Quest::OBJECTIVE_ITEM: objid = ((Item*)((*objiter).objective))->id; break;
+            case Quest::OBJECTIVE_ITEM: objid = ((Item*)((*objiter).objective))->GetID(); break;
         }
         ch->Send(Utilities::itos(ctr) + ". Type: " + Utilities::itos((*objiter).type) + " Count: " + Utilities::itos((*objiter).count) 
                    + " Objective ID: " + Utilities::itos(objid) + " " + (*objiter).description + "\n\r");

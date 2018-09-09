@@ -39,7 +39,7 @@ void cmd_inventory(Player * ch, string argument)
 			ch->Send("|M(" + Utilities::itos(i->second) + ") ");
 		else
 			ch->Send("    ");
-		ch->Send(Item::quality_strings[i->first->quality] + i->first->name + "|X\n\r");
+		ch->Send(Item::quality_strings[i->first->quality] + i->first->GetName() + "|X\n\r");
 		total++;
 	}
 
@@ -55,67 +55,67 @@ void cmd_equipment(Player * ch, string argument)
     
     equipment << std::left << std::setw(15) << "<|BHead|X>";
     ch->equipped[Player::EQUIP_HEAD] ? 
-        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_HEAD]->quality] << ch->equipped[Player::EQUIP_HEAD]->name << "|X\n\r"
+        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_HEAD]->quality] << ch->equipped[Player::EQUIP_HEAD]->GetName() << "|X\n\r"
         : equipment << "None\n\r";
     equipment << std::setw(15) << "<|BNeck|X>";
     ch->equipped[Player::EQUIP_NECK] ? 
-        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_NECK]->quality] << ch->equipped[Player::EQUIP_NECK]->name << "|X\n\r"
+        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_NECK]->quality] << ch->equipped[Player::EQUIP_NECK]->GetName() << "|X\n\r"
         : equipment << "None\n\r";
     equipment << std::setw(15) << "<|BShoulder|X>";
     ch->equipped[Player::EQUIP_SHOULDER] ? 
-        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_SHOULDER]->quality] << ch->equipped[Player::EQUIP_SHOULDER]->name << "|X\n\r"
+        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_SHOULDER]->quality] << ch->equipped[Player::EQUIP_SHOULDER]->GetName() << "|X\n\r"
         : equipment << "None\n\r";
     equipment << std::setw(15) << "<|BBack|X>";
     ch->equipped[Player::EQUIP_BACK] ? 
-        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_BACK]->quality] << ch->equipped[Player::EQUIP_BACK]->name << "|X\n\r"
+        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_BACK]->quality] << ch->equipped[Player::EQUIP_BACK]->GetName() << "|X\n\r"
         : equipment << "None\n\r";
     equipment << std::setw(15) << "<|BChest|X>";
     ch->equipped[Player::EQUIP_CHEST] ? 
-        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_CHEST]->quality] << ch->equipped[Player::EQUIP_CHEST]->name << "|X\n\r"
+        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_CHEST]->quality] << ch->equipped[Player::EQUIP_CHEST]->GetName() << "|X\n\r"
         : equipment << "None\n\r";
     equipment << std::setw(15) << "<|BWrist|X>";
     ch->equipped[Player::EQUIP_WRIST] ? 
-        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_WRIST]->quality] << ch->equipped[Player::EQUIP_WRIST]->name << "|X\n\r"
+        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_WRIST]->quality] << ch->equipped[Player::EQUIP_WRIST]->GetName() << "|X\n\r"
         : equipment << "None\n\r";
     equipment << std::setw(15) << "<|BHands|X>";
     ch->equipped[Player::EQUIP_HANDS] ? 
-        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_HANDS]->quality] << ch->equipped[Player::EQUIP_HANDS]->name << "|X\n\r"
+        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_HANDS]->quality] << ch->equipped[Player::EQUIP_HANDS]->GetName() << "|X\n\r"
         : equipment << "None\n\r";
     equipment << std::setw(15) << "<|BWaist|X>";
     ch->equipped[Player::EQUIP_WAIST] ? 
-        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_WAIST]->quality] << ch->equipped[Player::EQUIP_WAIST]->name << "|X\n\r"
+        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_WAIST]->quality] << ch->equipped[Player::EQUIP_WAIST]->GetName() << "|X\n\r"
         : equipment << "None\n\r";
     equipment << std::setw(15) << "<|BLegs|X>";
     ch->equipped[Player::EQUIP_LEGS] ? 
-        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_LEGS]->quality] << ch->equipped[Player::EQUIP_LEGS]->name << "|X\n\r"
+        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_LEGS]->quality] << ch->equipped[Player::EQUIP_LEGS]->GetName() << "|X\n\r"
         : equipment << "None\n\r";
     equipment << std::setw(15) << "<|BFeet|X>";
     ch->equipped[Player::EQUIP_FEET] ? 
-        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_FEET]->quality] << ch->equipped[Player::EQUIP_FEET]->name << "|X\n\r"
+        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_FEET]->quality] << ch->equipped[Player::EQUIP_FEET]->GetName() << "|X\n\r"
         : equipment << "None\n\r";
     equipment << std::setw(15) << "<|BFinger|X>";
     ch->equipped[Player::EQUIP_FINGER1] ? 
-        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_FINGER1]->quality] << ch->equipped[Player::EQUIP_FINGER1]->name << "|X\n\r"
+        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_FINGER1]->quality] << ch->equipped[Player::EQUIP_FINGER1]->GetName() << "|X\n\r"
         : equipment << "None\n\r";
     equipment << std::setw(15) << "<|BFinger|X>";
     ch->equipped[Player::EQUIP_FINGER2] ? 
-        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_FINGER2]->quality] << ch->equipped[Player::EQUIP_FINGER2]->name << "|X\n\r"
+        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_FINGER2]->quality] << ch->equipped[Player::EQUIP_FINGER2]->GetName() << "|X\n\r"
         : equipment << "None\n\r";
     equipment << std::setw(15) << "<|BTrinket|X>";
     ch->equipped[Player::EQUIP_TRINKET1] ? 
-        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_TRINKET1]->quality] << ch->equipped[Player::EQUIP_TRINKET1]->name << "|X\n\r"
+        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_TRINKET1]->quality] << ch->equipped[Player::EQUIP_TRINKET1]->GetName() << "|X\n\r"
         : equipment << "None\n\r";
     equipment << std::setw(15) << "<|BTrinket|X>";
     ch->equipped[Player::EQUIP_TRINKET2] ? 
-        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_TRINKET2]->quality] << ch->equipped[Player::EQUIP_TRINKET2]->name << "|X\n\r"
+        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_TRINKET2]->quality] << ch->equipped[Player::EQUIP_TRINKET2]->GetName() << "|X\n\r"
         : equipment << "None\n\r";
     equipment << std::setw(15) << "<|BOffhand|X>";
     ch->equipped[Player::EQUIP_OFFHAND] ? 
-        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_OFFHAND]->quality] << ch->equipped[Player::EQUIP_OFFHAND]->name << "|X\n\r"
+        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_OFFHAND]->quality] << ch->equipped[Player::EQUIP_OFFHAND]->GetName() << "|X\n\r"
         : equipment << "None\n\r";
     equipment << std::setw(15) << "<|BMainhand|X>";
     ch->equipped[Player::EQUIP_MAINHAND] ? 
-        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_MAINHAND]->quality] << ch->equipped[Player::EQUIP_MAINHAND]->name << "|X\n\r"
+        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_MAINHAND]->quality] << ch->equipped[Player::EQUIP_MAINHAND]->GetName() << "|X\n\r"
         : equipment << "None\n\r";
     equipment << "\n\r";
 
@@ -152,7 +152,7 @@ void cmd_remove(Player * ch, string argument)
                 }
 				ch->RemoveEquipmentStats(remove);
                 ch->AddItemInventory(remove);
-                ch->Send("You remove " + remove->name + ".\n\r");
+                ch->Send("You remove " + remove->GetName() + ".\n\r");
             }
         }
         return;
@@ -178,7 +178,7 @@ void cmd_remove(Player * ch, string argument)
     }
 	ch->RemoveEquipmentStats(remove);
     ch->AddItemInventory(remove);
-    ch->Send("You remove " + remove->name + ".\n\r");
+    ch->Send("You remove " + remove->GetName() + ".\n\r");
 }   
 
 void cmd_wear(Player * ch, string argument)
@@ -226,7 +226,7 @@ void cmd_wear(Player * ch, string argument)
                 }
                 ch->EquipItemFromInventory(wear);
 				ch->AddEquipmentStats(wear);
-                ch->Send("You wear " + wear->name + ".\n\r");
+                ch->Send("You wear " + wear->GetName() + ".\n\r");
             }
         }
         return;
@@ -251,7 +251,7 @@ void cmd_wear(Player * ch, string argument)
     {
 		ch->RemoveEquipmentStats(removed);
         ch->AddItemInventory(removed);
-        ch->Send("You remove " + removed->name + ".\n\r");
+        ch->Send("You remove " + removed->GetName() + ".\n\r");
     }
     if(equiploc == Player::EQUIP_MAINHAND && wear->equipLocation == Item::EQUIP_TWOHAND) //remove the offhand when equipping a two hand
     {
@@ -260,7 +260,7 @@ void cmd_wear(Player * ch, string argument)
         {
 			ch->RemoveEquipmentStats(offhand);
             ch->AddItemInventory(offhand);
-            ch->Send("You remove " + offhand->name + ".\n\r");
+            ch->Send("You remove " + offhand->GetName() + ".\n\r");
         }
     }
     else if(equiploc == Player::EQUIP_OFFHAND) //remove a twohand when equipping an offhand
@@ -270,12 +270,12 @@ void cmd_wear(Player * ch, string argument)
             Item * mh = ch->RemoveItemEquipped(Player::EQUIP_MAINHAND);
 			ch->RemoveEquipmentStats(mh);
             ch->AddItemInventory(mh);
-            ch->Send("You remove " + mh->name + ".\n\r");
+            ch->Send("You remove " + mh->GetName() + ".\n\r");
         }
     }
     ch->EquipItemFromInventory(wear);
 	ch->AddEquipmentStats(wear);
-    ch->Send("You wear " + wear->name + ".\n\r");
+    ch->Send("You wear " + wear->GetName() + ".\n\r");
 }
 
 void cmd_drop(Player * ch, string argument)
@@ -336,7 +336,7 @@ void cmd_drop(Player * ch, string argument)
         ch->Send("You're not carrying that item.\n\r");
         return;
     }
-	ch->SetQuery("Destroy " + item->name + "? (y/n) ", item, cmd_drop_Query);
+	ch->SetQuery("Destroy " + item->GetName() + "? (y/n) ", item, cmd_drop_Query);
 }
 
 bool cmd_drop_Query(Player * ch, string argument)
@@ -357,12 +357,12 @@ bool cmd_drop_Query(Player * ch, string argument)
     {
         Item * item = (Item*)ch->GetQueryData(); //the query data is the Item Index just in case it got deleted in the meantime
         ch->QueryClear();
-        if((item = ch->GetItemInventory(item->id)) == nullptr)
+        if((item = ch->GetItemInventory(item->GetID())) == nullptr)
         {
             ch->Send("You're not carrying that item.\n\r");
             return true;
         }
-        ch->RemoveItemInventory(item->id);
+        ch->RemoveItemInventory(item->GetID());
         return true;
     }
     ch->QueryClear();
@@ -409,7 +409,7 @@ void cmd_take(Player * ch, string argument)
 	json casttime = { { "time", 2.5 } };
 	ch->SendGMCP("char.casttime " + casttime.dump());
 
-	ch->Send("You begin taking " + i->name + "...\n\r");
+	ch->Send("You begin taking " + i->GetName() + "...\n\r");
 
 	ch->delay = (Game::GetGame()->currentTime + 2.5);
 	Character::DelayData dd;
@@ -455,8 +455,8 @@ void cmd_takeCallback(Character::DelayData delayData)
 	{
 		((Player*)(delayData.caster))->AddItemInventory(delayData.itemTarget);
 	}
-	delayData.caster->Send("You take " + delayData.itemTarget->name + "\n\r");
-	delayData.caster->Message(delayData.caster->GetName() + " takes " + delayData.itemTarget->name, Character::MSG_ROOM_NOTCHAR);
+	delayData.caster->Send("You take " + delayData.itemTarget->GetName() + "\n\r");
+	delayData.caster->Message(delayData.caster->GetName() + " takes " + delayData.itemTarget->GetName(), Character::MSG_ROOM_NOTCHAR);
 }
 
 void cmd_loot(Player * ch, string argument)
@@ -492,7 +492,7 @@ void cmd_loot(Player * ch, string argument)
 				iter = ch->pending_loot_rolls.erase(iter);
 				continue;
 			}
-			ch->Send(Utilities::itos(iter->my_id) + ". " + (string)Item::quality_strings[loot->item->quality] + loot->item->name + "|X");
+			ch->Send(Utilities::itos(iter->my_id) + ". " + (string)Item::quality_strings[loot->item->quality] + loot->item->GetName() + "|X");
 			if (loot->roll_timer > 0 && loot->roll_timer > Game::currentTime)
 				ch->Send(" |Y[" + Utilities::dtos(loot->roll_timer - Game::currentTime, 1) + "s remaining]|X");
 			ch->Send("\n\r");
@@ -512,7 +512,7 @@ void cmd_loot(Player * ch, string argument)
 				if (can_loot != std::end(iter->looters))
 				{
 					lootable_items = true;
-					ch->Send(Utilities::itos(iter->id) + ". " + (string)Item::quality_strings[iter->item->quality] + iter->item->name + "|X");
+					ch->Send(Utilities::itos(iter->id) + ". " + (string)Item::quality_strings[iter->item->quality] + iter->item->GetName() + "|X");
 					if (iter->roll_timer > 0 && iter->roll_timer > Game::currentTime)
 						ch->Send(" |Y[" + Utilities::dtos(iter->roll_timer - Game::currentTime, 1) + "s remaining]|X");
 					ch->Send("\n\r");
@@ -553,10 +553,10 @@ void cmd_loot(Player * ch, string argument)
 						{
 							if (looter_iter->ch != ch)
 							{
-								looter_iter->ch->Send(ch->GetName() + " receives loot: " + (string)Item::quality_strings[oneloot->item->quality] + oneloot->item->name + "|X\n\r");
+								looter_iter->ch->Send(ch->GetName() + " receives loot: " + (string)Item::quality_strings[oneloot->item->quality] + oneloot->item->GetName() + "|X\n\r");
 							}
 						}
-						ch->Send("You receive loot: " + (string)Item::quality_strings[theitem->quality] + theitem->name + "|X\n\r");
+						ch->Send("You receive loot: " + (string)Item::quality_strings[theitem->quality] + theitem->GetName() + "|X\n\r");
 						loot_target->RemoveLoot(oneloot);
 					}
 					else
@@ -728,14 +728,14 @@ void cmd_eat(Player * ch, string argument)
 		Skill * sk = Game::GetGame()->GetSkill(eat->useSkillID);
 		if (sk == nullptr)
 		{
-			LogFile::Log("error", "Item \"" + eat->name + "\": cmd_eat bad skillid");
+			LogFile::Log("error", "Item \"" + eat->GetName() + "\": cmd_eat bad skillid");
 			return;
 		}
 
 
 		ch->Sit();
 		ch->RemoveItemInventory(eat);
-		ch->Send("You start eating " + eat->name + ".\n\r");
+		ch->Send("You start eating " + eat->GetName() + ".\n\r");
 
 		string func = sk->function_name + "_cast";
 		try

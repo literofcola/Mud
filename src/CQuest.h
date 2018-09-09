@@ -14,7 +14,6 @@ public:
     Quest(std::string name, int id);
     ~Quest();
 
-    //Quest "index" data
     int id;
     std::string name;
     std::string shortDescription;

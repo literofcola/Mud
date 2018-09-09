@@ -30,8 +30,8 @@ public:
 	bool IsGroupLeader(Player * ch);
 	Player * FindByName(std::string name);
 	int GetMemberCount() { return count; };
-	bool IsRaidGroup();
-	void MakeRaidGroup();
+	bool IsRaidGroup() { return raid; };
+	void MakeRaidGroup() { raid = true; };
 
 private:
 	int count;

@@ -11,11 +11,10 @@ class Player;
 class Item : public SubscriberManager
 {
 public:
-    Item();
+    Item() = delete;
     Item(std::string name_, int id_);
-    Item(const Item&);
+    Item(const Item&) = delete;
     ~Item();
-    void SetDefaults();
 
     enum EquipLocation
     { 
@@ -37,22 +36,20 @@ public:
         TYPE_WEAPON_AXE, TYPE_WEAPON_POLEARM, TYPE_WEAPON_STAFF, TYPE_CONTAINER, TYPE_FOOD, TYPE_CONSUMABLE, TYPE_MISC, TYPE_LAST
     };
 
-    std::vector<int> flags; //a vector of constants to indicate flag is set
     enum Flags
     {
         FLAG_ROOMONLY
     };
+
     struct flag_type
     {
         int flag;
         std::string flag_name;
     };
-    static flag_type flag_table[];
-
-    int id;
-    std::string name;
+    
 	std::string keywords;
 	std::string inroom_name;
+	std::vector<int> flags; //a vector of constants to indicate flag is set
     int itemLevel;
     int charLevel;
 	int binds;
@@ -71,7 +68,7 @@ public:
 	double speed;
 	int value;
     std::list<Item *> contents; //TODO
-
+	bool changed;
 	//stat bonuses
 	int agility;	//crit chance and avoidance
 	int intellect;  //spell power
@@ -85,25 +82,26 @@ public:
 	//dodge chance
 	//spell school resist?
 
-	std::string FormatItemInfo(Player * ch = nullptr);
+	int GetID() { return id; };
+	std::string GetName() { return name; };
+	void Save();
+	std::string FormatItemInfo(Player * ch = nullptr); //optional argument will add coloring based on player
+	friend void itemEditCmd_name(Player * ch, std::string argument); //keep tabs on the places we're allowed to change name
+
+	static flag_type flag_table[];
+	static const char * equip_strings[];
+	static const char * quality_strings[];
+	static const char * type_strings[];
+	static const char * bind_strings[];
 
     //For search  Store a reference to all searchable class data by type
     std::map<std::string, std::string*> stringTable;
     std::map<std::string, int*> intTable;
     std::map<std::string, double*> doubleTable;
 
-    bool changed;
-
-    void Save();
-
-    static const char * equip_strings[];
-    static const char * quality_strings[];
-    static const char * type_strings[];
-    static const char * bind_strings[];
-
 private:
-
-   
+	int id;
+    std::string name;
 };
 
 #endif

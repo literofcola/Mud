@@ -21,7 +21,6 @@ private:
     static CRITICAL_SECTION logFileCS;
     static bool init;
 
-
     static std::map<const char *, std::ofstream*> files;
 };
 

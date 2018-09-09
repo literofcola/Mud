@@ -10,7 +10,7 @@ Skill::flag_type Skill::flag_table[] =
 	{ -1, "" }
 };
 
-Skill::Skill()
+/*Skill::Skill()
 {
     cooldown = 0;
     castTime = 0;
@@ -25,7 +25,7 @@ Skill::Skill()
     stringTable["long_name"] = &long_name;
     stringTable["function_name"] = &function_name;
     stringTable["description"] = &description;
-}
+}*/
 
 Skill::Skill(int id_, std::string long_name_)
 {

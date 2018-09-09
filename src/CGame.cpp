@@ -1816,9 +1816,7 @@ void Game::LoadItems(Server * server)
     for(iter = itemres.begin(); iter != itemres.end(); ++iter)
     {
         row = *iter;
-        Item * i = new Item();
-        i->id = row["id"];
-        i->name = (string)row["name"];
+        Item * i = new Item((string)row["name"], row["id"]);
 		i->keywords = (string)row["keywords"];
 		i->inroom_name = (string)row["inroom_name"];
         i->charLevel = row["char_level"];
@@ -1843,7 +1841,7 @@ void Game::LoadItems(Server * server)
 		i->wisdom = row["wisdom"];
 		i->spirit = row["spirit"];
 
-        items[i->id] = i;
+        items[i->GetID()] = i;
     }
 }
 
@@ -2365,7 +2363,7 @@ Item * Game::CreateItemAnyID(string arg)
     std::map<int,Item *>::iterator iter;
     for(iter = items.begin(); iter != items.end(); ++iter)
     {
-        if(ctr != iter->second->id)
+        if(ctr != iter->second->GetID())
         {
             //found the first integer not in the map
             break;
@@ -2375,7 +2373,7 @@ Item * Game::CreateItemAnyID(string arg)
 
     Item * pItem = new Item(arg, ctr);
     pItem->changed = true;
-	items.insert(std::pair<int, Item *>(pItem->id, pItem));
+	items.insert(std::make_pair(pItem->GetID(), pItem));
     return pItem;
 }
 
@@ -2794,21 +2792,21 @@ int Game::Search(string table_name, string field_name, int conditional_type, str
 			case 1:
 				if (SearchComparisonInt(*(iter->second->intTable[field_name]), value, conditional_type))
 				{
-					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + Utilities::itos(*(iter->second->intTable[field_name])) + "\n\r";
+					result += "[" + Utilities::itos(iter->second->GetID()) + "] " + iter->second->GetName() + ":  " + Utilities::itos(*(iter->second->intTable[field_name])) + "\n\r";
 					++results_found;
 				}
 				break;
 			case 2:
 				if (SearchComparisonDouble(*(iter->second->doubleTable[field_name]), value, conditional_type))
 				{
-					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + Utilities::dtos(*(iter->second->doubleTable[field_name]), 2) + "\n\r";
+					result += "[" + Utilities::itos(iter->second->GetID()) + "] " + iter->second->GetName() + ":  " + Utilities::dtos(*(iter->second->doubleTable[field_name]), 2) + "\n\r";
 					++results_found;
 				}
 				break;
 			case 3:
 				if (SearchComparisonString(*(iter->second->stringTable[field_name]), argument, conditional_type))
 				{
-					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + *(iter->second->stringTable[field_name]) + "\n\r";
+					result += "[" + Utilities::itos(iter->second->GetID()) + "] " + iter->second->GetName() + ":  " + *(iter->second->stringTable[field_name]) + "\n\r";
 					++results_found;
 				}
 				break;

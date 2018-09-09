@@ -14,7 +14,6 @@ public:
     int type; //npc, item
     int targetID;
     Character * npc;
-	//Item * item; //use inroom->items instead
 	Room * inroom;
     int interval; //WorldUpdate only checks resets every 30 seconds
     int wanderDistance;

@@ -18,7 +18,8 @@ std::string Exit::reverseExitNames[Exit::DIR_LAST] =
     "south", "southwest", "west", "northwest", "north", "northeast", "east", "southeast", "below", "above" 
 };
 
-int Exit::exitOpposite[Exit::DIR_LAST] = { 4, 5, 6, 7, 0, 1, 2, 3, 9, 8 };
+int Exit::exitOpposite[Exit::DIR_LAST] = 
+{ DIR_SOUTH, DIR_SOUTHWEST, DIR_WEST, DIR_NORTHWEST, DIR_NORTH, DIR_NORTHEAST, DIR_EAST, DIR_SOUTHEAST, DIR_DOWN, DIR_UP };
 
 Exit::Exit(Room * from_, Room * to_, int dir)
 {

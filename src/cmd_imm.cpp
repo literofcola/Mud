@@ -159,7 +159,7 @@ void cmd_load(Player * ch, string argument)
             return;
         }
         ch->AddItemInventory(itemIndex);
-		ch->Send(itemIndex->name + " loaded into inventory.\n\r");
+		ch->Send(itemIndex->GetName() + " loaded into inventory.\n\r");
     }
     else
     {

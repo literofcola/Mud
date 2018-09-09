@@ -193,7 +193,7 @@ void cmd_look(Player * ch, std::string argument)
 				if(!itemiter->first->inroom_name.empty())
 					ch->Send(itemiter->first->inroom_name + "\n\r");
 				else
-					ch->Send(itemiter->first->name + "\n\r");
+					ch->Send(itemiter->first->GetName() + "\n\r");
 			}
 
 			std::list<Character *>::iterator i;
@@ -1468,7 +1468,7 @@ void cmd_quest(Player * ch, std::string argument)
                         {
                             for(auto inviter = ch->inventory.begin(); inviter != ch->inventory.end(); ++inviter)
                             {
-                                if(inviter->first->id == ((Item*)((*iter).objective))->id)
+                                if(inviter->first->GetID() == ((Item*)((*iter).objective))->GetID())
                                 {
                                     ch->questObjectives[ch->questLog.size()-1][objindex]++;
                                 }
@@ -1734,7 +1734,7 @@ bool questCompleteQuery(Player * ch, std::string argument)
 	Item * myreward = Game::GetGame()->GetItem(quest->itemRewards[choice - 1]);
 	if(myreward)
 	{
-		ch->Send("|WYou receive loot: " + std::string(Item::quality_strings[myreward->quality]) + myreward->name + "|X\n\r");
+		ch->Send("|WYou receive loot: " + std::string(Item::quality_strings[myreward->quality]) + myreward->GetName() + "|X\n\r");
 		ch->AddItemInventory(myreward);
 	}
 

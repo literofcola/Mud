@@ -275,7 +275,7 @@ CREATE TABLE `player_active_quests` (
 
 LOCK TABLES `player_active_quests` WRITE;
 /*!40000 ALTER TABLE `player_active_quests` DISABLE KEYS */;
-INSERT INTO `player_active_quests` VALUES ('Bobo',1,'4'),('Bobo',4,'8'),('Boris',15,'3'),('Boris',16,'0'),('Maikeru',5,'1'),('Momo',1,'0'),('Momo',4,'0'),('Tanktest',1,'0'),('Tanktest',4,'7'),('Tanktest',5,'0');
+INSERT INTO `player_active_quests` VALUES ('Bobo',1,'4'),('Bobo',4,'8'),('Boris',15,'4'),('Boris',16,'0'),('Maikeru',5,'1'),('Momo',1,'0'),('Momo',4,'0'),('Tanktest',1,'0'),('Tanktest',4,'7'),('Tanktest',5,'0');
 /*!40000 ALTER TABLE `player_active_quests` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -374,7 +374,6 @@ CREATE TABLE `player_cooldowns` (
 
 LOCK TABLES `player_cooldowns` WRITE;
 /*!40000 ALTER TABLE `player_cooldowns` DISABLE KEYS */;
-INSERT INTO `player_cooldowns` VALUES ('Boris',9,1536436287.86);
 /*!40000 ALTER TABLE `player_cooldowns` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -400,7 +399,7 @@ CREATE TABLE `player_inventory` (
 
 LOCK TABLES `player_inventory` WRITE;
 /*!40000 ALTER TABLE `player_inventory` DISABLE KEYS */;
-INSERT INTO `player_inventory` VALUES ('Tash',4,1,0),('Tash',5,1,0),('Tash',6,1,0),('Tash',3,1,0),('Tash',19,1,1),('Tash',19,1,1),('Tash',19,1,1),('Tash',19,1,1),('Tash',19,1,1),('Maikeru',12,1,0),('Maikeru',27,1,0),('Maikeru',11,1,0),('Maikeru',13,1,0),('Maikeru',14,1,0),('Maikeru',19,1,1),('Maikeru',19,1,1),('Maikeru',19,1,1),('Maikeru',19,1,1),('Maikeru',19,1,1),('Maikeru',19,1,1),('Maikeru',19,1,1),('Maikeru',19,1,1),('Maikeru',19,1,1),('Maikeru',18,1,1),('Maikeru',18,1,1),('Maikeru',18,1,1),('Maikeru',18,1,1),('Maikeru',18,1,1),('Maikeru',18,1,1),('Maikeru',18,1,1),('Maikeru',18,1,1),('Maikeru',18,1,1),('Maikeru',18,1,1),('Maikeru',21,1,1),('Bob',4,1,0),('Bob',5,1,0),('Bob',6,1,0),('Bob',3,1,0),('Bob',21,8,1),('Bob',20,2,1),('Bob',22,3,1),('Bobo',2,1,0),('Bobo',12,1,0),('Bobo',11,1,0),('Bobo',13,1,0),('Bobo',14,1,0),('Bobo',10,1,1),('Bobo',3,1,1),('Bobo',20,11,1),('Bobo',18,11,1),('Bobo',19,10,1),('Tanktest',2,1,0),('Tanktest',4,1,0),('Tanktest',5,1,0),('Tanktest',6,1,0),('Tanktest',1,1,0),('Tanktest',3,1,0),('Tanktest',10,2,1),('Tanktest',3,2,1),('Tanktest',18,12,1),('Tanktest',20,7,1),('Tanktest',1,1,1),('Tanktest',2,1,1),('Dpstest',8,1,0),('Dpstest',9,1,0),('Dpstest',7,1,0),('Dpstest',10,1,0),('Dpstest',18,10,1),('Dpstest',19,10,1),('Castertest',17,1,0),('Castertest',15,1,0),('Castertest',16,1,0),('Castertest',10,1,0),('Castertest',31,1,1),('Castertest',1,3,1),('Castertest',18,10,1),('Castertest',19,10,1),('Castertest',20,2,1),('Castertest',2,1,1),('Momo',4,1,0),('Momo',5,1,0),('Momo',6,1,0),('Momo',3,1,0),('Momo',18,10,1),('Momo',19,10,1),('Boris',2,1,0),('Boris',1,1,0),('Boris',1,1,0),('Boris',3,1,0),('Boris',18,4,1),('Boris',20,1,1),('Boris',30,3,1);
+INSERT INTO `player_inventory` VALUES ('Tash',4,1,0),('Tash',5,1,0),('Tash',6,1,0),('Tash',3,1,0),('Tash',19,1,1),('Tash',19,1,1),('Tash',19,1,1),('Tash',19,1,1),('Tash',19,1,1),('Maikeru',12,1,0),('Maikeru',27,1,0),('Maikeru',11,1,0),('Maikeru',13,1,0),('Maikeru',14,1,0),('Maikeru',19,1,1),('Maikeru',19,1,1),('Maikeru',19,1,1),('Maikeru',19,1,1),('Maikeru',19,1,1),('Maikeru',19,1,1),('Maikeru',19,1,1),('Maikeru',19,1,1),('Maikeru',19,1,1),('Maikeru',18,1,1),('Maikeru',18,1,1),('Maikeru',18,1,1),('Maikeru',18,1,1),('Maikeru',18,1,1),('Maikeru',18,1,1),('Maikeru',18,1,1),('Maikeru',18,1,1),('Maikeru',18,1,1),('Maikeru',18,1,1),('Maikeru',21,1,1),('Bob',4,1,0),('Bob',5,1,0),('Bob',6,1,0),('Bob',3,1,0),('Bob',21,8,1),('Bob',20,2,1),('Bob',22,3,1),('Dpstest',8,1,0),('Dpstest',9,1,0),('Dpstest',7,1,0),('Dpstest',10,1,0),('Dpstest',18,10,1),('Dpstest',19,10,1),('Momo',4,1,0),('Momo',5,1,0),('Momo',6,1,0),('Momo',3,1,0),('Momo',18,10,1),('Momo',19,10,1),('Tanktest',2,1,0),('Tanktest',4,1,0),('Tanktest',5,1,0),('Tanktest',6,1,0),('Tanktest',1,1,0),('Tanktest',3,1,0),('Tanktest',2,1,1),('Tanktest',1,1,1),('Tanktest',20,7,1),('Tanktest',18,12,1),('Tanktest',3,2,1),('Tanktest',10,2,1),('Castertest',17,1,0),('Castertest',15,1,0),('Castertest',16,1,0),('Castertest',10,1,0),('Castertest',2,1,1),('Castertest',20,2,1),('Castertest',19,10,1),('Castertest',18,10,1),('Castertest',1,3,1),('Castertest',31,1,1),('Bobo',2,1,0),('Bobo',12,1,0),('Bobo',11,1,0),('Bobo',13,1,0),('Bobo',14,1,0),('Bobo',10,1,1),('Bobo',3,1,1),('Bobo',20,11,1),('Bobo',18,11,1),('Bobo',19,10,1),('Boris',2,1,0),('Boris',1,1,0),('Boris',1,1,0),('Boris',3,1,0),('Boris',18,4,1),('Boris',20,1,1),('Boris',30,4,1);
 /*!40000 ALTER TABLE `player_inventory` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -477,7 +476,7 @@ CREATE TABLE `players` (
 
 LOCK TABLES `players` WRITE;
 /*!40000 ALTER TABLE `players` DISABLE KEYS */;
-INSERT INTO `players` VALUES ('Bob','\r\Z',0,'',61309521,35,240,1,0,139,512,118,446,269,102,4460,2690,4,0,0,0,1758),('Bobo','\r\Z',0,'',1245,20,2,1,0,5,5,5,5,5,5,50,50,2,2,0,0,6),('Boris','\r\Z',10,'',61309521,127,240,1,7,251,261,490,729,285,261,3805,2850,2,2,0,0,3815),('Castertest','\r\Z',0,'',61309521,126,240,1,4,5,363,5,363,365,363,3630,3650,3,2,0,0,0),('Dpstest','\r\Z',0,'',61309521,20,240,1,6,5,5,5,209,202,5,2090,2020,2,2,0,0,1033),('Maikeru','\0W',0,'',1356,121,2,1,0,5,5,5,11,5,5,0,50,4,2,1532997372,92,0),('Momo','\r\Z',0,'',300,33,1,1,0,5,5,5,5,5,5,50,50,1,2,0,0,0),('Tanktest','\r\Z',0,'',61309521,126,240,1,7,291,5,489,669,5,5,6466,50,2,2,0,0,72),('Tash','FCU',0,'',1451,3,2,1,2,5,5,5,5,5,0,50,100,1,2,0,0,6);
+INSERT INTO `players` VALUES ('Bob','\r\Z',0,'',61309521,35,240,1,0,139,512,118,446,269,102,4460,2690,4,0,0,0,1758),('Bobo','\r\Z',0,'',1268,123,2,1,0,5,5,5,5,5,5,34,36,2,2,0,0,6),('Boris','\r\Z',10,'',61309521,126,240,1,7,251,261,490,729,285,261,7290,2850,2,2,0,0,3815),('Castertest','\r\Z',0,'',61309521,126,240,1,4,5,363,5,363,365,363,3630,3650,3,2,0,0,0),('Dpstest','\r\Z',0,'',61309521,20,240,1,6,5,5,5,209,202,5,2090,2020,2,2,0,0,1033),('Maikeru','\0W',0,'',1356,121,2,1,0,5,5,5,11,5,5,0,50,4,2,1532997372,92,0),('Momo','\r\Z',0,'',300,33,1,1,0,5,5,5,5,5,5,50,50,1,2,0,0,0),('Tanktest','\r\Z',0,'',61309521,126,240,1,7,291,5,489,669,5,5,6690,50,2,2,0,0,72),('Tash','FCU',0,'',1451,3,2,1,2,5,5,5,5,5,0,50,100,1,2,0,0,6);
 /*!40000 ALTER TABLE `players` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -702,4 +701,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-09-08 15:04:41
+-- Dump completed on 2018-09-09 14:23:07
