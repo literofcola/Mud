@@ -1209,6 +1209,9 @@ bool Player::CanRes(int time_since_death)
 
 bool Player::CanWearArmor(int armortype)
 {
+	if (armortype < Item::TYPE_ARMOR_CLOTH || armortype > Item::TYPE_ARMOR_PLATE)
+		return true;
+
 	std::list<Player::ClassData>::iterator iter;
 	for (iter = classList.begin(); iter != classList.end(); ++iter)
 	{

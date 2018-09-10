@@ -224,6 +224,10 @@ void cmd_wear(Player * ch, string argument)
                 {
                     continue;
                 }
+				if (!ch->CanWearArmor(wear->type))
+				{
+					continue;
+				}
                 ch->EquipItemFromInventory(wear);
 				ch->AddEquipmentStats(wear);
                 ch->Send("You wear " + wear->GetName() + ".\n\r");
@@ -245,6 +249,13 @@ void cmd_wear(Player * ch, string argument)
         ch->Send("You can't equip that item.\n\r");
         return;
     }
+
+	if ((wear->type == Item::TYPE_ARMOR_CLOTH || wear->type == Item::TYPE_ARMOR_LEATHER
+		|| wear->type == Item::TYPE_ARMOR_MAIL || wear->type == Item::TYPE_ARMOR_PLATE) && !ch->CanWearArmor(wear->type))
+	{
+		ch->Send("You can't equip that item.\n\r");
+		return;
+	}
 
     Item * removed = ch->RemoveItemEquipped(equiploc);
     if(removed != nullptr) //remove anything already in this slot

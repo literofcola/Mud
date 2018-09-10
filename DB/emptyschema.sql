@@ -148,6 +148,20 @@ CREATE TABLE `npc_drops` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `npc_skills`
+--
+
+DROP TABLE IF EXISTS `npc_skills`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `npc_skills` (
+  `npc` int(11) NOT NULL,
+  `skill` int(11) NOT NULL,
+  PRIMARY KEY (`npc`,`skill`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `npcs`
 --
 
@@ -474,4 +488,4 @@ CREATE TABLE `triggers` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-09-09 14:23:06
+-- Dump completed on 2018-09-09 22:28:06
