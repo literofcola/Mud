@@ -376,65 +376,81 @@ void cmd_commands(Player * ch, std::string argument)
 
 void cmd_score(Player * ch, std::string argument)
 {
-    ch->Send("Player information for " + ch->GetName() + ":\n\r");
-    ch->Send("Level: " + Utilities::itos(ch->GetLevel()) + "\n\r");
-    ch->Send("Class: " + ch->currentClass->name + "\n\r");
-    ch->Send("Class Level: " + Utilities::itos(ch->GetClassLevel(ch->currentClass->GetID())) + "\n\r");
-    ch->Send("Class History: ");
+	std::stringstream score;
+	score.setf(std::ios_base::fixed);
+
+	score << "|BPlayer Information for: |X" << ch->GetName() << " " << ch->GetTitle() << "|X\n\r";
+	score << "|BTotal Level: |X" << std::setw(11) << std::left << ch->GetLevel();
+	score << " |BClass Level: |X" << ch->GetClassLevel(ch->currentClass->GetID()) << "\n\r";
+	if (ch->IsImmortal())
+		score << "|BImmortal Level: |X" << ch->GetImmLevel() << "\n\r";
+	score << "|BRace: |X" << std::setw(18) << std::left << Character::race_table[ch->race].name;
+	score << " |BGender: |X" << (ch->GetGender() ? "male\n\r" : "female\n\r");
+	score << "|BClass: |X" << std::setw(17) << std::left << ch->currentClass->name;
+	score << " |BClass History: |X";
+	
 
     bool found = false;
     std::list<Player::ClassData>::iterator iter;
     for(iter = ch->classList.begin(); iter != ch->classList.end(); ++iter)
     {
         Class * c = Game::GetGame()->GetClass((*iter).id);
-        ch->Send("[" + c->name + " " + Utilities::itos((*iter).level) + "] ");
+		score << "[" << c->name << " " << iter->level << "] ";
         found = true;
     }
     if(found)
     {
-        ch->Send("\n\r");
+		score << "\n\r";
     }
     else
     {
-        ch->Send("None\n\r");
+		score << "None\n\r";
     }
-	ch->Send("Available armor types: ");
+
+	score << "|BHealth: |X" << std::setw(5) << std::right << ch->GetHealth() << "|B/|X" << std::setw(11) << std::left << ch->GetMaxHealth();
+	score << "|BMana: |X" << std::setw(5) << std::right << ch->GetMana() << "|B/|X" << ch->GetMaxMana() << "\n\r";
+	score << "|BEnergy: |X" << std::setw(5) << std::right << ch->GetEnergy() << "|B/|X" << std::setw(11) << std::left << ch->GetMaxEnergy();
+	score << "|BRage: |X" << std::setw(5) << std::right << ch->GetRage() << "|B/|X" << ch->GetMaxRage() << "\n\r";
+
+	score << "|BAgility: |X" << std::setw(16) << std::left << ch->GetAgility() << "|BIntellect: |X" << ch->GetIntellect() << "\n\r";
+	score << "|BStrength: |X" << std::setw(15) << std::left << ch->GetStrength() << "|BStamina: |X" << ch->GetStamina() << "\n\r";
+	score << "|BWisdom: |X" << std::setw(17) << std::left << ch->GetWisdom() << "|BSpirit: |X" << ch->GetSpirit() << "\n\r";
+
+	score << "|BAttribute Points: |X" << ch->statPoints << "\n\r";
+
+	score << "|BDodge chance: |X" << std::setw(5) << std::right << std::setprecision(2) << ch->GetDodge() << std::setw(6) << std::left << "%";
+	score << "|BCritical Strike chance: |X" << std::setprecision(2) << ch->GetCrit() << "%\n\r";
+
+	score << "|BYou can wear the following armor types: |X";
+
 	if (ch->CanWearArmor(Item::TYPE_ARMOR_CLOTH))
-		ch->Send("Cloth ");
+		score << "Cloth ";
 	if (ch->CanWearArmor(Item::TYPE_ARMOR_LEATHER))
-		ch->Send("Leather ");
+		score << "Leather ";
 	if (ch->CanWearArmor(Item::TYPE_ARMOR_MAIL))
-		ch->Send("Mail ");
+		score << "Mail ";
 	if (ch->CanWearArmor(Item::TYPE_ARMOR_PLATE))
-		ch->Send("Plate ");
-	ch->Send("\n\r");
-    if(ch->IsImmortal())
-        ch->Send("Immortal Level: " + Utilities::itos(ch->GetImmLevel()) + "\n\r");
-    ch->Send("Health: " + Utilities::itos(ch->GetHealth()) + "/" + Utilities::itos(ch->GetMaxHealth()));
-    ch->Send("  Mana: " + Utilities::itos(ch->GetMana()) + "/" + Utilities::itos(ch->GetMaxMana()));
-    ch->Send("  Energy: " + Utilities::itos(ch->GetEnergy()) + "/" + Utilities::itos(ch->GetMaxEnergy()));
-	ch->Send("  Rage: " + Utilities::itos(ch->GetRage()) + "/" + Utilities::itos(ch->GetMaxRage()) + "\n\r");
-    ch->Send("Agility: " + Utilities::itos(ch->GetAgility()) + " Intellect: " + Utilities::itos(ch->GetIntellect())
-        + " Strength: " + Utilities::itos(ch->GetStrength()) + " Stamina: " + Utilities::itos(ch->GetStamina()) + " Wisdom: "
-        + Utilities::itos(ch->GetWisdom()) + " Spirit: " + Utilities::itos(ch->GetSpirit()) + "\n\r");
-	ch->Send("Attribute Points available: " + Utilities::itos(ch->statPoints) + "\n\r");
-    ch->Send("Experience: " + Utilities::itos(ch->experience) + "\n\r");
-    ch->Send("You have " + Utilities::itos(ch->experience) + " experience and need " 
-                    + Utilities::itos(Game::ExperienceForLevel(ch->GetLevel()+1)) + " experience to reach level " 
-                    + Utilities::itos(ch->GetLevel()+1) + " (" + Utilities::itos((Game::ExperienceForLevel(ch->GetLevel()+1) - ch->experience))
-                    + " tnl)\n\r");
+		score << "Plate ";
+	score << "\n\r";
+
+    score << "|BYou have |X" << ch->experience << "|B experience and need |X"
+		<< Game::ExperienceForLevel(ch->GetLevel()+1) << "|B experience to reach level |X"
+		<< ch->GetLevel()+1 << "|B (|X" << (Game::ExperienceForLevel(ch->GetLevel()+1) - ch->experience) << "|B tnl)|X\n\r";
+
     double movespeed = ch->GetMoveSpeed();
-    ch->Send("Current movement speed: " + Utilities::dtos(ch->movementSpeed * movespeed, 2) + " rooms per second ("
-        + Utilities::dtos(movespeed*100, 0) + "% of normal)\n\r");
+    score << "|BCurrent movement speed: |X" << std::setprecision(2) << ch->movementSpeed * movespeed << "|B rooms per second (|X"
+		<< std::setprecision(0) << movespeed*100 << "% |Bof normal)|X\n\r";
+
 	if (!ch->IsAlive())
 	{
 		int res_at_graveyard = ch->death_timer - ch->TimeSinceDeath();
 		int res_at_corpse = ch->death_timer_runback - ch->TimeSinceDeath();
-		if(res_at_graveyard > 0)
-			ch->Send("|W" + Utilities::itos(res_at_graveyard) + " seconds before you can resurrect at the graveyard.\n\r");
+		if (res_at_graveyard > 0)
+			score << "|W" << res_at_graveyard << " seconds before you can resurrect at the graveyard.\n\r";
 		if (res_at_corpse > 0)
-			ch->Send("|W" + Utilities::itos(res_at_corpse) + " seconds before you can resurrect near your corpse.\n\r");
+			score << "|W" << res_at_corpse << " seconds before you can resurrect near your corpse.\n\r";
 	}
+	ch->Send(score.str());
 }
 
 void cmd_scan(Player * ch, std::string argument)

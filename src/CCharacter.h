@@ -50,7 +50,7 @@ public:
 		double threat;
 		double damage;
 		double healing;
-		bool tapped; //This character has a valid "tap" on us
+		bool tapped; //This 'ch' has a valid "tap" on us
 		enum Type { THREAT_DAMAGE, THREAT_HEALING, THREAT_OTHER };
 	};
 	struct DelayData
@@ -73,6 +73,11 @@ public:
     //Combat
     bool meleeActive;
     std::list<Threat> threatList;
+	static constexpr double BASE_MISS_CHANCE = 5.00;
+	static constexpr double DODGE_PER_AGILITY = 0.035;
+	static constexpr double CRIT_PER_AGILITY = 0.03;
+	static constexpr double CRIT_MAX = 75;
+	static constexpr double DODGE_MAX = 50;
 
     //Spells/Skills
     double delay;
@@ -131,6 +136,8 @@ public:
 	Character * GetTap();
 	std::string AggressionColor(Character * target);
 	std::string AggressionLightColor(Character * target);
+	virtual double GetDodge() = 0;
+	virtual double GetCrit() = 0;
 
 	//Skills/Spell Affects
 	virtual bool HasSkill(Skill * sk) { return true; };

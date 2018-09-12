@@ -87,6 +87,8 @@ public:
 	int GetOffhandDamageRandomHit() override;
 	double GetOffhandDamagePerSecond() override;
 	int GetMainhandDamageRandomHit() override;
+	double GetDodge() override { return 0;  }; //todo: npcindex needs these fields, no stats!
+	double GetCrit() override { return 0; };
 
 	void Cast(std::string argument) override;
 

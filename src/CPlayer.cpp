@@ -1232,6 +1232,20 @@ void Player::HandleNPCKillRewards(Character * killed)
 	QuestCompleteObjective(Quest::OBJECTIVE_KILLNPC, (void*)killed);
 }
 
+double Player::GetDodge()
+{
+	if (agility * Character::DODGE_PER_AGILITY > Character::DODGE_MAX)
+		return Character::DODGE_MAX;
+	return agility * Character::DODGE_PER_AGILITY;
+}
+
+double Player::GetCrit()
+{
+	if (agility * CRIT_PER_AGILITY > CRIT_MAX)
+		return CRIT_MAX;
+	return agility * CRIT_PER_AGILITY;
+}
+
 Player * Player::LoadPlayer(std::string name, User * user)
 {
 	StoreQueryResult characterres = Server::sqlQueue->Read("select * from players where name='" + name + "'");

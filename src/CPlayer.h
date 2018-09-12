@@ -144,6 +144,8 @@ public:
 	double GetOffhandDamagePerSecond() override;
 	int GetMainhandDamageRandomHit() override;
 	void HandleNPCKillRewards(Character * killed);
+	double GetDodge() override;
+	double GetCrit() override;
 
 	//Movement
 	inline int GetRecall() override { return recall; };

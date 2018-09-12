@@ -1036,16 +1036,48 @@ void Character::AutoAttack(Character * victim)
             ((Player*)(victim))->lastCombatAction = Game::currentTime;
         lastAutoAttack_main = Game::currentTime;
 
+		double percent = (double)(Server::rand() % 100);
+		double range_low = 0;
+		double range_high = BASE_MISS_CHANCE;
+		bool crit = false;
+		if (percent <= range_high)
+		{
+			//miss
+			victim->Send("|Y" + GetName() + "'s attack misses you.|X\n\r");
+			return;
+		}
+		range_low = range_high;
+		range_high += victim->GetDodge();
+		if (percent > range_low && percent <= range_high)
+		{
+			//dodge
+			victim->Send("|YYou dodge " + GetName() + "'s attack.|X\n\r");
+			return;
+		}
+		range_low = range_high;
+		range_high += GetCrit();
+		if (percent > range_low && percent <= range_high)
+		{
+			//crit
+			crit = true;
+		}
+
         int damage = thisnpc->GetNPCIndex()->npcDamageLow;
         if(thisnpc->GetNPCIndex()->npcDamageHigh != thisnpc->GetNPCIndex()->npcDamageLow)
             damage = (Server::rand() % (thisnpc->GetNPCIndex()->npcDamageHigh - thisnpc->GetNPCIndex()->npcDamageLow)) + thisnpc->GetNPCIndex()->npcDamageLow;
 		if (victim->IsPlayer())
 			((Player*)(victim))->GenerateRageOnTakeDamage(damage);
 
-		victim->Send("|Y" + GetName() + " hits you for " + Utilities::itos(damage) + " damage.|X\n\r");
+		string hitcrit = "hits";
+		if (crit)
+		{
+			damage = (int)(damage * 1.5);
+			hitcrit = "CRITS";
+		}
+		victim->Send("|Y" + GetName() + "'s attack " + hitcrit + " you for " + Utilities::itos(damage) + " damage.|X\n\r");
 		//Message("|G" + name + "'s attack hits " + victim->name + " for " + Utilities::itos(damage) + " damage.|X", Character::MSG_ROOM_NOTCHARVICT, victim);
 
-        OneHit(victim, damage); //TODO fancy damage calculations, block miss hit crit 
+        OneHit(victim, damage);
         //victim may be invalid here if it was killed!
     }
     else if(IsPlayer()) //Player autoattack
@@ -1074,7 +1106,6 @@ void Character::AutoAttack(Character * victim)
             if(victim->IsPlayer())
 				((Player*)(victim))->lastCombatAction = Game::currentTime;
             lastAutoAttack_main = Game::currentTime;
-			GenerateRageOnAttack(damage_main, weaponSpeed_main, true, false);
 
 			string tapcolor = "|G";
 			Character * thetap = victim->GetTap();
@@ -1082,11 +1113,51 @@ void Character::AutoAttack(Character * victim)
 			{
 				tapcolor = "|D";
 			}
-			Send(tapcolor + "You hit " + victim->GetName() + " for " + Utilities::itos(damage_main) + " damage.|X\n\r");
-			victim->Send("|Y" + GetName() + " hits you for " + Utilities::itos(damage_main) + " damage.|X\n\r");
+
+			double percent = (double)(Server::rand() % 100);
+			double range_low = 0;
+			double range_high = BASE_MISS_CHANCE;
+			bool crit = false;
+			if (percent <= range_high)
+			{
+				//miss
+				Send(tapcolor + "Your attack misses " + victim->GetName() + "|X\n\r");
+				victim->Send("|Y" + GetName() + "'s attack misses you.|X\n\r");
+				return;
+			}
+			range_low = range_high;
+			range_high += victim->GetDodge();
+			if (percent > range_low && percent <= range_high)
+			{
+				//dodge
+				Send(tapcolor + victim->GetName() + " dodges your attack.|X\n\r");
+				victim->Send("|YYou dodge " + GetName() + "'s attack.|X\n\r");
+				return;
+			}
+			range_low = range_high;
+			range_high += GetCrit();
+			if (percent > range_low && percent <= range_high)
+			{
+				//crit
+				crit = true;
+			}
+
+			string hitcrit = "hit";
+			string hitcrits = "hits";
+			if (crit)
+			{
+				damage_main = (int)(damage_main * 1.5);
+				hitcrit = "CRIT";
+				hitcrits = "CRITS";
+			}
+
+			GenerateRageOnAttack(damage_main, weaponSpeed_main, true, false);
+
+			Send(tapcolor + "You " + hitcrit + " " + victim->GetName() + " for " + Utilities::itos(damage_main) + " damage.|X\n\r");
+			victim->Send("|Y" + GetName() + " " + hitcrits + " you for " + Utilities::itos(damage_main) + " damage.|X\n\r");
 			//Message("|G" + name + "'s attack hits " + victim->name + " for " + Utilities::itos(damage_main) + " damage.|X", Character::MSG_ROOM_NOTCHARVICT, victim);
 
-            OneHit(victim, damage_main); //TODO fancy damage calculations, block miss hit crit 
+            OneHit(victim, damage_main);
             //victim may be invalid if it was killed!
         }
         if(attack_oh && thisplayer->lastAutoAttack_off + weaponSpeed_off <= Game::currentTime)
@@ -1102,19 +1173,58 @@ void Character::AutoAttack(Character * victim)
             if(victim->IsPlayer())
                 ((Player*)victim)->lastCombatAction = Game::currentTime;
 			thisplayer->lastAutoAttack_off = Game::currentTime;
-			GenerateRageOnAttack(damage_off, weaponSpeed_off, false, false);
-
+			
 			string tapcolor = "|G";
 			Character * thetap = victim->GetTap();
 			if (thetap != nullptr && thetap != this && !thetap->InSameGroup(this))
 			{
 				tapcolor = "|D";
 			}
-			Send(tapcolor + "You hit " + victim->GetName() + " for " + Utilities::itos(damage_off) + " damage.|X\n\r");
-			victim->Send("|Y" + GetName() + " hits you for " + Utilities::itos(damage_off) + " damage.|X\n\r");
+
+			double percent = (double)(Server::rand() % 100);
+			double range_low = 0;
+			double range_high = BASE_MISS_CHANCE;
+			bool crit = false;
+			if (percent <= range_high)
+			{
+				//miss
+				Send(tapcolor + "Your attack misses " + victim->GetName() + "|X\n\r");
+				victim->Send("|Y" + GetName() + "'s attack misses you.|X\n\r");
+				return;
+			}
+			range_low = range_high;
+			range_high += victim->GetDodge();
+			if (percent > range_low && percent <= range_high)
+			{
+				//dodge
+				Send(tapcolor + victim->GetName() + " dodges your attack.|X\n\r");
+				victim->Send("|YYou dodge " + GetName() + "'s attack.|X\n\r");
+				return;
+			}
+			range_low = range_high;
+			range_high += GetCrit();
+			if (percent > range_low && percent <= range_high)
+			{
+				//crit
+				crit = true;
+			}
+
+			string hitcrit = "hit";
+			string hitcrits = "hits";
+			if (crit)
+			{
+				damage_off = (int)(damage_off * 1.5);
+				hitcrit = "CRIT";
+				hitcrits = "CRITS";
+			}
+
+			GenerateRageOnAttack(damage_off, weaponSpeed_off, false, false);
+
+			Send(tapcolor + "You " + hitcrit + " " + victim->GetName() + " for " + Utilities::itos(damage_off) + " damage.|X\n\r");
+			victim->Send("|Y" + GetName() + " " + hitcrits + " you for " + Utilities::itos(damage_off) + " damage.|X\n\r");
 			//Message("|G" + name + "'s attack hits " + victim->name + " for " + Utilities::itos(damage_off) + " damage.|X", Character::MSG_ROOM_NOTCHARVICT, victim);
 
-            OneHit(victim, damage_off); //TODO fancy damage calculations, block miss hit crit 
+            OneHit(victim, damage_off);
             //victim may be invalid if it was killed!
         }
     }
