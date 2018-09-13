@@ -31,11 +31,11 @@ const char * Item::bind_strings[] =
 
 const char * Item::type_strings[] =
 {
-    "Cloth", "Leather", "Mail", "Plate", "Sword", "Dagger", "Mace", "Axe", "Polearm", "Staff", "Container", "Food", "Consumable", "", ""
+    "Cloth", "Leather", "Mail", "Plate", "Sword", "Dagger", "Mace", "Axe", "Polearm", "Staff", "Container", "Food", "Consumable", "", "Shield", ""
 };
 /*
 ARMOR_CLOTH, ARMOR_LEATHER, ARMOR_MAIL, ARMOR_PLATE, WEAPON_SWORD, WEAPON_DAGGER, WEAPON_MACE, 
-WEAPON_AXE, WEAPON_POLEARM, WEAPON_STAFF, CONTAINER, FOOD, CONSUMABLE, TYPE_MISC, TYPE_LAST
+WEAPON_AXE, WEAPON_POLEARM, WEAPON_STAFF, CONTAINER, FOOD, CONSUMABLE, TYPE_MISC, TYPE_SHIELD, TYPE_LAST
 */
 
 Item::flag_type Item::flag_table[] =
@@ -43,15 +43,9 @@ Item::flag_type Item::flag_table[] =
 	{ Item::FLAG_ROOMONLY, "room_only" },
 	{ -1, "" }
 };
-/*
-Item::Item()
-{
-    SetDefaults();
-}
-*/
+
 Item::Item(std::string name_, int id_)
 {
-    //SetDefaults();
     id = id_;
     name = name_;
 
@@ -92,75 +86,7 @@ Item::Item(std::string name_, int id_)
 	doubleTable["speed"] = &speed;
 	intTable["value"] = &value;
 }
-/*
-Item::Item(const Item & copy)
-{
-    SetDefaults();
-    id = copy.id;
-    name = copy.name;
-	keywords = copy.keywords;
-	inroom_name = copy.inroom_name;
-    itemLevel = copy.itemLevel;
-    charLevel = copy.charLevel;
-    quality = copy.quality;
-    equipLocation = copy.equipLocation;
-    binds = copy.binds;
-    type = copy.type;
-	useSkillID = copy.useSkillID;
-    armor = copy.armor;
-    quest = copy.quest;
-    unique = copy.unique;
-    durability = copy.durability;
-    damageLow = copy.damageLow;
-    damageHigh = copy.damageHigh;
-    speed = copy.speed;
-    value = copy.value;
-}
-*/
-/*
-void Item::SetDefaults()
-{
-    id = 0;
-	keywords.clear();
-	inroom_name.clear();
-    itemLevel = 0;
-    charLevel = 0;
-    equipLocation = Item::EQUIP_NONE;
-    quality = Item::QUALITY_POOR;
-    binds = Item::BIND_NONE;
-    type = Item::TYPE_MISC;
-	useSkillID = 0;
-    armor = 0;
-    quest = false;
-    unique = false;
-    durability = 0;
-    damageLow = 0;
-    damageHigh = 0;
-    speed = 0.0;
-    value = 0;
 
-    changed = false;
-
-    intTable["id"] = &id;
-    stringTable["name"] = &name;
-	stringTable["keywords"] = &keywords;
-	stringTable["inroom_name"] = &inroom_name;
-    intTable["itemLevel"] = &itemLevel;
-    intTable["charLevel"] = &charLevel;
-	intTable["binds"] = &binds;
-    intTable["equipLocation"] = &equipLocation;
-	intTable["type"] = &type;
-    intTable["quest"] = &quest;
-    intTable["quality"] = &quality;
-	intTable["unique"] = &unique;
-	intTable["armor"] = &armor;
-	intTable["durability"] = &durability;
-	intTable["damageLow"] = &damageLow;
-	intTable["damageHigh"] = &damageHigh;
-	doubleTable["speed"] = &speed;
-	intTable["value"] = &value;
-}
-*/
 Item::~Item()
 {
 

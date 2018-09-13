@@ -2203,7 +2203,7 @@ void itemEditCmd_type(Player * ch, std::string argument)
     {
         ch->Send("type: 0 TYPE_ARMOR_CLOTH, 1 TYPE_ARMOR_LEATHER, 2 TYPE_ARMOR_MAIL, 3 TYPE_ARMOR_PLATE, 4 TYPE_WEAPON_SWORD, 5 TYPE_WEAPON_DAGGER\n\r");
         ch->Send("      6 TYPE_WEAPON_MACE, 7 TYPE_WEAPON_AXE, 8 TYPE_WEAPON_POLEARM, 9 TYPE_WEAPON_STAFF, 10 TYPE_CONTAINER, 11 TYPE_FOOD\n\r");
-        ch->Send("      12 TYPE_CONSUMABLE, 13 TYPE_MISC\n\r");
+        ch->Send("      12 TYPE_CONSUMABLE, 13 TYPE_MISC, 14 TYPE_SHIELD\n\r");
         return;
     }
     int type = Utilities::atoi(arg1);
@@ -2211,7 +2211,7 @@ void itemEditCmd_type(Player * ch, std::string argument)
     {
         ch->Send("type: 0 TYPE_ARMOR_CLOTH, 1 TYPE_ARMOR_LEATHER, 2 TYPE_ARMOR_MAIL, 3 TYPE_ARMOR_PLATE, 4 TYPE_WEAPON_SWORD, 5 TYPE_WEAPON_DAGGER\n\r");
         ch->Send("      6 TYPE_WEAPON_MACE, 7 TYPE_WEAPON_AXE, 8 TYPE_WEAPON_POLEARM, 9 TYPE_WEAPON_STAFF, 10 TYPE_CONTAINER, 11 TYPE_FOOD\n\r");
-        ch->Send("      12 TYPE_CONSUMABLE, 13 TYPE_MISC\n\r");
+        ch->Send("      12 TYPE_CONSUMABLE, 13 TYPE_MISC, 14 TYPE_SHIELD\n\r");
         return;
     }
     pItem->changed = true;

@@ -306,7 +306,14 @@ void cmd_look(Player * ch, std::string argument)
     }
     else // "look argument" //TODO, look at things in the room with higher priority
     {
-        //TODO definitely want to make a function out of this
+		Character * ch_inspect = ch->GetCharacterRoom(arg1);
+		if (ch_inspect != nullptr && ch_inspect->IsPlayer())
+		{
+			ch->Send(ch_inspect->GetName() + " is currently wearing:\n\r");
+			ch->Send(((Player*)ch_inspect)->FormatEquipment().str());
+			return;
+		}
+
         Item * inspect = ch->GetItemInventory(arg1);
         if(inspect == nullptr)
         {

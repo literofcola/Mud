@@ -51,74 +51,7 @@ void cmd_inventory(Player * ch, string argument)
 
 void cmd_equipment(Player * ch, string argument)
 {
-    std::stringstream equipment;
-    
-    equipment << std::left << std::setw(15) << "<|BHead|X>";
-    ch->equipped[Player::EQUIP_HEAD] ? 
-        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_HEAD]->quality] << ch->equipped[Player::EQUIP_HEAD]->GetName() << "|X\n\r"
-        : equipment << "None\n\r";
-    equipment << std::setw(15) << "<|BNeck|X>";
-    ch->equipped[Player::EQUIP_NECK] ? 
-        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_NECK]->quality] << ch->equipped[Player::EQUIP_NECK]->GetName() << "|X\n\r"
-        : equipment << "None\n\r";
-    equipment << std::setw(15) << "<|BShoulder|X>";
-    ch->equipped[Player::EQUIP_SHOULDER] ? 
-        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_SHOULDER]->quality] << ch->equipped[Player::EQUIP_SHOULDER]->GetName() << "|X\n\r"
-        : equipment << "None\n\r";
-    equipment << std::setw(15) << "<|BBack|X>";
-    ch->equipped[Player::EQUIP_BACK] ? 
-        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_BACK]->quality] << ch->equipped[Player::EQUIP_BACK]->GetName() << "|X\n\r"
-        : equipment << "None\n\r";
-    equipment << std::setw(15) << "<|BChest|X>";
-    ch->equipped[Player::EQUIP_CHEST] ? 
-        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_CHEST]->quality] << ch->equipped[Player::EQUIP_CHEST]->GetName() << "|X\n\r"
-        : equipment << "None\n\r";
-    equipment << std::setw(15) << "<|BWrist|X>";
-    ch->equipped[Player::EQUIP_WRIST] ? 
-        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_WRIST]->quality] << ch->equipped[Player::EQUIP_WRIST]->GetName() << "|X\n\r"
-        : equipment << "None\n\r";
-    equipment << std::setw(15) << "<|BHands|X>";
-    ch->equipped[Player::EQUIP_HANDS] ? 
-        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_HANDS]->quality] << ch->equipped[Player::EQUIP_HANDS]->GetName() << "|X\n\r"
-        : equipment << "None\n\r";
-    equipment << std::setw(15) << "<|BWaist|X>";
-    ch->equipped[Player::EQUIP_WAIST] ? 
-        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_WAIST]->quality] << ch->equipped[Player::EQUIP_WAIST]->GetName() << "|X\n\r"
-        : equipment << "None\n\r";
-    equipment << std::setw(15) << "<|BLegs|X>";
-    ch->equipped[Player::EQUIP_LEGS] ? 
-        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_LEGS]->quality] << ch->equipped[Player::EQUIP_LEGS]->GetName() << "|X\n\r"
-        : equipment << "None\n\r";
-    equipment << std::setw(15) << "<|BFeet|X>";
-    ch->equipped[Player::EQUIP_FEET] ? 
-        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_FEET]->quality] << ch->equipped[Player::EQUIP_FEET]->GetName() << "|X\n\r"
-        : equipment << "None\n\r";
-    equipment << std::setw(15) << "<|BFinger|X>";
-    ch->equipped[Player::EQUIP_FINGER1] ? 
-        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_FINGER1]->quality] << ch->equipped[Player::EQUIP_FINGER1]->GetName() << "|X\n\r"
-        : equipment << "None\n\r";
-    equipment << std::setw(15) << "<|BFinger|X>";
-    ch->equipped[Player::EQUIP_FINGER2] ? 
-        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_FINGER2]->quality] << ch->equipped[Player::EQUIP_FINGER2]->GetName() << "|X\n\r"
-        : equipment << "None\n\r";
-    equipment << std::setw(15) << "<|BTrinket|X>";
-    ch->equipped[Player::EQUIP_TRINKET1] ? 
-        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_TRINKET1]->quality] << ch->equipped[Player::EQUIP_TRINKET1]->GetName() << "|X\n\r"
-        : equipment << "None\n\r";
-    equipment << std::setw(15) << "<|BTrinket|X>";
-    ch->equipped[Player::EQUIP_TRINKET2] ? 
-        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_TRINKET2]->quality] << ch->equipped[Player::EQUIP_TRINKET2]->GetName() << "|X\n\r"
-        : equipment << "None\n\r";
-    equipment << std::setw(15) << "<|BOffhand|X>";
-    ch->equipped[Player::EQUIP_OFFHAND] ? 
-        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_OFFHAND]->quality] << ch->equipped[Player::EQUIP_OFFHAND]->GetName() << "|X\n\r"
-        : equipment << "None\n\r";
-    equipment << std::setw(15) << "<|BMainhand|X>";
-    ch->equipped[Player::EQUIP_MAINHAND] ? 
-        equipment << Item::quality_strings[ch->equipped[Player::EQUIP_MAINHAND]->quality] << ch->equipped[Player::EQUIP_MAINHAND]->GetName() << "|X\n\r"
-        : equipment << "None\n\r";
-    equipment << "\n\r";
-
+    std::stringstream equipment = ch->FormatEquipment();
     ch->Send(equipment.str());
 }
 

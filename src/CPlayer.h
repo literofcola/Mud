@@ -216,6 +216,7 @@ public:
 	int GetEquippedItemIndex(std::string name);
 	Item * GetItemEquipped(std::string name);
 	bool CanWearArmor(int armortype);
+	std::stringstream FormatEquipment();
 
 	//Class
 	void AddClass(int id, int level);

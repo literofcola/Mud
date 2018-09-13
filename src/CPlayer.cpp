@@ -1224,6 +1224,79 @@ bool Player::CanWearArmor(int armortype)
 	return false;
 }
 
+std::stringstream Player::FormatEquipment()
+{
+	std::stringstream equipment;
+
+	equipment << std::left << std::setw(15) << "<|BHead|X>";
+	equipped[Player::EQUIP_HEAD] ?
+		equipment << Item::quality_strings[equipped[Player::EQUIP_HEAD]->quality] << equipped[Player::EQUIP_HEAD]->GetName() << "|X\n\r"
+		: equipment << "None\n\r";
+	equipment << std::setw(15) << "<|BNeck|X>";
+	equipped[Player::EQUIP_NECK] ?
+		equipment << Item::quality_strings[equipped[Player::EQUIP_NECK]->quality] << equipped[Player::EQUIP_NECK]->GetName() << "|X\n\r"
+		: equipment << "None\n\r";
+	equipment << std::setw(15) << "<|BShoulder|X>";
+	equipped[Player::EQUIP_SHOULDER] ?
+		equipment << Item::quality_strings[equipped[Player::EQUIP_SHOULDER]->quality] << equipped[Player::EQUIP_SHOULDER]->GetName() << "|X\n\r"
+		: equipment << "None\n\r";
+	equipment << std::setw(15) << "<|BBack|X>";
+	equipped[Player::EQUIP_BACK] ?
+		equipment << Item::quality_strings[equipped[Player::EQUIP_BACK]->quality] << equipped[Player::EQUIP_BACK]->GetName() << "|X\n\r"
+		: equipment << "None\n\r";
+	equipment << std::setw(15) << "<|BChest|X>";
+	equipped[Player::EQUIP_CHEST] ?
+		equipment << Item::quality_strings[equipped[Player::EQUIP_CHEST]->quality] << equipped[Player::EQUIP_CHEST]->GetName() << "|X\n\r"
+		: equipment << "None\n\r";
+	equipment << std::setw(15) << "<|BWrist|X>";
+	equipped[Player::EQUIP_WRIST] ?
+		equipment << Item::quality_strings[equipped[Player::EQUIP_WRIST]->quality] << equipped[Player::EQUIP_WRIST]->GetName() << "|X\n\r"
+		: equipment << "None\n\r";
+	equipment << std::setw(15) << "<|BHands|X>";
+	equipped[Player::EQUIP_HANDS] ?
+		equipment << Item::quality_strings[equipped[Player::EQUIP_HANDS]->quality] << equipped[Player::EQUIP_HANDS]->GetName() << "|X\n\r"
+		: equipment << "None\n\r";
+	equipment << std::setw(15) << "<|BWaist|X>";
+	equipped[Player::EQUIP_WAIST] ?
+		equipment << Item::quality_strings[equipped[Player::EQUIP_WAIST]->quality] << equipped[Player::EQUIP_WAIST]->GetName() << "|X\n\r"
+		: equipment << "None\n\r";
+	equipment << std::setw(15) << "<|BLegs|X>";
+	equipped[Player::EQUIP_LEGS] ?
+		equipment << Item::quality_strings[equipped[Player::EQUIP_LEGS]->quality] << equipped[Player::EQUIP_LEGS]->GetName() << "|X\n\r"
+		: equipment << "None\n\r";
+	equipment << std::setw(15) << "<|BFeet|X>";
+	equipped[Player::EQUIP_FEET] ?
+		equipment << Item::quality_strings[equipped[Player::EQUIP_FEET]->quality] << equipped[Player::EQUIP_FEET]->GetName() << "|X\n\r"
+		: equipment << "None\n\r";
+	equipment << std::setw(15) << "<|BFinger|X>";
+	equipped[Player::EQUIP_FINGER1] ?
+		equipment << Item::quality_strings[equipped[Player::EQUIP_FINGER1]->quality] << equipped[Player::EQUIP_FINGER1]->GetName() << "|X\n\r"
+		: equipment << "None\n\r";
+	equipment << std::setw(15) << "<|BFinger|X>";
+	equipped[Player::EQUIP_FINGER2] ?
+		equipment << Item::quality_strings[equipped[Player::EQUIP_FINGER2]->quality] << equipped[Player::EQUIP_FINGER2]->GetName() << "|X\n\r"
+		: equipment << "None\n\r";
+	equipment << std::setw(15) << "<|BTrinket|X>";
+	equipped[Player::EQUIP_TRINKET1] ?
+		equipment << Item::quality_strings[equipped[Player::EQUIP_TRINKET1]->quality] << equipped[Player::EQUIP_TRINKET1]->GetName() << "|X\n\r"
+		: equipment << "None\n\r";
+	equipment << std::setw(15) << "<|BTrinket|X>";
+	equipped[Player::EQUIP_TRINKET2] ?
+		equipment << Item::quality_strings[equipped[Player::EQUIP_TRINKET2]->quality] << equipped[Player::EQUIP_TRINKET2]->GetName() << "|X\n\r"
+		: equipment << "None\n\r";
+	equipment << std::setw(15) << "<|BOffhand|X>";
+	equipped[Player::EQUIP_OFFHAND] ?
+		equipment << Item::quality_strings[equipped[Player::EQUIP_OFFHAND]->quality] << equipped[Player::EQUIP_OFFHAND]->GetName() << "|X\n\r"
+		: equipment << "None\n\r";
+	equipment << std::setw(15) << "<|BMainhand|X>";
+	equipped[Player::EQUIP_MAINHAND] ?
+		equipment << Item::quality_strings[equipped[Player::EQUIP_MAINHAND]->quality] << equipped[Player::EQUIP_MAINHAND]->GetName() << "|X\n\r"
+		: equipment << "None\n\r";
+	equipment << "\n\r";
+
+	return equipment;
+}
+
 void Player::HandleNPCKillRewards(Character * killed)
 {
 	int exp = Game::CalculateExperience(this, killed);
