@@ -27,7 +27,7 @@ public:
 	static const int GROUP_LOOT_DISTANCE = 10;
 	static const int DEFAULT_DEATH_TIME = 600;
 	static const int DEFAULT_DEATH_TIME_RUNBACK = 120;
-	static const int STATS_PER_LEVEL = 6;
+	static const int STATS_PER_LEVEL = 3;
 	static const int DB_INVENTORY_EQUIPPED = 0;
 	static const int DB_INVENTORY_INVENTORY = 1;
 	static const int DB_INVENTORY_BANK = 2;
@@ -93,6 +93,7 @@ public:
 	Group * group;
 
 	//Inventory and equipment
+	int armor;
 	std::vector<Item *> equipped;
 	std::list<std::pair<Item *, int>> inventory;	//structured this way to support item stacks
 	int inventorySize;
@@ -261,6 +262,7 @@ public:
 	inline virtual std::string GetTitle() override { return title; };
 	inline bool IsImmortal() override { return (immlevel > 0); };
 	inline int GetImmLevel() override { return immlevel; };
+	int GetArmor() override { return armor; };
 
 	//Lua friendly "commands"
 	void Look(std::string argument) override { ::cmd_look(this, argument); };

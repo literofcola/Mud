@@ -78,6 +78,7 @@ public:
 	static constexpr double CRIT_PER_AGILITY = 0.03;
 	static constexpr double CRIT_MAX = 75;
 	static constexpr double DODGE_MAX = 50;
+	static constexpr double ARMOR_MITIGATION_MAX = 0.75;
 
     //Spells/Skills
     double delay;
@@ -138,6 +139,8 @@ public:
 	std::string AggressionLightColor(Character * target);
 	virtual double GetDodge() = 0;
 	virtual double GetCrit() = 0;
+	int RunAttackTable(Character * victim, int school);
+	double CalculateArmorMitigation(Character * victim);
 
 	//Skills/Spell Affects
 	virtual bool HasSkill(Skill * sk) { return true; };
@@ -244,6 +247,7 @@ public:
 	virtual int GetGender() = 0;
 	virtual std::string GetTitle() = 0;
 	Room * GetRoom() { return room; }
+	virtual int GetArmor() = 0;
 	
 	//Utility/Misc
 	std::string HisHer();

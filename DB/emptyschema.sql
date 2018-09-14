@@ -179,6 +179,7 @@ CREATE TABLE `npcs` (
   `mana` int(11) NOT NULL,
   `energy` int(11) NOT NULL,
   `rage` int(11) NOT NULL,
+  `armor` int(11) NOT NULL,
   `title` varchar(45) NOT NULL,
   `attack_speed` double NOT NULL,
   `damage_low` int(11) NOT NULL,
@@ -488,4 +489,4 @@ CREATE TABLE `triggers` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-09-12 20:18:50
+-- Dump completed on 2018-09-13 21:02:17

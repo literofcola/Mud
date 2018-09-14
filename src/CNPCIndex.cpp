@@ -115,11 +115,11 @@ void NPCIndex::Save()
 	string fixtitle = Utilities::SQLFixQuotes(title);
 
 	sql = "INSERT INTO npcs (id, name, keywords, level, gender, race, ";
-	sql += "health, mana, energy, rage, title, attack_speed, damage_low, damage_high, flags, speechtext) values (";
+	sql += "health, mana, energy, rage, armor, title, attack_speed, damage_low, damage_high, flags, speechtext) values (";
 	sql += Utilities::itos(id) + ", '";
 	sql += name + "', '" + keywords + "', " + Utilities::itos(level) + "," + Utilities::itos(gender) + "," + Utilities::itos(race) + ",";
 	sql += Utilities::itos(maxHealth) + "," + Utilities::itos(maxMana) + "," + Utilities::itos(maxEnergy) + "," + Utilities::itos(maxRage);
-	sql += ", '" + fixtitle + "', " + Utilities::dtos(npcAttackSpeed, 2) + ", " + Utilities::itos(npcDamageLow) + ", ";
+	sql += "," + Utilities::itos(armor) + ",'" + fixtitle + "', " + Utilities::dtos(npcAttackSpeed, 2) + ", " + Utilities::itos(npcDamageLow) + ", ";
 	sql += Utilities::itos(npcDamageHigh) + ",'";
 
 	std::vector<int>::iterator flagiter;
@@ -130,7 +130,7 @@ void NPCIndex::Save()
 	sql += "','" + Utilities::SQLFixQuotes(speechText) + "')";
 
 	sql += " ON DUPLICATE KEY UPDATE id=VALUES(id), name=VALUES(name), level=VALUES(level), gender=VALUES(gender), race=VALUES(race), ";
-	sql += "health=VALUES(health), mana=VALUES(mana), energy=VALUES(energy), rage=VALUES(rage),";
+	sql += "health=VALUES(health), mana=VALUES(mana), energy=VALUES(energy), rage=VALUES(rage), armor=VALUES(armor),";
 	sql += "title=VALUES(title), attack_speed=VALUES(attack_speed), damage_low=VALUES(damage_low), ";
 	sql += "damage_high=VALUES(damage_high), flags=VALUES(flags), speechtext=VALUES(speechtext)";
 

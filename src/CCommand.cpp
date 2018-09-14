@@ -307,6 +307,7 @@ const class Command npcEditCmd_table[] =
     { "gender",     npcEditCmd_gender, 0, 0, 1, 1 },
     { "health",     npcEditCmd_health, 0, 0, 1, 1 },
     { "mana",       npcEditCmd_mana, 0, 0, 1, 1 },
+	{ "armor",		npcEditCmd_armor, 0, 0, 1, 1 },
     { "attack_speed",npcEditCmd_attackSpeed, 0, 0, 1, 1 },
     { "damage_low",  npcEditCmd_damageLow, 0, 0, 1, 1 },
     { "damage_high", npcEditCmd_damageHigh, 0, 0, 1, 1 },

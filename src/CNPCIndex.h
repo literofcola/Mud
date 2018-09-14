@@ -46,6 +46,7 @@ public:
 	int maxMana;
 	int maxEnergy;
 	int maxRage;
+	int armor;
 	std::string title;
 	double npcAttackSpeed;
 	int npcDamageLow;

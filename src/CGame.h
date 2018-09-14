@@ -34,6 +34,11 @@ public:
 	Game();
     ~Game();
 
+	enum School
+	{
+		SCHOOL_PHYSICAL=1, SCHOOL_FIRE, SCHOOL_FROST, SCHOOL_ARCANE, SCHOOL_NATURE, SCHOOL_SHADOW, SCHOOL_HOLY
+	};
+
     static Game * GetGame();
     static void DeleteGame();
     void GameLoop(Server * server);

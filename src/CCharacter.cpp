@@ -1093,6 +1093,13 @@ void Character::AutoAttack(Character * victim)
 		if(damage_off == 0)
 			attack_oh = false;
 
+		string tapcolor = "|G";
+		Character * thetap = victim->GetTap();
+		if (thetap != nullptr && thetap != this && !thetap->InSameGroup(this))
+		{
+			tapcolor = "|D";
+		}
+
         if(attack_mh && thisplayer->lastAutoAttack_main + weaponSpeed_main <= Game::currentTime)
         {
 			damage_main += (int)ceil((thisplayer->GetStrength() * Player::STRENGTH_DAMAGE_MODIFIER) / weaponSpeed_main);
@@ -1106,13 +1113,6 @@ void Character::AutoAttack(Character * victim)
             if(victim->IsPlayer())
 				((Player*)(victim))->lastCombatAction = Game::currentTime;
             lastAutoAttack_main = Game::currentTime;
-
-			string tapcolor = "|G";
-			Character * thetap = victim->GetTap();
-			if (thetap != nullptr && thetap != this && !thetap->InSameGroup(this))
-			{
-				tapcolor = "|D";
-			}
 
 			double percent = (double)(Server::rand() % 100);
 			double range_low = 0;
@@ -1173,13 +1173,6 @@ void Character::AutoAttack(Character * victim)
             if(victim->IsPlayer())
                 ((Player*)victim)->lastCombatAction = Game::currentTime;
 			thisplayer->lastAutoAttack_off = Game::currentTime;
-			
-			string tapcolor = "|G";
-			Character * thetap = victim->GetTap();
-			if (thetap != nullptr && thetap != this && !thetap->InSameGroup(this))
-			{
-				tapcolor = "|D";
-			}
 
 			double percent = (double)(Server::rand() % 100);
 			double range_low = 0;
@@ -1228,6 +1221,26 @@ void Character::AutoAttack(Character * victim)
             //victim may be invalid if it was killed!
         }
     }
+}
+
+//returns the outcome of the attack, miss dodge parry block crit resist absorb? (need new enum)
+//todo move stuff from AutoAttack in here
+int Character::RunAttackTable(Character * victim, int school)
+{
+	if (school == Game::School::SCHOOL_PHYSICAL)
+	{
+
+	}
+	return 0;
+}
+
+double Character::CalculateArmorMitigation(Character * victim)
+{
+	double percent_reduction = victim->GetArmor() / ((22 * GetLevel()) + victim->GetArmor() + 400);
+	if(percent_reduction > ARMOR_MITIGATION_MAX)
+		return ARMOR_MITIGATION_MAX;
+	return percent_reduction;
+	//%Reduction = (Armor / ([85 * Enemy_Level] + Armor + 400)) * 100
 }
 
 void Character::OneHit(Character * victim, int damage) 

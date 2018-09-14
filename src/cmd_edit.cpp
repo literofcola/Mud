@@ -1463,6 +1463,7 @@ void npcEditCmd_show(Player * ch, std::string argument)
     ch->Send("Gender:    [" + Utilities::itos(pChar->gender) + "]\n\r");
     ch->Send("Health:    [" + Utilities::itos(pChar->maxHealth) + "]\n\r");
     ch->Send("Mana:      [" + Utilities::itos(pChar->maxMana) + "]\n\r");
+	ch->Send("Armor:	 [" + Utilities::itos(pChar->armor) + "]\n\r");
     ch->Send("Energy:    [" + Utilities::itos(pChar->maxEnergy) + "]\n\r");
     ch->Send("attack_speed: [" + Utilities::dtos(pChar->npcAttackSpeed, 2) + "]\n\r");
     ch->Send("damage_low:   [" + Utilities::itos(pChar->npcDamageLow) + "]\n\r");
@@ -1802,6 +1803,28 @@ void npcEditCmd_mana(Player * ch, std::string argument)
     }
     pChar->changed = true;
 	pChar->maxMana = mana;
+}
+
+void npcEditCmd_armor(Player * ch, std::string argument)
+{
+	NPCIndex * pChar = (NPCIndex *)ch->editData;
+
+	std::string arg1;
+	argument = Utilities::one_argument(argument, arg1);
+
+	if (arg1.empty() || !Utilities::IsNumber(arg1))
+	{
+		ch->Send("armor <#>\n\r");
+		return;
+	}
+	int armor = Utilities::atoi(arg1);
+	if (armor < 0)
+	{
+		ch->Send("armor must be >= 0.\n\r");
+		return;
+	}
+	pChar->changed = true;
+	pChar->armor = armor;
 }
 
 void npcEditCmd_attackSpeed(Player * ch, std::string argument)

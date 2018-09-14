@@ -117,13 +117,15 @@ void cmd_load(Player * ch, string argument)
     if(argument.empty())
     {
         ch->Send("load npc <#id>\n\r");
-        ch->Send("load item <#id>\n\r");
+        ch->Send("load item <#id> <player>\n\r");
         return;
     }
     string arg1;
     string arg2;
+	string arg3;
     argument = Utilities::one_argument(argument, arg1);
     argument = Utilities::one_argument(argument, arg2);
+	argument = Utilities::one_argument(argument, arg3);
 
     if(!Utilities::str_cmp(arg1, "npc"))
     {
@@ -158,7 +160,20 @@ void cmd_load(Player * ch, string argument)
             ch->Send("Item " + arg2 + " does not exist.\n\r");
             return;
         }
-        ch->AddItemInventory(itemIndex);
+		Player * player_target = nullptr;
+		if (!arg3.empty())
+		{
+			player_target = Game::GetGame()->GetPlayerByName(arg3);
+			if (player_target == nullptr)
+			{
+				ch->Send("Could not find a player with that name.\n\r");
+				return;
+			}
+			player_target->AddItemInventory(itemIndex);
+			ch->Send(itemIndex->GetName() + " loaded into " + player_target->GetName() + "'s inventory.\n\r");
+			return;
+		}
+		ch->AddItemInventory(itemIndex);
 		ch->Send(itemIndex->GetName() + " loaded into inventory.\n\r");
     }
     else

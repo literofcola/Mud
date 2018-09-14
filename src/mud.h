@@ -157,6 +157,7 @@ void npcEditCmd_level(Player * ch, std::string argument);
 void npcEditCmd_gender(Player * ch, std::string argument);
 void npcEditCmd_health(Player * ch, std::string argument);
 void npcEditCmd_mana(Player * ch, std::string argument);
+void npcEditCmd_armor(Player * ch, std::string argument);
 void npcEditCmd_attackSpeed(Player * ch, std::string argument);
 void npcEditCmd_damageLow(Player * ch, std::string argument);
 void npcEditCmd_damageHigh(Player * ch, std::string argument);
