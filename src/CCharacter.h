@@ -34,6 +34,10 @@ public:
 	{
 		RESOURCE_HEALTH = 1, RESOURCE_MANA, RESOURCE_ENERGY, RESOURCE_RAGE, RESOURCE_COMBO
 	};
+	enum AttackType
+	{
+		ATTACK_MISS = 1, ATTACK_DODGE, ATTACK_PARRY, ATTACK_BLOCK, ATTACK_CRIT, ATTACK_HIT, ATTACK_RESIST, ATTACK_ABSORB
+	};
 	enum Races
 	{
 		RACE_NONE, RACE_HUMAN, RACE_ELF, RACE_DWARF, RACE_ORC, RACE_GNOME, RACE_GOBLIN, RACE_UNDEAD, RACE_MINOTAUR, RACE_TROLL
@@ -74,10 +78,8 @@ public:
     bool meleeActive;
     std::list<Threat> threatList;
 	static constexpr double BASE_MISS_CHANCE = 5.00;
-	static constexpr double DODGE_PER_AGILITY = 0.035;
-	static constexpr double CRIT_PER_AGILITY = 0.03;
-	static constexpr double CRIT_MAX = 75;
-	static constexpr double DODGE_MAX = 50;
+	static constexpr int CRIT_MAX = 75;
+	static constexpr int DODGE_MAX = 50;
 	static constexpr double ARMOR_MITIGATION_MAX = 0.75;
 
     //Spells/Skills

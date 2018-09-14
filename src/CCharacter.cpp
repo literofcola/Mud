@@ -1225,6 +1225,12 @@ void Character::AutoAttack(Character * victim)
 
 //returns the outcome of the attack, miss dodge parry block crit resist absorb? (need new enum)
 //todo move stuff from AutoAttack in here
+/*
+enum AttackType
+{
+ATTACK_MISS = 1, ATTACK_DODGE, ATTACK_PARRY, ATTACK_BLOCK, ATTACK_CRIT, ATTACK_HIT, ATTACK_RESIST, ATTACK_ABSORB
+};
+*/
 int Character::RunAttackTable(Character * victim, int school)
 {
 	if (school == Game::School::SCHOOL_PHYSICAL)
@@ -1236,11 +1242,10 @@ int Character::RunAttackTable(Character * victim, int school)
 
 double Character::CalculateArmorMitigation(Character * victim)
 {
-	double percent_reduction = victim->GetArmor() / ((22 * GetLevel()) + victim->GetArmor() + 400);
+	double percent_reduction = (double)victim->GetArmor() / ((22 * GetLevel()) + victim->GetArmor() + 400);
 	if(percent_reduction > ARMOR_MITIGATION_MAX)
 		return ARMOR_MITIGATION_MAX;
 	return percent_reduction;
-	//%Reduction = (Armor / ([85 * Enemy_Level] + Armor + 400)) * 100
 }
 
 void Character::OneHit(Character * victim, int damage) 

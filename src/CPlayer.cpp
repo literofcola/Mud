@@ -35,6 +35,7 @@ Player::Player(std::string name_, User * user_) : Character()
     immlevel = 0;
     experience = 0;
 	statPoints = 0;
+	armor = 0;
 	recall = 0;
     isGhost = false;
     lastCombatAction = 0;
@@ -220,6 +221,7 @@ void Player::AddEquipmentStats(Item * add)
 	stamina += add->stamina;
 	wisdom += add->wisdom;
 	spirit += add->spirit;
+	armor += add->armor;
 	ResetMaxStats();
 }
 
@@ -231,6 +233,7 @@ void Player::RemoveEquipmentStats(Item * remove)
 	stamina -= remove->stamina;
 	wisdom -= remove->wisdom;
 	spirit -= remove->spirit;
+	armor -= remove->armor;
 	ResetMaxStats();
 }
 
@@ -1307,16 +1310,16 @@ void Player::HandleNPCKillRewards(Character * killed)
 
 double Player::GetDodge()
 {
-	if (agility * Character::DODGE_PER_AGILITY > Character::DODGE_MAX)
-		return Character::DODGE_MAX;
-	return agility * Character::DODGE_PER_AGILITY;
+	if (agility * DODGE_FROM_AGILITY > DODGE_MAX)
+		return DODGE_MAX;
+	return agility * DODGE_FROM_AGILITY;
 }
 
 double Player::GetCrit()
 {
-	if (agility * CRIT_PER_AGILITY > CRIT_MAX)
+	if (agility * CRIT_FROM_AGILITY > CRIT_MAX)
 		return CRIT_MAX;
-	return agility * CRIT_PER_AGILITY;
+	return agility * CRIT_FROM_AGILITY;
 }
 
 Player * Player::LoadPlayer(std::string name, User * user)

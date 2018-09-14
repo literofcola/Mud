@@ -425,6 +425,8 @@ void cmd_score(Player * ch, std::string argument)
 
 	score << "|BAttribute Points: |X" << ch->statPoints << "\n\r";
 
+	score << "|BArmor: |X" << ch->GetArmor() << " |BPhysical damage mitigation against equal level opponent: |X" << std::setprecision(2) << ch->CalculateArmorMitigation(ch)*100 << "%\n\r";
+
 	score << "|BDodge chance: |X" << std::setw(5) << std::right << std::setprecision(2) << ch->GetDodge() << std::setw(6) << std::left << "%";
 	score << "|BCritical Strike chance: |X" << std::setprecision(2) << ch->GetCrit() << "%\n\r";
 
