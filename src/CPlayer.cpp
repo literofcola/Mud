@@ -215,17 +215,29 @@ void Player::ResetMaxStats()
 
 void Player::AddEquipmentStats(Item * add)
 {
+	AddEquipmentPrimaryStats(add);
+	AddEquipmentSecondaryStats(add);
+}
+
+void Player::RemoveEquipmentStats(Item * add)
+{
+	RemoveEquipmentPrimaryStats(add);
+	RemoveEquipmentSecondaryStats(add);
+}
+
+//Primary stats are the stats saved with the player in the db
+void Player::AddEquipmentPrimaryStats(Item * add)
+{
 	agility += add->agility;
 	intellect += add->intellect;
 	strength += add->strength;
 	stamina += add->stamina;
 	wisdom += add->wisdom;
 	spirit += add->spirit;
-	armor += add->armor;
 	ResetMaxStats();
 }
 
-void Player::RemoveEquipmentStats(Item * remove)
+void Player::RemoveEquipmentPrimaryStats(Item * remove)
 {
 	agility -= remove->agility;
 	intellect -= remove->intellect;
@@ -233,8 +245,18 @@ void Player::RemoveEquipmentStats(Item * remove)
 	stamina -= remove->stamina;
 	wisdom -= remove->wisdom;
 	spirit -= remove->spirit;
-	armor -= remove->armor;
 	ResetMaxStats();
+}
+
+//Secondary stats are stats not saved in the player db (armor, bonus dodge crit block... spell affects? set bonuses?)
+void Player::AddEquipmentSecondaryStats(Item * add)
+{
+	armor += add->armor;
+}
+
+void Player::RemoveEquipmentSecondaryStats(Item * remove)
+{
+	armor -= remove->armor;
 }
 
 
@@ -1398,7 +1420,8 @@ Player * Player::LoadPlayer(std::string name, User * user)
 		{
 			Item * equip = Game::GetGame()->GetItem(id);
 			loaded->EquipItem(equip);
-			//do NOT add equipment stats here, since a player is saved while wearing said equipment
+			loaded->AddEquipmentSecondaryStats(equip);
+			//do NOT add ALL equipment stats here, since a player is saved while wearing said equipment
 			break;
 		}
 

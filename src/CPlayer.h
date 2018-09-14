@@ -128,7 +128,11 @@ public:
 	//Stats
 	void ResetMaxStats();
 	void AddEquipmentStats(Item * add);
-	void RemoveEquipmentStats(Item * remove);
+	void RemoveEquipmentStats(Item * add);
+	void AddEquipmentPrimaryStats(Item * add); //Primary stats are the stats saved with the player in the db
+	void RemoveEquipmentPrimaryStats(Item * remove);
+	void AddEquipmentSecondaryStats(Item * add); //Secondary stats are stats not saved in the player db (armor, bonus dodge crit block... spell affects? set bonuses?)
+	void RemoveEquipmentSecondaryStats(Item * remove);
 	void SetExperience(int newexp);
 	void ApplyExperience(int amount);
 
