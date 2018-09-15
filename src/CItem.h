@@ -84,6 +84,7 @@ public:
 
 	int GetID() { return id; };
 	std::string GetName() { return name; };
+	std::string GetColoredName() { return std::string(quality_strings[quality]) + GetName(); };
 	void Save();
 	std::string FormatItemInfo(Player * ch = nullptr); //optional argument will add coloring based on player
 	friend void itemEditCmd_name(Player * ch, std::string argument); //keep tabs on the places we're allowed to change name

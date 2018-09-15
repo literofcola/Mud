@@ -2459,36 +2459,42 @@ void itemEditCmd_stats(Player * ch, std::string argument)
 	{
 		pItem->agility = val;
 		ch->Send("agility set\n\r");
+		pItem->changed = true;
 		return;
 	}
 	else if (!Utilities::str_cmp("intellect", arg1))
 	{
 		pItem->intellect = val;
 		ch->Send("intellect set\n\r");
+		pItem->changed = true;
 		return;
 	}
 	else if (!Utilities::str_cmp("strength", arg1))
 	{
 		pItem->strength = val;
 		ch->Send("strength set\n\r");
+		pItem->changed = true;
 		return;
 	}
 	else if (!Utilities::str_cmp("stamina", arg1))
 	{
 		pItem->stamina = val;
 		ch->Send("stamina set\n\r");
+		pItem->changed = true;
 		return;
 	}
 	else if (!Utilities::str_cmp("wisdom", arg1))
 	{
 		pItem->wisdom = val;
 		ch->Send("wisdom set\n\r");
+		pItem->changed = true;
 		return;
 	}
 	else if (!Utilities::str_cmp("spirit", arg1))
 	{
 		pItem->spirit = val;
 		ch->Send("spirit set\n\r");
+		pItem->changed = true;
 		return;
 	}
 	ch->Send("stats agility/intellect/strength/stamina/wisdom/spirit <val>\n\r");

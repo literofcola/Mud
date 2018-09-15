@@ -39,7 +39,7 @@ void cmd_inventory(Player * ch, string argument)
 			ch->Send("|M(" + Utilities::itos(i->second) + ") ");
 		else
 			ch->Send("    ");
-		ch->Send(Item::quality_strings[i->first->quality] + i->first->GetName() + "|X\n\r");
+		ch->Send(i->first->GetColoredName() + "|X\n\r");
 		total++;
 	}
 
@@ -85,7 +85,8 @@ void cmd_remove(Player * ch, string argument)
                 }
 				ch->RemoveEquipmentStats(remove);
                 ch->AddItemInventory(remove);
-                ch->Send("You remove " + remove->GetName() + ".\n\r");
+                ch->Send("You remove " + remove->GetColoredName() + "|X.\n\r");
+				ch->Message(ch->GetName() + " removes " + remove->GetColoredName() + "|X.", Character::MSG_ROOM_NOTCHAR);
             }
         }
         return;
@@ -111,7 +112,8 @@ void cmd_remove(Player * ch, string argument)
     }
 	ch->RemoveEquipmentStats(remove);
     ch->AddItemInventory(remove);
-    ch->Send("You remove " + remove->GetName() + ".\n\r");
+    ch->Send("You remove " + remove->GetColoredName() + "|X.\n\r");
+	ch->Message(ch->GetName() + " removes " + remove->GetColoredName() + "|X.", Character::MSG_ROOM_NOTCHAR);
 }   
 
 void cmd_wear(Player * ch, string argument)
@@ -163,7 +165,8 @@ void cmd_wear(Player * ch, string argument)
 				}
                 ch->EquipItemFromInventory(wear);
 				ch->AddEquipmentStats(wear);
-                ch->Send("You wear " + wear->GetName() + ".\n\r");
+                ch->Send("You wear " + wear->GetColoredName() + "|X.\n\r");
+				ch->Message(ch->GetName() + " wears " + wear->GetColoredName() + "|X.", Character::MSG_ROOM_NOTCHAR);
             }
         }
         return;
@@ -195,7 +198,8 @@ void cmd_wear(Player * ch, string argument)
     {
 		ch->RemoveEquipmentStats(removed);
         ch->AddItemInventory(removed);
-        ch->Send("You remove " + removed->GetName() + ".\n\r");
+        ch->Send("You remove " + removed->GetColoredName() + "|X.\n\r");
+		ch->Message(ch->GetName() + " removes " + removed->GetColoredName() + "|X.", Character::MSG_ROOM_NOTCHAR);
     }
     if(equiploc == Player::EQUIP_MAINHAND && wear->equipLocation == Item::EQUIP_TWOHAND) //remove the offhand when equipping a two hand
     {
@@ -204,7 +208,8 @@ void cmd_wear(Player * ch, string argument)
         {
 			ch->RemoveEquipmentStats(offhand);
             ch->AddItemInventory(offhand);
-            ch->Send("You remove " + offhand->GetName() + ".\n\r");
+            ch->Send("You remove " + offhand->GetColoredName() + "|X.\n\r");
+			ch->Message(ch->GetName() + " removes " + offhand->GetColoredName() + "|X.", Character::MSG_ROOM_NOTCHAR);
         }
     }
     else if(equiploc == Player::EQUIP_OFFHAND) //remove a twohand when equipping an offhand
@@ -214,12 +219,14 @@ void cmd_wear(Player * ch, string argument)
             Item * mh = ch->RemoveItemEquipped(Player::EQUIP_MAINHAND);
 			ch->RemoveEquipmentStats(mh);
             ch->AddItemInventory(mh);
-            ch->Send("You remove " + mh->GetName() + ".\n\r");
+            ch->Send("You remove " + mh->GetColoredName() + "|X.\n\r");
+			ch->Message(ch->GetName() + " removes " + mh->GetColoredName() + "|X.", Character::MSG_ROOM_NOTCHAR);
         }
     }
     ch->EquipItemFromInventory(wear);
 	ch->AddEquipmentStats(wear);
-    ch->Send("You wear " + wear->GetName() + ".\n\r");
+    ch->Send("You wear " + wear->GetColoredName() + "|X.\n\r");
+	ch->Message(ch->GetName() + " wears " + wear->GetColoredName() + "|X.", Character::MSG_ROOM_NOTCHAR);
 }
 
 void cmd_drop(Player * ch, string argument)
@@ -280,7 +287,7 @@ void cmd_drop(Player * ch, string argument)
         ch->Send("You're not carrying that item.\n\r");
         return;
     }
-	ch->SetQuery("Destroy " + item->GetName() + "? (y/n) ", item, cmd_drop_Query);
+	ch->SetQuery("Destroy " + item->GetColoredName() + "|X? (y/n) ", item, cmd_drop_Query);
 }
 
 bool cmd_drop_Query(Player * ch, string argument)
@@ -436,7 +443,7 @@ void cmd_loot(Player * ch, string argument)
 				iter = ch->pending_loot_rolls.erase(iter);
 				continue;
 			}
-			ch->Send(Utilities::itos(iter->my_id) + ". " + (string)Item::quality_strings[loot->item->quality] + loot->item->GetName() + "|X");
+			ch->Send(Utilities::itos(iter->my_id) + ". " + loot->item->GetColoredName() + "|X");
 			if (loot->roll_timer > 0 && loot->roll_timer > Game::currentTime)
 				ch->Send(" |Y[" + Utilities::dtos(loot->roll_timer - Game::currentTime, 1) + "s remaining]|X");
 			ch->Send("\n\r");
@@ -456,7 +463,7 @@ void cmd_loot(Player * ch, string argument)
 				if (can_loot != std::end(iter->looters))
 				{
 					lootable_items = true;
-					ch->Send(Utilities::itos(iter->id) + ". " + (string)Item::quality_strings[iter->item->quality] + iter->item->GetName() + "|X");
+					ch->Send(Utilities::itos(iter->id) + ". " + iter->item->GetColoredName() + "|X");
 					if (iter->roll_timer > 0 && iter->roll_timer > Game::currentTime)
 						ch->Send(" |Y[" + Utilities::dtos(iter->roll_timer - Game::currentTime, 1) + "s remaining]|X");
 					ch->Send("\n\r");
@@ -497,10 +504,10 @@ void cmd_loot(Player * ch, string argument)
 						{
 							if (looter_iter->ch != ch)
 							{
-								looter_iter->ch->Send(ch->GetName() + " receives loot: " + (string)Item::quality_strings[oneloot->item->quality] + oneloot->item->GetName() + "|X\n\r");
+								looter_iter->ch->Send(ch->GetName() + " receives loot: " + oneloot->item->GetColoredName() + "|X\n\r");
 							}
 						}
-						ch->Send("You receive loot: " + (string)Item::quality_strings[theitem->quality] + theitem->GetName() + "|X\n\r");
+						ch->Send("You receive loot: " + theitem->GetColoredName() + "|X\n\r");
 						loot_target->RemoveLoot(oneloot);
 					}
 					else

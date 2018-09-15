@@ -96,7 +96,7 @@ std::string Item::FormatItemInfo(Player * ch)
 {
 	std::string itemstring;
 
-	itemstring = (Item::quality_strings[quality] + name + "|X\n\r");
+	itemstring = (GetColoredName() + "|X\n\r");
 
 	if (binds != Item::BIND_NONE)
 	{

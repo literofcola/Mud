@@ -419,13 +419,14 @@ void cmd_score(Player * ch, std::string argument)
 	score << "|BEnergy: |X" << std::setw(5) << std::right << ch->GetEnergy() << "|B/|X" << std::setw(11) << std::left << ch->GetMaxEnergy();
 	score << "|BRage: |X" << std::setw(5) << std::right << ch->GetRage() << "|B/|X" << ch->GetMaxRage() << "\n\r";
 
-	score << "|BAgility: |X" << std::setw(16) << std::left << ch->GetAgility() << "|BIntellect: |X" << ch->GetIntellect() << "\n\r";
-	score << "|BStrength: |X" << std::setw(15) << std::left << ch->GetStrength() << "|BStamina: |X" << ch->GetStamina() << "\n\r";
-	score << "|BWisdom: |X" << std::setw(17) << std::left << ch->GetWisdom() << "|BSpirit: |X" << ch->GetSpirit() << "\n\r";
+	score << "|BAgility: |X" << std::setw(16) << std::left << ch->GetAgility() << "|G+" << ch->GetTotalAgility() - ch->GetAgility();
+	score << "|BIntellect: |X" << ch->GetTotalIntellect() << "\n\r";
+	score << "|BStrength: |X" << std::setw(15) << std::left << ch->GetTotalStrength() << "|BStamina: |X" << ch->GetTotalStamina() << "\n\r";
+	score << "|BWisdom: |X" << std::setw(17) << std::left << ch->GetTotalWisdom() << "|BSpirit: |X" << ch->GetTotalSpirit() << "\n\r";
 
 	score << "|BAttribute Points: |X" << ch->statPoints << "\n\r";
 
-	score << "|BArmor: |X" << ch->GetArmor() << " |BPhysical damage mitigation against equal level opponent: |X" << std::setprecision(2) << ch->CalculateArmorMitigation(ch)*100 << "%\n\r";
+	score << "|BArmor: |X" << ch->GetArmor() << " |BPhysical damage reduction: |X" << std::setprecision(2) << ch->CalculateArmorMitigation()*100 << "%\n\r";
 
 	score << "|BDodge chance: |X" << std::setw(5) << std::right << std::setprecision(2) << ch->GetDodge() << std::setw(6) << std::left << "%";
 	score << "|BCritical Strike chance: |X" << std::setprecision(2) << ch->GetCrit() << "%\n\r";
@@ -1759,7 +1760,7 @@ bool questCompleteQuery(Player * ch, std::string argument)
 	Item * myreward = Game::GetGame()->GetItem(quest->itemRewards[choice - 1]);
 	if(myreward)
 	{
-		ch->Send("|WYou receive loot: " + std::string(Item::quality_strings[myreward->quality]) + myreward->GetName() + "|X\n\r");
+		ch->Send("|WYou receive loot: " + myreward->GetColoredName() + "|X\n\r");
 		ch->AddItemInventory(myreward);
 	}
 

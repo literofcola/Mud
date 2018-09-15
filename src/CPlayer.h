@@ -63,12 +63,7 @@ public:
 
 	//DATA
 	//Stats
-	int agility;	//crit chance and avoidance
-	int intellect;  //spell power
-	int strength;	//attack power
-	int stamina;	//health
-	int wisdom;		//mana
-	int spirit;		//mana regen
+	
 	int statPoints;
 
 	//Combat
@@ -129,10 +124,6 @@ public:
 	void ResetMaxStats();
 	void AddEquipmentStats(Item * add);
 	void RemoveEquipmentStats(Item * add);
-	void AddEquipmentPrimaryStats(Item * add); //Primary stats are the stats saved with the player in the db
-	void RemoveEquipmentPrimaryStats(Item * remove);
-	void AddEquipmentSecondaryStats(Item * add); //Secondary stats are stats not saved in the player db (armor, bonus dodge crit block... spell affects? set bonuses?)
-	void RemoveEquipmentSecondaryStats(Item * remove);
 	void SetExperience(int newexp);
 	void ApplyExperience(int amount);
 
@@ -254,6 +245,12 @@ public:
 	inline int GetStamina() override { return stamina; };
 	inline int GetWisdom() override { return wisdom; };
 	inline int GetSpirit() override { return spirit; };
+	inline int GetTotalAgility() override { return agility + bonus_agility; };
+	inline int GetTotalIntellect() override { return intellect + bonus_intellect; };
+	inline int GetTotalStrength() override { return strength + bonus_strength; };
+	inline int GetTotalStamina() override { return stamina + bonus_stamina; };
+	inline int GetTotalWisdom() override { return wisdom + bonus_wisdom; };
+	inline int GetTotalSpirit() override { return spirit + bonus_spirit; };
 	inline void SetAgility(int val) { agility <= 0 ? agility = val : agility = 1; };
 	inline void SetIntellect(int val) { intellect <= 0 ? intellect = val : intellect = 1; };
 	inline void SetStrength(int val) { strength <= 0 ? strength = val : strength = 1; };
@@ -285,6 +282,18 @@ public:
 
 private:
 	std::string name;
+	int agility;	//crit chance and avoidance
+	int intellect;  //spell power
+	int strength;	//attack power
+	int stamina;	//health
+	int wisdom;		//mana
+	int spirit;		//mana regen
+	int bonus_agility;   //stats given by equipment and spells, not saved to db
+	int bonus_intellect; //needed to make sure these bonuses never touch our permanent stats
+	int bonus_strength;  //  and corrupt them say by editing an item's stats while wearing one
+	int bonus_stamina;
+	int bonus_wisdom;
+	int bonus_spirit;
 	int immlevel;
 	int level;
 	int gender;

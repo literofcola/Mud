@@ -1102,7 +1102,7 @@ void Character::AutoAttack(Character * victim)
 
         if(attack_mh && thisplayer->lastAutoAttack_main + weaponSpeed_main <= Game::currentTime)
         {
-			damage_main += (int)ceil((thisplayer->GetStrength() * Player::STRENGTH_DAMAGE_MODIFIER) / weaponSpeed_main);
+			damage_main += (int)ceil((thisplayer->GetTotalStrength() * Player::STRENGTH_DAMAGE_MODIFIER) / weaponSpeed_main);
             if(victim->target == nullptr) //Force a target on our victim
             {     
                 victim->SetTarget(this);
@@ -1162,7 +1162,7 @@ void Character::AutoAttack(Character * victim)
         }
         if(attack_oh && thisplayer->lastAutoAttack_off + weaponSpeed_off <= Game::currentTime)
         {
-			damage_off += (int)ceil((thisplayer->strength * Player::STRENGTH_DAMAGE_MODIFIER) / weaponSpeed_off);
+			damage_off += (int)ceil((thisplayer->GetTotalStrength() * Player::STRENGTH_DAMAGE_MODIFIER) / weaponSpeed_off);
             if(victim->target == nullptr) //Force a target on our victim
             {     
                 victim->SetTarget(this);
@@ -1223,26 +1223,30 @@ void Character::AutoAttack(Character * victim)
     }
 }
 
-//returns the outcome of the attack, miss dodge parry block crit resist absorb? (need new enum)
+//returns the outcome of the attack, miss dodge parry block crit resist absorb?
 //todo move stuff from AutoAttack in here
 /*
+enum School
+{
+SCHOOL_PHYSICAL=1, SCHOOL_FIRE, SCHOOL_FROST, SCHOOL_ARCANE, SCHOOL_NATURE, SCHOOL_SHADOW, SCHOOL_HOLY
+};
 enum AttackType
 {
 ATTACK_MISS = 1, ATTACK_DODGE, ATTACK_PARRY, ATTACK_BLOCK, ATTACK_CRIT, ATTACK_HIT, ATTACK_RESIST, ATTACK_ABSORB
 };
 */
-int Character::RunAttackTable(Character * victim, int school)
+int Character::DoAttackRoll(Character * victim, int school)
 {
 	if (school == Game::School::SCHOOL_PHYSICAL)
 	{
 
 	}
-	return 0;
+	return ATTACK_HIT;
 }
 
-double Character::CalculateArmorMitigation(Character * victim)
+double Character::CalculateArmorMitigation()
 {
-	double percent_reduction = (double)victim->GetArmor() / ((22 * GetLevel()) + victim->GetArmor() + 400);
+	double percent_reduction = (double)GetArmor() / (GetArmor() + 5750);
 	if(percent_reduction > ARMOR_MITIGATION_MAX)
 		return ARMOR_MITIGATION_MAX;
 	return percent_reduction;
@@ -1446,7 +1450,7 @@ void Character::OnDeath()
 								one_loot.looters.push_back(NPC::Looter(group_member));
 								group_member->AddSubscriber(this);
 
-								group_member->Send(GetName() + " drops loot: " + (string)Item::quality_strings[drop->quality] + drop->GetName() + "|X");
+								group_member->Send(GetName() + " drops loot: " + drop->GetColoredName() + "|X");
 								if (drop->quality >= Item::QUALITY_UNCOMMON)
 								{
 									int my_id = group_member->AddLootRoll(one_loot.id, thisnpc);
@@ -1462,7 +1466,7 @@ void Character::OnDeath()
 						one_loot.looters.push_back(NPC::Looter(tap_player));
 						tap->AddSubscriber(this);
 
-						tap->Send(GetName() + " drops loot: " + (string)Item::quality_strings[drop->quality] + drop->GetName() + "|X\n\r");
+						tap->Send(GetName() + " drops loot: " + drop->GetColoredName() + "|X\n\r");
 					}
 					if(!one_loot.looters.empty()) //Don't actually drop this loot if no one can loot it
 						thisnpc->loot.push_back(one_loot);

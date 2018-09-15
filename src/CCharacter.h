@@ -141,8 +141,8 @@ public:
 	std::string AggressionLightColor(Character * target);
 	virtual double GetDodge() = 0;
 	virtual double GetCrit() = 0;
-	int RunAttackTable(Character * victim, int school);
-	double CalculateArmorMitigation(Character * victim);
+	int DoAttackRoll(Character * victim, int school);
+	double CalculateArmorMitigation();
 
 	//Skills/Spell Affects
 	virtual bool HasSkill(Skill * sk) { return true; };
@@ -242,6 +242,12 @@ public:
 	virtual int GetStamina() { return 1; };
 	virtual int GetWisdom() { return 1; };
 	virtual int GetSpirit() { return 1; };
+	virtual int GetTotalAgility() { return 1; };
+	virtual int GetTotalIntellect() { return 1; };
+	virtual int GetTotalStrength() { return 1; };
+	virtual int GetTotalStamina() { return 1; };
+	virtual int GetTotalWisdom() { return 1; };
+	virtual int GetTotalSpirit() { return 1; };
 	virtual int GetLevel() = 0;
 	virtual bool IsImmortal() { return false; };
 	virtual int GetImmLevel() { return 0; };

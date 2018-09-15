@@ -76,11 +76,11 @@ void NPC::DoLootRoll(OneLoot * oneloot)
 			{
 				if (looter_iter2->ch != looter_iter->ch)
 				{
-					looter_iter2->ch->Send(looter_iter->ch->GetName() + " has passed on " + (string)Item::quality_strings[oneloot->item->quality] + oneloot->item->GetName() + "|X\n\r");
+					looter_iter2->ch->Send(looter_iter->ch->GetName() + " has passed on " + oneloot->item->GetColoredName() + "|X\n\r");
 				}
 				else if (looter_iter2->ch == looter_iter->ch)
 				{
-					looter_iter2->ch->Send("You passed on " + (string)Item::quality_strings[oneloot->item->quality] + oneloot->item->GetName() + "|X\n\r");
+					looter_iter2->ch->Send("You passed on " + oneloot->item->GetColoredName() + "|X\n\r");
 				}
 			}
 		}
@@ -106,7 +106,7 @@ void NPC::DoLootRoll(OneLoot * oneloot)
 		oneloot->roll_timer = 0;
 		for (auto looter_iter = oneloot->looters.begin(); looter_iter != oneloot->looters.end(); ++looter_iter)
 		{
-			looter_iter->ch->Send("Everyone passed on " + (string)Item::quality_strings[oneloot->item->quality] + oneloot->item->GetName() + "|X\n\r");
+			looter_iter->ch->Send("Everyone passed on " + oneloot->item->GetColoredName() + "|X\n\r");
 		}
 		return;
 	}
@@ -124,7 +124,7 @@ void NPC::DoLootRoll(OneLoot * oneloot)
 			for (auto looter_iter2 = oneloot->looters.begin(); looter_iter2 != oneloot->looters.end(); ++looter_iter2)
 			{
 				looter_iter2->ch->Send(roll_msg + " - " + Utilities::itos(looter_iter->final_roll) + " for " +
-					(string)Item::quality_strings[oneloot->item->quality] + oneloot->item->GetName() + "|X by " + looter_iter->ch->GetName() + "\n\r");
+				  oneloot->item->GetColoredName() + "|X by " + looter_iter->ch->GetName() + "\n\r");
 			}
 		}
 	}
@@ -162,10 +162,10 @@ void NPC::DoLootRoll(OneLoot * oneloot)
 	{
 		if (looter_iter->ch != winner)
 		{
-			looter_iter->ch->Send(winner->GetName() + " receives loot: " + (string)Item::quality_strings[oneloot->item->quality] + oneloot->item->GetName() + "|X\n\r");
+			looter_iter->ch->Send(winner->GetName() + " receives loot: " + oneloot->item->GetColoredName() + "|X\n\r");
 		}
 	}
-	winner->Send("You receive loot: " + (string)Item::quality_strings[oneloot->item->quality] + oneloot->item->GetName() + "|X\n\r");
+	winner->Send("You receive loot: " + oneloot->item->GetColoredName() + "|X\n\r");
 	if (!winner->AddItemInventory(oneloot->item)) //if additeminventory fails, leave it in the corpse for cmd_loot
 	{
 		winner->Send("Your inventory is full.\n\r");
@@ -246,11 +246,11 @@ void NPC::SetRollType(Player * who, int corpse_id, NPC::Looter::RollType type)
 			{
 				if (looter_iter2->ch != looter_iter->ch)
 				{
-					looter_iter2->ch->Send(looter_iter->ch->GetName() + " has" + roll_msg + (string)Item::quality_strings[oneloot->item->quality] + oneloot->item->GetName() + "|X\n\r");
+					looter_iter2->ch->Send(looter_iter->ch->GetName() + " has" + roll_msg + oneloot->item->GetColoredName() + "|X\n\r");
 				}
 				else if (looter_iter2->ch == looter_iter->ch)
 				{
-					looter_iter2->ch->Send("You have" + roll_msg + (string)Item::quality_strings[oneloot->item->quality] + oneloot->item->GetName() + "|X\n\r");
+					looter_iter2->ch->Send("You have" + roll_msg + oneloot->item->GetColoredName() + "|X\n\r");
 				}
 			}
 		}

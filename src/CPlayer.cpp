@@ -55,6 +55,7 @@ Player::Player(std::string name_, User * user_) : Character()
 	recall = 0;
 	prompt = true;
 	agility = intellect = strength = stamina = wisdom = spirit = 5;
+	bonus_agility = bonus_intellect = bonus_strength = bonus_stamina = bonus_wisdom = bonus_spirit = 0;
 	maxHealth = stamina * Player::HEALTH_FROM_STAMINA;
 	maxMana = wisdom * Player::MANA_FROM_WISDOM;
 	maxEnergy = 100;
@@ -205,8 +206,8 @@ bool Player::HasSkillByName(string name) //Not guaranteed to be the same skill i
 
 void Player::ResetMaxStats()
 {
-	SetMaxHealth(stamina * Player::HEALTH_FROM_STAMINA);
-	SetMaxMana(wisdom * Player::MANA_FROM_WISDOM);
+	SetMaxHealth(GetTotalStamina() * Player::HEALTH_FROM_STAMINA);
+	SetMaxMana(GetTotalWisdom() * Player::MANA_FROM_WISDOM);
 	//todo: these might be higher based on skills or talents?
 	SetMaxEnergy(100);
 	SetMaxRage(100);
@@ -215,50 +216,36 @@ void Player::ResetMaxStats()
 
 void Player::AddEquipmentStats(Item * add)
 {
-	AddEquipmentPrimaryStats(add);
-	AddEquipmentSecondaryStats(add);
-}
-
-void Player::RemoveEquipmentStats(Item * add)
-{
-	RemoveEquipmentPrimaryStats(add);
-	RemoveEquipmentSecondaryStats(add);
-}
-
-//Primary stats are the stats saved with the player in the db
-void Player::AddEquipmentPrimaryStats(Item * add)
-{
-	agility += add->agility;
-	intellect += add->intellect;
-	strength += add->strength;
-	stamina += add->stamina;
-	wisdom += add->wisdom;
-	spirit += add->spirit;
-	ResetMaxStats();
-}
-
-void Player::RemoveEquipmentPrimaryStats(Item * remove)
-{
-	agility -= remove->agility;
-	intellect -= remove->intellect;
-	strength -= remove->strength;
-	stamina -= remove->stamina;
-	wisdom -= remove->wisdom;
-	spirit -= remove->spirit;
-	ResetMaxStats();
-}
-
-//Secondary stats are stats not saved in the player db (armor, bonus dodge crit block... spell affects? set bonuses?)
-void Player::AddEquipmentSecondaryStats(Item * add)
-{
+	bonus_agility += add->agility;
+	bonus_intellect += add->intellect;
+	bonus_strength += add->strength;
+	bonus_stamina += add->stamina;
+	bonus_wisdom += add->wisdom;
+	bonus_spirit += add->spirit;
 	armor += add->armor;
+	ResetMaxStats();
 }
 
-void Player::RemoveEquipmentSecondaryStats(Item * remove)
+void Player::RemoveEquipmentStats(Item * remove)
 {
+	bonus_agility -= remove->agility;
+	bonus_intellect -= remove->intellect;
+	bonus_strength -= remove->strength;
+	bonus_stamina -= remove->stamina;
+	bonus_wisdom -= remove->wisdom;
+	bonus_spirit -= remove->spirit;
 	armor -= remove->armor;
-}
 
+	if (bonus_agility < 0) bonus_agility = 0;
+	if (bonus_intellect < 0) bonus_intellect = 0;
+	if (bonus_strength < 0) bonus_strength = 0;
+	if (bonus_stamina < 0) bonus_stamina = 0;
+	if (bonus_wisdom < 0) bonus_wisdom = 0;
+	if (bonus_spirit < 0) bonus_spirit = 0;
+	if (armor < 0) armor = 0;
+
+	ResetMaxStats();
+}
 
 void Player::GeneratePrompt(double currentTime)
 {
@@ -1254,69 +1241,53 @@ std::stringstream Player::FormatEquipment()
 	std::stringstream equipment;
 
 	equipment << std::left << std::setw(15) << "<|BHead|X>";
-	equipped[Player::EQUIP_HEAD] ?
-		equipment << Item::quality_strings[equipped[Player::EQUIP_HEAD]->quality] << equipped[Player::EQUIP_HEAD]->GetName() << "|X\n\r"
-		: equipment << "None\n\r";
+	equipped[Player::EQUIP_HEAD] ? equipment << equipped[Player::EQUIP_HEAD]->GetColoredName() << "|X\n\r" : equipment << "None\n\r";
+
 	equipment << std::setw(15) << "<|BNeck|X>";
-	equipped[Player::EQUIP_NECK] ?
-		equipment << Item::quality_strings[equipped[Player::EQUIP_NECK]->quality] << equipped[Player::EQUIP_NECK]->GetName() << "|X\n\r"
-		: equipment << "None\n\r";
+	equipped[Player::EQUIP_NECK] ? equipment << equipped[Player::EQUIP_NECK]->GetColoredName() << "|X\n\r" : equipment << "None\n\r";
+
 	equipment << std::setw(15) << "<|BShoulder|X>";
-	equipped[Player::EQUIP_SHOULDER] ?
-		equipment << Item::quality_strings[equipped[Player::EQUIP_SHOULDER]->quality] << equipped[Player::EQUIP_SHOULDER]->GetName() << "|X\n\r"
-		: equipment << "None\n\r";
+	equipped[Player::EQUIP_SHOULDER] ? equipment << equipped[Player::EQUIP_SHOULDER]->GetColoredName() << "|X\n\r" : equipment << "None\n\r";
+
 	equipment << std::setw(15) << "<|BBack|X>";
-	equipped[Player::EQUIP_BACK] ?
-		equipment << Item::quality_strings[equipped[Player::EQUIP_BACK]->quality] << equipped[Player::EQUIP_BACK]->GetName() << "|X\n\r"
-		: equipment << "None\n\r";
+	equipped[Player::EQUIP_BACK] ? equipment << equipped[Player::EQUIP_BACK]->GetColoredName() << "|X\n\r" : equipment << "None\n\r";
+
 	equipment << std::setw(15) << "<|BChest|X>";
-	equipped[Player::EQUIP_CHEST] ?
-		equipment << Item::quality_strings[equipped[Player::EQUIP_CHEST]->quality] << equipped[Player::EQUIP_CHEST]->GetName() << "|X\n\r"
-		: equipment << "None\n\r";
+	equipped[Player::EQUIP_CHEST] ? equipment << equipped[Player::EQUIP_CHEST]->GetColoredName() << "|X\n\r" : equipment << "None\n\r";
+
 	equipment << std::setw(15) << "<|BWrist|X>";
-	equipped[Player::EQUIP_WRIST] ?
-		equipment << Item::quality_strings[equipped[Player::EQUIP_WRIST]->quality] << equipped[Player::EQUIP_WRIST]->GetName() << "|X\n\r"
-		: equipment << "None\n\r";
+	equipped[Player::EQUIP_WRIST] ? equipment << equipped[Player::EQUIP_WRIST]->GetColoredName() << "|X\n\r" : equipment << "None\n\r";
+
 	equipment << std::setw(15) << "<|BHands|X>";
-	equipped[Player::EQUIP_HANDS] ?
-		equipment << Item::quality_strings[equipped[Player::EQUIP_HANDS]->quality] << equipped[Player::EQUIP_HANDS]->GetName() << "|X\n\r"
-		: equipment << "None\n\r";
+	equipped[Player::EQUIP_HANDS] ? equipment << equipped[Player::EQUIP_HANDS]->GetColoredName() << "|X\n\r" : equipment << "None\n\r";
+
 	equipment << std::setw(15) << "<|BWaist|X>";
-	equipped[Player::EQUIP_WAIST] ?
-		equipment << Item::quality_strings[equipped[Player::EQUIP_WAIST]->quality] << equipped[Player::EQUIP_WAIST]->GetName() << "|X\n\r"
-		: equipment << "None\n\r";
+	equipped[Player::EQUIP_WAIST] ? equipment << equipped[Player::EQUIP_WAIST]->GetColoredName() << "|X\n\r" : equipment << "None\n\r";
+
 	equipment << std::setw(15) << "<|BLegs|X>";
-	equipped[Player::EQUIP_LEGS] ?
-		equipment << Item::quality_strings[equipped[Player::EQUIP_LEGS]->quality] << equipped[Player::EQUIP_LEGS]->GetName() << "|X\n\r"
-		: equipment << "None\n\r";
+	equipped[Player::EQUIP_LEGS] ? equipment << equipped[Player::EQUIP_LEGS]->GetColoredName() << "|X\n\r" : equipment << "None\n\r";
+
 	equipment << std::setw(15) << "<|BFeet|X>";
-	equipped[Player::EQUIP_FEET] ?
-		equipment << Item::quality_strings[equipped[Player::EQUIP_FEET]->quality] << equipped[Player::EQUIP_FEET]->GetName() << "|X\n\r"
-		: equipment << "None\n\r";
+	equipped[Player::EQUIP_FEET] ? equipment << equipped[Player::EQUIP_FEET]->GetColoredName() << "|X\n\r" : equipment << "None\n\r";
+
 	equipment << std::setw(15) << "<|BFinger|X>";
-	equipped[Player::EQUIP_FINGER1] ?
-		equipment << Item::quality_strings[equipped[Player::EQUIP_FINGER1]->quality] << equipped[Player::EQUIP_FINGER1]->GetName() << "|X\n\r"
-		: equipment << "None\n\r";
+	equipped[Player::EQUIP_FINGER1] ? equipment << equipped[Player::EQUIP_FINGER1]->GetColoredName() << "|X\n\r" : equipment << "None\n\r";
+
 	equipment << std::setw(15) << "<|BFinger|X>";
-	equipped[Player::EQUIP_FINGER2] ?
-		equipment << Item::quality_strings[equipped[Player::EQUIP_FINGER2]->quality] << equipped[Player::EQUIP_FINGER2]->GetName() << "|X\n\r"
-		: equipment << "None\n\r";
+	equipped[Player::EQUIP_FINGER2] ? equipment << equipped[Player::EQUIP_FINGER2]->GetColoredName() << "|X\n\r" : equipment << "None\n\r";
+
 	equipment << std::setw(15) << "<|BTrinket|X>";
-	equipped[Player::EQUIP_TRINKET1] ?
-		equipment << Item::quality_strings[equipped[Player::EQUIP_TRINKET1]->quality] << equipped[Player::EQUIP_TRINKET1]->GetName() << "|X\n\r"
-		: equipment << "None\n\r";
+	equipped[Player::EQUIP_TRINKET1] ? equipment << equipped[Player::EQUIP_TRINKET1]->GetColoredName() << "|X\n\r" : equipment << "None\n\r";
+
 	equipment << std::setw(15) << "<|BTrinket|X>";
-	equipped[Player::EQUIP_TRINKET2] ?
-		equipment << Item::quality_strings[equipped[Player::EQUIP_TRINKET2]->quality] << equipped[Player::EQUIP_TRINKET2]->GetName() << "|X\n\r"
-		: equipment << "None\n\r";
+	equipped[Player::EQUIP_TRINKET2] ? equipment << equipped[Player::EQUIP_TRINKET2]->GetColoredName() << "|X\n\r" : equipment << "None\n\r";
+
 	equipment << std::setw(15) << "<|BOffhand|X>";
-	equipped[Player::EQUIP_OFFHAND] ?
-		equipment << Item::quality_strings[equipped[Player::EQUIP_OFFHAND]->quality] << equipped[Player::EQUIP_OFFHAND]->GetName() << "|X\n\r"
-		: equipment << "None\n\r";
+	equipped[Player::EQUIP_OFFHAND] ? equipment << equipped[Player::EQUIP_OFFHAND]->GetColoredName() << "|X\n\r" : equipment << "None\n\r";
+
 	equipment << std::setw(15) << "<|BMainhand|X>";
-	equipped[Player::EQUIP_MAINHAND] ?
-		equipment << Item::quality_strings[equipped[Player::EQUIP_MAINHAND]->quality] << equipped[Player::EQUIP_MAINHAND]->GetName() << "|X\n\r"
-		: equipment << "None\n\r";
+	equipped[Player::EQUIP_MAINHAND] ? equipment << equipped[Player::EQUIP_MAINHAND]->GetColoredName() << "|X\n\r" : equipment << "None\n\r";
+
 	equipment << "\n\r";
 
 	return equipment;
@@ -1332,16 +1303,16 @@ void Player::HandleNPCKillRewards(Character * killed)
 
 double Player::GetDodge()
 {
-	if (agility * DODGE_FROM_AGILITY > DODGE_MAX)
+	if (GetTotalAgility() * DODGE_FROM_AGILITY > DODGE_MAX)
 		return DODGE_MAX;
-	return agility * DODGE_FROM_AGILITY;
+	return GetTotalAgility() * DODGE_FROM_AGILITY;
 }
 
 double Player::GetCrit()
 {
-	if (agility * CRIT_FROM_AGILITY > CRIT_MAX)
+	if (GetTotalAgility() * CRIT_FROM_AGILITY > CRIT_MAX)
 		return CRIT_MAX;
-	return agility * CRIT_FROM_AGILITY;
+	return GetTotalAgility() * CRIT_FROM_AGILITY;
 }
 
 Player * Player::LoadPlayer(std::string name, User * user)
@@ -1420,8 +1391,7 @@ Player * Player::LoadPlayer(std::string name, User * user)
 		{
 			Item * equip = Game::GetGame()->GetItem(id);
 			loaded->EquipItem(equip);
-			loaded->AddEquipmentSecondaryStats(equip);
-			//do NOT add ALL equipment stats here, since a player is saved while wearing said equipment
+			loaded->AddEquipmentStats(equip);
 			break;
 		}
 

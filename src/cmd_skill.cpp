@@ -582,38 +582,38 @@ void cmd_train(Player * ch, string argument)
 	if (!Utilities::str_cmp(argument, "agility"))
 	{
 		ch->statPoints--;
-		ch->agility++;
-		ch->Send("|WAgility increased: " + Utilities::itos(ch->agility) + "|X\n\r");
+		ch->SetAgility(ch->GetAgility()+1);
+		ch->Send("|WAgility increased: " + Utilities::itos(ch->GetAgility()) + "|X\n\r");
 	}
 	else if (!Utilities::str_cmp(argument, "intellect"))
 	{
 		ch->statPoints--;
-		ch->intellect++;
-		ch->Send("|WIntellect increased: " + Utilities::itos(ch->intellect) + "|X\n\r");
+		ch->SetIntellect(ch->GetIntellect() + 1);
+		ch->Send("|WIntellect increased: " + Utilities::itos(ch->GetIntellect()) + "|X\n\r");
 	}
 	else if (!Utilities::str_cmp(argument, "strength"))
 	{
 		ch->statPoints--;
-		ch->strength++;
-		ch->Send("|WStrength increased: " + Utilities::itos(ch->strength) + "|X\n\r");
+		ch->SetStrength(ch->GetStrength() + 1);
+		ch->Send("|WStrength increased: " + Utilities::itos(ch->GetStrength()) + "|X\n\r");
 	}
 	else if (!Utilities::str_cmp(argument, "stamina"))
 	{
 		ch->statPoints--;
-		ch->stamina++;
-		ch->Send("|WStamina increased: " + Utilities::itos(ch->stamina) + "|X\n\r");
+		ch->SetStamina(ch->GetStamina() + 1);
+		ch->Send("|WStamina increased: " + Utilities::itos(ch->GetStamina()) + "|X\n\r");
 	}
 	else if (!Utilities::str_cmp(argument, "wisdom"))
 	{
 		ch->statPoints--;
-		ch->wisdom++;
-		ch->Send("|WWisdom increased: " + Utilities::itos(ch->wisdom) + "|X\n\r");
+		ch->SetWisdom(ch->GetWisdom() + 1);
+		ch->Send("|WWisdom increased: " + Utilities::itos(ch->GetWisdom()) + "|X\n\r");
 	}
 	else if (!Utilities::str_cmp(argument, "spirit"))
 	{
 		ch->statPoints--;
-		ch->spirit++;
-		ch->Send("|WSpirit increased: " + Utilities::itos(ch->spirit) + "|X\n\r");
+		ch->SetSpirit(ch->GetSpirit() + 1);
+		ch->Send("|WSpirit increased: " + Utilities::itos(ch->GetSpirit()) + "|X\n\r");
 	}
 	else
 	{
