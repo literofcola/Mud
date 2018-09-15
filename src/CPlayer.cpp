@@ -208,6 +208,10 @@ void Player::ResetMaxStats()
 {
 	SetMaxHealth(GetTotalStamina() * Player::HEALTH_FROM_STAMINA);
 	SetMaxMana(GetTotalWisdom() * Player::MANA_FROM_WISDOM);
+	if (GetHealth() > GetMaxHealth())
+		SetHealth(GetMaxHealth());
+	if (GetMana() > GetMaxMana())
+		SetMana(GetMaxMana());
 	//todo: these might be higher based on skills or talents?
 	SetMaxEnergy(100);
 	SetMaxRage(100);

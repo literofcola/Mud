@@ -85,8 +85,8 @@ void cmd_remove(Player * ch, string argument)
                 }
 				ch->RemoveEquipmentStats(remove);
                 ch->AddItemInventory(remove);
-                ch->Send("You remove " + remove->GetColoredName() + "|X.\n\r");
-				ch->Message(ch->GetName() + " removes " + remove->GetColoredName() + "|X.", Character::MSG_ROOM_NOTCHAR);
+                ch->Send("You remove " + remove->GetColoredName() + "|X\n\r");
+				ch->Message(ch->GetName() + " removes " + remove->GetColoredName() + "|X", Character::MSG_ROOM_NOTCHAR);
             }
         }
         return;
@@ -112,8 +112,8 @@ void cmd_remove(Player * ch, string argument)
     }
 	ch->RemoveEquipmentStats(remove);
     ch->AddItemInventory(remove);
-    ch->Send("You remove " + remove->GetColoredName() + "|X.\n\r");
-	ch->Message(ch->GetName() + " removes " + remove->GetColoredName() + "|X.", Character::MSG_ROOM_NOTCHAR);
+    ch->Send("You remove " + remove->GetColoredName() + "|X\n\r");
+	ch->Message(ch->GetName() + " removes " + remove->GetColoredName() + "|X", Character::MSG_ROOM_NOTCHAR);
 }   
 
 void cmd_wear(Player * ch, string argument)
@@ -165,8 +165,8 @@ void cmd_wear(Player * ch, string argument)
 				}
                 ch->EquipItemFromInventory(wear);
 				ch->AddEquipmentStats(wear);
-                ch->Send("You wear " + wear->GetColoredName() + "|X.\n\r");
-				ch->Message(ch->GetName() + " wears " + wear->GetColoredName() + "|X.", Character::MSG_ROOM_NOTCHAR);
+                ch->Send("You wear " + wear->GetColoredName() + "|X\n\r");
+				ch->Message(ch->GetName() + " wears " + wear->GetColoredName() + "|X", Character::MSG_ROOM_NOTCHAR);
             }
         }
         return;
@@ -198,8 +198,8 @@ void cmd_wear(Player * ch, string argument)
     {
 		ch->RemoveEquipmentStats(removed);
         ch->AddItemInventory(removed);
-        ch->Send("You remove " + removed->GetColoredName() + "|X.\n\r");
-		ch->Message(ch->GetName() + " removes " + removed->GetColoredName() + "|X.", Character::MSG_ROOM_NOTCHAR);
+        ch->Send("You remove " + removed->GetColoredName() + "|X\n\r");
+		ch->Message(ch->GetName() + " removes " + removed->GetColoredName() + "|X", Character::MSG_ROOM_NOTCHAR);
     }
     if(equiploc == Player::EQUIP_MAINHAND && wear->equipLocation == Item::EQUIP_TWOHAND) //remove the offhand when equipping a two hand
     {
@@ -208,8 +208,8 @@ void cmd_wear(Player * ch, string argument)
         {
 			ch->RemoveEquipmentStats(offhand);
             ch->AddItemInventory(offhand);
-            ch->Send("You remove " + offhand->GetColoredName() + "|X.\n\r");
-			ch->Message(ch->GetName() + " removes " + offhand->GetColoredName() + "|X.", Character::MSG_ROOM_NOTCHAR);
+            ch->Send("You remove " + offhand->GetColoredName() + "|X\n\r");
+			ch->Message(ch->GetName() + " removes " + offhand->GetColoredName() + "|X", Character::MSG_ROOM_NOTCHAR);
         }
     }
     else if(equiploc == Player::EQUIP_OFFHAND) //remove a twohand when equipping an offhand
@@ -219,14 +219,14 @@ void cmd_wear(Player * ch, string argument)
             Item * mh = ch->RemoveItemEquipped(Player::EQUIP_MAINHAND);
 			ch->RemoveEquipmentStats(mh);
             ch->AddItemInventory(mh);
-            ch->Send("You remove " + mh->GetColoredName() + "|X.\n\r");
-			ch->Message(ch->GetName() + " removes " + mh->GetColoredName() + "|X.", Character::MSG_ROOM_NOTCHAR);
+            ch->Send("You remove " + mh->GetColoredName() + "|X\n\r");
+			ch->Message(ch->GetName() + " removes " + mh->GetColoredName() + "|X", Character::MSG_ROOM_NOTCHAR);
         }
     }
     ch->EquipItemFromInventory(wear);
 	ch->AddEquipmentStats(wear);
-    ch->Send("You wear " + wear->GetColoredName() + "|X.\n\r");
-	ch->Message(ch->GetName() + " wears " + wear->GetColoredName() + "|X.", Character::MSG_ROOM_NOTCHAR);
+    ch->Send("You wear " + wear->GetColoredName() + "|X\n\r");
+	ch->Message(ch->GetName() + " wears " + wear->GetColoredName() + "|X", Character::MSG_ROOM_NOTCHAR);
 }
 
 void cmd_drop(Player * ch, string argument)
