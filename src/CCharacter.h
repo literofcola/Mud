@@ -78,6 +78,7 @@ public:
     bool meleeActive;
     std::list<Threat> threatList;
 	static constexpr double BASE_MISS_CHANCE = 5.00;
+	static constexpr double CRIT_DAMAGE_BONUS = 1.5;
 	static constexpr int CRIT_MAX = 75;
 	static constexpr int DODGE_MAX = 50;
 	static constexpr double ARMOR_MITIGATION_MAX = 0.75;

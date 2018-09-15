@@ -1036,45 +1036,41 @@ void Character::AutoAttack(Character * victim)
             ((Player*)(victim))->lastCombatAction = Game::currentTime;
         lastAutoAttack_main = Game::currentTime;
 
-		double percent = (double)(Server::rand() % 100);
-		double range_low = 0;
-		double range_high = BASE_MISS_CHANCE;
-		bool crit = false;
-		if (percent <= range_high)
+		int damage = thisnpc->GetNPCIndex()->npcDamageLow;
+		if (thisnpc->GetNPCIndex()->npcDamageHigh != thisnpc->GetNPCIndex()->npcDamageLow)
+			damage = (Server::rand() % (thisnpc->GetNPCIndex()->npcDamageHigh - thisnpc->GetNPCIndex()->npcDamageLow)) + thisnpc->GetNPCIndex()->npcDamageLow;
+
+		switch (DoAttackRoll(victim, Game::SCHOOL_PHYSICAL))
 		{
-			//miss
+		case ATTACK_MISS:
 			victim->Send("|Y" + GetName() + "'s attack misses you.|X\n\r");
 			return;
-		}
-		range_low = range_high;
-		range_high += victim->GetDodge();
-		if (percent > range_low && percent <= range_high)
-		{
-			//dodge
+			break;
+		case ATTACK_DODGE:
 			victim->Send("|YYou dodge " + GetName() + "'s attack.|X\n\r");
 			return;
+			break;
+		case ATTACK_PARRY:
+			break;
+		case ATTACK_BLOCK:
+			break;
+		case ATTACK_CRIT:
+			damage = (int)(damage * CRIT_DAMAGE_BONUS);
+			//Armor reduction
+			damage -= (int)(damage * victim->CalculateArmorMitigation());
+			victim->Send("|Y" + GetName() + "'s attack CRITS you for " + Utilities::itos(damage) + " damage.|X\n\r");
+			if (victim->IsPlayer())
+				((Player*)(victim))->GenerateRageOnTakeDamage(damage);
+			break;
+		case ATTACK_HIT:
+			//Armor reduction
+			damage -= (int)(damage * victim->CalculateArmorMitigation());
+			victim->Send("|Y" + GetName() + "'s attack hits you for " + Utilities::itos(damage) + " damage.|X\n\r");
+			if (victim->IsPlayer())
+				((Player*)(victim))->GenerateRageOnTakeDamage(damage);
+			break;
 		}
-		range_low = range_high;
-		range_high += GetCrit();
-		if (percent > range_low && percent <= range_high)
-		{
-			//crit
-			crit = true;
-		}
-
-        int damage = thisnpc->GetNPCIndex()->npcDamageLow;
-        if(thisnpc->GetNPCIndex()->npcDamageHigh != thisnpc->GetNPCIndex()->npcDamageLow)
-            damage = (Server::rand() % (thisnpc->GetNPCIndex()->npcDamageHigh - thisnpc->GetNPCIndex()->npcDamageLow)) + thisnpc->GetNPCIndex()->npcDamageLow;
-		if (victim->IsPlayer())
-			((Player*)(victim))->GenerateRageOnTakeDamage(damage);
-
-		string hitcrit = "hits";
-		if (crit)
-		{
-			damage = (int)(damage * 1.5);
-			hitcrit = "CRITS";
-		}
-		victim->Send("|Y" + GetName() + "'s attack " + hitcrit + " you for " + Utilities::itos(damage) + " damage.|X\n\r");
+		//dont print auto attacks to everyone... unless verbose combat flag? TODO
 		//Message("|G" + name + "'s attack hits " + victim->name + " for " + Utilities::itos(damage) + " damage.|X", Character::MSG_ROOM_NOTCHARVICT, victim);
 
         OneHit(victim, damage);
@@ -1114,47 +1110,45 @@ void Character::AutoAttack(Character * victim)
 				((Player*)(victim))->lastCombatAction = Game::currentTime;
             lastAutoAttack_main = Game::currentTime;
 
-			double percent = (double)(Server::rand() % 100);
-			double range_low = 0;
-			double range_high = BASE_MISS_CHANCE;
-			bool crit = false;
-			if (percent <= range_high)
+			switch (DoAttackRoll(victim, Game::SCHOOL_PHYSICAL))
 			{
-				//miss
+			case ATTACK_MISS:
 				Send(tapcolor + "Your attack misses " + victim->GetName() + "|X\n\r");
 				victim->Send("|Y" + GetName() + "'s attack misses you.|X\n\r");
 				return;
-			}
-			range_low = range_high;
-			range_high += victim->GetDodge();
-			if (percent > range_low && percent <= range_high)
-			{
-				//dodge
+				break;
+			case ATTACK_DODGE:
 				Send(tapcolor + victim->GetName() + " dodges your attack.|X\n\r");
 				victim->Send("|YYou dodge " + GetName() + "'s attack.|X\n\r");
 				return;
-			}
-			range_low = range_high;
-			range_high += GetCrit();
-			if (percent > range_low && percent <= range_high)
-			{
-				//crit
-				crit = true;
+				break;
+			case ATTACK_PARRY:
+				return;
+				break;
+			case ATTACK_BLOCK:
+				break;
+			case ATTACK_CRIT:
+				damage_main = (int)(damage_main * CRIT_DAMAGE_BONUS);
+				//Armor reduction
+				damage_main -= (int)(damage_main * victim->CalculateArmorMitigation());
+				Send(tapcolor + "You CRIT " + victim->GetName() + " for " + Utilities::itos(damage_main) + " damage.|X\n\r");
+				victim->Send("|Y" + GetName() + " CRITS you for " + Utilities::itos(damage_main) + " damage.|X\n\r");
+				GenerateRageOnAttack(damage_main, weaponSpeed_main, true, true);
+				if (victim->IsPlayer())
+					((Player*)(victim))->GenerateRageOnTakeDamage(damage_main);
+				break;
+			case ATTACK_HIT:
+				//Armor reduction
+				damage_main -= (int)(damage_main * victim->CalculateArmorMitigation());
+				Send(tapcolor + "You hit " + victim->GetName() + " for " + Utilities::itos(damage_main) + " damage.|X\n\r");
+				victim->Send("|Y" + GetName() + " hits you for " + Utilities::itos(damage_main) + " damage.|X\n\r");
+				GenerateRageOnAttack(damage_main, weaponSpeed_main, true, false);
+				if (victim->IsPlayer())
+					((Player*)(victim))->GenerateRageOnTakeDamage(damage_main);				
+				break;
 			}
 
-			string hitcrit = "hit";
-			string hitcrits = "hits";
-			if (crit)
-			{
-				damage_main = (int)(damage_main * 1.5);
-				hitcrit = "CRIT";
-				hitcrits = "CRITS";
-			}
-
-			GenerateRageOnAttack(damage_main, weaponSpeed_main, true, false);
-
-			Send(tapcolor + "You " + hitcrit + " " + victim->GetName() + " for " + Utilities::itos(damage_main) + " damage.|X\n\r");
-			victim->Send("|Y" + GetName() + " " + hitcrits + " you for " + Utilities::itos(damage_main) + " damage.|X\n\r");
+			//dont print auto attacks to everyone... unless verbose combat flag? TODO
 			//Message("|G" + name + "'s attack hits " + victim->name + " for " + Utilities::itos(damage_main) + " damage.|X", Character::MSG_ROOM_NOTCHARVICT, victim);
 
             OneHit(victim, damage_main);
@@ -1174,47 +1168,44 @@ void Character::AutoAttack(Character * victim)
                 ((Player*)victim)->lastCombatAction = Game::currentTime;
 			thisplayer->lastAutoAttack_off = Game::currentTime;
 
-			double percent = (double)(Server::rand() % 100);
-			double range_low = 0;
-			double range_high = BASE_MISS_CHANCE;
-			bool crit = false;
-			if (percent <= range_high)
+			switch (DoAttackRoll(victim, Game::SCHOOL_PHYSICAL))
 			{
-				//miss
+			case ATTACK_MISS:
 				Send(tapcolor + "Your attack misses " + victim->GetName() + "|X\n\r");
 				victim->Send("|Y" + GetName() + "'s attack misses you.|X\n\r");
 				return;
-			}
-			range_low = range_high;
-			range_high += victim->GetDodge();
-			if (percent > range_low && percent <= range_high)
-			{
-				//dodge
+				break;
+			case ATTACK_DODGE:
 				Send(tapcolor + victim->GetName() + " dodges your attack.|X\n\r");
 				victim->Send("|YYou dodge " + GetName() + "'s attack.|X\n\r");
 				return;
+				break;
+			case ATTACK_PARRY:
+				return;
+				break;
+			case ATTACK_BLOCK:
+				break;
+			case ATTACK_CRIT:
+				damage_off = (int)(damage_off * CRIT_DAMAGE_BONUS);
+				//Armor reduction
+				damage_off -= (int)(damage_off * victim->CalculateArmorMitigation());
+				Send(tapcolor + "You CRIT " + victim->GetName() + " for " + Utilities::itos(damage_off) + " damage.|X\n\r");
+				victim->Send("|Y" + GetName() + " CRITS you for " + Utilities::itos(damage_off) + " damage.|X\n\r");
+				GenerateRageOnAttack(damage_off, weaponSpeed_off, false, true);
+				if (victim->IsPlayer())
+					((Player*)(victim))->GenerateRageOnTakeDamage(damage_off);
+				break;
+			case ATTACK_HIT:
+				//Armor reduction
+				damage_off -= (int)(damage_off * victim->CalculateArmorMitigation());
+				Send(tapcolor + "You hit " + victim->GetName() + " for " + Utilities::itos(damage_off) + " damage.|X\n\r");
+				victim->Send("|Y" + GetName() + " hits you for " + Utilities::itos(damage_off) + " damage.|X\n\r");
+				GenerateRageOnAttack(damage_off, weaponSpeed_off, false, false);
+				if (victim->IsPlayer())
+					((Player*)(victim))->GenerateRageOnTakeDamage(damage_off);
+				break;
 			}
-			range_low = range_high;
-			range_high += GetCrit();
-			if (percent > range_low && percent <= range_high)
-			{
-				//crit
-				crit = true;
-			}
-
-			string hitcrit = "hit";
-			string hitcrits = "hits";
-			if (crit)
-			{
-				damage_off = (int)(damage_off * 1.5);
-				hitcrit = "CRIT";
-				hitcrits = "CRITS";
-			}
-
-			GenerateRageOnAttack(damage_off, weaponSpeed_off, false, false);
-
-			Send(tapcolor + "You " + hitcrit + " " + victim->GetName() + " for " + Utilities::itos(damage_off) + " damage.|X\n\r");
-			victim->Send("|Y" + GetName() + " " + hitcrits + " you for " + Utilities::itos(damage_off) + " damage.|X\n\r");
+			//dont print auto attacks to everyone... unless verbose combat flag? TODO
 			//Message("|G" + name + "'s attack hits " + victim->name + " for " + Utilities::itos(damage_off) + " damage.|X", Character::MSG_ROOM_NOTCHARVICT, victim);
 
             OneHit(victim, damage_off);
@@ -1224,28 +1215,46 @@ void Character::AutoAttack(Character * victim)
 }
 
 //returns the outcome of the attack, miss dodge parry block crit resist absorb?
-//todo move stuff from AutoAttack in here
 /*
-enum School
-{
 SCHOOL_PHYSICAL=1, SCHOOL_FIRE, SCHOOL_FROST, SCHOOL_ARCANE, SCHOOL_NATURE, SCHOOL_SHADOW, SCHOOL_HOLY
-};
-enum AttackType
-{
 ATTACK_MISS = 1, ATTACK_DODGE, ATTACK_PARRY, ATTACK_BLOCK, ATTACK_CRIT, ATTACK_HIT, ATTACK_RESIST, ATTACK_ABSORB
-};
 */
 int Character::DoAttackRoll(Character * victim, int school)
 {
 	if (school == Game::School::SCHOOL_PHYSICAL)
 	{
-
+		double percent = (double)(Server::rand() % 100);
+		double range_low = 0;
+		double range_high = BASE_MISS_CHANCE;
+		bool crit = false;
+		if (percent <= range_high)
+		{
+			//miss
+			return ATTACK_MISS;
+		}
+		range_low = range_high;
+		range_high += victim->GetDodge();
+		if (percent > range_low && percent <= range_high)
+		{
+			//dodge
+			return ATTACK_DODGE;
+		}
+		range_low = range_high;
+		range_high += GetCrit();
+		if (percent > range_low && percent <= range_high)
+		{
+			//crit
+			return ATTACK_CRIT;
+		}
+		return ATTACK_HIT;
 	}
 	return ATTACK_HIT;
 }
 
 double Character::CalculateArmorMitigation()
 {
+	if(GetArmor() <= 0)
+		return 0;
 	double percent_reduction = (double)GetArmor() / (GetArmor() + 5750);
 	if(percent_reduction > ARMOR_MITIGATION_MAX)
 		return ARMOR_MITIGATION_MAX;
