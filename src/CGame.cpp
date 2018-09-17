@@ -580,7 +580,7 @@ void Game::WorldUpdate(Server * server)
 				if (currChar->IsNPC())
 					currChar->AdjustMana(currChar, (int)ceil(currChar->GetMaxMana() * 0.01));
 				else
-					currPlayer->AdjustMana(currPlayer, (int)ceil(currPlayer->GetTotalSpirit() * 0.1) + 10);
+					currPlayer->AdjustMana(currPlayer, (int)ceil(currPlayer->GetSpirit() * 0.1) + 10);
 			}
 			if (currChar->GetEnergy() < currChar->GetMaxEnergy())
 			{

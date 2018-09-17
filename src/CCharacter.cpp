@@ -1051,6 +1051,8 @@ void Character::AutoAttack(Character * victim)
 			return;
 			break;
 		case ATTACK_PARRY:
+			victim->Send("|YYou parry " + GetName() + "'s attack.|X\n\r");
+			return;
 			break;
 		case ATTACK_BLOCK:
 			break;
@@ -1059,15 +1061,11 @@ void Character::AutoAttack(Character * victim)
 			//Armor reduction
 			damage -= (int)(damage * victim->CalculateArmorMitigation());
 			victim->Send("|Y" + GetName() + "'s attack CRITS you for " + Utilities::itos(damage) + " damage.|X\n\r");
-			if (victim->IsPlayer())
-				((Player*)(victim))->GenerateRageOnTakeDamage(damage);
 			break;
 		case ATTACK_HIT:
 			//Armor reduction
 			damage -= (int)(damage * victim->CalculateArmorMitigation());
 			victim->Send("|Y" + GetName() + "'s attack hits you for " + Utilities::itos(damage) + " damage.|X\n\r");
-			if (victim->IsPlayer())
-				((Player*)(victim))->GenerateRageOnTakeDamage(damage);
 			break;
 		}
 		//dont print auto attacks to everyone... unless verbose combat flag? TODO
@@ -1098,7 +1096,7 @@ void Character::AutoAttack(Character * victim)
 
         if(attack_mh && thisplayer->lastAutoAttack_main + weaponSpeed_main <= Game::currentTime)
         {
-			damage_main += (int)ceil((thisplayer->GetTotalStrength() * Player::STRENGTH_DAMAGE_MODIFIER) / weaponSpeed_main);
+			damage_main += (int)ceil((thisplayer->GetStrength() * Player::STRENGTH_DAMAGE_MODIFIER) / weaponSpeed_main);
             if(victim->target == nullptr) //Force a target on our victim
             {     
                 victim->SetTarget(this);
@@ -1123,6 +1121,8 @@ void Character::AutoAttack(Character * victim)
 				return;
 				break;
 			case ATTACK_PARRY:
+				Send(tapcolor + victim->GetName() + " parries your attack.|X\n\r");
+				victim->Send("|YYou parry " + GetName() + "'s attack.|X\n\r");
 				return;
 				break;
 			case ATTACK_BLOCK:
@@ -1134,17 +1134,13 @@ void Character::AutoAttack(Character * victim)
 				Send(tapcolor + "You CRIT " + victim->GetName() + " for " + Utilities::itos(damage_main) + " damage.|X\n\r");
 				victim->Send("|Y" + GetName() + " CRITS you for " + Utilities::itos(damage_main) + " damage.|X\n\r");
 				GenerateRageOnAttack(damage_main, weaponSpeed_main, true, true);
-				if (victim->IsPlayer())
-					((Player*)(victim))->GenerateRageOnTakeDamage(damage_main);
 				break;
 			case ATTACK_HIT:
 				//Armor reduction
 				damage_main -= (int)(damage_main * victim->CalculateArmorMitigation());
 				Send(tapcolor + "You hit " + victim->GetName() + " for " + Utilities::itos(damage_main) + " damage.|X\n\r");
 				victim->Send("|Y" + GetName() + " hits you for " + Utilities::itos(damage_main) + " damage.|X\n\r");
-				GenerateRageOnAttack(damage_main, weaponSpeed_main, true, false);
-				if (victim->IsPlayer())
-					((Player*)(victim))->GenerateRageOnTakeDamage(damage_main);				
+				GenerateRageOnAttack(damage_main, weaponSpeed_main, true, false);			
 				break;
 			}
 
@@ -1156,7 +1152,7 @@ void Character::AutoAttack(Character * victim)
         }
         if(attack_oh && thisplayer->lastAutoAttack_off + weaponSpeed_off <= Game::currentTime)
         {
-			damage_off += (int)ceil((thisplayer->GetTotalStrength() * Player::STRENGTH_DAMAGE_MODIFIER) / weaponSpeed_off);
+			damage_off += (int)ceil((thisplayer->GetStrength() * Player::STRENGTH_DAMAGE_MODIFIER) / weaponSpeed_off);
             if(victim->target == nullptr) //Force a target on our victim
             {     
                 victim->SetTarget(this);
@@ -1181,6 +1177,8 @@ void Character::AutoAttack(Character * victim)
 				return;
 				break;
 			case ATTACK_PARRY:
+				Send(tapcolor + victim->GetName() + " parries your attack.|X\n\r");
+				victim->Send("|YYou parry " + GetName() + "'s attack.|X\n\r");
 				return;
 				break;
 			case ATTACK_BLOCK:
@@ -1192,8 +1190,6 @@ void Character::AutoAttack(Character * victim)
 				Send(tapcolor + "You CRIT " + victim->GetName() + " for " + Utilities::itos(damage_off) + " damage.|X\n\r");
 				victim->Send("|Y" + GetName() + " CRITS you for " + Utilities::itos(damage_off) + " damage.|X\n\r");
 				GenerateRageOnAttack(damage_off, weaponSpeed_off, false, true);
-				if (victim->IsPlayer())
-					((Player*)(victim))->GenerateRageOnTakeDamage(damage_off);
 				break;
 			case ATTACK_HIT:
 				//Armor reduction
@@ -1201,8 +1197,6 @@ void Character::AutoAttack(Character * victim)
 				Send(tapcolor + "You hit " + victim->GetName() + " for " + Utilities::itos(damage_off) + " damage.|X\n\r");
 				victim->Send("|Y" + GetName() + " hits you for " + Utilities::itos(damage_off) + " damage.|X\n\r");
 				GenerateRageOnAttack(damage_off, weaponSpeed_off, false, false);
-				if (victim->IsPlayer())
-					((Player*)(victim))->GenerateRageOnTakeDamage(damage_off);
 				break;
 			}
 			//dont print auto attacks to everyone... unless verbose combat flag? TODO
@@ -1238,6 +1232,13 @@ int Character::DoAttackRoll(Character * victim, int school)
 		{
 			//dodge
 			return ATTACK_DODGE;
+		}
+		range_low = range_high;
+		range_high += victim->GetParry();
+		if (percent > range_low && percent <= range_high)
+		{
+			//parry
+			return ATTACK_PARRY;
 		}
 		range_low = range_high;
 		range_high += GetCrit();
@@ -1279,6 +1280,9 @@ void Character::OneHit(Character * victim, int damage)
     }
 	if (damage > 0 && victim->CancelCastOnHit())
 		victim->Send("Action Interrupted!\n\r");
+
+	if (victim->IsPlayer())
+		((Player*)(victim))->GenerateRageOnTakeDamage(damage);
 
     victim->AdjustHealth(this, -damage);
 }

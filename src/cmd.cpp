@@ -419,12 +419,12 @@ void cmd_score(Player * ch, std::string argument)
 	score << "|BEnergy: |X" << std::setw(5) << std::right << ch->GetEnergy() << "|B/|X" << std::setw(11) << std::left << ch->GetMaxEnergy();
 	score << "|BRage: |X" << std::setw(5) << std::right << ch->GetRage() << "|B/|X" << ch->GetMaxRage() << "\n\r";
 
-	score << "|BAgility: |X" << std::setw(4) << std::left << ch->GetAgility() << "|G+" << std::setw(11) << ch->GetTotalAgility() - ch->GetAgility();
-	score << "|BIntellect: |X" << ch->GetIntellect() << " |G+" << ch->GetTotalIntellect() - ch->GetIntellect() << "\n\r";
-	score << "|BStrength: |X" << std::setw(4) << std::left << ch->GetStrength() << "|G+" << std::setw(10) << ch->GetTotalStrength() - ch->GetStrength();
-	score << "|BStamina: |X" << ch->GetStamina() << " |G+" << ch->GetTotalStamina() - ch->GetStamina() << "\n\r";
-	score << "|BWisdom: |X" << std::setw(4) << std::left << ch->GetWisdom() << "|G+" << std::setw(12) << ch->GetTotalWisdom() - ch->GetWisdom();
-	score << "|BSpirit: |X" << ch->GetSpirit() << " |G+" << ch->GetTotalSpirit() - ch->GetSpirit() << "\n\r";
+	score << "|BAgility: |X" << std::setw(4) << std::left << ch->GetAgility() << "|G+" << std::setw(11) << ch->GetAgility() - ch->GetBaseAgility();
+	score << "|BIntellect: |X" << ch->GetIntellect() << " |G+" << ch->GetIntellect() - ch->GetBaseIntellect() << "\n\r";
+	score << "|BStrength: |X" << std::setw(4) << std::left << ch->GetStrength() << "|G+" << std::setw(10) << ch->GetStrength() - ch->GetBaseStrength();
+	score << "|BStamina: |X" << ch->GetStamina() << " |G+" << ch->GetStamina() - ch->GetBaseStamina() << "\n\r";
+	score << "|BWisdom: |X" << std::setw(4) << std::left << ch->GetWisdom() << "|G+" << std::setw(12) << ch->GetWisdom() - ch->GetBaseWisdom();
+	score << "|BSpirit: |X" << ch->GetSpirit() << " |G+" << ch->GetSpirit() - ch->GetBaseSpirit() << "\n\r";
 
 	score << "|BAttribute Points: |X" << ch->statPoints << "\n\r";
 

@@ -582,38 +582,38 @@ void cmd_train(Player * ch, string argument)
 	if (!Utilities::str_cmp(argument, "agility"))
 	{
 		ch->statPoints--;
-		ch->SetAgility(ch->GetAgility()+1);
-		ch->Send("|WAgility increased: " + Utilities::itos(ch->GetAgility()) + "|X\n\r");
+		ch->SetAgility(ch->GetBaseAgility()+1);
+		ch->Send("|WAgility increased: " + Utilities::itos(ch->GetBaseAgility()) + "|X\n\r");
 	}
 	else if (!Utilities::str_cmp(argument, "intellect"))
 	{
 		ch->statPoints--;
-		ch->SetIntellect(ch->GetIntellect() + 1);
-		ch->Send("|WIntellect increased: " + Utilities::itos(ch->GetIntellect()) + "|X\n\r");
+		ch->SetIntellect(ch->GetBaseIntellect() + 1);
+		ch->Send("|WIntellect increased: " + Utilities::itos(ch->GetBaseIntellect()) + "|X\n\r");
 	}
 	else if (!Utilities::str_cmp(argument, "strength"))
 	{
 		ch->statPoints--;
-		ch->SetStrength(ch->GetStrength() + 1);
-		ch->Send("|WStrength increased: " + Utilities::itos(ch->GetStrength()) + "|X\n\r");
+		ch->SetStrength(ch->GetBaseStrength() + 1);
+		ch->Send("|WStrength increased: " + Utilities::itos(ch->GetBaseStrength()) + "|X\n\r");
 	}
 	else if (!Utilities::str_cmp(argument, "stamina"))
 	{
 		ch->statPoints--;
-		ch->SetStamina(ch->GetStamina() + 1);
-		ch->Send("|WStamina increased: " + Utilities::itos(ch->GetStamina()) + "|X\n\r");
+		ch->SetStamina(ch->GetBaseStamina() + 1);
+		ch->Send("|WStamina increased: " + Utilities::itos(ch->GetBaseStamina()) + "|X\n\r");
 	}
 	else if (!Utilities::str_cmp(argument, "wisdom"))
 	{
 		ch->statPoints--;
-		ch->SetWisdom(ch->GetWisdom() + 1);
-		ch->Send("|WWisdom increased: " + Utilities::itos(ch->GetWisdom()) + "|X\n\r");
+		ch->SetWisdom(ch->GetBaseWisdom() + 1);
+		ch->Send("|WWisdom increased: " + Utilities::itos(ch->GetBaseWisdom()) + "|X\n\r");
 	}
 	else if (!Utilities::str_cmp(argument, "spirit"))
 	{
 		ch->statPoints--;
-		ch->SetSpirit(ch->GetSpirit() + 1);
-		ch->Send("|WSpirit increased: " + Utilities::itos(ch->GetSpirit()) + "|X\n\r");
+		ch->SetSpirit(ch->GetBaseSpirit() + 1);
+		ch->Send("|WSpirit increased: " + Utilities::itos(ch->GetBaseSpirit()) + "|X\n\r");
 	}
 	else
 	{

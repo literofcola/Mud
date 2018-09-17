@@ -206,8 +206,8 @@ bool Player::HasSkillByName(string name) //Not guaranteed to be the same skill i
 
 void Player::ResetMaxStats()
 {
-	SetMaxHealth(GetTotalStamina() * Player::HEALTH_FROM_STAMINA);
-	SetMaxMana(GetTotalWisdom() * Player::MANA_FROM_WISDOM);
+	SetMaxHealth(GetStamina() * Player::HEALTH_FROM_STAMINA);
+	SetMaxMana(GetWisdom() * Player::MANA_FROM_WISDOM);
 	if (GetHealth() > GetMaxHealth())
 		SetHealth(GetMaxHealth());
 	if (GetMana() > GetMaxMana())
@@ -1307,16 +1307,21 @@ void Player::HandleNPCKillRewards(Character * killed)
 
 double Player::GetDodge()
 {
-	if (GetTotalAgility() * DODGE_FROM_AGILITY > DODGE_MAX)
+	if (GetAgility() * DODGE_FROM_AGILITY > DODGE_MAX)
 		return DODGE_MAX;
-	return GetTotalAgility() * DODGE_FROM_AGILITY;
+	return GetAgility() * DODGE_FROM_AGILITY;
 }
 
 double Player::GetCrit()
 {
-	if (GetTotalAgility() * CRIT_FROM_AGILITY > CRIT_MAX)
+	if (GetAgility() * CRIT_FROM_AGILITY > CRIT_MAX)
 		return CRIT_MAX;
-	return GetTotalAgility() * CRIT_FROM_AGILITY;
+	return GetAgility() * CRIT_FROM_AGILITY;
+}
+
+double Player::GetParry()
+{
+	return 5;
 }
 
 Player * Player::LoadPlayer(std::string name, User * user)

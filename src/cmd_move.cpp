@@ -60,6 +60,11 @@ void cmd_down(Player * ch, string argument)
 
 void cmd_sit(Player * ch, string argument)
 {
+	if (ch->InCombat())
+	{
+		ch->Send("You can't do that while in combat!\n\r");
+		return;
+	}
 	if (ch->position == Player::Position::POSITION_SITTING)
 	{
 		ch->Send("You are already sitting.\n\r");

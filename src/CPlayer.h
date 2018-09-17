@@ -144,6 +144,7 @@ public:
 	void HandleNPCKillRewards(Character * killed);
 	double GetDodge() override;
 	double GetCrit() override;
+	double GetParry() override;
 
 	//Movement
 	inline int GetRecall() override { return recall; };
@@ -239,18 +240,18 @@ public:
 	inline int GetMaxMana() override { return maxMana; };
 	inline int GetMaxEnergy() override { return maxEnergy; };
 	inline int GetMaxRage() override { return maxRage; };
-	inline int GetAgility() override { return agility; };
-	inline int GetIntellect() override { return intellect; };
-	inline int GetStrength() override { return strength; };
-	inline int GetStamina() override { return stamina; };
-	inline int GetWisdom() override { return wisdom; };
-	inline int GetSpirit() override { return spirit; };
-	inline int GetTotalAgility() override { return agility + bonus_agility; };
-	inline int GetTotalIntellect() override { return intellect + bonus_intellect; };
-	inline int GetTotalStrength() override { return strength + bonus_strength; };
-	inline int GetTotalStamina() override { return stamina + bonus_stamina; };
-	inline int GetTotalWisdom() override { return wisdom + bonus_wisdom; };
-	inline int GetTotalSpirit() override { return spirit + bonus_spirit; };
+	inline int GetBaseAgility() override { return agility; };
+	inline int GetBaseIntellect() override { return intellect; };
+	inline int GetBaseStrength() override { return strength; };
+	inline int GetBaseStamina() override { return stamina; };
+	inline int GetBaseWisdom() override { return wisdom; };
+	inline int GetBaseSpirit() override { return spirit; };
+	inline int GetAgility() override { return agility + bonus_agility; };
+	inline int GetIntellect() override { return intellect + bonus_intellect; };
+	inline int GetStrength() override { return strength + bonus_strength; };
+	inline int GetStamina() override { return stamina + bonus_stamina; };
+	inline int GetWisdom() override { return wisdom + bonus_wisdom; };
+	inline int GetSpirit() override { return spirit + bonus_spirit; };
 	inline void SetAgility(int val) { agility <= 0 ? agility = val : agility = 1; };
 	inline void SetIntellect(int val) { intellect <= 0 ? intellect = val : intellect = 1; };
 	inline void SetStrength(int val) { strength <= 0 ? strength = val : strength = 1; };

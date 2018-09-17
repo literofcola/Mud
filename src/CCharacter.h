@@ -142,6 +142,7 @@ public:
 	std::string AggressionLightColor(Character * target);
 	virtual double GetDodge() = 0;
 	virtual double GetCrit() = 0;
+	virtual double GetParry() = 0;
 	int DoAttackRoll(Character * victim, int school);
 	double CalculateArmorMitigation();
 
@@ -237,18 +238,18 @@ public:
 	virtual void SetMaxMana(int amount) { };
 	virtual void SetMaxEnergy(int amount) { };
 	virtual void SetMaxRage(int amount) { };
+	virtual int GetBaseAgility() { return 1; };
+	virtual int GetBaseIntellect() { return 1; };
+	virtual int GetBaseStrength() { return 1; };
+	virtual int GetBaseStamina() { return 1; };
+	virtual int GetBaseWisdom() { return 1; };
+	virtual int GetBaseSpirit() { return 1; };
 	virtual int GetAgility() { return 1; };
 	virtual int GetIntellect() { return 1; };
 	virtual int GetStrength() { return 1; };
 	virtual int GetStamina() { return 1; };
 	virtual int GetWisdom() { return 1; };
 	virtual int GetSpirit() { return 1; };
-	virtual int GetTotalAgility() { return 1; };
-	virtual int GetTotalIntellect() { return 1; };
-	virtual int GetTotalStrength() { return 1; };
-	virtual int GetTotalStamina() { return 1; };
-	virtual int GetTotalWisdom() { return 1; };
-	virtual int GetTotalSpirit() { return 1; };
 	virtual int GetLevel() = 0;
 	virtual bool IsImmortal() { return false; };
 	virtual int GetImmLevel() { return 0; };
