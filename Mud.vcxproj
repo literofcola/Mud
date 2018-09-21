@@ -173,6 +173,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="lua_constants.lua" />
+    <None Include="lua_skills.lua" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\CArea.h" />

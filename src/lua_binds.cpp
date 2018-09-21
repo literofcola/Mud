@@ -110,6 +110,7 @@ void Lua_DefineClasses(sol::state * lua)
 			"GetOffhandDamageRandomHit", &Character::GetOffhandDamageRandomHit,
 			"GetOffhandDamagePerSecond", &Character::GetOffhandDamagePerSecond,
 			"GetMainhandDamageRandomHit", &Character::GetMainhandDamageRandomHit,
+			"GetCharacterRoom", (Character *(Character::*)(Character *)) &Character::GetCharacterRoom,
 			"Cast", &Character::Cast,
 			"Look", &Character::Look
 			//"level", &Character::level,

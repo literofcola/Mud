@@ -357,6 +357,12 @@ void cmd_edit(Player * ch, std::string argument)
 				break;
 		}
 	}
+	else if (!Utilities::str_cmp(arg1, "reloadlua"))
+	{
+		Server::lua.script_file("lua_constants.lua");
+		Server::lua.script_file("lua_skills.lua");
+		ch->Send("Reloaded files: lua_constants.lua, lua_skills.lua\n\r");
+	}
 	else
 	{
 		//this should be a help file
@@ -371,6 +377,7 @@ void cmd_edit(Player * ch, std::string argument)
 		syntax += "              help <name> || help create <name>\n\r";
 		syntax += "              player <name>\n\r";
 		syntax += "              save\n\r";
+		syntax += "              reloadlua\n\r";
 		syntax += "              exit\n\r";
 		ch->Send(syntax);
 	}

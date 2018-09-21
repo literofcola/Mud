@@ -18,6 +18,9 @@
     <None Include="lua_constants.lua">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="lua_skills.lua">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\CClass.h">

@@ -1752,6 +1752,9 @@ void Game::LoadSkills(Server * server)
 			LogFile::Log("error", e.what());
 		}
     }
+
+	//Load functions in lua_skills.lua (override any from db)
+	Server::lua.script_file("lua_skills.lua");
 }
 
 void Game::LoadQuests(Server * server)
