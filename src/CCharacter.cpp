@@ -901,6 +901,18 @@ void Character::EnterCombat(Character * victim)
 	{
         victim->UpdateThreat(this, 0, Character::Threat::THREAT_DAMAGE); 
 		UpdateThreat(victim, 0, Character::Threat::THREAT_DAMAGE);
+
+		if (IsNPC())
+		{
+			//Check for other hostile npcs in the room to see if we need to chain aggro (pull from adjacent room)
+			for (auto iter = room->characters.begin(); iter != room->characters.end(); ++iter)
+			{
+				if ((*iter)->IsNPC() && (*iter)->FlagIsSet(NPCIndex::FLAG_AGGRESSIVE) && !(*iter)->InCombat())
+				{
+					(*iter)->EnterCombatAssist(this);
+				}
+			}
+		}
     }
 
     movementSpeed = Character::COMBAT_MOVE_SPEED;

@@ -3025,9 +3025,9 @@ void classEditCmd_show(Player * ch, std::string argument)
 
     ch->Send("Name:      [" + pClass->name + "]\n\r");
     ch->Send("ID:        [" + Utilities::itos(pClass->GetID()) + "]\n\r");
-    ch->Send("Color std::string: [|" + pClass->color + "]\n\r");
+    ch->Send("Color [|" + pClass->color + "]\n\r");
 
-    ch->Send("Skills (Level, Skill ID, long_name):\n\r");
+    ch->Send("(Level, Skill ID, long_name):\n\r");
     std::list<Class::SkillData>::iterator iter;
     for(iter = pClass->classSkills.begin(); iter != pClass->classSkills.end(); ++iter)
     {

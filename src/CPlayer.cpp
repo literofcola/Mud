@@ -798,8 +798,8 @@ void Player::QuestCompleteObjective(int type, void * obj)
                     case Quest::OBJECTIVE_KILLNPC: 
                     {
                         NPC * npc = (NPC*)obj;
-                        NPC * questnpc = (NPC*)((*objiter).objective);
-                        if(npc && questnpc && npc->GetIndexID() == questnpc->GetIndexID())
+                        NPCIndex * questnpc = (NPCIndex*)((*objiter).objective);
+                        if(npc && questnpc && npc->GetIndexID() == questnpc->id)
                         {
                             questObjectives[i][j]++;
                             user->Send("|W" + q->name + ": ");
