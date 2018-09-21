@@ -59,6 +59,8 @@ public:
     void ApplyAura(std::string aura_name, int modifier);
 	bool HasAura(int aura_id);
 	void RemoveAura(int aura_id);
+	int GetAuraModifier(int aura_id);
+	void SetAuraModifier(int aura_id, int modifier);
     std::string GetCasterName();
     std::string GetAffectCategoryName();
     void SaveDataInt(std::string tag, int val);
@@ -80,7 +82,7 @@ public:
 
     enum Auras
     {
-        AURA_MOVE_SPEED = 1, AURA_RESOURCE_COST = 2, AURA_EATING = 3, AURA_DRINKING = 4, AURA_TAUNT = 5
+        AURA_MOVE_SPEED = 1, AURA_RESOURCE_COST = 2, AURA_EATING = 3, AURA_DRINKING = 4, AURA_TAUNT = 5, AURA_DAMAGE_ABSORB = 6
     };
 
 	//Comparison functor

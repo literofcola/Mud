@@ -17,6 +17,7 @@ const struct SpellAffect::AuraTable aura_table[] =
 	{ "EATING", SpellAffect::AURA_EATING },
 	{ "DRINKING", SpellAffect::AURA_DRINKING },
 	{ "TAUNT", SpellAffect::AURA_TAUNT },
+	{ "DAMAGE_ABSORB", SpellAffect::AURA_DAMAGE_ABSORB },
     { "", 0 }
 };
 
@@ -74,6 +75,26 @@ void SpellAffect::ApplyAura(std::string affectName, int modifier)
     auraAffects.push_front(af);
 }
 
+void SpellAffect::ApplyAura(int auraID, int modifier)
+{
+	bool found = false;
+	for (int i = 0; aura_table[i].auraID != 0; i++)
+	{
+		if (auraID == aura_table[i].auraID)
+		{
+			found = true;
+			break;
+		}
+	}
+	if (!found)
+	{
+		LogFile::Log("error", "SpellAffect::ApplyAura, bad affectID");
+		return;
+	}
+	AuraAffect af = { auraID, modifier };
+	auraAffects.push_front(af);
+}
+
 bool SpellAffect::HasAura(int aura_id)
 {
 	for (auto iter = auraAffects.begin(); iter != auraAffects.end(); iter++)
@@ -95,24 +116,29 @@ void SpellAffect::RemoveAura(int aura_id)
 	}
 }
 
-void SpellAffect::ApplyAura(int auraID, int modifier)
+int SpellAffect::GetAuraModifier(int aura_id)
 {
-    bool found = false;
-    for(int i = 0; aura_table[i].auraID != 0; i++)
-    {
-        if(auraID == aura_table[i].auraID)
-        {
-            found = true;
-            break;
-        }
-    }
-    if(!found)
-    {
-        LogFile::Log("error", "SpellAffect::ApplyAura, bad affectID");
-        return;
-    }
-    AuraAffect af = { auraID, modifier };
-    auraAffects.push_front(af);
+	for (auto iter = auraAffects.begin(); iter != auraAffects.end(); ++iter)
+	{
+		if (iter->auraID == aura_id)
+			return iter->modifier;
+	}
+	//-1 could be a valid modifier... should check HasAura before calling this
+	LogFile::Log("error", "SpellAffect::GetAuraModifier: aura_id not found in this spell affect!");
+	return -1;
+}
+
+void SpellAffect::SetAuraModifier(int aura_id, int modifier)
+{
+	for (auto iter = auraAffects.begin(); iter != auraAffects.end(); ++iter)
+	{
+		if (iter->auraID == aura_id)
+		{
+			iter->modifier = modifier;
+			return;
+		}
+	}
+	LogFile::Log("error", "SpellAffect::SetAuraModifier: aura_id not found in this spell affect!");
 }
 
 std::string SpellAffect::GetCasterName()

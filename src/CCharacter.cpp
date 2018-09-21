@@ -1143,15 +1143,15 @@ void Character::AutoAttack(Character * victim)
 				damage_main = (int)(damage_main * CRIT_DAMAGE_BONUS);
 				//Armor reduction
 				damage_main -= (int)(damage_main * victim->CalculateArmorMitigation());
-				Send(tapcolor + "You CRIT " + victim->GetName() + " for " + Utilities::itos(damage_main) + " damage.|X\n\r");
-				victim->Send("|Y" + GetName() + " CRITS you for " + Utilities::itos(damage_main) + " damage.|X\n\r");
+				Send(tapcolor + "Your attack CRITS " + victim->GetName() + " for " + Utilities::itos(damage_main) + " damage.|X\n\r");
+				victim->Send("|Y" + GetName() + "'s attack CRITS you for " + Utilities::itos(damage_main) + " damage.|X\n\r");
 				GenerateRageOnAttack(damage_main, weaponSpeed_main, true, true);
 				break;
 			case ATTACK_HIT:
 				//Armor reduction
 				damage_main -= (int)(damage_main * victim->CalculateArmorMitigation());
-				Send(tapcolor + "You hit " + victim->GetName() + " for " + Utilities::itos(damage_main) + " damage.|X\n\r");
-				victim->Send("|Y" + GetName() + " hits you for " + Utilities::itos(damage_main) + " damage.|X\n\r");
+				Send(tapcolor + "Your attack hits " + victim->GetName() + " for " + Utilities::itos(damage_main) + " damage.|X\n\r");
+				victim->Send("|Y" + GetName() + "'s attack hits you for " + Utilities::itos(damage_main) + " damage.|X\n\r");
 				GenerateRageOnAttack(damage_main, weaponSpeed_main, true, false);			
 				break;
 			}
@@ -1199,15 +1199,15 @@ void Character::AutoAttack(Character * victim)
 				damage_off = (int)(damage_off * CRIT_DAMAGE_BONUS);
 				//Armor reduction
 				damage_off -= (int)(damage_off * victim->CalculateArmorMitigation());
-				Send(tapcolor + "You CRIT " + victim->GetName() + " for " + Utilities::itos(damage_off) + " damage.|X\n\r");
-				victim->Send("|Y" + GetName() + " CRITS you for " + Utilities::itos(damage_off) + " damage.|X\n\r");
+				Send(tapcolor + "Your attack CRITS " + victim->GetName() + " for " + Utilities::itos(damage_off) + " damage.|X\n\r");
+				victim->Send("|Y" + GetName() + "'s attack CRITS you for " + Utilities::itos(damage_off) + " damage.|X\n\r");
 				GenerateRageOnAttack(damage_off, weaponSpeed_off, false, true);
 				break;
 			case ATTACK_HIT:
 				//Armor reduction
 				damage_off -= (int)(damage_off * victim->CalculateArmorMitigation());
-				Send(tapcolor + "You hit " + victim->GetName() + " for " + Utilities::itos(damage_off) + " damage.|X\n\r");
-				victim->Send("|Y" + GetName() + " hits you for " + Utilities::itos(damage_off) + " damage.|X\n\r");
+				Send(tapcolor + "Your attack hits " + victim->GetName() + " for " + Utilities::itos(damage_off) + " damage.|X\n\r");
+				victim->Send("|Y" + GetName() + "'s attack hits you for " + Utilities::itos(damage_off) + " damage.|X\n\r");
 				GenerateRageOnAttack(damage_off, weaponSpeed_off, false, false);
 				break;
 			}
@@ -1290,6 +1290,31 @@ void Character::OneHit(Character * victim, int damage)
         victim->UpdateThreat(this, damage, Threat::Type::THREAT_DAMAGE);
         //Send("My threat on " + victim->name + " is " + Utilities::itos(victim->GetThreat(this)) + "\n\r");
     }
+
+	//Handle damage absorbs
+	int original_damage = damage;
+	SpellAffect * absorb = victim->GetFirstSpellAffectWithAura(SpellAffect::AURA_DAMAGE_ABSORB);
+	while (damage > 0 && absorb != nullptr)
+	{
+		int remaining = absorb->GetAuraModifier(SpellAffect::AURA_DAMAGE_ABSORB);
+		if (damage >= remaining)
+		{
+			Send("|W" + victim->GetName() + "'s " + absorb->name + " ABSORBS " + Utilities::itos(remaining) + " damage.|X\n\r");
+			victim->Send("|WYour " + absorb->name + " ABSORBS " + Utilities::itos(remaining) + " damage.|X\n\r");
+			absorb->RemoveAura(SpellAffect::AURA_DAMAGE_ABSORB);
+			damage -= remaining;
+		}
+		else if (remaining > damage)
+		{
+			Send("|W" + victim->GetName() + "'s " + absorb->name + " ABSORBS " + Utilities::itos(damage) + " damage.|X\n\r");
+			victim->Send("|WYour " + absorb->name + " ABSORBS " + Utilities::itos(damage) + " damage.|X\n\r");
+			absorb->SetAuraModifier(SpellAffect::AURA_DAMAGE_ABSORB, remaining - damage);
+			damage = 0;
+		}
+
+		absorb = victim->GetFirstSpellAffectWithAura(SpellAffect::AURA_DAMAGE_ABSORB);
+	}
+
 	if (damage > 0 && victim->CancelCastOnHit())
 		victim->Send("Action Interrupted!\n\r");
 
