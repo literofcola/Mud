@@ -436,6 +436,7 @@ SpellAffect * Character::AddSpellAffect(int isDebuff, Character * caster, string
 			if (!Utilities::str_cmp((*iter)->name, name) && (*iter)->skill == sk) 
 			{
 				//Found it, refresh the duration
+				//TODO: REMOVE THE FOUND AFFECT AND READD.
 				(*iter)->ticksRemaining = (*iter)->ticks;
 				(*iter)->appliedTime = Game::currentTime;
 				return nullptr;
@@ -676,6 +677,30 @@ void Character::RemoveSpellAffect(int isDebuff, string name)
             }
         }
     }
+}
+
+void Character::RemoveSpellAffect(SpellAffect * remove)
+{
+	for (auto iter = buffs.begin(); iter != buffs.end(); ++iter)
+	{
+		if ((*iter) == remove)
+		{
+			(*iter)->auraAffects.clear();
+			delete (*iter);
+			buffs.erase(iter);
+			break;
+		}
+	}
+	for (auto iter = debuffs.begin(); iter != debuffs.end(); ++iter)
+	{
+		if ((*iter) == remove)
+		{
+			(*iter)->auraAffects.clear();
+			delete (*iter);
+			debuffs.erase(iter);
+			return;
+		}
+	}
 }
 
 void Character::RemoveAllSpellAffects()
@@ -1054,35 +1079,49 @@ void Character::AutoAttack(Character * victim)
 
 		switch (DoAttackRoll(victim, Game::SCHOOL_PHYSICAL))
 		{
-		case ATTACK_MISS:
-			victim->Send("|Y" + GetName() + "'s attack misses you.|X\n\r");
-			return;
-			break;
-		case ATTACK_DODGE:
-			victim->Send("|YYou dodge " + GetName() + "'s attack.|X\n\r");
-			return;
-			break;
-		case ATTACK_PARRY:
-			victim->Send("|YYou parry " + GetName() + "'s attack.|X\n\r");
-			return;
-			break;
-		case ATTACK_BLOCK:
-			break;
-		case ATTACK_CRIT:
-			damage = (int)(damage * CRIT_DAMAGE_BONUS);
-			//Armor reduction
-			damage -= (int)(damage * victim->CalculateArmorMitigation());
-			victim->Send("|Y" + GetName() + "'s attack CRITS you for " + Utilities::itos(damage) + " damage.|X\n\r");
-			break;
-		case ATTACK_HIT:
-			//Armor reduction
-			damage -= (int)(damage * victim->CalculateArmorMitigation());
-			victim->Send("|Y" + GetName() + "'s attack hits you for " + Utilities::itos(damage) + " damage.|X\n\r");
-			break;
+			case ATTACK_MISS:
+				victim->Send("|Y" + GetName() + "'s attack misses you.|X\n\r");
+				return;
+				break;
+			case ATTACK_DODGE:
+				victim->Send("|YYou dodge " + GetName() + "'s attack.|X\n\r");
+				return;
+				break;
+			case ATTACK_PARRY:
+				victim->Send("|YYou parry " + GetName() + "'s attack.|X\n\r");
+				return;
+				break;
+			case ATTACK_BLOCK:
+				break;
+			case ATTACK_CRIT:
+			{
+				damage = (int)(damage * CRIT_DAMAGE_BONUS);
+				//Armor reduction
+				damage -= (int)(damage * victim->CalculateArmorMitigation());
+				int absorbed = victim->HandleDamageAbsorb(damage);
+				victim->Send("|Y" + GetName() + "'s attack CRITS you for " + Utilities::itos(damage - absorbed) + " damage");
+				if(absorbed > 0)
+					victim->Send(" |W(" + Utilities::itos(absorbed) + " absorbed)|Y");
+				victim->Send(".|X\n\r");
+				damage -= absorbed;
+				break;
+			}
+			case ATTACK_HIT:
+			{
+				//Armor reduction
+				damage -= (int)(damage * victim->CalculateArmorMitigation());
+				int absorbed = victim->HandleDamageAbsorb(damage);
+				victim->Send("|Y" + GetName() + "'s attack hits you for " + Utilities::itos(damage - absorbed) + " damage");
+				if (absorbed > 0)
+					victim->Send(" |W(" + Utilities::itos(absorbed) + " absorbed)|Y");
+				victim->Send(".|X\n\r");
+				damage -= absorbed;
+				break;
+			}
 		}
 		//dont print auto attacks to everyone... unless verbose combat flag? TODO
 		//Message("|G" + name + "'s attack hits " + victim->name + " for " + Utilities::itos(damage) + " damage.|X", Character::MSG_ROOM_NOTCHARVICT, victim);
-
+		
         OneHit(victim, damage);
         //victim may be invalid here if it was killed!
     }
@@ -1274,6 +1313,31 @@ double Character::CalculateArmorMitigation()
 	return percent_reduction;
 }
 
+int Character::HandleDamageAbsorb(int damage)
+{
+	int totalabsorbed = 0;
+	SpellAffect * absorb_spell = GetFirstSpellAffectWithAura(SpellAffect::AURA_DAMAGE_ABSORB);
+	while (damage > 0 && absorb_spell != nullptr)
+	{
+		int remaining = absorb_spell->GetAuraModifier(SpellAffect::AURA_DAMAGE_ABSORB);
+		if (damage >= remaining)
+		{
+			absorb_spell->RemoveAura(SpellAffect::AURA_DAMAGE_ABSORB);
+			absorb_spell->remove_me = true; //remove the spell naturally on next game loop
+			damage -= remaining;
+			totalabsorbed += remaining;
+		}
+		else if (remaining > damage)
+		{
+			absorb_spell->SetAuraModifier(SpellAffect::AURA_DAMAGE_ABSORB, remaining - damage);
+			totalabsorbed += damage;
+			damage = 0;
+		}
+		absorb_spell = GetFirstSpellAffectWithAura(SpellAffect::AURA_DAMAGE_ABSORB);
+	}
+	return totalabsorbed;
+}
+
 void Character::OneHit(Character * victim, int damage) 
 {
     if(victim == nullptr)
@@ -1290,30 +1354,6 @@ void Character::OneHit(Character * victim, int damage)
         victim->UpdateThreat(this, damage, Threat::Type::THREAT_DAMAGE);
         //Send("My threat on " + victim->name + " is " + Utilities::itos(victim->GetThreat(this)) + "\n\r");
     }
-
-	//Handle damage absorbs
-	int original_damage = damage;
-	SpellAffect * absorb = victim->GetFirstSpellAffectWithAura(SpellAffect::AURA_DAMAGE_ABSORB);
-	while (damage > 0 && absorb != nullptr)
-	{
-		int remaining = absorb->GetAuraModifier(SpellAffect::AURA_DAMAGE_ABSORB);
-		if (damage >= remaining)
-		{
-			Send("|W" + victim->GetName() + "'s " + absorb->name + " ABSORBS " + Utilities::itos(remaining) + " damage.|X\n\r");
-			victim->Send("|WYour " + absorb->name + " ABSORBS " + Utilities::itos(remaining) + " damage.|X\n\r");
-			absorb->RemoveAura(SpellAffect::AURA_DAMAGE_ABSORB);
-			damage -= remaining;
-		}
-		else if (remaining > damage)
-		{
-			Send("|W" + victim->GetName() + "'s " + absorb->name + " ABSORBS " + Utilities::itos(damage) + " damage.|X\n\r");
-			victim->Send("|WYour " + absorb->name + " ABSORBS " + Utilities::itos(damage) + " damage.|X\n\r");
-			absorb->SetAuraModifier(SpellAffect::AURA_DAMAGE_ABSORB, remaining - damage);
-			damage = 0;
-		}
-
-		absorb = victim->GetFirstSpellAffectWithAura(SpellAffect::AURA_DAMAGE_ABSORB);
-	}
 
 	if (damage > 0 && victim->CancelCastOnHit())
 		victim->Send("Action Interrupted!\n\r");

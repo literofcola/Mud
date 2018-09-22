@@ -200,6 +200,8 @@ void cmd_cast(Player * ch, string argument)
 
     if(arg_target == nullptr)
         arg_target = ch->GetTarget();
+	if(arg_target == nullptr) //If no target or argument, target self
+		arg_target = ch;
 
     if((spell->targetType == Skill::TARGET_OTHER || spell->targetType == Skill::TARGET_HOSTILE)
         && (!arg_target || arg_target == ch)) //Requires a target

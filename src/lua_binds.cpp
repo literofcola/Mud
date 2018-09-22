@@ -64,6 +64,7 @@ void Lua_DefineClasses(sol::state * lua)
 			"Message", &Character::Message,
 			"AddSpellAffect", &Character::AddSpellAffect,
 			"CleanseSpellAffect", &Character::CleanseSpellAffect,
+			"HasSpellAffect", &Character::HasSpellAffect,
 			"GetHealth", &Character::GetHealth,
 			"GetMana", &Character::GetMana,
 			"GetMaxMana", &Character::GetMaxMana,
@@ -111,6 +112,7 @@ void Lua_DefineClasses(sol::state * lua)
 			"GetOffhandDamagePerSecond", &Character::GetOffhandDamagePerSecond,
 			"GetMainhandDamageRandomHit", &Character::GetMainhandDamageRandomHit,
 			"GetCharacterRoom", (Character *(Character::*)(Character *)) &Character::GetCharacterRoom,
+			"GetCharacterAdjacentRoom", (Character *(Character::*)(Character *)) &Character::GetCharacterAdjacentRoom,
 			"Cast", &Character::Cast,
 			"Look", &Character::Look
 			//"level", &Character::level,

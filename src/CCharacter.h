@@ -145,6 +145,7 @@ public:
 	virtual double GetParry() = 0;
 	int DoAttackRoll(Character * victim, int school);
 	double CalculateArmorMitigation();
+	int HandleDamageAbsorb(int damage);
 
 	//Skills/Spell Affects
 	virtual bool HasSkill(Skill * sk) { return true; };
@@ -167,6 +168,7 @@ public:
 	bool RemoveSpellAffectsByAura(int isDebuff, int auraid);
 	void RemoveSpellAffect(int isDebuff, int id);
 	void RemoveSpellAffect(int isDebuff, std::string name);
+	void RemoveSpellAffect(SpellAffect * remove);
 	void RemoveAllSpellAffects();
 	int GetAuraModifier(int aura_id, int whatModifier);
 	int GetTotalAuraModifier(int aura_id);
