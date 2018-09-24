@@ -19,6 +19,13 @@
 #include "CLogFile.h"
 #include <string>
 
+std::string printluatable(std::pair<sol::object, sol::object> key_value_pair)
+{
+	auto fs = key_value_pair.first.as<std::string>();
+	auto ss = key_value_pair.first.as<std::string>();
+	return fs + ss;
+}
+
 void cmd_edit(Player * ch, std::string argument)
 {
     /*if(!user->character)
@@ -84,6 +91,93 @@ void cmd_edit(Player * ch, std::string argument)
             ch->editData = sk;
             ch->Send("Ok.\n\r");
         }
+		else if (!Utilities::str_cmp("luadebug", arg2))
+		{
+			//prints debug.getinfo(): short_src, linedefined, lastlinedefined
+			std::string func_name[5] = { "_cost", "_cast", "_apply", "_tick", "_remove" };
+
+			sol::function getinfowrapper = Server::lua["getinfowrapper"];
+			std::tuple<std::string, int, int> return_values;
+			sol::protected_function_result result;
+			for (auto iter = Game::GetGame()->skills.begin(); iter != Game::GetGame()->skills.end(); ++iter)
+			{
+				sol::protected_function cost = Server::lua[iter->second->function_name + "_cost"];
+				sol::protected_function cast = Server::lua[iter->second->function_name + "_cast"];
+				sol::protected_function apply = Server::lua[iter->second->function_name + "_apply"];
+				sol::protected_function tick = Server::lua[iter->second->function_name + "_tick"];
+				sol::protected_function remove = Server::lua[iter->second->function_name + "_remove"];
+				try
+				{
+					result = getinfowrapper(cost);
+					if (!result.valid())
+					{
+						sol::error err = result;
+						std::string what = err.what();
+						LogFile::Log("error", "getinfo cost call failed, sol::error::what() is: " + what);
+					}
+					return_values = result;
+					ch->Send(std::get<0>(return_values) + "\n\r");
+					ch->Send(Utilities::itos(std::get<1>(return_values)) + "\n\r");
+					ch->Send(Utilities::itos(std::get<2>(return_values)) + "\n\r");
+					//
+					result = getinfowrapper(cast);
+					if (!result.valid())
+					{
+						sol::error err = result;
+						std::string what = err.what();
+						LogFile::Log("error", "getinfo cast call failed, sol::error::what() is: " + what);
+					}
+					return_values = result;
+					ch->Send(std::get<0>(return_values) + "\n\r");
+					ch->Send(Utilities::itos(std::get<1>(return_values)) + "\n\r");
+					ch->Send(Utilities::itos(std::get<2>(return_values)) + "\n\r");
+					//
+					if (apply == sol::nil)
+					{
+						ch->Send("NIL APPLY\n\r");
+					}
+					result = getinfowrapper(apply);
+					if (!result.valid())
+					{
+						sol::error err = result;
+						std::string what = err.what();
+						LogFile::Log("error", "getinfo apply call failed, sol::error::what() is: " + what);
+					}
+					return_values = result;
+					ch->Send(std::get<0>(return_values) + "\n\r");
+					ch->Send(Utilities::itos(std::get<1>(return_values)) + "\n\r");
+					ch->Send(Utilities::itos(std::get<2>(return_values)) + "\n\r");
+					//
+					result = getinfowrapper(tick);
+					if (!result.valid())
+					{
+						sol::error err = result;
+						std::string what = err.what();
+						LogFile::Log("error", "getinfo tick call failed, sol::error::what() is: " + what);
+					}
+					return_values = result;
+					ch->Send(std::get<0>(return_values) + "\n\r");
+					ch->Send(Utilities::itos(std::get<1>(return_values)) + "\n\r");
+					ch->Send(Utilities::itos(std::get<2>(return_values)) + "\n\r");
+					//
+					result = getinfowrapper(remove);
+					if (!result.valid())
+					{
+						sol::error err = result;
+						std::string what = err.what();
+						LogFile::Log("error", "getinfo remove call failed, sol::error::what() is: " + what);
+					}
+					return_values = result;
+					ch->Send(std::get<0>(return_values) + "\n\r");
+					ch->Send(Utilities::itos(std::get<1>(return_values)) + "\n\r");
+					ch->Send(Utilities::itos(std::get<2>(return_values)) + "\n\r");
+				}
+				catch (const std::exception & e)
+				{
+					LogFile::Log("error", e.what());
+				}
+			}
+		}
         else
         {
             ch->Send("Syntax: edit skill <id> || edit skill create <name>\n\r");

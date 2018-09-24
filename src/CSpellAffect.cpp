@@ -49,7 +49,7 @@ SpellAffect::~SpellAffect()
     if(caster)
     {
         caster->RemoveSubscriber(this);
-		//cout << "~SpellAffect REMOVE" << endl;
+		//std::cout << "~SpellAffect REMOVE" << std::endl;
     }
     auraAffects.clear();
 }
@@ -198,7 +198,7 @@ void SpellAffect::Save(std::string charname)
     double timeleft = (appliedTime + duration) - Game::currentTime;
 
 	std::string affectsql = "INSERT INTO player_spell_affects (player, caster, skill, ticks, duration, timeleft, stackable, hidden, debuff, ";
-	affectsql += "category, auras, data) ";
+	affectsql += "category, auras, data, name, affect_description) ";
 	affectsql += "values ('" + charname + "','" + casterName + "',";
 	if (skill)
 		affectsql += Utilities::itos(skill->id);
@@ -232,7 +232,7 @@ void SpellAffect::Save(std::string charname)
         affectsql += "s," + (*iter).first + "," + (*iter).second + ";";
     }
 
-    affectsql += "');";
+    affectsql += "', '" + this->name + "', '" + this->affectDescription + "');";
     Server::sqlQueue->Write(affectsql);
 }
 
@@ -258,7 +258,8 @@ void SpellAffect::Load(Character * ch)
         //ch->AddSpellAffect(row["is_debuff"], ch, sk->long_name, row["hidden"], row["stackable"], row["ticks"], row["duration"], sk); 
         //don't use AddSpellAffect since we don't want to call the _apply function
         SpellAffect * sa = new SpellAffect();
-        sa->name = sk->long_name;
+        sa->name = row["name"];
+		sa->affectDescription = row["affect_description"];
         sa->hidden = row["hidden"];
         sa->stackable = row["stackable"];
         sa->ticks = row["ticks"];

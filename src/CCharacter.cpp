@@ -433,13 +433,12 @@ SpellAffect * Character::AddSpellAffect(int isDebuff, Character * caster, string
         }
         for(; iter != end; ++iter)
         {
-			if (!Utilities::str_cmp((*iter)->name, name) && (*iter)->skill == sk) 
+			if (!Utilities::str_cmp((*iter)->name, name) && (*iter)->skill == sk)
 			{
-				//Found it, refresh the duration
-				//TODO: REMOVE THE FOUND AFFECT AND READD.
-				(*iter)->ticksRemaining = (*iter)->ticks;
-				(*iter)->appliedTime = Game::currentTime;
-				return nullptr;
+				//Found it, remove the existing affect, and re-add
+				RemoveSpellAffect(*iter);
+				SpellAffect * copy = AddSpellAffect(isDebuff, caster, name, hidden, stackable, ticks, duration, category, sk, affect_description);
+				return copy;
 			}
 		}
     }
@@ -459,7 +458,7 @@ SpellAffect * Character::AddSpellAffect(int isDebuff, Character * caster, string
     if(sa->caster)
     {
         sa->caster->AddSubscriber(sa);
-		//cout << "AddSpellAffect ADD" << endl;
+		//std::cout << "AddSpellAffect AddSubscriber" << std::endl;
         sa->casterName = caster->GetName();
     }
     sa->ticksRemaining = ticks;
@@ -1096,7 +1095,6 @@ void Character::AutoAttack(Character * victim)
 			case ATTACK_CRIT:
 			{
 				damage = (int)(damage * CRIT_DAMAGE_BONUS);
-				//Armor reduction
 				damage -= (int)(damage * victim->CalculateArmorMitigation());
 				int absorbed = victim->HandleDamageAbsorb(damage);
 				victim->Send("|Y" + GetName() + "'s attack CRITS you for " + Utilities::itos(damage - absorbed) + " damage");
@@ -1108,7 +1106,6 @@ void Character::AutoAttack(Character * victim)
 			}
 			case ATTACK_HIT:
 			{
-				//Armor reduction
 				damage -= (int)(damage * victim->CalculateArmorMitigation());
 				int absorbed = victim->HandleDamageAbsorb(damage);
 				victim->Send("|Y" + GetName() + "'s attack hits you for " + Utilities::itos(damage - absorbed) + " damage");
@@ -1161,38 +1158,58 @@ void Character::AutoAttack(Character * victim)
 
 			switch (DoAttackRoll(victim, Game::SCHOOL_PHYSICAL))
 			{
-			case ATTACK_MISS:
-				Send(tapcolor + "Your attack misses " + victim->GetName() + "|X\n\r");
-				victim->Send("|Y" + GetName() + "'s attack misses you.|X\n\r");
-				return;
-				break;
-			case ATTACK_DODGE:
-				Send(tapcolor + victim->GetName() + " dodges your attack.|X\n\r");
-				victim->Send("|YYou dodge " + GetName() + "'s attack.|X\n\r");
-				return;
-				break;
-			case ATTACK_PARRY:
-				Send(tapcolor + victim->GetName() + " parries your attack.|X\n\r");
-				victim->Send("|YYou parry " + GetName() + "'s attack.|X\n\r");
-				return;
-				break;
-			case ATTACK_BLOCK:
-				break;
-			case ATTACK_CRIT:
-				damage_main = (int)(damage_main * CRIT_DAMAGE_BONUS);
-				//Armor reduction
-				damage_main -= (int)(damage_main * victim->CalculateArmorMitigation());
-				Send(tapcolor + "Your attack CRITS " + victim->GetName() + " for " + Utilities::itos(damage_main) + " damage.|X\n\r");
-				victim->Send("|Y" + GetName() + "'s attack CRITS you for " + Utilities::itos(damage_main) + " damage.|X\n\r");
-				GenerateRageOnAttack(damage_main, weaponSpeed_main, true, true);
-				break;
-			case ATTACK_HIT:
-				//Armor reduction
-				damage_main -= (int)(damage_main * victim->CalculateArmorMitigation());
-				Send(tapcolor + "Your attack hits " + victim->GetName() + " for " + Utilities::itos(damage_main) + " damage.|X\n\r");
-				victim->Send("|Y" + GetName() + "'s attack hits you for " + Utilities::itos(damage_main) + " damage.|X\n\r");
-				GenerateRageOnAttack(damage_main, weaponSpeed_main, true, false);			
-				break;
+				case ATTACK_MISS:
+					Send(tapcolor + "Your attack misses " + victim->GetName() + "|X\n\r");
+					victim->Send("|Y" + GetName() + "'s attack misses you.|X\n\r");
+					return;
+					break;
+				case ATTACK_DODGE:
+					Send(tapcolor + victim->GetName() + " dodges your attack.|X\n\r");
+					victim->Send("|YYou dodge " + GetName() + "'s attack.|X\n\r");
+					return;
+					break;
+				case ATTACK_PARRY:
+					Send(tapcolor + victim->GetName() + " parries your attack.|X\n\r");
+					victim->Send("|YYou parry " + GetName() + "'s attack.|X\n\r");
+					return;
+					break;
+				case ATTACK_BLOCK:
+					break;
+				case ATTACK_CRIT:
+				{
+					damage_main = (int)(damage_main * CRIT_DAMAGE_BONUS);
+					damage_main -= (int)(damage_main * victim->CalculateArmorMitigation());
+					int absorbed = victim->HandleDamageAbsorb(damage_main);
+					Send(tapcolor + "Your attack CRITS " + victim->GetName() + " for " + Utilities::itos(damage_main - absorbed) + " damage");
+					victim->Send("|Y" + GetName() + "'s attack CRITS you for " + Utilities::itos(damage_main - absorbed) + " damage");
+					if (absorbed > 0)
+					{
+						Send(" |W(" + Utilities::itos(absorbed) + " absorbed)" + tapcolor);
+						victim->Send(" |W(" + Utilities::itos(absorbed) + " absorbed)|Y");
+					}
+					Send(".|X\n\r");
+					victim->Send(".|X\n\r");
+					damage_main -= absorbed;
+					GenerateRageOnAttack(damage_main, weaponSpeed_main, true, true);
+					break;
+				}
+				case ATTACK_HIT:
+				{
+					damage_main -= (int)(damage_main * victim->CalculateArmorMitigation());
+					int absorbed = victim->HandleDamageAbsorb(damage_main);
+					Send(tapcolor + "Your attack hits " + victim->GetName() + " for " + Utilities::itos(damage_main - absorbed) + " damage");
+					victim->Send("|Y" + GetName() + "'s attack hits you for " + Utilities::itos(damage_main - absorbed) + " damage");
+					if (absorbed > 0)
+					{
+						Send(" |W(" + Utilities::itos(absorbed) + " absorbed)" + tapcolor);
+						victim->Send(" |W(" + Utilities::itos(absorbed) + " absorbed)|Y");
+					}
+					Send(".|X\n\r");
+					victim->Send(".|X\n\r");
+					damage_main -= absorbed;
+					GenerateRageOnAttack(damage_main, weaponSpeed_main, true, false);
+					break;
+				}
 			}
 
 			//dont print auto attacks to everyone... unless verbose combat flag? TODO
@@ -1217,38 +1234,58 @@ void Character::AutoAttack(Character * victim)
 
 			switch (DoAttackRoll(victim, Game::SCHOOL_PHYSICAL))
 			{
-			case ATTACK_MISS:
-				Send(tapcolor + "Your attack misses " + victim->GetName() + "|X\n\r");
-				victim->Send("|Y" + GetName() + "'s attack misses you.|X\n\r");
-				return;
-				break;
-			case ATTACK_DODGE:
-				Send(tapcolor + victim->GetName() + " dodges your attack.|X\n\r");
-				victim->Send("|YYou dodge " + GetName() + "'s attack.|X\n\r");
-				return;
-				break;
-			case ATTACK_PARRY:
-				Send(tapcolor + victim->GetName() + " parries your attack.|X\n\r");
-				victim->Send("|YYou parry " + GetName() + "'s attack.|X\n\r");
-				return;
-				break;
-			case ATTACK_BLOCK:
-				break;
-			case ATTACK_CRIT:
-				damage_off = (int)(damage_off * CRIT_DAMAGE_BONUS);
-				//Armor reduction
-				damage_off -= (int)(damage_off * victim->CalculateArmorMitigation());
-				Send(tapcolor + "Your attack CRITS " + victim->GetName() + " for " + Utilities::itos(damage_off) + " damage.|X\n\r");
-				victim->Send("|Y" + GetName() + "'s attack CRITS you for " + Utilities::itos(damage_off) + " damage.|X\n\r");
-				GenerateRageOnAttack(damage_off, weaponSpeed_off, false, true);
-				break;
-			case ATTACK_HIT:
-				//Armor reduction
-				damage_off -= (int)(damage_off * victim->CalculateArmorMitigation());
-				Send(tapcolor + "Your attack hits " + victim->GetName() + " for " + Utilities::itos(damage_off) + " damage.|X\n\r");
-				victim->Send("|Y" + GetName() + "'s attack hits you for " + Utilities::itos(damage_off) + " damage.|X\n\r");
-				GenerateRageOnAttack(damage_off, weaponSpeed_off, false, false);
-				break;
+				case ATTACK_MISS:
+					Send(tapcolor + "Your attack misses " + victim->GetName() + "|X\n\r");
+					victim->Send("|Y" + GetName() + "'s attack misses you.|X\n\r");
+					return;
+					break;
+				case ATTACK_DODGE:
+					Send(tapcolor + victim->GetName() + " dodges your attack.|X\n\r");
+					victim->Send("|YYou dodge " + GetName() + "'s attack.|X\n\r");
+					return;
+					break;
+				case ATTACK_PARRY:
+					Send(tapcolor + victim->GetName() + " parries your attack.|X\n\r");
+					victim->Send("|YYou parry " + GetName() + "'s attack.|X\n\r");
+					return;
+					break;
+				case ATTACK_BLOCK:
+					break;
+				case ATTACK_CRIT:
+				{
+					damage_off = (int)(damage_off * CRIT_DAMAGE_BONUS);
+					damage_off -= (int)(damage_off * victim->CalculateArmorMitigation());
+					int absorbed = victim->HandleDamageAbsorb(damage_off);
+					Send(tapcolor + "Your attack CRITS " + victim->GetName() + " for " + Utilities::itos(damage_off - absorbed) + " damage");
+					victim->Send("|Y" + GetName() + "'s attack CRITS you for " + Utilities::itos(damage_off - absorbed) + " damage");
+					if (absorbed > 0)
+					{
+						Send(" |W(" + Utilities::itos(absorbed) + " absorbed)" + tapcolor);
+						victim->Send(" |W(" + Utilities::itos(absorbed) + " absorbed)|Y");
+					}
+					Send(".|X\n\r");
+					victim->Send(".|X\n\r");
+					damage_off -= absorbed;
+					GenerateRageOnAttack(damage_off, weaponSpeed_off, false, true);
+					break;
+				}
+				case ATTACK_HIT:
+				{
+					damage_off -= (int)(damage_off * victim->CalculateArmorMitigation());
+					int absorbed = victim->HandleDamageAbsorb(damage_off);
+					Send(tapcolor + "Your attack hits " + victim->GetName() + " for " + Utilities::itos(damage_off - absorbed) + " damage");
+					victim->Send("|Y" + GetName() + "'s attack hits you for " + Utilities::itos(damage_off - absorbed) + " damage");
+					if (absorbed > 0)
+					{
+						Send(" |W(" + Utilities::itos(absorbed) + " absorbed)" + tapcolor);
+						victim->Send(" |W(" + Utilities::itos(absorbed) + " absorbed)|Y");
+					}
+					Send(".|X\n\r");
+					victim->Send(".|X\n\r");
+					damage_off -= absorbed;
+					GenerateRageOnAttack(damage_off, weaponSpeed_off, false, false);
+					break;
+				}
 			}
 			//dont print auto attacks to everyone... unless verbose combat flag? TODO
 			//Message("|G" + name + "'s attack hits " + victim->name + " for " + Utilities::itos(damage_off) + " damage.|X", Character::MSG_ROOM_NOTCHARVICT, victim);
@@ -1323,7 +1360,7 @@ int Character::HandleDamageAbsorb(int damage)
 		if (damage >= remaining)
 		{
 			absorb_spell->RemoveAura(SpellAffect::AURA_DAMAGE_ABSORB);
-			absorb_spell->remove_me = true; //remove the spell naturally on next game loop
+			absorb_spell->appliedTime = 0; //remove the spell naturally on next game loop
 			damage -= remaining;
 			totalabsorbed += remaining;
 		}
