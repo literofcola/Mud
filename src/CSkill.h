@@ -38,7 +38,7 @@ public:
 
 	std::string description;
 	std::string costDescription;
-	std::string costFunction;
+	std::string costScript;
     std::string castScript;
     std::string applyScript;
     std::string tickScript;

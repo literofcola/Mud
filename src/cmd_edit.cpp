@@ -19,18 +19,8 @@
 #include "CLogFile.h"
 #include <string>
 
-std::string printluatable(std::pair<sol::object, sol::object> key_value_pair)
-{
-	auto fs = key_value_pair.first.as<std::string>();
-	auto ss = key_value_pair.first.as<std::string>();
-	return fs + ss;
-}
-
 void cmd_edit(Player * ch, std::string argument)
 {
-    /*if(!user->character)
-		return;
-    */
 	std::string arg1, arg2, arg3;
 
     argument = Utilities::one_argument(argument, arg1);
@@ -99,82 +89,33 @@ void cmd_edit(Player * ch, std::string argument)
 			sol::function getinfowrapper = Server::lua["getinfowrapper"];
 			std::tuple<std::string, int, int> return_values;
 			sol::protected_function_result result;
+			sol::protected_function skill_func;
 			for (auto iter = Game::GetGame()->skills.begin(); iter != Game::GetGame()->skills.end(); ++iter)
 			{
-				sol::protected_function cost = Server::lua[iter->second->function_name + "_cost"];
-				sol::protected_function cast = Server::lua[iter->second->function_name + "_cast"];
-				sol::protected_function apply = Server::lua[iter->second->function_name + "_apply"];
-				sol::protected_function tick = Server::lua[iter->second->function_name + "_tick"];
-				sol::protected_function remove = Server::lua[iter->second->function_name + "_remove"];
-				try
+				for (int i = 0; i <= 4; ++i)
 				{
-					result = getinfowrapper(cost);
-					if (!result.valid())
+					try
 					{
-						sol::error err = result;
-						std::string what = err.what();
-						LogFile::Log("error", "getinfo cost call failed, sol::error::what() is: " + what);
+						skill_func = Server::lua[iter->second->function_name + func_name[i]];
+						if (skill_func == sol::nil)
+							continue;
+						result = getinfowrapper(skill_func);
+						if (!result.valid())
+						{
+							sol::error err = result;
+							std::string what = err.what();
+							LogFile::Log("error", "getinfo call failed, sol::error::what() is: " + what);
+						}
+						return_values = result;
+						ch->Send(std::get<0>(return_values) + "\n\r");
+						ch->Send(Utilities::itos(std::get<1>(return_values)) + "\n\r");
+						ch->Send(Utilities::itos(std::get<2>(return_values)) + "\n\r");
+
 					}
-					return_values = result;
-					ch->Send(std::get<0>(return_values) + "\n\r");
-					ch->Send(Utilities::itos(std::get<1>(return_values)) + "\n\r");
-					ch->Send(Utilities::itos(std::get<2>(return_values)) + "\n\r");
-					//
-					result = getinfowrapper(cast);
-					if (!result.valid())
+					catch (const std::exception & e)
 					{
-						sol::error err = result;
-						std::string what = err.what();
-						LogFile::Log("error", "getinfo cast call failed, sol::error::what() is: " + what);
+						LogFile::Log("error", e.what());
 					}
-					return_values = result;
-					ch->Send(std::get<0>(return_values) + "\n\r");
-					ch->Send(Utilities::itos(std::get<1>(return_values)) + "\n\r");
-					ch->Send(Utilities::itos(std::get<2>(return_values)) + "\n\r");
-					//
-					if (apply == sol::nil)
-					{
-						ch->Send("NIL APPLY\n\r");
-					}
-					result = getinfowrapper(apply);
-					if (!result.valid())
-					{
-						sol::error err = result;
-						std::string what = err.what();
-						LogFile::Log("error", "getinfo apply call failed, sol::error::what() is: " + what);
-					}
-					return_values = result;
-					ch->Send(std::get<0>(return_values) + "\n\r");
-					ch->Send(Utilities::itos(std::get<1>(return_values)) + "\n\r");
-					ch->Send(Utilities::itos(std::get<2>(return_values)) + "\n\r");
-					//
-					result = getinfowrapper(tick);
-					if (!result.valid())
-					{
-						sol::error err = result;
-						std::string what = err.what();
-						LogFile::Log("error", "getinfo tick call failed, sol::error::what() is: " + what);
-					}
-					return_values = result;
-					ch->Send(std::get<0>(return_values) + "\n\r");
-					ch->Send(Utilities::itos(std::get<1>(return_values)) + "\n\r");
-					ch->Send(Utilities::itos(std::get<2>(return_values)) + "\n\r");
-					//
-					result = getinfowrapper(remove);
-					if (!result.valid())
-					{
-						sol::error err = result;
-						std::string what = err.what();
-						LogFile::Log("error", "getinfo remove call failed, sol::error::what() is: " + what);
-					}
-					return_values = result;
-					ch->Send(std::get<0>(return_values) + "\n\r");
-					ch->Send(Utilities::itos(std::get<1>(return_values)) + "\n\r");
-					ch->Send(Utilities::itos(std::get<2>(return_values)) + "\n\r");
-				}
-				catch (const std::exception & e)
-				{
-					LogFile::Log("error", e.what());
 				}
 			}
 		}
@@ -1246,7 +1187,7 @@ void skillEditCmd_show(Player * ch, std::string argument)
     ch->Send("function_name: [" + pSkill->function_name + "]\n\r");
     ch->Send("description:   [" + pSkill->description + "]\n\r");
 	ch->Send("cost_desc:   [" + pSkill->costDescription + "]\n\r");
-    ch->SendBW("Cost function:\n\r" + pSkill->costFunction + "\n\r");
+    ch->SendBW("Cost script:\n\r" + pSkill->costScript + "\n\r");
     ch->SendBW("Cast script:\n\r" + pSkill->castScript + "\n\r");
     ch->SendBW("Apply script:\n\r" + pSkill->applyScript + "\n\r");
     ch->SendBW("Tick script:\n\r" + pSkill->tickScript + "\n\r");
@@ -1335,10 +1276,10 @@ void skillEditCmd_reload(Player * ch, std::string argument)
 {
     Skill * pSkill = (Skill *)ch->editData;
 
-	ch->Send("Reloading LUA scripts.\n\r");
+	ch->Send("Reloading LUA scripts (overrides lua_skills.lua)\n\r");
 
 	try {
-		Server::lua.script(pSkill->costFunction.c_str());
+		Server::lua.script(pSkill->costScript.c_str());
 		Server::lua.script(pSkill->castScript.c_str());
 		Server::lua.script(pSkill->applyScript.c_str());
 		Server::lua.script(pSkill->tickScript.c_str());
@@ -1348,29 +1289,73 @@ void skillEditCmd_reload(Player * ch, std::string argument)
 	{
 		LogFile::Log("error", e.what());
 	}
+}
 
-	/*
-    if(luaL_dostring(Server::luaState, pSkill->costFunction.c_str()))
-    {
-        LogFile::Log("error", std::string("Cost script: ") + lua_tostring(Server::luaState, -1));
-    }
-    if(luaL_dostring(Server::luaState, pSkill->castScript.c_str()))
-    {
-        LogFile::Log("error", std::string("Cast script: ") + lua_tostring(Server::luaState, -1));
-    }
-    if(luaL_dostring(Server::luaState, pSkill->applyScript.c_str()))
-    {
-        LogFile::Log("error", std::string("Apply script: ") + lua_tostring(Server::luaState, -1));
-    }
-    if(luaL_dostring(Server::luaState, pSkill->tickScript.c_str()))
-    {
-        LogFile::Log("error", std::string("Tick script: ") + lua_tostring(Server::luaState, -1));
-    }
-    if(luaL_dostring(Server::luaState, pSkill->removeScript.c_str()))
-    {
-        LogFile::Log("error", std::string("Remove script: ") + lua_tostring(Server::luaState, -1));
-    }
-	*/
+void skillEditCmd_import(Player * ch, std::string argument)
+{
+	Skill * pSkill = (Skill *)ch->editData;
+
+	std::string func_name[5] = { "_cost", "_cast", "_apply", "_tick", "_remove" };
+	sol::function getinfowrapper = Server::lua["getinfowrapper"];
+	std::tuple<std::string, int, int> return_values;
+	sol::protected_function_result result;
+	sol::protected_function skill_func;
+
+	for (int i = 0; i <= 4; ++i)
+	{
+		try
+		{
+			skill_func = Server::lua[pSkill->function_name + func_name[i]];
+			if (skill_func == sol::nil)
+				continue;
+			result = getinfowrapper(skill_func);
+			if (!result.valid())
+			{
+				sol::error err = result;
+				std::string what = err.what();
+				LogFile::Log("error", "getinfo call failed, sol::error::what() is: " + what);
+			}
+			return_values = result;
+		}
+		catch (const std::exception & e)
+		{
+			LogFile::Log("error", e.what());
+		}
+
+		std::string short_src = std::get<0>(return_values);
+		if (short_src == "lua_skills.lua")
+		{
+			ch->Send(pSkill->function_name + func_name[i] + " found in lua_skills.lua\n\r");
+			std::string variable_lookup[5] = { "cost_script", "cast_script", "apply_script", "tick_script", "remove_script" };
+			int first_line = std::get<1>(return_values);
+			int last_line = std::get<2>(return_values);
+			std::stringstream new_file;
+			std::fstream importfile("lua_skills.lua", std::fstream::in);
+			std::string one_line;
+			std::string imported_function;
+			for (int line_number = 1; !importfile.eof(); ++line_number)
+			{
+				std::getline(importfile, one_line);
+				if (line_number < first_line || line_number > last_line) //not part of the function we're looking for
+				{   //copy to new file
+					new_file << one_line << '\n';
+				}
+				else //import this to pSkill
+				{
+					imported_function += one_line + '\n';
+				}
+			}
+			importfile.close();
+			*(pSkill->stringTable[variable_lookup[i].c_str()]) = imported_function;
+			pSkill->changed = true;
+			importfile.open("lua_skills.lua", std::fstream::out | std::fstream::trunc);
+			importfile << new_file.str();
+			importfile.close();
+			skillEditCmd_reload(ch, "");
+			Server::lua.script_file("lua_skills.lua");
+			ch->Send("Reloaded file lua_skills.lua\n\r");
+		}
+	}
 }
 
 void skillEditCmd_description(Player * ch, std::string argument)
@@ -1447,12 +1432,12 @@ void skillEditCmd_remove_script(Player * ch, std::string argument)
         pSkill->changed = true;
 }
 
-void skillEditCmd_cost_function(Player * ch, std::string argument)
+void skillEditCmd_cost_script(Player * ch, std::string argument)
 {
     Skill * pSkill = (Skill *)ch->editData;
 
 
-        StringEdit::string_append( ch->user, &pSkill->costFunction );
+        StringEdit::string_append( ch->user, &pSkill->costScript);
         pSkill->changed = true;
 }
 

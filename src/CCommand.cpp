@@ -281,6 +281,7 @@ const class Command skillEditCmd_table[] =
     { "long_name",	    skillEditCmd_long_name, 0, 0, 1, 1	},
     { "function_name",	skillEditCmd_function_name, 0, 0, 1, 1	},
     { "target_type",    skillEditCmd_target_type, 0, 0, 1, 1 },
+	{ "cost_script",    skillEditCmd_cost_script, 0, 0, 1, 1 },
     { "cast_script",    skillEditCmd_cast_script, 0, 0, 1, 1	},
     { "apply_script",	skillEditCmd_apply_script, 0, 0, 1, 1	},
     { "tick_script",	skillEditCmd_tick_script, 0, 0, 1, 1	},
@@ -291,8 +292,8 @@ const class Command skillEditCmd_table[] =
 	{ "interrupt_flags",skillEditCmd_interrupt_flags, 0, 0, 1, 1 },
     { "cooldown",       skillEditCmd_cooldown, 0, 0, 1, 1 },
 	{ "flag",		    skillEditCmd_flag, 0, 0, 1, 1 },
-    { "cost_function",  skillEditCmd_cost_function, 0, 0, 1, 1 },
     { "reload",         skillEditCmd_reload, 0, 0, 1, 1 },
+	{ "import",			skillEditCmd_import, 0, 0, 1, 1 },
 	{ "",			0, 0, 0, 1, 1				}
 };
 

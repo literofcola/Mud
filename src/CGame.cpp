@@ -1737,7 +1737,7 @@ void Game::LoadSkills(Server * server)
 		}
 
         s->cooldown = row["cooldown"];
-        s->costFunction = row["cost_script"];
+        s->costScript = row["cost_script"];
         
         skills.insert(std::pair<int, Skill *>(s->id, s));
 		try {
@@ -1745,7 +1745,7 @@ void Game::LoadSkills(Server * server)
 			Server::lua.script(s->applyScript.c_str());
 			Server::lua.script(s->tickScript.c_str());
 			Server::lua.script(s->removeScript.c_str());
-			Server::lua.script(s->costFunction.c_str());
+			Server::lua.script(s->costScript.c_str());
 		}
 		catch (const std::exception & e)
 		{

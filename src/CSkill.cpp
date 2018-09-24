@@ -44,6 +44,11 @@ Skill::Skill(int id_, std::string long_name_)
     stringTable["long_name"] = &long_name;
     stringTable["function_name"] = &function_name;
     stringTable["description"] = &description;
+	stringTable["cost_script"] = &costScript;
+	stringTable["cast_script"] = &castScript;
+	stringTable["apply_script"] = &applyScript;
+	stringTable["tick_script"] = &tickScript;
+	stringTable["remove_script"] = &removeScript;
 }
 
 Skill::~Skill()
@@ -73,7 +78,7 @@ void Skill::Save()
     skillsql += "','" + fixfname + "', '" + Utilities::SQLFixQuotes(applyScript) + "', '" + Utilities::SQLFixQuotes(tickScript) + "', '";
     skillsql += Utilities::SQLFixQuotes(removeScript) + "'," + Utilities::itos(targetType) + ",'" + Utilities::SQLFixQuotes(description);
     skillsql += "','" + Utilities::SQLFixQuotes(costDescription) + "','" + Utilities::SQLFixQuotes(long_name) + "'," + Utilities::dtos(cooldown, 2);
-	skillsql += ", '" + Utilities::SQLFixQuotes(costFunction) + "','";
+	skillsql += ", '" + Utilities::SQLFixQuotes(costScript) + "','";
 
 	std::vector<int>::iterator flagiter;
 	for (flagiter = flags.begin(); flagiter != flags.end(); ++flagiter)
