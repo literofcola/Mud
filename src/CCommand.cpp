@@ -294,6 +294,7 @@ const class Command skillEditCmd_table[] =
 	{ "flag",		    skillEditCmd_flag, 0, 0, 1, 1 },
     { "reload",         skillEditCmd_reload, 0, 0, 1, 1 },
 	{ "import",			skillEditCmd_import, 0, 0, 1, 1 },
+	{ "export",			skillEditCmd_export, 0, 0, 1, 1 },
 	{ "",			0, 0, 0, 1, 1				}
 };
 

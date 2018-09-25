@@ -1358,6 +1358,54 @@ void skillEditCmd_import(Player * ch, std::string argument)
 	}
 }
 
+void skillEditCmd_export(Player * ch, std::string argument)
+{
+	Skill * pSkill = (Skill *)ch->editData;
+
+	std::string func_name[5] = { "_cost", "_cast", "_apply", "_tick", "_remove" };
+	sol::function getinfowrapper = Server::lua["getinfowrapper"];
+	std::tuple<std::string, int, int> return_values;
+	sol::protected_function_result result;
+	sol::protected_function skill_func;
+
+	for (int i = 0; i <= 4; ++i)
+	{
+		try
+		{
+			skill_func = Server::lua[pSkill->function_name + func_name[i]];
+			if (skill_func == sol::nil)
+				continue;
+			result = getinfowrapper(skill_func);
+			if (!result.valid())
+			{
+				sol::error err = result;
+				std::string what = err.what();
+				LogFile::Log("error", "getinfo call failed, sol::error::what() is: " + what);
+			}
+			return_values = result;
+		}
+		catch (const std::exception & e)
+		{
+			LogFile::Log("error", e.what());
+			continue;
+		}
+
+		std::string short_src = std::get<0>(return_values);
+		if (short_src == "lua_skills.lua")
+		{
+			ch->Send(pSkill->function_name + func_name[i] + " found in lua_skills.lua, unable to export\n\r");
+			continue;
+		}
+		std::fstream exportfile("lua_skills.lua", std::fstream::binary | std::fstream::out | std::fstream::app);
+		std::string variable_lookup[5] = { "cost_script", "cast_script", "apply_script", "tick_script", "remove_script" };
+		exportfile.write((pSkill->stringTable[variable_lookup[i].c_str()])->c_str(), pSkill->stringTable[variable_lookup[i].c_str()]->length());
+		exportfile.close();
+		ch->Send("exported " + pSkill->function_name + func_name[i] + "\n\r");
+	}
+	Server::lua.script_file("lua_skills.lua");
+	ch->Send("Reloaded file lua_skills.lua\n\r");
+}
+
 void skillEditCmd_description(Player * ch, std::string argument)
 {
     Skill * pSkill = (Skill *)ch->editData;

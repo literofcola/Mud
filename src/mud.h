@@ -147,6 +147,7 @@ void skillEditCmd_flag(Player * ch, std::string argument);
 void skillEditCmd_cost_script(Player * ch, std::string argument);
 void skillEditCmd_reload(Player * ch, std::string argument);
 void skillEditCmd_import(Player * ch, std::string argument);
+void skillEditCmd_export(Player * ch, std::string argument);
 void skillEditCmd_description(Player * ch, std::string argument);
 void skillEditCmd_cost_description(Player * ch, std::string argument);
 void npcEditCmd_show(Player * ch, std::string argument);
