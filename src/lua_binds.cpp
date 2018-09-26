@@ -98,6 +98,7 @@ void Lua_DefineClasses(sol::state * lua)
 			"CanAttack", &Character::CanAttack,
 			"DoAttackRoll", &Character::DoAttackRoll,
 			"CalculateArmorMitigation", &Character::CalculateArmorMitigation,
+            "HandleDamageAbsorb", &Character::HandleDamageAbsorb,
 			"IsFighting", &Character::IsFighting,
 			"InCombat", &Character::InCombat,
 			"IsAlive", &Character::IsAlive,
