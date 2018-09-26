@@ -220,7 +220,7 @@ void Game::GameLoop(Server * server)
 				if (!user->character
 					|| (user->character && !user->character->IsImmortal()))
 				{
-					user->Send("Idle timeout exceeded. Disconnecting.\n\r");
+					user->Send("Idle timeout exceeded. Disconnecting.\r\n");
 					user->SetDisconnect();
 				}
 			}
@@ -250,7 +250,7 @@ void Game::GameLoop(Server * server)
                     if(iac_response == Server::MXP_DO)
                     {
                         //turn on mxp
-                        user->Send("MXP Enabled\n\r");
+                        user->Send("MXP Enabled\r\n");
 						//Send immediately (only really necessary for MCCP)
 						server->deliver(user->GetClient(), Server::MXP_START);
 						server->deliver(user->GetClient(), MXP_LOCKLOCKED);
@@ -258,14 +258,14 @@ void Game::GameLoop(Server * server)
                     }
 					else if(iac_response == Server::GMCP_DO)
 					{
-						user->Send("GMCP Enabled\n\r");
+						user->Send("GMCP Enabled\r\n");
 						server->deliver(user->GetClient(), Server::GMCP_START);
 						user->gmcp = true;
 					}
 					else if(iac_response == Server::MCCP_DO)
 					{
 						//turn on mccp
-						user->Send("MCCP2 Enabled\n\r");
+						user->Send("MCCP2 Enabled\r\n");
 						/* allocate deflate state */
 						user->z_strm.zalloc = Z_NULL;
 						user->z_strm.zfree = Z_NULL;
@@ -634,7 +634,7 @@ void Game::WorldUpdate(Server * server)
 					{
 						currChar->EnterCombat((*aggroiter));
 						(*aggroiter)->EnterCombat(currChar);
-						(*aggroiter)->Send(currChar->GetName() + " begins attacking you!\n\r");
+						(*aggroiter)->Send(currChar->GetName() + " begins attacking you!\r\n");
 						currChar->AutoAttack((*aggroiter));
 						break;
 					}
@@ -781,7 +781,7 @@ void Game::WorldUpdate(Server * server)
 				{
 					if (currNPC->GetTarget() != taunt->caster)
 					{
-						taunt->caster->Send(currNPC->GetName() + " changes " + currNPC->HisHer() + " target and begins attacking you!\n\r");
+						taunt->caster->Send(currNPC->GetName() + " changes " + currNPC->HisHer() + " target and begins attacking you!\r\n");
 						taunt->caster->Message(currNPC->GetName() + " changes " + currNPC->HisHer() + " target and begins attacking " + taunt->caster->GetName() + "!",
 							Character::MessageType::MSG_ROOM_NOTCHARVICT, currNPC);
 					}
@@ -790,7 +790,7 @@ void Game::WorldUpdate(Server * server)
                 else if(topthreat && topthreat != currNPC->GetTarget() && (currNPC->GetThreat(currNPC->GetTarget()) + currNPC->GetThreat(currNPC->GetTarget()) * .1) < currNPC->GetThreat(topthreat))
                 {
 					currNPC->SetTarget(currNPC->GetTopThreat());
-					currNPC->GetTarget()->Send(currNPC->GetName() + " changes " + currNPC->HisHer() + " target and begins attacking you!\n\r");
+					currNPC->GetTarget()->Send(currNPC->GetName() + " changes " + currNPC->HisHer() + " target and begins attacking you!\r\n");
 					currNPC->Message(currNPC->GetName() + " changes " + currNPC->HisHer() + " target and begins attacking " + currNPC->GetTarget()->GetName() + "!",
 						Character::MessageType::MSG_ROOM_NOTCHARVICT, currNPC->GetTarget());
                 }
@@ -972,7 +972,7 @@ void Game::WorldUpdate(Server * server)
 			Exit::Direction dir = FindDirection(currChar, currChar->GetTarget(), 3);
 			if (dir == Exit::DIR_LAST) //Clear the target
 			{
-				currChar->Send("Target out of range.\n\r");
+				currChar->Send("Target out of range.\r\n");
 				currChar->ClearTarget();
 			}
 				
@@ -1079,7 +1079,7 @@ void Game::LoginHandler(Server * server, User * user, string argument)
                     && tempUser->connectedState >= User::CONN_GET_NEW_PASSWORD
 				    && tempUser->connectedState <= User::CONN_CONFIRM_CLASS)
 			{   //player exists, but hasnt finished creating
-				user->Send("A character is currently being created with that name.\n\r");
+				user->Send("A character is currently being created with that name.\r\n");
 				LogFile::Log("status", "Login attempt on creating character in progress : " + tempUser->character->GetName());
 				user->SetDisconnect();
 			}
@@ -1126,7 +1126,7 @@ void Game::LoginHandler(Server * server, User * user, string argument)
                 Player * c = Player::LoadPlayer(user->character->GetName(), user);
                 delete user->character;
                 user->character = c;
-                user->Send("|B.|C1 |MEnter world\n\r |C2|B.|MChange password\n\r|B.|C3 |MDelete this character\n\r |C4|B.|MQuit|X\n\r: ");
+                user->Send("|B.|C1 |MEnter world\r\n |C2|B.|MChange password\r\n|B.|C3 |MDelete this character\r\n |C4|B.|MQuit|X\r\n: ");
                 user->connectedState = User::CONN_MENU;
             }
             else
@@ -1137,7 +1137,7 @@ void Game::LoginHandler(Server * server, User * user, string argument)
                 existingUser->character = nullptr;
                 if(existingUser->IsConnected())
                 {
-                    existingUser->Send("\n\rMultiple login detected. Disconnecting...\n\r");
+                    existingUser->Send("\r\nMultiple login detected. Disconnecting...\r\n");
                     existingUser->SetDisconnect();
 
                 }
@@ -1214,7 +1214,7 @@ void Game::LoginHandler(Server * server, User * user, string argument)
             }
             else
             {
-				user->Send("|YInvalid choice.|X\n\r");
+				user->Send("|YInvalid choice.|X\r\n");
 				string raceChoice = "|YChoose your race (";
 				for (int i = 0; Character::race_table[i].id != -1; i++)
 				{
@@ -1275,7 +1275,7 @@ void Game::LoginHandler(Server * server, User * user, string argument)
             }
             else
             {
-				user->Send("|YInvalid choice.|X\n\r");
+				user->Send("|YInvalid choice.|X\r\n");
 				std::string classChoice = "|YChoose your class (";
 				std::map<int, Class *>::iterator iter;
 				for (iter = classes.begin(); iter != classes.end(); ++iter)
@@ -1363,7 +1363,7 @@ void Game::LoginHandler(Server * server, User * user, string argument)
 
 			if (valid)
 			{
-				user->Send("|B.|C1 |MEnter world\n\r |C2|B.|MChange password\n\r|B.|C3 |MDelete this character\n\r |C4|B.|MQuit|X\n\r: ");
+				user->Send("|B.|C1 |MEnter world\r\n |C2|B.|MChange password\r\n|B.|C3 |MDelete this character\r\n |C4|B.|MQuit|X\r\n: ");
 				user->connectedState = User::CONN_MENU;
 			}
 			break;
@@ -1378,8 +1378,8 @@ void Game::LoginHandler(Server * server, User * user, string argument)
             }
             else
             {
-                user->Send("Incorrect password.\n\r\n\r");
-                user->Send("|B.|C1 |MEnter world\n\r |C2|B.|MChange password\n\r|B.|C3 |MDelete this character\n\r |C4|B.|MQuit|X\n\r: ");
+                user->Send("Incorrect password.\r\n\r\n");
+                user->Send("|B.|C1 |MEnter world\r\n |C2|B.|MChange password\r\n|B.|C3 |MDelete this character\r\n |C4|B.|MQuit|X\r\n: ");
                 user->connectedState = User::CONN_MENU;
             }
             break;
@@ -1404,17 +1404,17 @@ void Game::LoginHandler(Server * server, User * user, string argument)
         {
             if(arg1 == user->character->pwtemp)
             {
-                user->Send("Password changed.\n\r");
+                user->Send("Password changed.\r\n");
                 user->character->password = server->EncryptDecrypt(argument);
 				Server::sqlQueue->Write("UPDATE players SET password = '" + user->character->password + "' WHERE name='" + user->character->GetName() + "'");
                 user->character->pwtemp.clear();
             }
             else
             {
-                user->Send("Password doesn't match, NOT changed.\n\r");
+                user->Send("Password doesn't match, NOT changed.\r\n");
                 user->character->pwtemp.clear();
             }
-            user->Send("|B.|C1 |MEnter world\n\r |C2|B.|MChange password\n\r|B.|C3 |MDelete this character\n\r |C4|B.|MQuit|X\n\r: ");
+            user->Send("|B.|C1 |MEnter world\r\n |C2|B.|MChange password\r\n|B.|C3 |MDelete this character\r\n |C4|B.|MQuit|X\r\n: ");
             user->connectedState = User::CONN_MENU;
             break;
         }
@@ -1428,8 +1428,8 @@ void Game::LoginHandler(Server * server, User * user, string argument)
             }
             else
             {
-                user->Send("Incorrect password.\n\r\n\r");
-                user->Send("|B.|C1 |MEnter world\n\r |C2|B.|MChange password\n\r|B.|C3 |MDelete this character\n\r |C4|B.|MQuit|X\n\r: ");
+                user->Send("Incorrect password.\r\n\r\n");
+                user->Send("|B.|C1 |MEnter world\r\n |C2|B.|MChange password\r\n|B.|C3 |MDelete this character\r\n |C4|B.|MQuit|X\r\n: ");
                 user->connectedState = User::CONN_MENU;
             }
             break;
@@ -1451,7 +1451,7 @@ void Game::LoginHandler(Server * server, User * user, string argument)
             }
             else
             {
-                user->Send("|B.|C1 |MEnter world\n\r |C2|B.|MChange password\n\r|B.|C3 |MDelete this character\n\r |C4|B.|MQuit|X\n\r: ");
+                user->Send("|B.|C1 |MEnter world\r\n |C2|B.|MChange password\r\n|B.|C3 |MDelete this character\r\n |C4|B.|MQuit|X\r\n: ");
                 user->connectedState = User::CONN_MENU;
             }
             break;
@@ -1461,7 +1461,7 @@ void Game::LoginHandler(Server * server, User * user, string argument)
         {
             if(arg1.empty())
             {
-                user->Send("|B.|C1 |MEnter world\n\r |C2|B.|MChange password\n\r|B.|C3 |MDelete this character\n\r |C4|B.|MQuit|X\n\r: ");
+                user->Send("|B.|C1 |MEnter world\r\n |C2|B.|MChange password\r\n|B.|C3 |MDelete this character\r\n |C4|B.|MQuit|X\r\n: ");
                 user->connectedState = User::CONN_MENU;
                 break;
             }
@@ -1469,13 +1469,13 @@ void Game::LoginHandler(Server * server, User * user, string argument)
             {
                 user->Send("|MThere are currently |X" + Utilities::itos((int)rooms.size()) + " |Munique locations, |X" +
                     Utilities::itos((int)characters.size() - (int)users.size()) + "|M non player characters and |X" +
-                    Utilities::itos((int)quests.size()) + "|M quests.|X\n\r");
-                user->Send("|MThere are currently |X" + Utilities::itos((int)users.size()) + "|M players online.|X\n\r");
+                    Utilities::itos((int)quests.size()) + "|M quests.|X\r\n");
+                user->Send("|MThere are currently |X" + Utilities::itos((int)users.size()) + "|M players online.|X\r\n");
                 user->Send("|MThere have been |X" + Utilities::itos(total_players_since_boot) + 
-                    "|M players connected to the server since last boot.|X\n\r");
+                    "|M players connected to the server since last boot.|X\r\n");
                 user->Send("|MThe most players that have been online at one time since last boot is |X" + 
-                    Utilities::itos(max_players_since_boot) + "|M.|X\n\r");
-                user->Send("|MYou are player [|X" + Utilities::itos(++total_past_connections) + "|M] connected since May 19th, 2010.|X\n\r\n\r");
+                    Utilities::itos(max_players_since_boot) + "|M.|X\r\n");
+                user->Send("|MYou are player [|X" + Utilities::itos(++total_past_connections) + "|M] connected since May 19th, 2010.|X\r\n\r\n");
                 //user->Send("Logged In!\r\n");
 
 				json vitals = { { "hp", user->character->GetHealth() },{ "hpmax", user->character->GetMaxHealth() },{ "mp", user->character->GetMana() },{ "mpmax", user->character->GetMaxMana() },
@@ -1560,7 +1560,7 @@ void Game::LoadRooms(Server * server)
 	if (roomres.empty())
 	{
 		LogFile::Log("error", "Warning! No rooms loaded from database, creating default room. Set the new player room number in serverstats.txt line 2");
-		Room * r = new Room(1, "The One Room", "One room to rule them all.\n\r");
+		Room * r = new Room(1, "The One Room", "One room to rule them all.\r\n");
 		rooms.insert(std::pair<int, Room *>(r->id, r));
 		return;
 	}
@@ -1703,10 +1703,12 @@ void Game::LoadSkills(Server * server)
         s->name = (string)row["name"];
         s->function_name = (string)row["function_name"];
         s->targetType = (Skill::TargetType)(int)row["target_type"];
+		s->costScript = row["cost_script"];
         s->castScript = (string)row["cast_script"];
         s->applyScript = (string)row["apply_script"];
         s->tickScript = (string)row["tick_script"];
         s->removeScript = (string)row["remove_script"];
+		s->cooldown = row["cooldown"];
         s->description = (string)row["description"];
 		s->costDescription = (string)row["cost_description"];
         s->castTime = row["cast_time"];
@@ -1736,16 +1738,13 @@ void Game::LoadSkills(Server * server)
 			}
 		}
 
-        s->cooldown = row["cooldown"];
-        s->costScript = row["cost_script"];
-        
         skills.insert(std::pair<int, Skill *>(s->id, s));
 		try {
+			Server::lua.script(s->costScript.c_str());
 			Server::lua.script(s->castScript.c_str());
 			Server::lua.script(s->applyScript.c_str());
 			Server::lua.script(s->tickScript.c_str());
 			Server::lua.script(s->removeScript.c_str());
-			Server::lua.script(s->costScript.c_str());
 		}
 		catch (const std::exception & e)
 		{
@@ -2518,7 +2517,7 @@ Character * Game::LoadNPCRoom(int id, Room * toroom)
     NPCIndex * charIndex = Game::GetGame()->GetNPCIndex(id);
     if(charIndex == nullptr)
     {
-        //ch->Send("NPC " + arg2 + " does not exist.\n\r");
+        //ch->Send("NPC " + arg2 + " does not exist.\r\n");
         return nullptr;
     }
     Character * newChar = Game::GetGame()->NewNPC(charIndex);
@@ -2591,7 +2590,7 @@ int Game::DoSearch(T1 table_name, std::string field_name, std::string argument, 
         {
             if(*(iterator->second->intTable[field_name]) == value)
             {
-                result += "[" + Utilities::itos(iterator->second->id) + "] " + iterator->second->name + "\n\r";
+                result += "[" + Utilities::itos(iterator->second->id) + "] " + iterator->second->name + "\r\n";
                 ++results_found;
             }
         }
@@ -2599,7 +2598,7 @@ int Game::DoSearch(T1 table_name, std::string field_name, std::string argument, 
         {
             if(!Utilities::str_str(argument, *(iterator->second->stringTable[field_name])))
             {
-                result += "[" + Utilities::itos(iterator->second->id) + "] " + iterator->second->name + "\n\r";
+                result += "[" + Utilities::itos(iterator->second->id) + "] " + iterator->second->name + "\r\n";
                 ++results_found;
             }
         }
@@ -2723,7 +2722,7 @@ int Game::Search(string table_name, string field_name, int conditional_type, str
     {
 		if (rooms.begin() == rooms.end())
 		{
-			result += "No rooms in the room list.\n\r";
+			result += "No rooms in the room list.\r\n";
 			return 0;
 		}
 		if (data_type == 1 && rooms.begin()->second->intTable.find(field_name) != rooms.begin()->second->intTable.end())
@@ -2736,7 +2735,7 @@ int Game::Search(string table_name, string field_name, int conditional_type, str
 		}
 		else
 		{
-			result += "Invalid field_name.\n\r";
+			result += "Invalid field_name.\r\n";
 			return 0;
 		}
 
@@ -2748,14 +2747,14 @@ int Game::Search(string table_name, string field_name, int conditional_type, str
 			case 1:
 				if (SearchComparisonInt(*(iter->second->intTable[field_name]), value, conditional_type))
 				{
-					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + Utilities::itos(*(iter->second->intTable[field_name])) + "\n\r";
+					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + Utilities::itos(*(iter->second->intTable[field_name])) + "\r\n";
 					++results_found;
 				}
 				break;
 			case 3:
 				if (SearchComparisonString(*(iter->second->stringTable[field_name]), argument, conditional_type))
 				{
-					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + *(iter->second->stringTable[field_name]) + "\n\r";
+					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + *(iter->second->stringTable[field_name]) + "\r\n";
 					++results_found;
 				}
 				break;
@@ -2767,7 +2766,7 @@ int Game::Search(string table_name, string field_name, int conditional_type, str
     {
 		if (items.begin() == items.end())
 		{
-			result += "No items in the item list.\n\r";
+			result += "No items in the item list.\r\n";
 			return 0;
 		}
 		if (data_type == 1 && items.begin()->second->intTable.find(field_name) != items.begin()->second->intTable.end())
@@ -2784,7 +2783,7 @@ int Game::Search(string table_name, string field_name, int conditional_type, str
 		}
 		else
 		{
-			result += "Invalid field_name.\n\r";
+			result += "Invalid field_name.\r\n";
 			return 0;
 		}
 
@@ -2796,21 +2795,21 @@ int Game::Search(string table_name, string field_name, int conditional_type, str
 			case 1:
 				if (SearchComparisonInt(*(iter->second->intTable[field_name]), value, conditional_type))
 				{
-					result += "[" + Utilities::itos(iter->second->GetID()) + "] " + iter->second->GetName() + ":  " + Utilities::itos(*(iter->second->intTable[field_name])) + "\n\r";
+					result += "[" + Utilities::itos(iter->second->GetID()) + "] " + iter->second->GetName() + ":  " + Utilities::itos(*(iter->second->intTable[field_name])) + "\r\n";
 					++results_found;
 				}
 				break;
 			case 2:
 				if (SearchComparisonDouble(*(iter->second->doubleTable[field_name]), value, conditional_type))
 				{
-					result += "[" + Utilities::itos(iter->second->GetID()) + "] " + iter->second->GetName() + ":  " + Utilities::dtos(*(iter->second->doubleTable[field_name]), 2) + "\n\r";
+					result += "[" + Utilities::itos(iter->second->GetID()) + "] " + iter->second->GetName() + ":  " + Utilities::dtos(*(iter->second->doubleTable[field_name]), 2) + "\r\n";
 					++results_found;
 				}
 				break;
 			case 3:
 				if (SearchComparisonString(*(iter->second->stringTable[field_name]), argument, conditional_type))
 				{
-					result += "[" + Utilities::itos(iter->second->GetID()) + "] " + iter->second->GetName() + ":  " + *(iter->second->stringTable[field_name]) + "\n\r";
+					result += "[" + Utilities::itos(iter->second->GetID()) + "] " + iter->second->GetName() + ":  " + *(iter->second->stringTable[field_name]) + "\r\n";
 					++results_found;
 				}
 				break;
@@ -2822,7 +2821,7 @@ int Game::Search(string table_name, string field_name, int conditional_type, str
     {
 		if (npcIndex.begin() == npcIndex.end())
 		{
-			result += "No npcs in the npc index list.\n\r";
+			result += "No npcs in the npc index list.\r\n";
 			return 0;
 		}
 		if (data_type == 1 && npcIndex.begin()->second->intTable.find(field_name) != npcIndex.begin()->second->intTable.end())
@@ -2839,7 +2838,7 @@ int Game::Search(string table_name, string field_name, int conditional_type, str
 		}
 		else
 		{
-			result += "Invalid field_name.\n\r";
+			result += "Invalid field_name.\r\n";
 			return 0;
 		}
 
@@ -2851,21 +2850,21 @@ int Game::Search(string table_name, string field_name, int conditional_type, str
 			case 1:
 				if (SearchComparisonInt(*(iter->second->intTable[field_name]), value, conditional_type))
 				{
-					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + Utilities::itos(*(iter->second->intTable[field_name])) + "\n\r";
+					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + Utilities::itos(*(iter->second->intTable[field_name])) + "\r\n";
 					++results_found;
 				}
 				break;
 			case 2:
 				if (SearchComparisonDouble(*(iter->second->doubleTable[field_name]), value, conditional_type))
 				{
-					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + Utilities::dtos(*(iter->second->doubleTable[field_name]), 2) + "\n\r";
+					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + Utilities::dtos(*(iter->second->doubleTable[field_name]), 2) + "\r\n";
 					++results_found;
 				}
 				break;
 			case 3:
 				if (SearchComparisonString(*(iter->second->stringTable[field_name]), argument, conditional_type))
 				{
-					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + *(iter->second->stringTable[field_name]) + "\n\r";
+					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + *(iter->second->stringTable[field_name]) + "\r\n";
 					++results_found;
 				}
 				break;
@@ -2877,7 +2876,7 @@ int Game::Search(string table_name, string field_name, int conditional_type, str
     {
 		if (quests.begin() == quests.end())
 		{
-			result += "No quests in the quest list.\n\r";
+			result += "No quests in the quest list.\r\n";
 			return 0;
 		}
 		if (data_type == 1 && quests.begin()->second->intTable.find(field_name) != quests.begin()->second->intTable.end())
@@ -2894,7 +2893,7 @@ int Game::Search(string table_name, string field_name, int conditional_type, str
 		}
 		else
 		{
-			result += "Invalid field_name.\n\r";
+			result += "Invalid field_name.\r\n";
 			return 0;
 		}
 
@@ -2906,21 +2905,21 @@ int Game::Search(string table_name, string field_name, int conditional_type, str
 			case 1:
 				if (SearchComparisonInt(*(iter->second->intTable[field_name]), value, conditional_type))
 				{
-					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + Utilities::itos(*(iter->second->intTable[field_name])) + "\n\r";
+					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + Utilities::itos(*(iter->second->intTable[field_name])) + "\r\n";
 					++results_found;
 				}
 				break;
 			case 2:
 				if (SearchComparisonDouble(*(iter->second->doubleTable[field_name]), value, conditional_type))
 				{
-					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + Utilities::dtos(*(iter->second->doubleTable[field_name]), 2) + "\n\r";
+					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + Utilities::dtos(*(iter->second->doubleTable[field_name]), 2) + "\r\n";
 					++results_found;
 				}
 				break;
 			case 3:
 				if (SearchComparisonString(*(iter->second->stringTable[field_name]), argument, conditional_type))
 				{
-					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + *(iter->second->stringTable[field_name]) + "\n\r";
+					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->name + ":  " + *(iter->second->stringTable[field_name]) + "\r\n";
 					++results_found;
 				}
 				break;
@@ -2932,7 +2931,7 @@ int Game::Search(string table_name, string field_name, int conditional_type, str
     {
 		if (skills.begin() == skills.end())
 		{
-			result += "No skills in the skill list.\n\r";
+			result += "No skills in the skill list.\r\n";
 			return 0;
 		}
 		if (data_type == 1 && skills.begin()->second->intTable.find(field_name) != skills.begin()->second->intTable.end())
@@ -2949,7 +2948,7 @@ int Game::Search(string table_name, string field_name, int conditional_type, str
 		}
 		else
 		{
-			result += "Invalid field_name.\n\r";
+			result += "Invalid field_name.\r\n";
 			return 0;
 		}
 
@@ -2961,21 +2960,21 @@ int Game::Search(string table_name, string field_name, int conditional_type, str
 			case 1:
 				if (SearchComparisonInt(*(iter->second->intTable[field_name]), value, conditional_type))
 				{
-					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->long_name + ":  " + Utilities::itos(*(iter->second->intTable[field_name])) + "\n\r";
+					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->long_name + ":  " + Utilities::itos(*(iter->second->intTable[field_name])) + "\r\n";
 					++results_found;
 				}
 				break;
 			case 2:
 				if (SearchComparisonDouble(*(iter->second->doubleTable[field_name]), value, conditional_type))
 				{
-					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->long_name + ":  " + Utilities::dtos(*(iter->second->doubleTable[field_name]), 2) + "\n\r";
+					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->long_name + ":  " + Utilities::dtos(*(iter->second->doubleTable[field_name]), 2) + "\r\n";
 					++results_found;
 				}
 				break;
 			case 3:
 				if (SearchComparisonString(*(iter->second->stringTable[field_name]), argument, conditional_type))
 				{
-					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->long_name + ":  " + *(iter->second->stringTable[field_name]) + "\n\r";
+					result += "[" + Utilities::itos(iter->second->id) + "] " + iter->second->long_name + ":  " + *(iter->second->stringTable[field_name]) + "\r\n";
 					++results_found;
 				}
 				break;
@@ -2985,7 +2984,7 @@ int Game::Search(string table_name, string field_name, int conditional_type, str
     }
     else
     {
-        result += "Invalid table name.\n\r";
+        result += "Invalid table name.\r\n";
     }
     return 0;
 }

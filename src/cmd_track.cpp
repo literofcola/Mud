@@ -19,7 +19,7 @@ void cmd_track(Player * ch, string argument)
 
     if(argument.empty())
     {
-        ch->Send("Track who?\n\r");
+        ch->Send("Track who?\r\n");
         return;
     }
 
@@ -29,32 +29,32 @@ void cmd_track(Player * ch, string argument)
 
     if(target == nullptr)
     {
-        ch->Send("Player not found.\n\r");
+        ch->Send("Player not found.\r\n");
         return;
     }
     if(ch == target)
     {
-        ch->Send("You cannot track yourself.\n\r");
+        ch->Send("You cannot track yourself.\r\n");
         return;
     }
     if(ch->room == target->room)
     {
-        ch->Send("Try looking around.\n\r");
+        ch->Send("Try looking around.\r\n");
         return;
     }
 
     HighResTimer timer;
     timer.Reset();
     Exit::Direction dir = FindDirection(ch, target, 30);
-    ch->Send("GetDirection took " + Utilities::dtos(timer.ElapsedMillis(), 5) + "ms\n\r");
+    ch->Send("GetDirection took " + Utilities::dtos(timer.ElapsedMillis(), 5) + "ms\r\n");
     
     if(dir == Exit::DIR_LAST)
     {
-        ch->Send("Could not find a path.\n\r");
+        ch->Send("Could not find a path.\r\n");
         return;
     }
 
-    ch->Send("You sense a trail " + Exit::exitNames[dir] + " from here.\n\r");
+    ch->Send("You sense a trail " + Exit::exitNames[dir] + " from here.\r\n");
 }
 
 Exit::Direction FindDirection(Room * start, Room * end, int depth)
@@ -93,7 +93,7 @@ Exit::Direction FindDirection(Room * start, Room * end, int depth)
 			currentDepth++;
 			if (currentDepth > depth)
 			{
-				//ch->Send("depth limit exceeded " + Utilities::itos(currentDepth) + "\n\r");
+				//ch->Send("depth limit exceeded " + Utilities::itos(currentDepth) + "\r\n");
 				break;
 			}
 			continue;
@@ -124,7 +124,7 @@ Exit::Direction FindDirection(Room * start, Room * end, int depth)
 			{
 				if (visited.find(searchme->exits[i]->to->id) == visited.end())
 				{
-					//ch->Send("searching room " + Utilities::itos(searchme->exits[i]->to->id) + "\n\r");
+					//ch->Send("searching room " + Utilities::itos(searchme->exits[i]->to->id) + "\r\n");
 					visited[searchme->exits[i]->to->id] = searchme;
 					searchQ.push_back(searchme->exits[i]->to);
 				}
@@ -180,7 +180,7 @@ int FindDistance(Room * start, Room * end, int maxSearchDist)
 			currentDepth++;
 			if (currentDepth > maxSearchDist)
 			{
-				//ch->Send("depth limit exceeded " + Utilities::itos(currentDepth) + "\n\r");
+				//ch->Send("depth limit exceeded " + Utilities::itos(currentDepth) + "\r\n");
 				break;
 			}
 			continue;
@@ -198,7 +198,7 @@ int FindDistance(Room * start, Room * end, int maxSearchDist)
 			{
 				if (visited.find(searchme->exits[i]->to->id) == visited.end())
 				{
-					//ch->Send("searching room " + Utilities::itos(searchme->exits[i]->to->id) + "\n\r");
+					//ch->Send("searching room " + Utilities::itos(searchme->exits[i]->to->id) + "\r\n");
 					visited[searchme->exits[i]->to->id] = searchme;
 					searchQ.push_back(searchme->exits[i]->to);
 				}

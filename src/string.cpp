@@ -20,10 +20,10 @@ std::string first_arg( const std::string & argument, std::string & arg_first, bo
  ****************************************************************************/
 void string_edit(User * user, std::string * pString)
 {
-    user->Send( "-========- Entering EDIT Mode -=========-\n\r");
-    user->Send( "    Type .h on a new line for help\n\r");
-    user->Send( " Terminate with a @ on a blank line.\n\r");
-    user->Send( "-=======================================-\n\r");
+    user->Send( "-========- Entering EDIT Mode -=========-\r\n");
+    user->Send( "    Type .h on a new line for help\r\n");
+    user->Send( " Terminate with a @ on a blank line.\r\n");
+    user->Send( "-=======================================-\r\n");
 
     user->stringEdit = pString;
     user->stringEdit->clear();
@@ -36,10 +36,10 @@ void string_edit(User * user, std::string * pString)
  ****************************************************************************/
 void string_append(User * user, std::string * pString)
 {
-    user->Send( "-=======- Entering APPEND Mode -========-\n\r");
-    user->Send( "    Type .h on a new line for help\n\r" );
-    user->Send( " Terminate with a @ on a blank line.\n\r");
-    user->Send( "-=======================================-\n\r");
+    user->Send( "-=======- Entering APPEND Mode -========-\r\n");
+    user->Send( "    Type .h on a new line for help\r\n" );
+    user->Send( " Terminate with a @ on a blank line.\r\n");
+    user->Send( "-=======================================-\r\n");
 
     user->Send( NumberLines(*pString));
     user->stringEdit = pString;
@@ -94,14 +94,14 @@ void string_add( User * user, std::string argument )
 
         if ( !Utilities::str_cmp( arg1, ".c" ) )
         {
-            user->Send( "String cleared.\n\r" );
+            user->Send( "String cleared.\r\n" );
             user->stringEdit->clear();
             return;
         }
 
         if ( !Utilities::str_cmp( arg1, ".s" ) )
         {
-            user->Send( "String so far:\n\r" );
+            user->Send( "String so far:\r\n" );
             user->Send( NumberLines(*user->stringEdit) );
             return;
         }
@@ -110,33 +110,33 @@ void string_add( User * user, std::string argument )
         {
             if ( arg2.empty() )
             {
-                user->Send("usage:  .r \"old string\" \"new string\"\n\r" );
+                user->Send("usage:  .r \"old string\" \"new string\"\r\n" );
                 return;
             }
 
             *user->stringEdit = string_replace( *user->stringEdit, arg2, arg3 );
-            user->Send("'" + arg2 + "' replaced with '" + arg3 + "'.\n\r");
+            user->Send("'" + arg2 + "' replaced with '" + arg3 + "'.\r\n");
             return;
         }
 
         if ( !Utilities::str_cmp( arg1, ".f" ) )
         {
             //*user->stringEdit = format_string( *user->stringEdit );
-            //user->Send( "String formatted.\n\r" );
+            //user->Send( "String formatted.\r\n" );
             return;
         }
         
 	    if ( !Utilities::str_cmp( arg1, ".ld" ) )
 	    {
 		    *user->stringEdit = string_linedel( *user->stringEdit, Utilities::atoi(arg2) );
-		    user->Send( "Line erased.\n\r" );
+		    user->Send( "Line erased.\r\n" );
 		    return;
 	    }
 
 	    if ( !Utilities::str_cmp( arg1, ".li" ) )
 	    {
 		    *user->stringEdit = string_lineadd( *user->stringEdit, tmparg3, Utilities::atoi(arg2) );
-		    user->Send( "Line inserted.\n\r" );
+		    user->Send( "Line inserted.\r\n" );
 		    return;
 	    }
 
@@ -144,27 +144,27 @@ void string_add( User * user, std::string argument )
 	    {
 		    *user->stringEdit = string_linedel( *user->stringEdit, Utilities::atoi(arg2) );
 		    *user->stringEdit = string_lineadd( *user->stringEdit, tmparg3, Utilities::atoi(arg2) );
-		    user->Send( "Line replaced.\n\r" );
+		    user->Send( "Line replaced.\r\n" );
 		    return;
 	    }
 
         if ( !Utilities::str_cmp( arg1, ".h" ) )
         {
-            user->Send( "Sedit help (commands on blank line):   \n\r" );
-            user->Send( ".r 'old' 'new'   - replace a substring \n\r" );
-            user->Send( "                   (requires '', \"\") \n\r" );
-            user->Send( ".h               - get help (this info)\n\r" );
-            user->Send( ".s               - show string so far  \n\r" );
-            //user->Send( ".f               - (word wrap) string  \n\r" );
-            user->Send( ".c               - clear string so far \n\r" );
-            user->Send( ".ld <num>        - delete line number <num>\n\r" );
-            user->Send( ".li <num> <str>  - insert <str> before line <num>\n\r" );
-	        user->Send( ".lr <num> <str>  - replace line <num> with <str>\n\r" );
-            user->Send( "@                - end string          \n\r" );
+            user->Send( "Sedit help (commands on blank line):   \r\n" );
+            user->Send( ".r 'old' 'new'   - replace a substring \r\n" );
+            user->Send( "                   (requires '', \"\") \r\n" );
+            user->Send( ".h               - get help (this info)\r\n" );
+            user->Send( ".s               - show string so far  \r\n" );
+            //user->Send( ".f               - (word wrap) string  \r\n" );
+            user->Send( ".c               - clear string so far \r\n" );
+            user->Send( ".ld <num>        - delete line number <num>\r\n" );
+            user->Send( ".li <num> <str>  - insert <str> before line <num>\r\n" );
+	        user->Send( ".lr <num> <str>  - replace line <num> with <str>\r\n" );
+            user->Send( "@                - end string          \r\n" );
             return;
         }
 
-        user->Send( "SEdit:  Invalid dot command.\n\r" );
+        user->Send( "SEdit:  Invalid dot command.\r\n" );
         return;
     }
 
@@ -182,7 +182,7 @@ void string_add( User * user, std::string argument )
      */
     if ( buf.length() + argument.length() >= ( 4604 ) )
     {
-        user->Send( "String too long, last line skipped.\n\r" );
+        user->Send( "String too long, last line skipped.\r\n" );
 
 	/* Force character out of editing mode. */
         user->stringEdit = nullptr;
@@ -195,7 +195,7 @@ void string_add( User * user, std::string argument )
      */
     //smash_tilde( argument );
 
-    buf += argument + "\n\r";
+    buf += argument + "\r\n";
     *user->stringEdit = buf;
     return;
 }
@@ -333,7 +333,7 @@ void string_add( User * user, std::string argument )
     {
       *(rdesc+i)=0;
       strcat(xbuf,rdesc);
-      strcat(xbuf,"\n\r");
+      strcat(xbuf,"\r\n");
       rdesc += i+1;
       while (*rdesc == ' ') rdesc++;
     }
@@ -342,7 +342,7 @@ void string_add( User * user, std::string argument )
       bug ("No spaces", 0);
       *(rdesc+75)=0;
       strcat(xbuf,rdesc);
-      strcat(xbuf,"-\n\r");
+      strcat(xbuf,"-\r\n");
       rdesc += 76;
     }
   }
@@ -353,7 +353,7 @@ void string_add( User * user, std::string argument )
   *(rdesc+i+1)=0;
   strcat(xbuf,rdesc);
   if (xbuf[strlen(xbuf)-2] != '\n')
-    strcat(xbuf,"\n\r");
+    strcat(xbuf,"\r\n");
 
   free_string(oldstring);
   return(str_dup(xbuf));
@@ -508,7 +508,7 @@ std::string string_lineadd(std::string str, std::string stradd, int line)
     {
         if(linectr == line)
         {
-            str.insert(first, stradd + "\n\r");
+            str.insert(first, stradd + "\r\n");
             break;
         }
         ++linectr;
@@ -528,7 +528,7 @@ std::string NumberLines(std::string str)
     do{
         last = (int)str.find('\n', first);
         if(last != std::string::npos)
-            formatted << std::setw(2) << ctr << ". " << str.substr(first, last-first) << "\n\r";
+            formatted << std::setw(2) << ctr << ". " << str.substr(first, last-first) << "\r\n";
         first = last+1;
         ++ctr;
     }while(last != std::string::npos);

@@ -491,7 +491,7 @@ DWORD WINAPI Server::WorkerThread(void * lpParam)
 				else if (pClientContext->inputBuffer.length() > MAX_COMMAND_LENGTH) //truncate the input
 				{
 					pClientContext->inputBuffer = pClientContext->inputBuffer.substr(0, MAX_COMMAND_LENGTH);
-					pClientContext->inputBuffer += "\n\r";
+					pClientContext->inputBuffer += "\r\n";
 				}
 
 				//search for \n \r

@@ -44,13 +44,13 @@ void cmd_attack(Player * ch, std::string argument)
             target = ch->GetTarget();
 			if (target->room != ch->room)
 			{
-				ch->Send("They aren't here.\n\r");
+				ch->Send("They aren't here.\r\n");
 				return;
 			}
         }
         else
         {
-            ch->Send("Attack who?\n\r");
+            ch->Send("Attack who?\r\n");
             return;
         }
     }
@@ -59,29 +59,29 @@ void cmd_attack(Player * ch, std::string argument)
         target = ch->GetCharacterRoom(arg1);
         if(target == nullptr)
         {
-            ch->Send("They aren't here.\n\r");
+            ch->Send("They aren't here.\r\n");
             return;
         }
     }
 	if(!target->IsAlive())
 	{
-		ch->Send("That target is already dead!\n\r");
+		ch->Send("That target is already dead!\r\n");
 		return;
 	}
     if(target == ch)
     {
-        ch->Send("You can't attack yourself!\n\r");
+        ch->Send("You can't attack yourself!\r\n");
         return;
     }
 	if (!ch->CanAttack(target))
 	{
-		ch->Send("You can't attack that target.\n\r");
+		ch->Send("You can't attack that target.\r\n");
 		return;
 	}
 
     ch->SetTarget(target);
-    ch->Send("You begin attacking " + target->GetName() + "!\n\r");
-    target->Send(ch->GetName() + " begins attacking you!\n\r");
+    ch->Send("You begin attacking " + target->GetName() + "!\r\n");
+    target->Send(ch->GetName() + " begins attacking you!\r\n");
 	ch->Message(ch->GetName() + " begins attacking " + target->GetName() + "!", Character::MSG_ROOM_NOTCHARVICT, target);
 
     ch->EnterCombat(target);
@@ -100,16 +100,16 @@ void cmd_cancel(Player * ch, std::string argument)
 {
     if(ch && ch->CancelActiveDelay())
     {
-        ch->Send("Action Cancelled!\n\r");
+        ch->Send("Action Cancelled!\r\n");
     }
     else if(ch && ch->meleeActive)
     {
-        ch->Send("Melee attack cancelled.\n\r");
+        ch->Send("Melee attack cancelled.\r\n");
         ch->meleeActive = false;
     }
     else
     {
-        ch->Send("No action is in progress.\n\r");
+        ch->Send("No action is in progress.\r\n");
     }
 }
 
@@ -144,10 +144,10 @@ void cmd_look(Player * ch, std::string argument)
         roomstream << " |W" << std::left << std::setw(55) << inroom->name <<
 			std::setw(8) << (exitstatus[7] ? "|WNW" : "|B--") <<
 			std::setw(7) << (exitstatus[0] ? "|WN" : "|B-") <<
-            (exitstatus[1] ? "|WNE" : "|B--") << "|X\n\r";
+            (exitstatus[1] ? "|WNE" : "|B--") << "|X\r\n";
         roomstream << std::left << std::setw(58) << "|B(-------------------------------------------------)" <<
             (exitstatus[6] ? "|WW" : "|B-") << "|Y <-" << (exitstatus[8] ? "|WU|Y" : "-") << "-X-" <<
-            (exitstatus[9] ? "|WD|Y" : "-") << "-> " << (exitstatus[2] ? "|WE" : "|B-") << "|X\n\r";
+            (exitstatus[9] ? "|WD|Y" : "-") << "-> " << (exitstatus[2] ? "|WE" : "|B-") << "|X\r\n";
 
         std::string areaname = "|X";
         Area * this_area = Game::GetGame()->GetArea(inroom->area);
@@ -176,7 +176,7 @@ void cmd_look(Player * ch, std::string argument)
 		roomstream << "|Y" << std::right << std::setw(26) << roomflags;
 		roomstream << std::right << std::setw(9) << (exitstatus[5] ? "|WSW" : "|B--") <<
 			std::setw(7) << (exitstatus[4] ? "|WS" : "|B-") <<
-			std::setw(8) << (exitstatus[3] ? "|WSE" : "|B--") << "|X\n\r\n\r";
+			std::setw(8) << (exitstatus[3] ? "|WSE" : "|B--") << "|X\r\n\r\n";
 
         ch->Send(roomstream.str());
 
@@ -184,16 +184,16 @@ void cmd_look(Player * ch, std::string argument)
 	        ch->Send("  " + inroom->description);
 
 		cmd_scan(ch, "");
-		ch->Send("\n\r");
+		ch->Send("\r\n");
 
 		if (!ch->IsGhost() || (ch->IsGhost() && (inroom->id == ch->corpse_room || inroom->id == ch->graveyard_room)))
 		{
 			for (auto itemiter = inroom->items.begin(); itemiter != inroom->items.end(); itemiter++)
 			{
 				if(!itemiter->first->inroom_name.empty())
-					ch->Send(itemiter->first->inroom_name + "\n\r");
+					ch->Send(itemiter->first->inroom_name + "\r\n");
 				else
-					ch->Send(itemiter->first->GetName() + "\n\r");
+					ch->Send(itemiter->first->GetName() + "\r\n");
 			}
 
 			std::list<Character *>::iterator i;
@@ -299,9 +299,9 @@ void cmd_look(Player * ch, std::string argument)
 				{
 					tapped = " |D(tapped by " + tappedBy->GetName() + ")";
 				}
-				ch->Send(disconnected + level + questicon + aggressionColor + corpse + (*i)->GetName() + title + " is here" + fighting + tapped + "|X\n\r");
+				ch->Send(disconnected + level + questicon + aggressionColor + corpse + (*i)->GetName() + title + " is here" + fighting + tapped + "|X\r\n");
 			}
-			ch->Send("\n\r");	
+			ch->Send("\r\n");	
 		}
     }
     else // "look argument" //TODO, look at things in the room with higher priority
@@ -309,7 +309,7 @@ void cmd_look(Player * ch, std::string argument)
 		Character * ch_inspect = ch->GetCharacterRoom(arg1);
 		if (ch_inspect != nullptr && ch_inspect->IsPlayer())
 		{
-			ch->Send(ch_inspect->GetName() + " is currently wearing:\n\r");
+			ch->Send(ch_inspect->GetName() + " is currently wearing:\r\n");
 			ch->Send(((Player*)ch_inspect)->FormatEquipment().str());
 			return;
 		}
@@ -321,7 +321,7 @@ void cmd_look(Player * ch, std::string argument)
         }
         if(!inspect)
         {
-            ch->Send("You don't see that here.\n\r");
+            ch->Send("You don't see that here.\r\n");
             return;
         }
 		ch->Send(inspect->FormatItemInfo(ch));
@@ -335,7 +335,7 @@ void cmd_target(Player * ch, std::string argument)
 {
     if(argument.empty())
 	{
-		ch->Send("Target cleared.\n\r");
+		ch->Send("Target cleared.\r\n");
 		ch->ClearTarget();
         ch->meleeActive = false; //Any target change stops auto attack
 		return;
@@ -354,11 +354,11 @@ void cmd_target(Player * ch, std::string argument)
         if(ch->GetTarget() != vch)
             ch->meleeActive = false; //Any target change stops auto attack
 		ch->SetTarget(vch);
-		ch->Send("Targeting " + vch->GetName() + "\n\r");
+		ch->Send("Targeting " + vch->GetName() + "\r\n");
 	}
     else
     {
-        ch->Send("Target not found.\n\r");
+        ch->Send("Target not found.\r\n");
     }
 }
 
@@ -375,10 +375,10 @@ void cmd_commands(Player * ch, std::string argument)
 			newline++;
 		}
 		if(newline % 5 == 0)
-			ch->Send("\n\r");
+			ch->Send("\r\n");
 		
 	}
-	ch->Send("\n\r");
+	ch->Send("\r\n");
 }
 
 void cmd_score(Player * ch, std::string argument)
@@ -386,13 +386,13 @@ void cmd_score(Player * ch, std::string argument)
 	std::stringstream score;
 	score.setf(std::ios_base::fixed);
 
-	score << "|BPlayer Information for: |X" << ch->GetName() << " " << ch->GetTitle() << "|X\n\r";
+	score << "|BPlayer Information for: |X" << ch->GetName() << " " << ch->GetTitle() << "|X\r\n";
 	score << "|BTotal Level: |X" << std::setw(11) << std::left << ch->GetLevel();
-	score << " |BClass Level: |X" << ch->GetClassLevel(ch->currentClass->GetID()) << "\n\r";
+	score << " |BClass Level: |X" << ch->GetClassLevel(ch->currentClass->GetID()) << "\r\n";
 	if (ch->IsImmortal())
-		score << "|BImmortal Level: |X" << ch->GetImmLevel() << "\n\r";
+		score << "|BImmortal Level: |X" << ch->GetImmLevel() << "\r\n";
 	score << "|BRace: |X" << std::setw(18) << std::left << Character::race_table[ch->race].name;
-	score << " |BGender: |X" << (ch->GetGender() ? "male\n\r" : "female\n\r");
+	score << " |BGender: |X" << (ch->GetGender() ? "male\r\n" : "female\r\n");
 	score << "|BClass: |X" << std::setw(17) << std::left << ch->currentClass->name;
 	score << " |BClass History: |X";
 	
@@ -407,31 +407,31 @@ void cmd_score(Player * ch, std::string argument)
     }
     if(found)
     {
-		score << "\n\r";
+		score << "\r\n";
     }
     else
     {
-		score << "None\n\r";
+		score << "None\r\n";
     }
 
 	score << "|BHealth: |X" << std::setw(5) << std::right << ch->GetHealth() << "|B/|X" << std::setw(11) << std::left << ch->GetMaxHealth();
-	score << "|BMana: |X" << std::setw(5) << std::right << ch->GetMana() << "|B/|X" << ch->GetMaxMana() << "\n\r";
+	score << "|BMana: |X" << std::setw(5) << std::right << ch->GetMana() << "|B/|X" << ch->GetMaxMana() << "\r\n";
 	score << "|BEnergy: |X" << std::setw(5) << std::right << ch->GetEnergy() << "|B/|X" << std::setw(11) << std::left << ch->GetMaxEnergy();
-	score << "|BRage: |X" << std::setw(5) << std::right << ch->GetRage() << "|B/|X" << ch->GetMaxRage() << "\n\r";
+	score << "|BRage: |X" << std::setw(5) << std::right << ch->GetRage() << "|B/|X" << ch->GetMaxRage() << "\r\n";
 
 	score << "|BAgility: |X" << std::setw(4) << std::left << ch->GetAgility() << "|G+" << std::setw(11) << ch->GetAgility() - ch->GetBaseAgility();
-	score << "|BIntellect: |X" << ch->GetIntellect() << " |G+" << ch->GetIntellect() - ch->GetBaseIntellect() << "\n\r";
+	score << "|BIntellect: |X" << ch->GetIntellect() << " |G+" << ch->GetIntellect() - ch->GetBaseIntellect() << "\r\n";
 	score << "|BStrength: |X" << std::setw(4) << std::left << ch->GetStrength() << "|G+" << std::setw(10) << ch->GetStrength() - ch->GetBaseStrength();
-	score << "|BStamina: |X" << ch->GetStamina() << " |G+" << ch->GetStamina() - ch->GetBaseStamina() << "\n\r";
+	score << "|BStamina: |X" << ch->GetStamina() << " |G+" << ch->GetStamina() - ch->GetBaseStamina() << "\r\n";
 	score << "|BWisdom: |X" << std::setw(4) << std::left << ch->GetWisdom() << "|G+" << std::setw(12) << ch->GetWisdom() - ch->GetBaseWisdom();
-	score << "|BSpirit: |X" << ch->GetSpirit() << " |G+" << ch->GetSpirit() - ch->GetBaseSpirit() << "\n\r";
+	score << "|BSpirit: |X" << ch->GetSpirit() << " |G+" << ch->GetSpirit() - ch->GetBaseSpirit() << "\r\n";
 
-	score << "|BAttribute Points: |X" << ch->statPoints << "\n\r";
+	score << "|BAttribute Points: |X" << ch->statPoints << "\r\n";
 
-	score << "|BArmor: |X" << ch->GetArmor() << " |BPhysical damage reduction: |X" << std::setprecision(2) << ch->CalculateArmorMitigation()*100 << "%\n\r";
+	score << "|BArmor: |X" << ch->GetArmor() << " |BPhysical damage reduction: |X" << std::setprecision(2) << ch->CalculateArmorMitigation()*100 << "%\r\n";
 
 	score << "|BDodge chance: |X" << std::setw(5) << std::right << std::setprecision(2) << ch->GetDodge() << std::setw(6) << std::left << "%";
-	score << "|BCritical Strike chance: |X" << std::setprecision(2) << ch->GetCrit() << "%\n\r";
+	score << "|BCritical Strike chance: |X" << std::setprecision(2) << ch->GetCrit() << "%\r\n";
 
 	score << "|BYou can wear the following armor types: |X";
 
@@ -443,24 +443,24 @@ void cmd_score(Player * ch, std::string argument)
 		score << "Mail ";
 	if (ch->CanWearArmor(Item::TYPE_ARMOR_PLATE))
 		score << "Plate ";
-	score << "\n\r";
+	score << "\r\n";
 
     score << "|BYou have |X" << ch->experience << "|B experience and need |X"
 		<< Game::ExperienceForLevel(ch->GetLevel()+1) << "|B experience to reach level |X"
-		<< ch->GetLevel()+1 << "|B (|X" << (Game::ExperienceForLevel(ch->GetLevel()+1) - ch->experience) << "|B tnl)|X\n\r";
+		<< ch->GetLevel()+1 << "|B (|X" << (Game::ExperienceForLevel(ch->GetLevel()+1) - ch->experience) << "|B tnl)|X\r\n";
 
     double movespeed = ch->GetMoveSpeed();
     score << "|BCurrent movement speed: |X" << std::setprecision(2) << ch->movementSpeed * movespeed << "|B rooms per second (|X"
-		<< std::setprecision(0) << movespeed*100 << "% |Bof normal)|X\n\r";
+		<< std::setprecision(0) << movespeed*100 << "% |Bof normal)|X\r\n";
 
 	if (!ch->IsAlive())
 	{
 		int res_at_graveyard = ch->death_timer - ch->TimeSinceDeath();
 		int res_at_corpse = ch->death_timer_runback - ch->TimeSinceDeath();
 		if (res_at_graveyard > 0)
-			score << "|W" << res_at_graveyard << " seconds before you can resurrect at the graveyard.\n\r";
+			score << "|W" << res_at_graveyard << " seconds before you can resurrect at the graveyard.\r\n";
 		if (res_at_corpse > 0)
-			score << "|W" << res_at_corpse << " seconds before you can resurrect near your corpse.\n\r";
+			score << "|W" << res_at_corpse << " seconds before you can resurrect near your corpse.\r\n";
 	}
 	ch->Send(score.str());
 }
@@ -501,7 +501,7 @@ void cmd_scan(Player * ch, std::string argument)
 			{
 				if (found == true)
 				{
-					out << std::setw(13) << std::left << "\n\r";
+					out << std::setw(13) << std::left << "\r\n";
 				}
 				found = true;
 				out << "|W[" << /*depthcolors[j]*/"|202" << depthstring[j] << "|W]:|X ";
@@ -538,7 +538,7 @@ void cmd_scan(Player * ch, std::string argument)
 		}
 		if (found)
 		{
-			out << "|X\n\r";
+			out << "|X\r\n";
 			ch->Send(out.str());
 			found = false;
 		}
@@ -554,8 +554,8 @@ void cmd_who(Player * ch, std::string argument)
 
 	if (arg1.empty()) //"who" with no arguments
 	{
-		ch->Send("|YPlayers online: |X\n\r");
-		ch->Send("|B`-------------------------------------------------------------------------------'|X\n\r");
+		ch->Send("|YPlayers online: |X\r\n");
+		ch->Send("|B`-------------------------------------------------------------------------------'|X\r\n");
 		int found = 0;
 		Player * wplayer;
 		std::list<User *>::iterator iter;
@@ -596,14 +596,14 @@ void cmd_who(Player * ch, std::string argument)
 					if (a)
 						sstr << " |B[|C" << a->name << "|B]";
 				}
-				sstr << "|X\n\r";
+				sstr << "|X\r\n";
 
 				ch->Send(sstr.str());
 				found++;
 			}
 		}
-		ch->Send("|B`-------------------------------------------------------------------------------'|X\n\r");
-		ch->Send(Utilities::itos(found) + " players found.\n\r");
+		ch->Send("|B`-------------------------------------------------------------------------------'|X\r\n");
+		ch->Send(Utilities::itos(found) + " players found.\r\n");
 	}
 	else //"who" with argument. For now just look up by character name
 	{
@@ -618,7 +618,7 @@ void cmd_who(Player * ch, std::string argument)
 				&& !Utilities::str_cmp((*iter)->character->GetName(), arg1))
 			{ 
 				wplayer = (*iter)->character;
-				ch->Send("|B`-------------------------------------------------------------------------------'|X\n\r");
+				ch->Send("|B`-------------------------------------------------------------------------------'|X\r\n");
 				sstr.str("");
 				sstr.clear();
 				//name
@@ -649,7 +649,7 @@ void cmd_who(Player * ch, std::string argument)
 						sstr << " |B[|C" << a->name << "|B]";
 				}
 				//classes
-				sstr << "\n\r              ";
+				sstr << "\r\n              ";
 				if (wplayer->IsImmortal())
 				{
 					sstr << "|B[|WImmortal|B]";
@@ -662,9 +662,9 @@ void cmd_who(Player * ch, std::string argument)
 						sstr << "|B[" << myclass->color << myclass->name << " " << std::right << std::setw(3) << Utilities::itos(wplayer->GetClassLevel(myclass->GetID())) << "|B]";
 					}
 				}
-				sstr << "|X\n\r";
+				sstr << "|X\r\n";
 				ch->Send(sstr.str());
-				ch->Send("|B`-------------------------------------------------------------------------------'|X\n\r");
+				ch->Send("|B`-------------------------------------------------------------------------------'|X\r\n");
 			}
 		}
 	}
@@ -674,13 +674,13 @@ void cmd_title(Player * ch, std::string argument)
 {   
     if(argument.empty())
 	{
-		ch->Send("Title cleared.\n\r");
+		ch->Send("Title cleared.\r\n");
         ch->title.clear();
 		return;
 	}
 	if(argument.length() > 45)
     {
-        ch->Send("Title too long. Shortened to 45 characters.\n\r");
+        ch->Send("Title too long. Shortened to 45 characters.\r\n");
 		argument = argument.substr(0, 45);
     }
 
@@ -689,7 +689,7 @@ void cmd_title(Player * ch, std::string argument)
 		argument = ' ' + argument;
 	}
 	ch->title = argument;
-	ch->Send("Title set.\n\r");
+	ch->Send("Title set.\r\n");
 }
 
 void cmd_group(Player * ch, std::string argument)
@@ -706,12 +706,12 @@ void cmd_group(Player * ch, std::string argument)
 
 		if (ch->HasGroup() && !ch->group->IsGroupLeader(ch))
 		{
-			ch->Send("Only the group leader can invite players.\n\r");
+			ch->Send("Only the group leader can invite players.\r\n");
 			return;
 		}
 		if (arg2.empty())
 		{
-			ch->Send("Invite who?\n\r");
+			ch->Send("Invite who?\r\n");
 			return;
 		}
 		int slot = -1;
@@ -719,34 +719,34 @@ void cmd_group(Player * ch, std::string argument)
 			slot = ch->group->FindNextEmptySlot();
 		if (ch->HasGroup() && slot == -1)
 		{
-			ch->Send("Your group is full.\n\r");
+			ch->Send("Your group is full.\r\n");
 			return;
 		}
 		if ((vch = Game::GetGame()->GetPlayerByName(arg2)) != nullptr)
 		{
 			if (vch == ch)
 			{
-				ch->Send("You can't invite yourself.\n\r");
+				ch->Send("You can't invite yourself.\r\n");
 				return;
 			}
 			if (vch->HasGroup())
 			{
-				ch->Send("That player already has a group.\n\r");
+				ch->Send("That player already has a group.\r\n");
 				return;
 			}
 			if (vch->HasQuery())
 			{
-				ch->Send("That player is busy.\n\r");
+				ch->Send("That player is busy.\r\n");
 				return;
 			}
-			ch->Send("You invite " + vch->GetName() + " to join your group.\n\r");
+			ch->Send("You invite " + vch->GetName() + " to join your group.\r\n");
 			vch->SetQuery(ch->GetName() + " has invited you to join " + ch->HisHer() + " group ('accept'/'decline') ", (void*)ch, cmd_groupQuery);
 			ch->AddSubscriber(vch); //If the person asking us to join disappears before we answer it's a problem
-			vch->Send("\n\r");
+			vch->Send("\r\n");
 		}
 		else
 		{
-			ch->Send("Player not found.\n\r");
+			ch->Send("Player not found.\r\n");
 			return;
 		}
 		return;
@@ -757,38 +757,38 @@ void cmd_group(Player * ch, std::string argument)
 
 		if (!ch->HasGroup())
 		{
-			ch->Send("You aren't in a group.\n\r");
+			ch->Send("You aren't in a group.\r\n");
 			return;
 		}
 		if (!ch->group->IsGroupLeader(ch))
 		{
-			ch->Send("Only the group leader can remove players.\n\r");
+			ch->Send("Only the group leader can remove players.\r\n");
 			return;
 		}
 		if (arg2.empty())
 		{
-			ch->Send("Who would you like to remove from your group?\n\r");
+			ch->Send("Who would you like to remove from your group?\r\n");
 			return;
 		}
 		Player * remove_me = ch->group->FindByName(arg2);
 		if (remove_me == nullptr)
 		{
-			ch->Send("A player with that name is not in your group.\n\r");
+			ch->Send("A player with that name is not in your group.\r\n");
 			return;
 		}
 		if (remove_me == ch)
 		{
-			ch->Send("You cannot remove yourself from the group. Use \"group leave\".\n\r");
+			ch->Send("You cannot remove yourself from the group. Use \"group leave\".\r\n");
 			return;
 		}
 
-		remove_me->Send("You have been removed from the group.\n\r");
+		remove_me->Send("You have been removed from the group.\r\n");
 		ch->group->Remove(remove_me);
 		ch->Message(remove_me->GetName() + " has been removed from the group.", Character::MSG_GROUP);
 
 		if (ch->group->GetMemberCount() <= 1)
 		{
-			ch->Send("Your group has been disbanded.\n\r");
+			ch->Send("Your group has been disbanded.\r\n");
 			delete ch->group;
 			ch->group = nullptr;
 		}
@@ -798,11 +798,11 @@ void cmd_group(Player * ch, std::string argument)
 	{
 		if (!ch->HasGroup())
 		{
-			ch->Send("You aren't in a group.\n\r");
+			ch->Send("You aren't in a group.\r\n");
 			return;
 		}
 		ch->Message(ch->GetName() + " has left the group.", Character::MSG_GROUP_NOTCHAR);
-		ch->Send("You have left the group.\n\r");
+		ch->Send("You have left the group.\r\n");
 		if (ch->group->GetMemberCount() <= 2)
 		{
 			ch->Message("Your group has been disbanded.", Character::MSG_GROUP_NOTCHAR);
@@ -826,7 +826,7 @@ void cmd_group(Player * ch, std::string argument)
 					{
 						ch->group->leader = ch->group->members[i];
 						ch->group->leader->Message(ch->group->leader->GetName() + " is now the group leader.", Character::MSG_GROUP_NOTCHAR);
-						ch->group->leader->Send("You are now the group leader.\n\r");
+						ch->group->leader->Send("You are now the group leader.\r\n");
 						break;
 					}
 				}
@@ -839,17 +839,17 @@ void cmd_group(Player * ch, std::string argument)
 	{
 		if (!ch->HasGroup())
 		{
-			ch->Send("You aren't in a group.\n\r");
+			ch->Send("You aren't in a group.\r\n");
 			return;
 		}
 		if (!ch->group->IsGroupLeader(ch))
 		{
-			ch->Send("You aren't the group leader.\n\r");
+			ch->Send("You aren't the group leader.\r\n");
 			return;
 		}
 		if (ch->group->IsRaidGroup())
 		{
-			ch->Send("You are already in a raid group.\n\r");
+			ch->Send("You are already in a raid group.\r\n");
 			return;
 		}
 		ch->group->MakeRaidGroup();
@@ -860,50 +860,50 @@ void cmd_group(Player * ch, std::string argument)
 	{
 		if (!ch->HasGroup())
 		{
-			ch->Send("You aren't in a group.\n\r");
+			ch->Send("You aren't in a group.\r\n");
 			return;
 		}
 		if (!ch->group->IsGroupLeader(ch))
 		{
-			ch->Send("You aren't the group leader.\n\r");
+			ch->Send("You aren't the group leader.\r\n");
 			return;
 		}
 		argument = Utilities::one_argument(argument, arg2);
 
 		if (arg2.empty())
 		{
-			ch->Send("Who would you like to make the new group leader?\n\r");
+			ch->Send("Who would you like to make the new group leader?\r\n");
 			return;
 		}
 		Player * new_leader = ch->group->FindByName(arg2);
 		if (new_leader == nullptr)
 		{
-			ch->Send("A player with that name is not in your group.\n\r");
+			ch->Send("A player with that name is not in your group.\r\n");
 			return;
 		}
 		if (new_leader == ch)
 		{
-			ch->Send("You are already the group leader.\n\r");
+			ch->Send("You are already the group leader.\r\n");
 			return;
 		}
 		ch->group->leader = new_leader;
 		new_leader->Message(new_leader->GetName() + " is now the group leader.", Character::MSG_GROUP_NOTCHAR);
-		new_leader->Send("You are now the group leader.\n\r");
+		new_leader->Send("You are now the group leader.\r\n");
 		return;
 	}
 	if (!Utilities::str_cmp(arg1, "talk"))
 	{
 		if (!ch->HasGroup())
 		{
-			ch->Send("You aren't in a group.\n\r");
+			ch->Send("You aren't in a group.\r\n");
 			return;
 		}
 		if (argument.empty())
 		{
-			ch->Send("What would you like to say?\n\r");
+			ch->Send("What would you like to say?\r\n");
 			return;
 		}
-		ch->Send("|CYou say to the group: '" + argument + "|C'|X\n\r");
+		ch->Send("|CYou say to the group: '" + argument + "|C'|X\r\n");
 		ch->Message("|C" + ch->GetName() + " says to the group, '" + argument + "|C'|X", Character::MSG_GROUP_NOTCHAR);
 		return;
 	}
@@ -911,17 +911,17 @@ void cmd_group(Player * ch, std::string argument)
 	{
 		if (!ch->HasGroup())
 		{
-			ch->Send("You aren't in a group.\n\r");
+			ch->Send("You aren't in a group.\r\n");
 			return;
 		}
 		if (!ch->group->IsGroupLeader(ch))
 		{
-			ch->Send("You aren't the group leader.\n\r");
+			ch->Send("You aren't the group leader.\r\n");
 			return;
 		}
 		if (!ch->group->IsRaidGroup())
 		{
-			ch->Send("You aren't in a raid group.\n\r");
+			ch->Send("You aren't in a raid group.\r\n");
 			return;
 		}
 		std::string player_arg;
@@ -931,19 +931,19 @@ void cmd_group(Player * ch, std::string argument)
 
 		if (player_arg.empty() || slot_arg.empty() || !Utilities::IsNumber(slot_arg))
 		{
-			ch->Send("Usage: group move <player> <slot #>\n\r");
+			ch->Send("Usage: group move <player> <slot #>\r\n");
 			return;
 		}
 		Player * group_member = ch->group->FindByName(player_arg);
 		if (!group_member)
 		{
-			ch->Send("That player is not in your group.\n\r");
+			ch->Send("That player is not in your group.\r\n");
 			return;
 		}
 		int slot_num = Utilities::atoi(slot_arg);
 		if (slot_num <= 0 || slot_num > Group::MAX_RAID_SIZE)
 		{
-			ch->Send("Slot number out of range.\n\r");
+			ch->Send("Slot number out of range.\r\n");
 			return;
 		}
 		ch->group->Move(group_member, slot_num - 1);
@@ -961,7 +961,7 @@ void cmd_group(Player * ch, std::string argument)
 	{
 		if (!ch->HasGroup())
 		{
-			ch->Send("You aren't in a group.\n\r");
+			ch->Send("You aren't in a group.\r\n");
 			return;
 		}
 		std::stringstream group_format;
@@ -969,7 +969,7 @@ void cmd_group(Player * ch, std::string argument)
 		//Display non-raid group
 		if (!ch->group->IsRaidGroup())
 		{
-			group_format << "Your group (" << ch->group->GetMemberCount() << "/" << Group::MAX_GROUP_SIZE << "):\n\r";
+			group_format << "Your group (" << ch->group->GetMemberCount() << "/" << Group::MAX_GROUP_SIZE << "):\r\n";
 			for (int i = 0; i < Group::MAX_GROUP_SIZE; i++)
 			{
 				Character * current_member = ch->group->members[i];
@@ -1000,16 +1000,16 @@ void cmd_group(Player * ch, std::string argument)
 					group_format << statColor << std::right << std::setw(4) << current_member->GetHealth() << "|X/" << std::left << std::setw(4) << current_member->GetMaxHealth() << "  ";
 				}
 			}
-			group_format << "\n\r";
+			group_format << "\r\n";
 		}
 		//Display raid group
 		else
 		{
-			group_format << "Your raid group (" << ch->group->GetMemberCount() << "/" << Group::MAX_RAID_SIZE << "):\n\r";
+			group_format << "Your raid group (" << ch->group->GetMemberCount() << "/" << Group::MAX_RAID_SIZE << "):\r\n";
 			for (int format_loop = 0; format_loop < (Group::MAX_RAID_SIZE / Group::MAX_GROUP_SIZE) / 2; format_loop++)
 			{
 				group_format << "           Group " << (format_loop * 2) + 1 << "                  ";
-				group_format << "Group " << (format_loop * 2) + 2 << "\n\r";
+				group_format << "Group " << (format_loop * 2) + 2 << "\r\n";
 				for (int i = 0; i < Group::MAX_GROUP_SIZE; i++)
 				{
 					for (int j = 0; j < 2; j++)
@@ -1047,22 +1047,22 @@ void cmd_group(Player * ch, std::string argument)
 							group_format << "    Empty                ";
 						}
 					}
-					group_format << "\n\r";
+					group_format << "\r\n";
 				}
-				group_format << "\n\r";
+				group_format << "\r\n";
 			}
 		}
 		ch->Send(group_format.str());
 		return;
 	}
-	ch->Send("group invite <player>\n\r");
-	ch->Send("group show\n\r");
-	ch->Send("group remove <player>\n\r");
-	ch->Send("group leave\n\r");
-	ch->Send("group talk <message>\n\r");
-	ch->Send("group raid\n\r");
-	ch->Send("group leader <player>\n\r");
-	ch->Send("group move <player> <slot #>\n\r");
+	ch->Send("group invite <player>\r\n");
+	ch->Send("group show\r\n");
+	ch->Send("group remove <player>\r\n");
+	ch->Send("group leave\r\n");
+	ch->Send("group talk <message>\r\n");
+	ch->Send("group raid\r\n");
+	ch->Send("group leader <player>\r\n");
+	ch->Send("group move <player> <slot #>\r\n");
 }
 
 bool cmd_groupQuery(Player *ch, std::string argument)
@@ -1076,7 +1076,7 @@ bool cmd_groupQuery(Player *ch, std::string argument)
 
 		if (ch->HasGroup())
 		{
-			ch->Send("You already have your own group.\n\r");
+			ch->Send("You already have your own group.\r\n");
 			return true;
 		}
 
@@ -1084,22 +1084,22 @@ bool cmd_groupQuery(Player *ch, std::string argument)
 		{
 			vch->group = new Group(vch);
 			vch->group->Add(ch);
-			vch->Send(ch->GetName() + " has joined your group.\n\r");
-			ch->Send("You have joined " + vch->GetName() + "'s group.\n\r");
+			vch->Send(ch->GetName() + " has joined your group.\r\n");
+			ch->Send("You have joined " + vch->GetName() + "'s group.\r\n");
 		}
 		else //joining an existing group
 		{
 			int slot = vch->group->FindNextEmptySlot();
 			if ((!vch->group->IsRaidGroup() && slot >= Group::MAX_GROUP_SIZE) || slot == -1)
 			{
-				ch->Send("That group is full.\n\r");
+				ch->Send("That group is full.\r\n");
 			}
 			else
 			{
 				if (vch->group->Add(ch))
 				{
-					//vch->Send(ch->name + " has joined your group.\n\r");
-					ch->Send("You have joined " + vch->GetName() + "'s group.\n\r");
+					//vch->Send(ch->name + " has joined your group.\r\n");
+					ch->Send("You have joined " + vch->GetName() + "'s group.\r\n");
 					ch->Message(ch->GetName() + " has joined the group.", Character::MSG_GROUP_NOTCHAR);
 				}
 			}
@@ -1108,7 +1108,7 @@ bool cmd_groupQuery(Player *ch, std::string argument)
 	}
 	else if (!Utilities::str_cmp(argument, "decline"))
 	{
-		vch->Send(ch->GetName() + " declines your group invitation.\n\r");
+		vch->Send(ch->GetName() + " declines your group invitation.\r\n");
 		ch->QueryClear();
 		vch->RemoveSubscriber(ch);
 		return true;
@@ -1128,7 +1128,7 @@ void cmd_class(Player * ch, std::string argument)
     if(!Utilities::str_cmp(arg1, "info"))
     {
         ch->Send("Current class: [" + currentClass->name + " " 
-                   + Utilities::itos(ch->GetClassLevel(currentClass->GetID())) + "]\n\r");
+                   + Utilities::itos(ch->GetClassLevel(currentClass->GetID())) + "]\r\n");
         ch->Send("Class history: ");
         bool found = false;
         std::list<Player::ClassData>::iterator iter;
@@ -1140,11 +1140,11 @@ void cmd_class(Player * ch, std::string argument)
         }
         if(found)
         {
-            ch->Send("\n\r");
+            ch->Send("\r\n");
         }
         else
         {
-            ch->Send("None\n\r");
+            ch->Send("None\r\n");
         }
         return;
     }
@@ -1158,7 +1158,7 @@ void cmd_class(Player * ch, std::string argument)
 			{
 				ch->Send(" " + (*iter).second->name);
 			}
-			ch->Send("\n\r");
+			ch->Send("\r\n");
             return;
         }
         Class * newclass = Game::GetGame()->GetClassByName(arg2);
@@ -1170,17 +1170,17 @@ void cmd_class(Player * ch, std::string argument)
 			{
 				ch->Send(" " + (*iter).second->name);
 			}
-			ch->Send("\n\r");
+			ch->Send("\r\n");
             return;
         }
         ch->currentClass = newclass;
-        ch->Send("Class changed to " + newclass->name + ".\n\r");
+        ch->Send("Class changed to " + newclass->name + ".\r\n");
         return;
     }
     else
     {
-        ch->Send("Usage: class info\n\r");
-        ch->Send("       class newclass <classname>\n\r");
+        ch->Send("Usage: class info\r\n");
+        ch->Send("       class newclass <classname>\r\n");
         return;
     }
 }
@@ -1193,7 +1193,7 @@ void cmd_levels(Player * ch, std::string argument)
         next = Game::ExperienceForLevel(i);
         std::stringstream sstr;
         sstr << "|B[|XLevel: " << std::setw(3) << i;
-        sstr << "|B]|X Experience Required: " << std::setw(9) << next << "  Difference: " << next - prev << "\n\r";
+        sstr << "|B]|X Experience Required: " << std::setw(9) << next << "  Difference: " << next - prev << "\r\n";
         ch->Send(sstr.str());
         prev = next;
     }
@@ -1206,8 +1206,8 @@ void cmd_help(Player * ch, std::string argument)
 
 	if(arg1.empty())
 	{
-		ch->Send("HELP is available on the following topics.\n\rType 'help <topic>' for more information.\n\rType 'commands' for a full list of commands.\n\r");
-		ch->Send("MOVEMENT    QUESTS    COMBAT    COMMUNICATION    SPELLS\n\r");
+		ch->Send("HELP is available on the following topics.\r\nType 'help <topic>' for more information.\r\nType 'commands' for a full list of commands.\r\n");
+		ch->Send("MOVEMENT    QUESTS    COMBAT    COMMUNICATION    SPELLS\r\n");
 		return;
 	}
 
@@ -1240,12 +1240,12 @@ void cmd_help(Player * ch, std::string argument)
 		{
 			for(int i = 0; i < (int)found.size(); i++)
 			{
-				ch->Send("|M[|X" + Utilities::itos(found[i]->id) + "|M]|X " + Utilities::ToUpper(found[i]->title) + "\n\r");
+				ch->Send("|M[|X" + Utilities::itos(found[i]->id) + "|M]|X " + Utilities::ToUpper(found[i]->title) + "\r\n");
 			}
 		}
 		else
 		{
-			ch->Send("No matching help items found.\n\r");
+			ch->Send("No matching help items found.\r\n");
 		}
 	}
 }
@@ -1274,7 +1274,7 @@ void cmd_quest(Player * ch, std::string argument)
 {
     if(argument.empty())
     {
-        ch->Send("Quest: log, list, info #, accept #, drop #, complete #, progress #, share #\n\r");
+        ch->Send("Quest: log, list, info #, accept #, drop #, complete #, progress #, share #\r\n");
         return;
     }
     //log, list, info #, accept #, drop #, complete #, progress #, share #
@@ -1285,10 +1285,10 @@ void cmd_quest(Player * ch, std::string argument)
 
     if(!Utilities::str_cmp(arg1, "log"))
     {
-        ch->Send("Active quests:\n\r");
+        ch->Send("Active quests:\r\n");
         if(ch->questLog.empty())
         {
-            ch->Send("None.\n\r");
+            ch->Send("None.\r\n");
             return;
         }
         std::vector<Quest *>::iterator iter;
@@ -1320,7 +1320,7 @@ void cmd_quest(Player * ch, std::string argument)
 				}
 			}
 			ch->Send(Utilities::itos(ctr) + ". " + Quest::GetDifficultyColor(ch->GetLevel(), q->level)
-				+ q->name + " " + complete + " |X[" + objectives + "|X]\n\r");
+				+ q->name + " " + complete + " |X[" + objectives + "|X]\r\n");
 			++ctr;
         }
         return;
@@ -1329,12 +1329,12 @@ void cmd_quest(Player * ch, std::string argument)
     {
         if(!ch->GetTarget())
         {
-            ch->Send("You need a target to list quests.\n\r");
+            ch->Send("You need a target to list quests.\r\n");
             return;
         }
 		if (!ch->GetTarget()->IsNPC())
 		{
-			ch->Send("Your target has no quests to offer.\n\r");
+			ch->Send("Your target has no quests to offer.\r\n");
 			return;
 		}
 		NPCIndex * quest_target = ch->GetTarget()->GetNPCIndex();
@@ -1344,17 +1344,17 @@ void cmd_quest(Player * ch, std::string argument)
             if(ch->QuestActive(*questiter))
             {
 				if (!found && !quest_target->speechText.empty())
-					ch->Send(quest_target->speechText + "\n\r");
+					ch->Send(quest_target->speechText + "\r\n");
                 //TODO color ? by complete status
                 found = true;
                 ch->Send("|Y? " + Quest::GetDifficultyColor(ch->GetLevel(), (*questiter)->level) + (*questiter)->name + " (" + Utilities::itos((*questiter)->level) + ")|X");
 				if (!(*questiter)->progressMessage.empty())
 				{
-					ch->Send(" : " + (*questiter)->progressMessage + "\n\r");
+					ch->Send(" : " + (*questiter)->progressMessage + "\r\n");
 				}
 				else
 				{
-					ch->Send("\n\r");
+					ch->Send("\r\n");
 				}
             }
         }
@@ -1364,16 +1364,16 @@ void cmd_quest(Player * ch, std::string argument)
             if(ch->QuestEligible(*questiter))
             {
 				if (!found && !quest_target->speechText.empty())
-					ch->Send(quest_target->speechText + "\n\r");
+					ch->Send(quest_target->speechText + "\r\n");
                 found = true;
                 ch->Send(Utilities::itos(ctr) + ". |Y! " + Quest::GetDifficultyColor(ch->GetLevel(), (*questiter)->level) 
-                           + (*questiter)->name + " (" + Utilities::itos((*questiter)->level) + ")|X\n\r");
+                           + (*questiter)->name + " (" + Utilities::itos((*questiter)->level) + ")|X\r\n");
                 ctr++;
             }
         }
         if(!found)
         {
-            ch->Send("Your target has no quests to offer.\n\r");
+            ch->Send("Your target has no quests to offer.\r\n");
             return;
         }
         return;
@@ -1382,24 +1382,24 @@ void cmd_quest(Player * ch, std::string argument)
     {
         if(!ch->GetTarget())
         {
-            ch->Send("You need a target to get quest information.\n\r");
+            ch->Send("You need a target to get quest information.\r\n");
             return;
         }
 		if (!ch->GetTarget()->IsNPC())
 		{
-			ch->Send("Your target has no quests to offer.\n\r");
+			ch->Send("Your target has no quests to offer.\r\n");
 			return;
 		}
 		NPCIndex * quest_target = ch->GetTarget()->GetNPCIndex();
         if(quest_target->questStart.empty())
         {
-            ch->Send("Your target has no quests to offer.\n\r");
+            ch->Send("Your target has no quests to offer.\r\n");
             return;
         }
         int qnum = Utilities::atoi(arg2);
         if(qnum == 0)
         {
-            ch->Send("Get information for which quest?\n\r");
+            ch->Send("Get information for which quest?\r\n");
             return;
         }
 
@@ -1413,17 +1413,17 @@ void cmd_quest(Player * ch, std::string argument)
                 {
                     Quest * q = (*questiter);
                     ch->Send(Quest::GetDifficultyColor(ch->GetLevel(), q->level) + q->name + " (" 
-                               + Utilities::itos(q->level) + ")|X\n\r\n\r");
-                    ch->Send(q->longDescription + "\n\r\n\r");
-                    ch->Send(q->shortDescription + "\n\r\n\r");
+                               + Utilities::itos(q->level) + ")|X\r\n\r\n");
+                    ch->Send(q->longDescription + "\r\n\r\n");
+                    ch->Send(q->shortDescription + "\r\n\r\n");
 					ch->Send("You will receive |Y" + Utilities::itos(q->experienceReward) + " experience|X");
 					if (q->moneyReward > 0)
 						ch->Send(" and |Y" + Utilities::itos(q->moneyReward) + " gold|X");
-					ch->Send("\n\r");
+					ch->Send("\r\n");
 
 					if (!q->itemRewards.empty())
 					{
-						ch->Send("|YYou will be able to choose one of these rewards:|X\n\r");
+						ch->Send("|YYou will be able to choose one of these rewards:|X\r\n");
 						std::string combinedRewards;
 						for (auto itemiter = std::begin(q->itemRewards); itemiter != std::end(q->itemRewards); ++itemiter)
 						{
@@ -1437,36 +1437,36 @@ void cmd_quest(Player * ch, std::string argument)
                 ctr++;
             }
         }
-        ch->Send("Quest " + arg2 + " not found.\n\r");
+        ch->Send("Quest " + arg2 + " not found.\r\n");
         return;
     }
     else if(!Utilities::str_cmp(arg1, "accept"))
     {
         if(!ch->GetTarget())
         {
-            ch->Send("You need a target to accept a quest.\n\r");
+            ch->Send("You need a target to accept a quest.\r\n");
             return;
         }
 		if (!ch->GetTarget()->IsNPC())
 		{
-			ch->Send("Your target has no quests to offer.\n\r");
+			ch->Send("Your target has no quests to offer.\r\n");
 			return;
 		}
 		NPCIndex * quest_target = ch->GetTarget()->GetNPCIndex();
         if(quest_target->questStart.empty())
         {
-            ch->Send("Your target has no quests to offer.\n\r");
+            ch->Send("Your target has no quests to offer.\r\n");
             return;
         }
         if(ch->questLog.size() >= Player::QUESTLOG_MAX_SIZE)
         {
-            ch->Send("Your quest log is full.\n\r");
+            ch->Send("Your quest log is full.\r\n");
             return;
         }
         int qnum = Utilities::atoi(arg2);
         if(qnum == 0)
         {
-            ch->Send("Accept which quest?\n\r");
+            ch->Send("Accept which quest?\r\n");
             return;
         }
         std::vector<Quest *>::iterator questiter;
@@ -1485,7 +1485,7 @@ void cmd_quest(Player * ch, std::string argument)
                     ch->questLog.push_back(q);
                     ch->questObjectives.push_back(playerObjectives);
                     
-                    ch->Send("Accepted quest: " + q->name + "\n\r");
+                    ch->Send("Accepted quest: " + q->name + "\r\n");
 
                     //TODO: check for already completed OBJECTIVE_ITEM
                     int objindex = 0;
@@ -1506,7 +1506,7 @@ void cmd_quest(Player * ch, std::string argument)
                                 ch->Send("|W" + q->name + ": ");
                                 ch->Send("|Y" + (*iter).description + " (" 
                                     + Utilities::itos(ch->questObjectives[ch->questLog.size()-1][objindex]) 
-                                    + "/" + Utilities::itos((*iter).count) + ")|X\n\r\n\r");
+                                    + "/" + Utilities::itos((*iter).count) + ")|X\r\n\r\n");
                             }
                         }
                         objindex++;
@@ -1516,7 +1516,7 @@ void cmd_quest(Player * ch, std::string argument)
                 ctr++;
             }
         }
-        ch->Send("Quest " + arg2 + " not found.\n\r");
+        ch->Send("Quest " + arg2 + " not found.\r\n");
 
         return;
     }
@@ -1524,21 +1524,21 @@ void cmd_quest(Player * ch, std::string argument)
     {
         if(ch->questLog.empty())
         {
-            ch->Send("Your quest log is empty.\n\r");
+            ch->Send("Your quest log is empty.\r\n");
             return;
         }
         int qnum = Utilities::atoi(arg2);
         if(qnum == 0)
         {
-            ch->Send("Drop which quest?\n\r");
+            ch->Send("Drop which quest?\r\n");
             return;
         }
         if(qnum < 1 || qnum > (int)ch->questLog.size())
         {
-            ch->Send("Choose a quest from your quest log, 1-" + Utilities::itos((int)ch->questLog.size()) + "\n\r");
+            ch->Send("Choose a quest from your quest log, 1-" + Utilities::itos((int)ch->questLog.size()) + "\r\n");
             return;
         }
-        ch->Send("You have dropped " + ch->questLog[qnum-1]->name + ".\n\r");
+        ch->Send("You have dropped " + ch->questLog[qnum-1]->name + ".\r\n");
         ch->questLog.erase(ch->questLog.begin() + qnum - 1);
         ch->questObjectives.erase(ch->questObjectives.begin() + qnum - 1);
         return;
@@ -1547,34 +1547,34 @@ void cmd_quest(Player * ch, std::string argument)
     {
         if(ch->questLog.empty())
         {
-            ch->Send("Your quest log is empty.\n\r");
+            ch->Send("Your quest log is empty.\r\n");
             return;
         }
         if(!ch->GetTarget())
         {
-            ch->Send("You need a target to complete a quest.\n\r");
+            ch->Send("You need a target to complete a quest.\r\n");
             return;
         }
 		if (!ch->GetTarget()->IsNPC())
 		{
-			ch->Send("Your target cannot complete your quest.\n\r");
+			ch->Send("Your target cannot complete your quest.\r\n");
 			return;
 		}
 		NPCIndex * quest_target = ch->GetTarget()->GetNPCIndex();
         if(quest_target->questEnd.empty())
         {
-            ch->Send("Your target cannot complete your quest.\n\r");
+            ch->Send("Your target cannot complete your quest.\r\n");
             return;
         }
         int qnum = Utilities::atoi(arg2);
         if(qnum == 0)
         {
-            ch->Send("Complete which quest?\n\r");
+            ch->Send("Complete which quest?\r\n");
             return;
         }
         if(qnum < 1 || qnum > (int)ch->questLog.size())
         {
-            ch->Send("Choose a quest from your quest log, 1-" + Utilities::itos((int)ch->questLog.size()) + "\n\r");
+            ch->Send("Choose a quest from your quest log, 1-" + Utilities::itos((int)ch->questLog.size()) + "\r\n");
             return;
         }
         Quest * complete = ch->questLog[qnum-1];
@@ -1590,12 +1590,12 @@ void cmd_quest(Player * ch, std::string argument)
         }
         if(!found)
         {
-            ch->Send("Your target cannot complete your quest.\n\r");
+            ch->Send("Your target cannot complete your quest.\r\n");
             return;
         }
         if(!ch->QuestObjectivesComplete(complete))
         {
-            ch->Send("Not all objectives of that quest are complete.\n\r");
+            ch->Send("Not all objectives of that quest are complete.\r\n");
             return;
         }
 
@@ -1641,9 +1641,9 @@ void cmd_quest(Player * ch, std::string argument)
 			ch->questObjectives.erase(objiter);
 			ch->completedQuests.insert(complete->id);
 
-			ch->Send(complete->name + " completed!\n\r");
-			ch->Send(complete->completionMessage + "\n\r");
-			ch->Send("|BYou have gained |Y" + Utilities::itos(complete->experienceReward) + "|B experience.|X\n\r");
+			ch->Send(complete->name + " completed!\r\n");
+			ch->Send(complete->completionMessage + "\r\n");
+			ch->Send("|BYou have gained |Y" + Utilities::itos(complete->experienceReward) + "|B experience.|X\r\n");
 			ch->ApplyExperience(complete->experienceReward);
 		}
         return;
@@ -1652,25 +1652,25 @@ void cmd_quest(Player * ch, std::string argument)
     {
         if(ch->questLog.empty())
         {
-            ch->Send("Your quest log is empty.\n\r");
+            ch->Send("Your quest log is empty.\r\n");
             return;
         }
         int qnum = Utilities::atoi(arg2);
         if(qnum == 0)
         {
-            ch->Send("Get progress information for which quest?\n\r");
+            ch->Send("Get progress information for which quest?\r\n");
             return;
         }
         if(qnum < 1 || qnum > (int)ch->questLog.size())
         {
-            ch->Send("Choose a quest from your quest log, 1-" + Utilities::itos((int)ch->questLog.size()) + "\n\r");
+            ch->Send("Choose a quest from your quest log, 1-" + Utilities::itos((int)ch->questLog.size()) + "\r\n");
             return;
         }
         Quest * progress = ch->questLog[qnum-1];
         ch->Send("Quest information for: " + Quest::GetDifficultyColor(ch->GetLevel(), progress->level) 
-                   + progress->name + " (" + Utilities::itos(progress->level) + ")|X\n\r");
-        ch->Send(progress->longDescription + "\n\r\n\r");
-        ch->Send(progress->shortDescription + "\n\r\n\r");
+                   + progress->name + " (" + Utilities::itos(progress->level) + ")|X\r\n");
+        ch->Send(progress->longDescription + "\r\n\r\n");
+        ch->Send(progress->shortDescription + "\r\n\r\n");
 
         std::vector<Quest::QuestObjective>::iterator objiter;
         int i = 0;
@@ -1680,22 +1680,22 @@ void cmd_quest(Player * ch, std::string argument)
             //type count objective description
             if(currentCount < (*objiter).count)
             {
-                ch->Send("|Y" + (*objiter).description + " (" + Utilities::itos(currentCount) + "/" + Utilities::itos((*objiter).count) + ")|X\n\r");
+                ch->Send("|Y" + (*objiter).description + " (" + Utilities::itos(currentCount) + "/" + Utilities::itos((*objiter).count) + ")|X\r\n");
             }
             else
             {
-                ch->Send("|G" + (*objiter).description + " (" + Utilities::itos(currentCount) + "/" + Utilities::itos((*objiter).count) + ")|X\n\r");
+                ch->Send("|G" + (*objiter).description + " (" + Utilities::itos(currentCount) + "/" + Utilities::itos((*objiter).count) + ")|X\r\n");
             }
         }
 
 		ch->Send("You will receive |Y" + Utilities::itos(progress->experienceReward) + " experience|X");
 		if (progress->moneyReward > 0)
 			ch->Send(" and |Y" + Utilities::itos(progress->moneyReward) + " gold|X");
-		ch->Send("\n\r");
+		ch->Send("\r\n");
 
 		if (!progress->itemRewards.empty())
 		{
-			ch->Send("|YYou will be able to choose one of these rewards:|X\n\r");
+			ch->Send("|YYou will be able to choose one of these rewards:|X\r\n");
 			std::string combinedRewards;
 			for (auto itemiter = std::begin(progress->itemRewards); itemiter != std::end(progress->itemRewards); ++itemiter)
 			{
@@ -1710,7 +1710,7 @@ void cmd_quest(Player * ch, std::string argument)
     {
         return;
     }
-    ch->Send("Quest: log, list, info #, accept #, drop #, complete #, progress #, share #\n\r");
+    ch->Send("Quest: log, list, info #, accept #, drop #, complete #, progress #, share #\r\n");
 }
 
 
@@ -1724,13 +1724,13 @@ bool questCompleteQuery(Player * ch, std::string argument)
 	Utilities::one_argument(argument, arg1);
 	if (!Utilities::IsNumber(arg1))
 	{
-		ch->Send("Invalid choice, quest not completed.\n\r");
+		ch->Send("Invalid choice, quest not completed.\r\n");
 		return true;
 	}
 	int choice = Utilities::atoi(arg1);
 	if (choice <= 0 || choice > quest->itemRewards.size())
 	{
-		ch->Send("Invalid choice, quest not completed.\n\r");
+		ch->Send("Invalid choice, quest not completed.\r\n");
 		return true;
 	}
 
@@ -1756,17 +1756,17 @@ bool questCompleteQuery(Player * ch, std::string argument)
 	ch->questObjectives.erase(objiter);
 	ch->completedQuests.insert(quest->id);
 
-	ch->Send(quest->name + " completed!\n\r");
-	ch->Send(quest->completionMessage + "\n\r");
+	ch->Send(quest->name + " completed!\r\n");
+	ch->Send(quest->completionMessage + "\r\n");
 
 	Item * myreward = Game::GetGame()->GetItem(quest->itemRewards[choice - 1]);
 	if(myreward)
 	{
-		ch->Send("|WYou receive loot: " + myreward->GetColoredName() + "|X\n\r");
+		ch->Send("|WYou receive loot: " + myreward->GetColoredName() + "|X\r\n");
 		ch->AddItemInventory(myreward);
 	}
 
-	ch->Send("|BYou have gained |Y" + Utilities::itos(quest->experienceReward) + "|B experience.|X\n\r");
+	ch->Send("|BYou have gained |Y" + Utilities::itos(quest->experienceReward) + "|B experience.|X\r\n");
 	ch->ApplyExperience(quest->experienceReward);
 	return true;
 }
@@ -1775,18 +1775,18 @@ void cmd_quit(Player * ch, std::string argument)
 {
     /*if(ch->HasQuery())
     {
-        ch->Send("Answer your current question first.\n\r");
+        ch->Send("Answer your current question first.\r\n");
         return;
     }*/
     //Do a few checks here, but just query the player with a quit-function callback.
     if(ch->InCombat())
     {
-        ch->Send("You can't do that while in combat!\n\r");
+        ch->Send("You can't do that while in combat!\r\n");
         return;
     }
     if(ch->delay_active)
     {
-        ch->Send("You can't do that while casting.\n\r");
+        ch->Send("You can't do that while casting.\r\n");
         return;
     }
 	
@@ -1805,16 +1805,16 @@ bool cmd_quit_Query(Player * ch, std::string argument)
 	{
         if(ch && ch->InCombat())
         {
-            ch->Send("You can't do that while in combat!\n\r");
+            ch->Send("You can't do that while in combat!\r\n");
             return true;
         }
         if(ch->delay_active)
         {
-            ch->Send("You can't do that while casting.\n\r");
+            ch->Send("You can't do that while casting.\r\n");
             return true;
         }
 
-		ch->Send("Bye\n\r");
+		ch->Send("Bye\r\n");
 		LogFile::Log("status", ch->GetName() + " \"quit\"");
 
         if(ch->user)
@@ -1853,9 +1853,9 @@ bool releaseSpiritQuery(Player * ch, std::string argument)
 		int res_at_graveyard = ch->death_timer - ch->TimeSinceDeath();
 		int res_at_corpse = ch->death_timer_runback - ch->TimeSinceDeath();
 		if (res_at_graveyard > 0)
-			ch->Send("|W" + Utilities::itos(res_at_graveyard) + " seconds before you can resurrect at the graveyard.\n\r");
+			ch->Send("|W" + Utilities::itos(res_at_graveyard) + " seconds before you can resurrect at the graveyard.\r\n");
 		if (res_at_corpse > 0)
-			ch->Send("|W" + Utilities::itos(res_at_corpse) + " seconds before you can resurrect near your corpse.\n\r");
+			ch->Send("|W" + Utilities::itos(res_at_corpse) + " seconds before you can resurrect near your corpse.\r\n");
         return true;
     }
     return false;
@@ -1904,15 +1904,15 @@ void cmd_alias(Player * ch, std::string argument)
 	{
 		if (ch->alias.empty())
 		{
-			ch->Send("You have no aliases.\n\r");
-			ch->Send("Use: alias <word>\n\r     alias <word> <substitution>\n\r");
+			ch->Send("You have no aliases.\r\n");
+			ch->Send("Use: alias <word>\r\n     alias <word> <substitution>\r\n");
 		}
 		else
 		{
-			ch->Send("Existing aliases:\n\r");
+			ch->Send("Existing aliases:\r\n");
 			for (auto iter = ch->alias.begin(); iter != ch->alias.end(); iter++)
 			{
-				ch->Send("'" + iter->first + "' : '" + iter->second + "'\n\r");
+				ch->Send("'" + iter->first + "' : '" + iter->second + "'\r\n");
 			}
 		}
 		return;
@@ -1920,7 +1920,7 @@ void cmd_alias(Player * ch, std::string argument)
 
 	if (!Utilities::str_cmp(new_alias, "alias") || !Utilities::str_cmp(new_alias, "unalias"))
 	{
-		ch->Send("That word is reserved.\n\r");
+		ch->Send("That word is reserved.\r\n");
 		return;
 	}
 
@@ -1929,28 +1929,28 @@ void cmd_alias(Player * ch, std::string argument)
 	{
 		if (!argument.empty())
 		{
-			ch->Send("That alias already exists.\n\r");
+			ch->Send("That alias already exists.\r\n");
 		}
-		ch->Send(new_alias + ": " + alias_iter->second + "\n\r");
+		ch->Send(new_alias + ": " + alias_iter->second + "\r\n");
 		return;
 	}
 	if (argument.empty())
 	{
-		ch->Send("Alias '" + new_alias + "' to what?\n\r");
+		ch->Send("Alias '" + new_alias + "' to what?\r\n");
 		return;
 	}
 	if (argument.length() > MAX_COMMAND_LENGTH)
 	{
-		ch->Send("That alias substitution is too long. Maximum length is " + Utilities::itos(MAX_COMMAND_LENGTH) + " characters.\n\r");
+		ch->Send("That alias substitution is too long. Maximum length is " + Utilities::itos(MAX_COMMAND_LENGTH) + " characters.\r\n");
 		return;
 	}
 	if (new_alias.length() > 25)
 	{
-		ch->Send("That alias keyword is too long. Maximum length is 25 characters.\n\r");
+		ch->Send("That alias keyword is too long. Maximum length is 25 characters.\r\n");
 		return;
 	}
 	ch->alias[new_alias] = argument;
-	ch->Send("Alias created: '" + new_alias + "': " + argument + "\n\r");
+	ch->Send("Alias created: '" + new_alias + "': " + argument + "\r\n");
 }
 
 void cmd_unalias(Player * ch, std::string argument)
@@ -1960,8 +1960,8 @@ void cmd_unalias(Player * ch, std::string argument)
 
 	if (ch->alias.empty())
 	{
-		ch->Send("You have no aliases.\n\r");
-		ch->Send("Use: unalias <word>\n\r");
+		ch->Send("You have no aliases.\r\n");
+		ch->Send("Use: unalias <word>\r\n");
 		return;
 	}
 
@@ -1970,11 +1970,11 @@ void cmd_unalias(Player * ch, std::string argument)
 
 	if (remove_alias.empty())
 	{
-		ch->Send("Use: unalias <word>\n\r");
-		ch->Send("Existing aliases:\n\r");
+		ch->Send("Use: unalias <word>\r\n");
+		ch->Send("Existing aliases:\r\n");
 		for (auto iter = ch->alias.begin(); iter != ch->alias.end(); iter++)
 		{
-			ch->Send("'" + iter->first + "' : '" + iter->second + "'\n\r");
+			ch->Send("'" + iter->first + "' : '" + iter->second + "'\r\n");
 		}
 		return;
 	}
@@ -1982,10 +1982,10 @@ void cmd_unalias(Player * ch, std::string argument)
 	auto iter = ch->alias.find(remove_alias);
 	if (iter == ch->alias.end())
 	{
-		ch->Send("You don't have an alias with that name.\n\r");
+		ch->Send("You don't have an alias with that name.\r\n");
 		return;
 	}
 
 	ch->alias.erase(remove_alias);
-	ch->Send("Alias '" + remove_alias + "' deleted.\n\r");
+	ch->Send("Alias '" + remove_alias + "' deleted.\r\n");
 }

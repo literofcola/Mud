@@ -179,6 +179,16 @@ bool IsAlpha(std::string arg)
     return true;
 }
 
+void string_replace(std::string & str, const std::string & oldStr, const std::string & newStr)
+{
+	std::string::size_type pos = 0u;
+	while ((pos = str.find(oldStr, pos)) != std::string::npos) 
+	{
+		str.replace(pos, oldStr.length(), newStr);
+		pos += newStr.length();
+	}
+}
+
 /*
  * Compare strings, case INSENSITIVE.
  * Return TRUE if different
@@ -466,21 +476,21 @@ std::string SideBySideString(std::string left, std::string right)
 
 	//Find the longest line in the left string for possible padding later
 	size_t first = 0;
-	size_t last = left.find("\n\r");
+	size_t last = left.find("\r\n");
 	while (last != std::string::npos)
 	{
 		int len = StringLengthWithoutColor(left.substr(first, last - first));
 		if (len > longestline)
 			longestline = len;
 		first = last + 1;
-		last = left.find("\n\r", last + 1);
+		last = left.find("\r\n", last + 1);
 	}
 	longestline++;
 
 	size_t first_L, first_R, last_L, last_R;
 	first_L = first_R = 0; 
-	last_L = left.find("\n\r");
-	last_R = right.find("\n\r");
+	last_L = left.find("\r\n");
+	last_R = right.find("\r\n");
 	while (last_L != std::string::npos || last_R != std::string::npos)
 	{
 		if (last_L == std::string::npos)
@@ -496,18 +506,18 @@ std::string SideBySideString(std::string left, std::string right)
 				sidebyside.append(longestline - len, ' ');
 			}
 			first_L = last_L + 2;
-			last_L = left.find("\n\r", last_L + 1);
+			last_L = left.find("\r\n", last_L + 1);
 		}
 
 		if (last_R == std::string::npos)
 		{
-			sidebyside += "\n\r";
+			sidebyside += "\r\n";
 		}
 		else
 		{
 			sidebyside += right.substr(first_R, last_R + 2 - first_R);
 			first_R = last_R + 2;
-			last_R = right.find("\n\r", last_R + 1);
+			last_R = right.find("\r\n", last_R + 1);
 		}
 	}
 

@@ -29,6 +29,7 @@ namespace Utilities
     bool FlagSet(std::vector<int> & flags, const int flag);
     bool FlagUnSet(std::vector<int> & flags, const int flag);
 	std::string one_argument(const std::string & argument, std::string & one_arg);
+	void string_replace(std::string & str, const std::string & oldStr, const std::string & newStr);
 	bool str_prefix(const std::string & astr, const std::string & bstr);
     bool str_str(const std::string & astr, const std::string & bstr);
     std::string GetLastErrorAsString();

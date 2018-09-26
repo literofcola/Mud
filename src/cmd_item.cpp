@@ -30,7 +30,7 @@ using std::string;
 
 void cmd_inventory(Player * ch, string argument)
 {
-	ch->Send("You are carrying:\n\r");
+	ch->Send("You are carrying:\r\n");
 
 	int total = 0;
 	for (auto i = ch->inventory.begin(); i != ch->inventory.end(); i++)
@@ -39,14 +39,14 @@ void cmd_inventory(Player * ch, string argument)
 			ch->Send("|M(" + Utilities::itos(i->second) + ") ");
 		else
 			ch->Send("    ");
-		ch->Send(i->first->GetColoredName() + "|X\n\r");
+		ch->Send(i->first->GetColoredName() + "|X\r\n");
 		total++;
 	}
 
     if(total == 0)
-        ch->Send("     Nothing.\n\r");
+        ch->Send("     Nothing.\r\n");
 
-    ch->Send(Utilities::itos(total) + "/" + Utilities::itos(ch->maxInventorySize) + " items\n\r");
+    ch->Send(Utilities::itos(total) + "/" + Utilities::itos(ch->maxInventorySize) + " items\r\n");
 }
 
 void cmd_equipment(Player * ch, string argument)
@@ -59,7 +59,7 @@ void cmd_remove(Player * ch, string argument)
 {
 	if (ch->InCombat())
 	{
-		ch->Send("You can't do that while in combat!\n\r");
+		ch->Send("You can't do that while in combat!\r\n");
 		return;
 
 	}
@@ -68,7 +68,7 @@ void cmd_remove(Player * ch, string argument)
 
     if(arg1.empty())
     {
-        ch->Send("Remove what?\n\r");
+        ch->Send("Remove what?\r\n");
         return;
     }
 
@@ -85,7 +85,7 @@ void cmd_remove(Player * ch, string argument)
                 }
 				ch->RemoveEquipmentStats(remove);
                 ch->AddItemInventory(remove);
-                ch->Send("You remove " + remove->GetColoredName() + "|X\n\r");
+                ch->Send("You remove " + remove->GetColoredName() + "|X\r\n");
 				ch->Message(ch->GetName() + " removes " + remove->GetColoredName() + "|X", Character::MSG_ROOM_NOTCHAR);
             }
         }
@@ -95,14 +95,14 @@ void cmd_remove(Player * ch, string argument)
     int slot = ch->GetEquippedItemIndex(arg1);
     if(slot == Player::EQUIP_LAST)
     {
-        ch->Send("You're not wearing that item.\n\r");
+        ch->Send("You're not wearing that item.\r\n");
         return;
     }
 
     if(ch->inventorySize >= ch->maxInventorySize
         && !ch->IsImmortal())
     {
-        ch->Send("Your inventory is full.\n\r");
+        ch->Send("Your inventory is full.\r\n");
         return;
     }
     Item * remove = ch->RemoveItemEquipped(slot);
@@ -112,7 +112,7 @@ void cmd_remove(Player * ch, string argument)
     }
 	ch->RemoveEquipmentStats(remove);
     ch->AddItemInventory(remove);
-    ch->Send("You remove " + remove->GetColoredName() + "|X\n\r");
+    ch->Send("You remove " + remove->GetColoredName() + "|X\r\n");
 	ch->Message(ch->GetName() + " removes " + remove->GetColoredName() + "|X", Character::MSG_ROOM_NOTCHAR);
 }   
 
@@ -120,7 +120,7 @@ void cmd_wear(Player * ch, string argument)
 {
 	if (ch->InCombat())
 	{
-		ch->Send("You can't do that while in combat!\n\r");
+		ch->Send("You can't do that while in combat!\r\n");
 		return;
 	}
 
@@ -129,7 +129,7 @@ void cmd_wear(Player * ch, string argument)
 
     if(arg1.empty())
     {
-        ch->Send("Wear what?\n\r");
+        ch->Send("Wear what?\r\n");
         return;
     }
 
@@ -165,7 +165,7 @@ void cmd_wear(Player * ch, string argument)
 				}
                 ch->EquipItemFromInventory(wear);
 				ch->AddEquipmentStats(wear);
-                ch->Send("You wear " + wear->GetColoredName() + "|X\n\r");
+                ch->Send("You wear " + wear->GetColoredName() + "|X\r\n");
 				ch->Message(ch->GetName() + " wears " + wear->GetColoredName() + "|X", Character::MSG_ROOM_NOTCHAR);
             }
         }
@@ -176,20 +176,20 @@ void cmd_wear(Player * ch, string argument)
 
     if(!wear)
     {
-        ch->Send("You're not carrying that item.\n\r");
+        ch->Send("You're not carrying that item.\r\n");
         return;
     }
     int equiploc = ch->GetEquipLocation(wear);
     if(equiploc == Player::EQUIP_LAST)
     {
-        ch->Send("You can't equip that item.\n\r");
+        ch->Send("You can't equip that item.\r\n");
         return;
     }
 
 	if ((wear->type == Item::TYPE_ARMOR_CLOTH || wear->type == Item::TYPE_ARMOR_LEATHER
 		|| wear->type == Item::TYPE_ARMOR_MAIL || wear->type == Item::TYPE_ARMOR_PLATE) && !ch->CanWearArmor(wear->type))
 	{
-		ch->Send("You can't equip that item.\n\r");
+		ch->Send("You can't equip that item.\r\n");
 		return;
 	}
 
@@ -198,7 +198,7 @@ void cmd_wear(Player * ch, string argument)
     {
 		ch->RemoveEquipmentStats(removed);
         ch->AddItemInventory(removed);
-        ch->Send("You remove " + removed->GetColoredName() + "|X\n\r");
+        ch->Send("You remove " + removed->GetColoredName() + "|X\r\n");
 		ch->Message(ch->GetName() + " removes " + removed->GetColoredName() + "|X", Character::MSG_ROOM_NOTCHAR);
     }
     if(equiploc == Player::EQUIP_MAINHAND && wear->equipLocation == Item::EQUIP_TWOHAND) //remove the offhand when equipping a two hand
@@ -208,7 +208,7 @@ void cmd_wear(Player * ch, string argument)
         {
 			ch->RemoveEquipmentStats(offhand);
             ch->AddItemInventory(offhand);
-            ch->Send("You remove " + offhand->GetColoredName() + "|X\n\r");
+            ch->Send("You remove " + offhand->GetColoredName() + "|X\r\n");
 			ch->Message(ch->GetName() + " removes " + offhand->GetColoredName() + "|X", Character::MSG_ROOM_NOTCHAR);
         }
     }
@@ -219,13 +219,13 @@ void cmd_wear(Player * ch, string argument)
             Item * mh = ch->RemoveItemEquipped(Player::EQUIP_MAINHAND);
 			ch->RemoveEquipmentStats(mh);
             ch->AddItemInventory(mh);
-            ch->Send("You remove " + mh->GetColoredName() + "|X\n\r");
+            ch->Send("You remove " + mh->GetColoredName() + "|X\r\n");
 			ch->Message(ch->GetName() + " removes " + mh->GetColoredName() + "|X", Character::MSG_ROOM_NOTCHAR);
         }
     }
     ch->EquipItemFromInventory(wear);
 	ch->AddEquipmentStats(wear);
-    ch->Send("You wear " + wear->GetColoredName() + "|X\n\r");
+    ch->Send("You wear " + wear->GetColoredName() + "|X\r\n");
 	ch->Message(ch->GetName() + " wears " + wear->GetColoredName() + "|X", Character::MSG_ROOM_NOTCHAR);
 }
 
@@ -233,17 +233,17 @@ void cmd_drop(Player * ch, string argument)
 {
     if(ch->HasQuery())
     {
-        ch->Send("Answer your current question first.\n\r");
+        ch->Send("Answer your current question first.\r\n");
         return;
     }
     if(ch->delay_active)
     {
-        ch->Send("You can't do that while casting.\n\r");
+        ch->Send("You can't do that while casting.\r\n");
         return;
     }
     if(argument.empty())
     {
-        ch->Send("Drop what?\n\r");
+        ch->Send("Drop what?\r\n");
         return;
     }
 
@@ -265,7 +265,7 @@ void cmd_drop(Player * ch, string argument)
         count = Utilities::atoi(arg1);
         if(count <= 0)
         {
-            ch->Send("You must drop one or more items.\n\r");
+            ch->Send("You must drop one or more items.\r\n");
             return;
         }
         itemname = arg2;
@@ -277,14 +277,14 @@ void cmd_drop(Player * ch, string argument)
 
     if(itemname.empty())
     {
-        ch->Send("Drop what?\n\r");
+        ch->Send("Drop what?\r\n");
         return;
     }*/
 
     Item * item;
     if((item = ch->GetItemInventory(arg1)) == nullptr)
     {
-        ch->Send("You're not carrying that item.\n\r");
+        ch->Send("You're not carrying that item.\r\n");
         return;
     }
 	ch->SetQuery("Destroy " + item->GetColoredName() + "|X? (y/n) ", item, cmd_drop_Query);
@@ -299,7 +299,7 @@ bool cmd_drop_Query(Player * ch, string argument)
     }
     if(ch->delay_active)
     {
-        ch->Send("You can't do that while casting.\n\r");
+        ch->Send("You can't do that while casting.\r\n");
         ch->QueryClear();
         return true;
     }
@@ -310,7 +310,7 @@ bool cmd_drop_Query(Player * ch, string argument)
         ch->QueryClear();
         if((item = ch->GetItemInventory(item->GetID())) == nullptr)
         {
-            ch->Send("You're not carrying that item.\n\r");
+            ch->Send("You're not carrying that item.\r\n");
             return true;
         }
         ch->RemoveItemInventory(item->GetID());
@@ -327,12 +327,12 @@ void cmd_take(Player * ch, string argument)
 
 	if (ch->delay_active)
 	{
-		ch->Send("Another action is in progress!\n\r");
+		ch->Send("Another action is in progress!\r\n");
 		return;
 	}
 	if (argument.empty())
 	{
-		ch->Send("Take what?\n\r");
+		ch->Send("Take what?\r\n");
 		return;
 	}
 
@@ -343,24 +343,24 @@ void cmd_take(Player * ch, string argument)
 
 	if (i == nullptr)
 	{
-		ch->Send("You don't see that here.\n\r");
+		ch->Send("You don't see that here.\r\n");
 		return;
 	}
 	if (Utilities::FlagIsSet(i->flags, Item::FLAG_ROOMONLY))
 	{
-		ch->Send("You can't take that.\n\r");
+		ch->Send("You can't take that.\r\n");
 		return;
 	}
 	if (i->quest && !ch->ShouldDropQuestItem(i))
 	{
-		ch->Send("You can't take that.\n\r");
+		ch->Send("You can't take that.\r\n");
 		return;
 	}
 
 	json casttime = { { "time", 2.5 } };
 	ch->SendGMCP("char.casttime " + casttime.dump());
 
-	ch->Send("You begin taking " + i->GetName() + "...\n\r");
+	ch->Send("You begin taking " + i->GetName() + "...\r\n");
 
 	ch->delay = (Game::GetGame()->currentTime + 2.5);
 	Character::DelayData dd;
@@ -388,7 +388,7 @@ void cmd_takeCallback(Character::DelayData delayData)
 
 	if (delayData.itemTarget == nullptr) //target will never be null from cmd_take, only from Subscriber::Notify 
 	{
-		delayData.caster->Send("That item is no longer here.\n\r");
+		delayData.caster->Send("That item is no longer here.\r\n");
 		return;
 	}
 
@@ -397,7 +397,7 @@ void cmd_takeCallback(Character::DelayData delayData)
 
 	if (!delayData.caster->IsItemInRoom(delayData.itemTarget))
 	{
-		delayData.caster->Send("That item is no longer here.\n\r");
+		delayData.caster->Send("That item is no longer here.\r\n");
 		return;
 	}
 
@@ -406,7 +406,7 @@ void cmd_takeCallback(Character::DelayData delayData)
 	{
 		((Player*)(delayData.caster))->AddItemInventory(delayData.itemTarget);
 	}
-	delayData.caster->Send("You take " + delayData.itemTarget->GetName() + "\n\r");
+	delayData.caster->Send("You take " + delayData.itemTarget->GetName() + "\r\n");
 	delayData.caster->Message(delayData.caster->GetName() + " takes " + delayData.itemTarget->GetName(), Character::MSG_ROOM_NOTCHAR);
 }
 
@@ -423,15 +423,15 @@ void cmd_loot(Player * ch, string argument)
 	{
 		if (ch->pending_loot_rolls.empty() && !ch->GetTarget())
 		{
-			ch->Send("Target a corpse with this command to see available items to loot.\n\r");
-			ch->Send("loot take||get <loot id>||all\n\r");
-			ch->Send("loot need||greed||pass <loot id>\n\r");
-			ch->Send("loot info roll||target <loot id>\n\r");
+			ch->Send("Target a corpse with this command to see available items to loot.\r\n");
+			ch->Send("loot take||get <loot id>||all\r\n");
+			ch->Send("loot need||greed||pass <loot id>\r\n");
+			ch->Send("loot info roll||target <loot id>\r\n");
 			return;
 		}
 
 		if(!ch->pending_loot_rolls.empty())
-			ch->Send("Pending loot rolls:\n\r");
+			ch->Send("Pending loot rolls:\r\n");
 
 		auto iter = std::begin(ch->pending_loot_rolls);
 		while (iter != std::end(ch->pending_loot_rolls))
@@ -446,7 +446,7 @@ void cmd_loot(Player * ch, string argument)
 			ch->Send(Utilities::itos(iter->my_id) + ". " + loot->item->GetColoredName() + "|X");
 			if (loot->roll_timer > 0 && loot->roll_timer > Game::currentTime)
 				ch->Send(" |Y[" + Utilities::dtos(loot->roll_timer - Game::currentTime, 1) + "s remaining]|X");
-			ch->Send("\n\r");
+			ch->Send("\r\n");
 			++iter;
 		}
 
@@ -454,7 +454,7 @@ void cmd_loot(Player * ch, string argument)
 		{
 			NPC * loot_target = (NPC*)ch->GetTarget();
 			bool lootable_items = false;
-			ch->Send("You can loot the following items from " + loot_target->GetName() + ":\n\r");
+			ch->Send("You can loot the following items from " + loot_target->GetName() + ":\r\n");
 			for (auto iter = std::begin(loot_target->loot); iter != std::end(loot_target->loot); ++iter)
 			{
 				/*std::find_if(iter->looters.begin(), iter->looters.end(),
@@ -466,11 +466,11 @@ void cmd_loot(Player * ch, string argument)
 					ch->Send(Utilities::itos(iter->id) + ". " + iter->item->GetColoredName() + "|X");
 					if (iter->roll_timer > 0 && iter->roll_timer > Game::currentTime)
 						ch->Send(" |Y[" + Utilities::dtos(iter->roll_timer - Game::currentTime, 1) + "s remaining]|X");
-					ch->Send("\n\r");
+					ch->Send("\r\n");
 				}
 			}
 			if (lootable_items == 0)
-				ch->Send("None\n\r");
+				ch->Send("None\r\n");
 		}
 		return;
 	}
@@ -478,12 +478,12 @@ void cmd_loot(Player * ch, string argument)
 	{
 		if (ch->GetTarget() == nullptr || !ch->GetTarget()->IsNPC() || ch->GetTarget()->IsAlive())
 		{
-			ch->Send("You must target a corpse with loot to take it.\n\r");
+			ch->Send("You must target a corpse with loot to take it.\r\n");
 			return;
 		}
 		if (!Utilities::IsNumber(arg2) && Utilities::str_cmp(arg2, "all"))
 		{
-			ch->Send("loot take||get <loot id>||all\n\r");
+			ch->Send("loot take||get <loot id>||all\r\n");
 			return;
 		}
 		if (!Utilities::str_cmp(arg2, "all"))
@@ -504,15 +504,15 @@ void cmd_loot(Player * ch, string argument)
 						{
 							if (looter_iter->ch != ch)
 							{
-								looter_iter->ch->Send(ch->GetName() + " receives loot: " + oneloot->item->GetColoredName() + "|X\n\r");
+								looter_iter->ch->Send(ch->GetName() + " receives loot: " + oneloot->item->GetColoredName() + "|X\r\n");
 							}
 						}
-						ch->Send("You receive loot: " + theitem->GetColoredName() + "|X\n\r");
+						ch->Send("You receive loot: " + theitem->GetColoredName() + "|X\r\n");
 						loot_target->RemoveLoot(oneloot);
 					}
 					else
 					{
-						ch->Send("Your inventory is full.\n\r");
+						ch->Send("Your inventory is full.\r\n");
 						return;
 					}
 				}
@@ -523,14 +523,14 @@ void cmd_loot(Player * ch, string argument)
 		{
 			return;
 		}
-		ch->Send("loot take||get <loot id>||all\n\r");
+		ch->Send("loot take||get <loot id>||all\r\n");
 		return;
 	}
 	else if (!Utilities::str_cmp(arg1, "info"))
 	{
 		if (!Utilities::IsNumber(arg3) || Utilities::str_cmp(arg2, "roll") || Utilities::str_cmp(arg2, "target"))
 		{
-			ch->Send("loot info roll||target <loot id>\n\r");
+			ch->Send("loot info roll||target <loot id>\r\n");
 			return;
 		}
 		int lootnum = Utilities::atoi(arg3);
@@ -545,33 +545,33 @@ void cmd_loot(Player * ch, string argument)
 					return;
 				}
 			}
-			ch->Send("You do not have a pending loot roll with that number.\n\r");
+			ch->Send("You do not have a pending loot roll with that number.\r\n");
 			return;
 		}
 		if (!Utilities::str_cmp(arg2, "target"))
 		{
 			if (!ch->GetTarget() || !ch->GetTarget()->IsNPC())
 			{
-				ch->Send("You do not have a lootable target.\n\r");
+				ch->Send("You do not have a lootable target.\r\n");
 				return;
 			}
 			NPC::OneLoot * oneloot = ((NPC*)(ch->GetTarget()))->GetCorpseLoot(lootnum);
 			if (oneloot == nullptr)
 			{
-				ch->Send("Could not find loot item " + Utilities::itos(lootnum) + " on your target.\n\r");
+				ch->Send("Could not find loot item " + Utilities::itos(lootnum) + " on your target.\r\n");
 				return;
 			}
 			ch->Send(oneloot->item->FormatItemInfo(ch));
 			return;
 		}
-		ch->Send("loot info roll||target <loot id>\n\r");
+		ch->Send("loot info roll||target <loot id>\r\n");
 		return;
 	}
 	else if (!Utilities::str_cmp(arg1, "need"))
 	{
 		if (!Utilities::IsNumber(arg2))
 		{
-			ch->Send("loot need <loot id>\n\r");
+			ch->Send("loot need <loot id>\r\n");
 			return;
 		}
 		int rollnum = Utilities::atoi(arg2);
@@ -584,14 +584,14 @@ void cmd_loot(Player * ch, string argument)
 				return;
 			}
 		}
-		ch->Send("You do not have a pending loot roll with that number.\n\r");
+		ch->Send("You do not have a pending loot roll with that number.\r\n");
 		return;
 	}
 	else if (!Utilities::str_cmp(arg1, "greed"))
 	{
 		if (!Utilities::IsNumber(arg2))
 		{
-			ch->Send("loot greed <loot id>\n\r");
+			ch->Send("loot greed <loot id>\r\n");
 			return;
 		}
 		int rollnum = Utilities::atoi(arg2);
@@ -604,14 +604,14 @@ void cmd_loot(Player * ch, string argument)
 				return;
 			}
 		}
-		ch->Send("You do not have a pending loot roll with that number.\n\r");
+		ch->Send("You do not have a pending loot roll with that number.\r\n");
 		return;
 	}
 	else if (!Utilities::str_cmp(arg1, "pass"))
 	{
 		if (!Utilities::IsNumber(arg2))
 		{
-			ch->Send("loot pass <loot id>\n\r");
+			ch->Send("loot pass <loot id>\r\n");
 			return;
 		}
 		int rollnum = Utilities::atoi(arg2);
@@ -624,13 +624,13 @@ void cmd_loot(Player * ch, string argument)
 				return;
 			}
 		}
-		ch->Send("You do not have a pending loot roll with that number.\n\r");
+		ch->Send("You do not have a pending loot roll with that number.\r\n");
 		return;
 	}
-	ch->Send("Target a corpse with this command to see available items to loot.\n\r");
-	ch->Send("loot take||get <loot id>||all\n\r");
-	ch->Send("loot need||greed||pass <loot id>\n\r");
-	ch->Send("loot info roll||target <loot id>\n\r");
+	ch->Send("Target a corpse with this command to see available items to loot.\r\n");
+	ch->Send("loot take||get <loot id>||all\r\n");
+	ch->Send("loot need||greed||pass <loot id>\r\n");
+	ch->Send("loot info roll||target <loot id>\r\n");
 }
 
 void cmd_drink(Player * ch, string argument)
@@ -642,7 +642,7 @@ void cmd_eat(Player * ch, string argument)
 {
 	if (ch->delay_active)
 	{
-		ch->Send("Another action is in progress!\n\r");
+		ch->Send("Another action is in progress!\r\n");
 		return;
 	}
 
@@ -651,7 +651,7 @@ void cmd_eat(Player * ch, string argument)
 
 	if (arg1.empty())
 	{
-		ch->Send("Eat what?\n\r");
+		ch->Send("Eat what?\r\n");
 		return;
 	}
 
@@ -659,13 +659,13 @@ void cmd_eat(Player * ch, string argument)
 
 	if (!eat)
 	{
-		ch->Send("You're not carrying that item.\n\r");
+		ch->Send("You're not carrying that item.\r\n");
 		return;
 	}
 
 	if (eat->type != Item::TYPE_FOOD && eat->type != Item::TYPE_CONSUMABLE)
 	{
-		ch->Send("That's not edible.\n\r");
+		ch->Send("That's not edible.\r\n");
 		return;
 	}
 	
@@ -673,7 +673,7 @@ void cmd_eat(Player * ch, string argument)
 	{
 		if (ch->InCombat())
 		{
-			ch->Send("You can't do that while in combat.\n\r");
+			ch->Send("You can't do that while in combat.\r\n");
 			return;
 		}
 		Skill * sk = Game::GetGame()->GetSkill(eat->useSkillID);
@@ -686,7 +686,7 @@ void cmd_eat(Player * ch, string argument)
 
 		ch->Sit();
 		ch->RemoveItemInventory(eat);
-		ch->Send("You start eating " + eat->GetName() + ".\n\r");
+		ch->Send("You start eating " + eat->GetName() + ".\r\n");
 
 		string func = sk->function_name + "_cast";
 		try

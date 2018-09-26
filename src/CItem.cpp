@@ -96,19 +96,19 @@ std::string Item::FormatItemInfo(Player * ch)
 {
 	std::string itemstring;
 
-	itemstring = (GetColoredName() + "|X\n\r");
+	itemstring = (GetColoredName() + "|X\r\n");
 
 	if (binds != Item::BIND_NONE)
 	{
-		itemstring += ((std::string)Item::bind_strings[binds] + "\n\r");
+		itemstring += ((std::string)Item::bind_strings[binds] + "\r\n");
 	}
 	if (quest)
 	{
-		itemstring += "Quest Item\n\r";
+		itemstring += "Quest Item\r\n";
 	}
 	if (unique)
 	{
-		itemstring += "Unique\n\r";
+		itemstring += "Unique\r\n";
 	}
 
 	if (equipLocation != Item::EQUIP_NONE)
@@ -122,57 +122,57 @@ std::string Item::FormatItemInfo(Player * ch)
 			{
 				itemstring += "|R";
 			}
-			itemstring += "     " + (std::string)Item::type_strings[type] + "|X\n\r";
+			itemstring += "     " + (std::string)Item::type_strings[type] + "|X\r\n";
 		}
 		else
 		{
-			itemstring += "\n\r";
+			itemstring += "\r\n";
 		}
 	}
 	else if (equipLocation == Item::EQUIP_NONE && type != Item::TYPE_MISC)
 	{
-		itemstring += (std::string)Item::type_strings[type] + "\n\r";
+		itemstring += (std::string)Item::type_strings[type] + "\r\n";
 	}
 
 	if (armor > 0)
 	{
-		itemstring += "Armor " + Utilities::itos(armor) + "\n\r";
+		itemstring += "Armor " + Utilities::itos(armor) + "\r\n";
 	}
 	if (damageHigh > 0 && speed > 0)
 	{
 		itemstring += Utilities::itos(damageLow) + " - " + Utilities::itos(damageHigh) + " Damage";
-		itemstring += "    Speed " + Utilities::dtos(speed, 2) + "\n\r";
+		itemstring += "    Speed " + Utilities::dtos(speed, 2) + "\r\n";
 		double dps = ((damageLow + damageHigh) / 2.0) / speed;
-		itemstring += "(" + Utilities::dtos(dps, 2) + " damage per second)\n\r";
+		itemstring += "(" + Utilities::dtos(dps, 2) + " damage per second)\r\n";
 	}
 
 	if (agility > 0)
-		itemstring += "+" + Utilities::itos(agility) + " Agility\n\r";
+		itemstring += "+" + Utilities::itos(agility) + " Agility\r\n";
 	if (intellect > 0)
-		itemstring += "+" + Utilities::itos(intellect) + " Intellect\n\r";
+		itemstring += "+" + Utilities::itos(intellect) + " Intellect\r\n";
 	if (strength > 0)
-		itemstring += "+" + Utilities::itos(strength) + " Strength\n\r";
+		itemstring += "+" + Utilities::itos(strength) + " Strength\r\n";
 	if (stamina > 0)
-		itemstring += "+" + Utilities::itos(stamina) + " Stamina\n\r";
+		itemstring += "+" + Utilities::itos(stamina) + " Stamina\r\n";
 	if (wisdom > 0)
-		itemstring += "+" + Utilities::itos(wisdom) + " Wisdom\n\r";
+		itemstring += "+" + Utilities::itos(wisdom) + " Wisdom\r\n";
 	if (spirit > 0)
-		itemstring += "+" + Utilities::itos(spirit) + " Spirit\n\r";
+		itemstring += "+" + Utilities::itos(spirit) + " Spirit\r\n";
 
 	if (durability)
 	{
-		itemstring += "Durability " + Utilities::itos(durability) + "\n\r";
+		itemstring += "Durability " + Utilities::itos(durability) + "\r\n";
 	}
 	if (charLevel > 0)
 	{
 		if (ch && ch->GetLevel() < charLevel)
 			itemstring += "|R";
-		itemstring += "Requires Level " + Utilities::itos(charLevel) + "|X\n\r";
+		itemstring += "Requires Level " + Utilities::itos(charLevel) + "|X\r\n";
 	}
 	if (itemLevel > 0)
-		itemstring += "Item Level " + Utilities::itos(itemLevel) + "\n\r";
+		itemstring += "Item Level " + Utilities::itos(itemLevel) + "\r\n";
 	if (value > 0)
-		itemstring += "Sell Price: " + Utilities::itos(value) + "\n\r";
+		itemstring += "Sell Price: " + Utilities::itos(value) + "\r\n";
 
 	return itemstring;
 }

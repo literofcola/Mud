@@ -11,7 +11,7 @@ void cmd_shout(Player * ch, std::string argument)
 {
     if(argument.empty())
     {
-      	ch->Send("Shout what?\n\r");
+      	ch->Send("Shout what?\r\n");
       	return;
     }
 
@@ -21,11 +21,11 @@ void cmd_shout(Player * ch, std::string argument)
     {
         if((*iter)->connectedState == User::CONN_PLAYING && (*iter)->character && (*iter)->character != ch)
 		{
-		    (*iter)->Send("|M" + ch->GetName() + " shouts '" + argument + "|X|M'|X\n\r");
+		    (*iter)->Send("|M" + ch->GetName() + " shouts '" + argument + "|X|M'|X\r\n");
 			shoutCount++;
 		}
     }
-    ch->Send("|M[" + Utilities::itos(shoutCount) + "] people heard you shout: " + argument + "|X\n\r");
+    ch->Send("|M[" + Utilities::itos(shoutCount) + "] people heard you shout: " + argument + "|X\r\n");
 }
 
 void cmd_say(Player * ch, std::string argument)
@@ -35,7 +35,7 @@ void cmd_say(Player * ch, std::string argument)
 
     if(argument.empty())
     {
-		ch->Send("Say what?\n\r");
+		ch->Send("Say what?\r\n");
 		return;
     }
 	if (argument == "color_test")
@@ -46,25 +46,25 @@ void cmd_say(Player * ch, std::string argument)
 		{
 			colored += "\033[38;5;" + Utilities::itos(i) + "m" + twofiftysix[i];
 		}
-		ch->Send(colored + "\n\r");
+		ch->Send(colored + "\r\n");
 	}
     ch->Message("|W" + ch->GetName() + " says, '" + argument + "|W'|X", Character::MSG_ROOM_NOTCHAR);
-    ch->Send("|WYou say, '" + argument + "|X|W'|X\n\r");
+    ch->Send("|WYou say, '" + argument + "|X|W'|X\r\n");
 }
 
 void cmd_tell(Player * ch, std::string argument)
 {
-    ch->Send("cmd_tell\n\r");
+    ch->Send("cmd_tell\r\n");
 }
 
 void cmd_reply(Player * ch, std::string argument)
 {
-    ch->Send("cmd_reply\n\r");
+    ch->Send("cmd_reply\r\n");
 }
 
 void cmd_yell(Player * ch, std::string argument)
 {
-    ch->Send("cmd_yell\n\r");
+    ch->Send("cmd_yell\r\n");
 }
 
 void cmd_set(Player * ch, std::string argument)
@@ -78,6 +78,6 @@ void cmd_set(Player * ch, std::string argument)
 		return;
 	}
 
-	ch->Send("\"set prompt\"\n\r");
+	ch->Send("\"set prompt\"\r\n");
 	return;
 }

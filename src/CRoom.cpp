@@ -263,7 +263,7 @@ void Room::Message(const std::string & text)
 	std::list<Character *>::iterator iter;
 	for (iter = characters.begin(); iter != characters.end(); iter++)
 	{
-		(*iter)->Send(text + "\n\r");
+		(*iter)->Send(text + "\r\n");
 	}
 }
 

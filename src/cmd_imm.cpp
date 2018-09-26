@@ -21,14 +21,14 @@ void cmd_goto(Player * ch, string argument)
 {
     if(argument.empty())
     {
-        ch->Send("Syntax: goto <room id>\n\r");
+        ch->Send("Syntax: goto <room id>\r\n");
         return;
     }
     string arg1;
     argument = Utilities::one_argument(argument, arg1);
     if(!Utilities::IsNumber(arg1))
     {
-        ch->Send("Syntax: goto <room id>\n\r");
+        ch->Send("Syntax: goto <room id>\r\n");
         return;
     }
 
@@ -39,7 +39,7 @@ void cmd_goto(Player * ch, string argument)
 
     if(rnum <= 0 || !ch->ChangeRoomsID(rnum))
     {
-        ch->Send("Room " + arg1 + " does not exist.\n\r");
+        ch->Send("Room " + arg1 + " does not exist.\r\n");
         return;
     }
     ch->Message(ch->GetName() + " appears in a puff of smoke.", Character::MSG_ROOM_NOTCHAR);
@@ -56,7 +56,7 @@ void cmd_restore(Player * ch, string argument)
             User * u = (*iter);
             if(u->character)
             {
-                u->Send("Your cooldowns have been reset!\n\r");
+                u->Send("Your cooldowns have been reset!\r\n");
                 u->character->cooldowns.clear();
             }
         }
@@ -69,7 +69,7 @@ void cmd_restore(Player * ch, string argument)
         User * u = (*iter);
         if(u->character)
         {
-            u->Send("Your health has been restored!\n\r");
+            u->Send("Your health has been restored!\r\n");
             u->character->SetHealth(u->character->GetMaxHealth());
             u->character->SetMana(u->character->GetMaxMana());
 			u->character->SetEnergy(u->character->GetMaxEnergy());
@@ -96,14 +96,14 @@ void cmd_sockets(Player * ch, string argument)
                 ch->Send("<no character> ");
             }
 
-            ch->Send((*iter)->GetClient()->GetIPAddress() + "\n\r");
+            ch->Send((*iter)->GetClient()->GetIPAddress() + "\r\n");
         }
     }
 }
 
 void cmd_disconnect(Player * ch, string argument)
 {
-    ch->Send("cmd_disconnect\n\r");
+    ch->Send("cmd_disconnect\r\n");
 }
 
 void cmd_shutdown(Player * ch, string argument)
@@ -116,8 +116,8 @@ void cmd_load(Player * ch, string argument)
 {
     if(argument.empty())
     {
-        ch->Send("load npc <#id>\n\r");
-        ch->Send("load item <#id> <player>\n\r");
+        ch->Send("load npc <#id>\r\n");
+        ch->Send("load item <#id> <player>\r\n");
         return;
     }
     string arg1;
@@ -131,33 +131,33 @@ void cmd_load(Player * ch, string argument)
     {
         if(!Utilities::IsNumber(arg2))
         {
-            ch->Send("load npc <#id>\n\r");
+            ch->Send("load npc <#id>\r\n");
             return;
         }
         int id = Utilities::atoi(arg2);
         NPCIndex * charIndex = Game::GetGame()->GetNPCIndex(id);
         if(charIndex == nullptr)
         {
-            ch->Send("NPC " + arg2 + " does not exist.\n\r");
+            ch->Send("NPC " + arg2 + " does not exist.\r\n");
             return;
         }
         NPC * newChar = Game::GetGame()->NewNPC(charIndex);
 		newChar->leashOrigin = ch->room;
         newChar->ChangeRooms(ch->room);
-		ch->Send(newChar->GetName() + " loaded into room.\n\r");
+		ch->Send(newChar->GetName() + " loaded into room.\r\n");
     }
     else if(!Utilities::str_cmp(arg1, "item"))
     {
         if(!Utilities::IsNumber(arg2))
         {
-            ch->Send("load item <#id>\n\r");
+            ch->Send("load item <#id>\r\n");
             return;
         }
         int id = Utilities::atoi(arg2);
         Item * itemIndex = Game::GetGame()->GetItem(id);
         if(itemIndex == nullptr)
         {
-            ch->Send("Item " + arg2 + " does not exist.\n\r");
+            ch->Send("Item " + arg2 + " does not exist.\r\n");
             return;
         }
 		Player * player_target = nullptr;
@@ -166,20 +166,20 @@ void cmd_load(Player * ch, string argument)
 			player_target = Game::GetGame()->GetPlayerByName(arg3);
 			if (player_target == nullptr)
 			{
-				ch->Send("Could not find a player with that name.\n\r");
+				ch->Send("Could not find a player with that name.\r\n");
 				return;
 			}
 			player_target->AddItemInventory(itemIndex);
-			ch->Send(itemIndex->GetName() + " loaded into " + player_target->GetName() + "'s inventory.\n\r");
+			ch->Send(itemIndex->GetName() + " loaded into " + player_target->GetName() + "'s inventory.\r\n");
 			return;
 		}
 		ch->AddItemInventory(itemIndex);
-		ch->Send(itemIndex->GetName() + " loaded into inventory.\n\r");
+		ch->Send(itemIndex->GetName() + " loaded into inventory.\r\n");
     }
     else
     {
-        ch->Send("load npc <#id>\n\r");
-        ch->Send("load item <#id>\n\r");
+        ch->Send("load npc <#id>\r\n");
+        ch->Send("load item <#id>\r\n");
     }
 }
 
@@ -229,12 +229,12 @@ void cmd_transfer(Player * ch, string argument)
 
 		if((chtran = Game::GetGame()->GetPlayerWorld(ch, arg1)) == nullptr)
 		{
-			ch->Send("They aren't here.\n\r");
+			ch->Send("They aren't here.\r\n");
 			return;
 		}
 		if(chtran == ch)
 		{
-			ch->Send("You're already here!\n\r");
+			ch->Send("You're already here!\r\n");
 			return;
 		}
 		getroom = ch->room;
@@ -243,14 +243,14 @@ void cmd_transfer(Player * ch, string argument)
 	// transfer <player name> <vnum>
 	else
 	{
-		ch->Send("Syntax: transfer <player name>\n\r");
-		ch->Send("        transfer <player name> <player name>\n\r");
-		ch->Send("        transfer <player name> <vnum>\n\r");
+		ch->Send("Syntax: transfer <player name>\r\n");
+		ch->Send("        transfer <player name> <player name>\r\n");
+		ch->Send("        transfer <player name> <vnum>\r\n");
 		return;
 	}
 
     chtran->Message(chtran->GetName() + " disappears in a puff of smoke.", Character::MSG_ROOM_NOTCHAR);
-    chtran->Send("You have been transferred!\n\r");
+    chtran->Send("You have been transferred!\r\n");
     chtran->ChangeRoomsID(getroom->id);
     chtran->Message(chtran->GetName() + " appears in a puff of smoke.", Character::MSG_ROOM_NOTCHAR);
     
@@ -267,7 +267,7 @@ void cmd_advance(Player * ch, string argument)
 
     if(!Utilities::IsNumber(new_level_arg))
     {
-        ch->Send("New level must be a number.\n\r");
+        ch->Send("New level must be a number.\r\n");
         return;
     }
     int new_level = Utilities::atoi(new_level_arg);
@@ -275,7 +275,7 @@ void cmd_advance(Player * ch, string argument)
     Player * player_target = Game::GetGame()->GetPlayerByName(player_target_arg);
     if(player_target == nullptr)
     {
-        ch->Send("Player not found.\n\r");
+        ch->Send("Player not found.\r\n");
         return;
     }
     player_target->ApplyExperience(Game::ExperienceForLevel(new_level) - player_target->experience);
@@ -286,31 +286,31 @@ void cmd_threat(Player * ch, string argument)
 	if (!ch)
 		return;
 
-	ch->Send("Current threat list:\n\r");
+	ch->Send("Current threat list:\r\n");
 	int ctr = 1;
 	for (auto iter = ch->threatList.begin(); iter != ch->threatList.end(); ++iter)
 	{
 		ch->Send(Utilities::itos(ctr) + ". " + iter->ch->GetName() + ", " + Utilities::dtos(iter->damage, 2) + "/" +
-			Utilities::dtos(iter->healing, 2) + "/" + Utilities::dtos(iter->threat, 2) + "\n\r");
-		ch->Send("    Subscribers: " + iter->ch->DebugPrintSubscribers() + "\n\r");
+			Utilities::dtos(iter->healing, 2) + "/" + Utilities::dtos(iter->threat, 2) + "\r\n");
+		ch->Send("    Subscribers: " + iter->ch->DebugPrintSubscribers() + "\r\n");
 		if (!iter->ch->threatList.empty())
 		{
 			for (auto iter2 = iter->ch->threatList.begin(); iter2 != iter->ch->threatList.end(); ++iter2)
 			{
-				ch->Send("    " + iter2->ch->GetName() + ", " + Utilities::dtos(iter2->damage, 2) + "/" + Utilities::dtos(iter2->healing, 2) + "/" + Utilities::dtos(iter2->threat, 2) + "\n\r");
+				ch->Send("    " + iter2->ch->GetName() + ", " + Utilities::dtos(iter2->damage, 2) + "/" + Utilities::dtos(iter2->healing, 2) + "/" + Utilities::dtos(iter2->threat, 2) + "\r\n");
 			}
 		}
 	}
 	//Roll this into this command because lazy
 	ch->Send("My Subscribers: ");
-	ch->Send(ch->DebugPrintSubscribers() + "\n\r");
+	ch->Send(ch->DebugPrintSubscribers() + "\r\n");
 }
 
 void cmd_sql(Player * ch, string argument)
 {
     if(argument.empty())
     {
-        ch->Send("Empty statement.\n\r");
+        ch->Send("Empty statement.\r\n");
         return;
     }
 
@@ -327,7 +327,7 @@ void cmd_sql(Player * ch, string argument)
             result = Server::sqlQueue->Read(argument);
             if(result.empty())
             {
-                ch->Send("Empty Resultset.\n\r");
+                ch->Send("Empty Resultset.\r\n");
             }
             else
             {
@@ -335,7 +335,7 @@ void cmd_sql(Player * ch, string argument)
                 {
                     ch->Send(result.field_name(i) + " ");
                 }
-                ch->Send("\n\r");
+                ch->Send("\r\n");
 
                 for(StoreQueryResult::iterator i = result.begin(); i != result.end(); i++)
                 {
@@ -344,14 +344,14 @@ void cmd_sql(Player * ch, string argument)
                     {
                         ch->Send(string(row[j]) + " ");
                     }
-                    ch->Send("\n\r");
+                    ch->Send("\r\n");
                 }
-                ch->Send("Done.\n\r");
+                ch->Send("Done.\r\n");
             }
         }
         catch(const BadQuery & er)
         {
-            ch->Send(string("Bad Query: ") + er.what() + "\n\r");
+            ch->Send(string("Bad Query: ") + er.what() + "\r\n");
         }
     }
     else
@@ -359,7 +359,7 @@ void cmd_sql(Player * ch, string argument)
         //write
         //string status;
         //Server::sqlQueue->Write(argument);
-		ch->Send("Commands other than select disabled\n\r");
+		ch->Send("Commands other than select disabled\r\n");
     }
 }
 
@@ -367,17 +367,17 @@ void cmd_systeminfo(Player * ch, string argument)
 {
     ch->Send("|MThere are currently |X" + Utilities::itos((int)Game::GetGame()->rooms.size()) + " |Munique locations, |X" +
         Utilities::itos((int)Game::GetGame()->characters.size() - (int)Game::GetGame()->users.size()) + "|M non player characters and |X" +
-        Utilities::itos((int)Game::GetGame()->quests.size()) + "|M quests.|X\n\r");
-    ch->Send("|MThere are currently |X" + Utilities::itos((int)Game::GetGame()->users.size()) + "|M players online.|X\n\r");
+        Utilities::itos((int)Game::GetGame()->quests.size()) + "|M quests.|X\r\n");
+    ch->Send("|MThere are currently |X" + Utilities::itos((int)Game::GetGame()->users.size()) + "|M players online.|X\r\n");
     ch->Send("|MThere have been |X" + Utilities::itos(Game::GetGame()->total_players_since_boot) + 
-        "|M players connected to the server since last boot.|X\n\r");
+        "|M players connected to the server since last boot.|X\r\n");
     ch->Send("|MThe most players that have been online at one time since last boot is |X" + 
-        Utilities::itos(Game::GetGame()->max_players_since_boot) + "|M.|X\n\r");
-    ch->Send("|MYou are player [|X" + Utilities::itos(Game::GetGame()->total_past_connections) + "|M] connected since May 19th, 2010.|X\n\r\n\r");
+        Utilities::itos(Game::GetGame()->max_players_since_boot) + "|M.|X\r\n");
+    ch->Send("|MYou are player [|X" + Utilities::itos(Game::GetGame()->total_past_connections) + "|M] connected since May 19th, 2010.|X\r\n\r\n");
    
-    ch->Send("WorldUpdate took " + Utilities::dtos(1.0 / Game::GetGame()->worldupdateCount, 10) + " seconds\n\r");
+    ch->Send("WorldUpdate took " + Utilities::dtos(1.0 / Game::GetGame()->worldupdateCount, 10) + " seconds\r\n");
 	ch->Send("Bandwidth usage:  Total data sent (" + Utilities::i64tos(Game::GetGame()->totalBytesCompressed) +
-		" bytes), without compression would have been (" + Utilities::i64tos(Game::GetGame()->totalBytesUncompressed) + ")\n\r");
+		" bytes), without compression would have been (" + Utilities::i64tos(Game::GetGame()->totalBytesUncompressed) + ")\r\n");
 }
 
 /*struct searchinfo
@@ -419,7 +419,7 @@ void cmd_search(Player * ch, string argument)
 
     if(table_name.empty() || field_name.empty() || conditional.empty() || argument.empty())
     {
-        ch->Send("Syntax: search table_name field_name conditional search_string\n\r");
+        ch->Send("Syntax: search table_name field_name conditional search_string\r\n");
         return;
     }
 
@@ -445,7 +445,7 @@ void cmd_search(Player * ch, string argument)
     }
     else
     {
-        ch->Send("Valid conditionals: equals notequals lessthan greaterthan contains\n\r");
+        ch->Send("Valid conditionals: equals notequals lessthan greaterthan contains\r\n");
         return;
     }
 
@@ -463,7 +463,7 @@ void cmd_search(Player * ch, string argument)
     int result_count = Game::GetGame()->Search(table_name, field_name, conditional_type, argument, data_type, results);
     
     ch->Send(results);
-    ch->Send(Utilities::itos(result_count) + " results found.\n\r");
+    ch->Send(Utilities::itos(result_count) + " results found.\r\n");
     return;
 }
 

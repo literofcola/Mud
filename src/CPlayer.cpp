@@ -253,7 +253,7 @@ void Player::RemoveEquipmentStats(Item * remove)
 
 void Player::GeneratePrompt(double currentTime)
 {
-	string prompt = "\n\r";
+	string prompt = "\r\n";
 
 	if (editState != ED_NONE)
 	{
@@ -523,7 +523,7 @@ void Player::GeneratePrompt(double currentTime)
 		int firstingroup = group->FindFirstSlotInSubgroup(this);
 		if (group->GetSubgroupCount(firstingroup) > 1)
 		{
-			prompt += "\n\r";
+			prompt += "\r\n";
 			int gmcpslot = 1;
 			for (int i = 0; i < Group::MAX_GROUP_SIZE; i++)
 			{
@@ -571,13 +571,13 @@ void Player::GeneratePrompt(double currentTime)
 	//todo: We could block the entire function at the top, but then we lose a lot of GMCP data. We need to structure this differently
 	if (this->prompt)
 	{
-		prompt += "\n\r";
+		prompt += "\r\n";
 		Send(prompt);
 	}
 
 	if (hasQuery)
 	{
-		Send(queryPrompt + "\n\r");
+		Send(queryPrompt + "\r\n");
 	}
 }
 
@@ -664,10 +664,10 @@ void Player::Stand()
 	}
 	if (removed)
 	{
-		Send("You stop eating or drinking.\n\r");
+		Send("You stop eating or drinking.\r\n");
 	}
 
-	Send("You stand up.\n\r");
+	Send("You stand up.\r\n");
 	position = Position::POSITION_STANDING;
 }
 
@@ -676,7 +676,7 @@ void Player::Sit()
 	if (position == Position::POSITION_SITTING)
 		return;
 
-	Send("You sit down.\n\r");
+	Send("You sit down.\r\n");
 	position = Position::POSITION_SITTING;
 }
 
@@ -790,7 +790,7 @@ void Player::QuestCompleteObjective(int type, void * obj)
                             questObjectives[i][j]++;
                             user->Send("|W" + q->name + ": ");
                             user->Send("|Y" + (*objiter).description + " (" + Utilities::itos(questObjectives[i][j]) 
-                                       + "/" + Utilities::itos((*objiter).count) + ")|X\n\r");
+                                       + "/" + Utilities::itos((*objiter).count) + ")|X\r\n");
                         }
                         break;
                     }
@@ -804,7 +804,7 @@ void Player::QuestCompleteObjective(int type, void * obj)
                             questObjectives[i][j]++;
                             user->Send("|W" + q->name + ": ");
                             user->Send("|Y" + (*objiter).description + " (" + Utilities::itos(questObjectives[i][j]) 
-                                       + "/" + Utilities::itos((*objiter).count) + ")|X\n\r\n\r");
+                                       + "/" + Utilities::itos((*objiter).count) + ")|X\r\n\r\n");
                         }
                         break;
                     }
@@ -818,7 +818,7 @@ void Player::QuestCompleteObjective(int type, void * obj)
                             questObjectives[i][j]++;
                             user->Send("|W" + q->name + ": ");
                             user->Send("|Y" + (*objiter).description + " (" + Utilities::itos(questObjectives[i][j]) 
-                                       + "/" + Utilities::itos((*objiter).count) + ")|X\n\r\n\r");
+                                       + "/" + Utilities::itos((*objiter).count) + ")|X\r\n\r\n");
                         }
                         break;
                     }
@@ -1245,54 +1245,54 @@ std::stringstream Player::FormatEquipment()
 	std::stringstream equipment;
 
 	equipment << std::left << std::setw(15) << "<|BHead|X>";
-	equipped[Player::EQUIP_HEAD] ? equipment << equipped[Player::EQUIP_HEAD]->GetColoredName() << "|X\n\r" : equipment << "None\n\r";
+	equipped[Player::EQUIP_HEAD] ? equipment << equipped[Player::EQUIP_HEAD]->GetColoredName() << "|X\r\n" : equipment << "None\r\n";
 
 	equipment << std::setw(15) << "<|BNeck|X>";
-	equipped[Player::EQUIP_NECK] ? equipment << equipped[Player::EQUIP_NECK]->GetColoredName() << "|X\n\r" : equipment << "None\n\r";
+	equipped[Player::EQUIP_NECK] ? equipment << equipped[Player::EQUIP_NECK]->GetColoredName() << "|X\r\n" : equipment << "None\r\n";
 
 	equipment << std::setw(15) << "<|BShoulder|X>";
-	equipped[Player::EQUIP_SHOULDER] ? equipment << equipped[Player::EQUIP_SHOULDER]->GetColoredName() << "|X\n\r" : equipment << "None\n\r";
+	equipped[Player::EQUIP_SHOULDER] ? equipment << equipped[Player::EQUIP_SHOULDER]->GetColoredName() << "|X\r\n" : equipment << "None\r\n";
 
 	equipment << std::setw(15) << "<|BBack|X>";
-	equipped[Player::EQUIP_BACK] ? equipment << equipped[Player::EQUIP_BACK]->GetColoredName() << "|X\n\r" : equipment << "None\n\r";
+	equipped[Player::EQUIP_BACK] ? equipment << equipped[Player::EQUIP_BACK]->GetColoredName() << "|X\r\n" : equipment << "None\r\n";
 
 	equipment << std::setw(15) << "<|BChest|X>";
-	equipped[Player::EQUIP_CHEST] ? equipment << equipped[Player::EQUIP_CHEST]->GetColoredName() << "|X\n\r" : equipment << "None\n\r";
+	equipped[Player::EQUIP_CHEST] ? equipment << equipped[Player::EQUIP_CHEST]->GetColoredName() << "|X\r\n" : equipment << "None\r\n";
 
 	equipment << std::setw(15) << "<|BWrist|X>";
-	equipped[Player::EQUIP_WRIST] ? equipment << equipped[Player::EQUIP_WRIST]->GetColoredName() << "|X\n\r" : equipment << "None\n\r";
+	equipped[Player::EQUIP_WRIST] ? equipment << equipped[Player::EQUIP_WRIST]->GetColoredName() << "|X\r\n" : equipment << "None\r\n";
 
 	equipment << std::setw(15) << "<|BHands|X>";
-	equipped[Player::EQUIP_HANDS] ? equipment << equipped[Player::EQUIP_HANDS]->GetColoredName() << "|X\n\r" : equipment << "None\n\r";
+	equipped[Player::EQUIP_HANDS] ? equipment << equipped[Player::EQUIP_HANDS]->GetColoredName() << "|X\r\n" : equipment << "None\r\n";
 
 	equipment << std::setw(15) << "<|BWaist|X>";
-	equipped[Player::EQUIP_WAIST] ? equipment << equipped[Player::EQUIP_WAIST]->GetColoredName() << "|X\n\r" : equipment << "None\n\r";
+	equipped[Player::EQUIP_WAIST] ? equipment << equipped[Player::EQUIP_WAIST]->GetColoredName() << "|X\r\n" : equipment << "None\r\n";
 
 	equipment << std::setw(15) << "<|BLegs|X>";
-	equipped[Player::EQUIP_LEGS] ? equipment << equipped[Player::EQUIP_LEGS]->GetColoredName() << "|X\n\r" : equipment << "None\n\r";
+	equipped[Player::EQUIP_LEGS] ? equipment << equipped[Player::EQUIP_LEGS]->GetColoredName() << "|X\r\n" : equipment << "None\r\n";
 
 	equipment << std::setw(15) << "<|BFeet|X>";
-	equipped[Player::EQUIP_FEET] ? equipment << equipped[Player::EQUIP_FEET]->GetColoredName() << "|X\n\r" : equipment << "None\n\r";
+	equipped[Player::EQUIP_FEET] ? equipment << equipped[Player::EQUIP_FEET]->GetColoredName() << "|X\r\n" : equipment << "None\r\n";
 
 	equipment << std::setw(15) << "<|BFinger|X>";
-	equipped[Player::EQUIP_FINGER1] ? equipment << equipped[Player::EQUIP_FINGER1]->GetColoredName() << "|X\n\r" : equipment << "None\n\r";
+	equipped[Player::EQUIP_FINGER1] ? equipment << equipped[Player::EQUIP_FINGER1]->GetColoredName() << "|X\r\n" : equipment << "None\r\n";
 
 	equipment << std::setw(15) << "<|BFinger|X>";
-	equipped[Player::EQUIP_FINGER2] ? equipment << equipped[Player::EQUIP_FINGER2]->GetColoredName() << "|X\n\r" : equipment << "None\n\r";
+	equipped[Player::EQUIP_FINGER2] ? equipment << equipped[Player::EQUIP_FINGER2]->GetColoredName() << "|X\r\n" : equipment << "None\r\n";
 
 	equipment << std::setw(15) << "<|BTrinket|X>";
-	equipped[Player::EQUIP_TRINKET1] ? equipment << equipped[Player::EQUIP_TRINKET1]->GetColoredName() << "|X\n\r" : equipment << "None\n\r";
+	equipped[Player::EQUIP_TRINKET1] ? equipment << equipped[Player::EQUIP_TRINKET1]->GetColoredName() << "|X\r\n" : equipment << "None\r\n";
 
 	equipment << std::setw(15) << "<|BTrinket|X>";
-	equipped[Player::EQUIP_TRINKET2] ? equipment << equipped[Player::EQUIP_TRINKET2]->GetColoredName() << "|X\n\r" : equipment << "None\n\r";
+	equipped[Player::EQUIP_TRINKET2] ? equipment << equipped[Player::EQUIP_TRINKET2]->GetColoredName() << "|X\r\n" : equipment << "None\r\n";
 
 	equipment << std::setw(15) << "<|BOffhand|X>";
-	equipped[Player::EQUIP_OFFHAND] ? equipment << equipped[Player::EQUIP_OFFHAND]->GetColoredName() << "|X\n\r" : equipment << "None\n\r";
+	equipped[Player::EQUIP_OFFHAND] ? equipment << equipped[Player::EQUIP_OFFHAND]->GetColoredName() << "|X\r\n" : equipment << "None\r\n";
 
 	equipment << std::setw(15) << "<|BMainhand|X>";
-	equipped[Player::EQUIP_MAINHAND] ? equipment << equipped[Player::EQUIP_MAINHAND]->GetColoredName() << "|X\n\r" : equipment << "None\n\r";
+	equipped[Player::EQUIP_MAINHAND] ? equipment << equipped[Player::EQUIP_MAINHAND]->GetColoredName() << "|X\r\n" : equipment << "None\r\n";
 
-	equipment << "\n\r";
+	equipment << "\r\n";
 
 	return equipment;
 }
@@ -1300,7 +1300,7 @@ std::stringstream Player::FormatEquipment()
 void Player::HandleNPCKillRewards(Character * killed)
 {
 	int exp = Game::CalculateExperience(this, killed);
-	Send("|BYou have gained |Y" + Utilities::itos(exp) + "|B experience.|X\n\r");
+	Send("|BYou have gained |Y" + Utilities::itos(exp) + "|B experience.|X\r\n");
 	ApplyExperience(exp);
 	QuestCompleteObjective(Quest::OBJECTIVE_KILLNPC, (void*)killed);
 }
@@ -1666,14 +1666,14 @@ void Player::SetLevel(int newlevel)
 	if (GetLevel() == newlevel || newlevel > Game::MAX_LEVEL || newlevel < 1)
 		return;
 
-	Send("|W***You have reached level " + Utilities::itos(newlevel) + "!***|X\n\r");
+	Send("|W***You have reached level " + Utilities::itos(newlevel) + "!***|X\r\n");
 
 
 		SetClassLevel(currentClass->GetID(),
 			Utilities::MAX(0, GetClassLevel(currentClass->GetID()) + (newlevel - level)));
 
 		statPoints += Player::STATS_PER_LEVEL;
-		Send("|WYou gain " + Utilities::itos(Player::STATS_PER_LEVEL) + " attribute points. Assign attribute points with the \"train\" command.|X\n\r");
+		Send("|WYou gain " + Utilities::itos(Player::STATS_PER_LEVEL) + " attribute points. Assign attribute points with the \"train\" command.|X\r\n");
 
 		std::list<Class::SkillData>::iterator newskills;
 		for (newskills = currentClass->classSkills.begin(); newskills != currentClass->classSkills.end(); newskills++)
@@ -1681,7 +1681,7 @@ void Player::SetLevel(int newlevel)
 			if (newskills->level == GetClassLevel(currentClass->GetID()) && !HasSkill(newskills->skill)) //Found a new skill to add
 			{
 				AddSkill(newskills->skill);
-				Send("|WYou have learned the skill \"" + newskills->skill->long_name + "\"|X\n\r");
+				Send("|WYou have learned the skill \"" + newskills->skill->long_name + "\"|X\r\n");
 			}
 		}
 	level = newlevel;

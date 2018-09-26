@@ -76,11 +76,11 @@ void NPC::DoLootRoll(OneLoot * oneloot)
 			{
 				if (looter_iter2->ch != looter_iter->ch)
 				{
-					looter_iter2->ch->Send(looter_iter->ch->GetName() + " has passed on " + oneloot->item->GetColoredName() + "|X\n\r");
+					looter_iter2->ch->Send(looter_iter->ch->GetName() + " has passed on " + oneloot->item->GetColoredName() + "|X\r\n");
 				}
 				else if (looter_iter2->ch == looter_iter->ch)
 				{
-					looter_iter2->ch->Send("You passed on " + oneloot->item->GetColoredName() + "|X\n\r");
+					looter_iter2->ch->Send("You passed on " + oneloot->item->GetColoredName() + "|X\r\n");
 				}
 			}
 		}
@@ -106,7 +106,7 @@ void NPC::DoLootRoll(OneLoot * oneloot)
 		oneloot->roll_timer = 0;
 		for (auto looter_iter = oneloot->looters.begin(); looter_iter != oneloot->looters.end(); ++looter_iter)
 		{
-			looter_iter->ch->Send("Everyone passed on " + oneloot->item->GetColoredName() + "|X\n\r");
+			looter_iter->ch->Send("Everyone passed on " + oneloot->item->GetColoredName() + "|X\r\n");
 		}
 		return;
 	}
@@ -124,7 +124,7 @@ void NPC::DoLootRoll(OneLoot * oneloot)
 			for (auto looter_iter2 = oneloot->looters.begin(); looter_iter2 != oneloot->looters.end(); ++looter_iter2)
 			{
 				looter_iter2->ch->Send(roll_msg + " - " + Utilities::itos(looter_iter->final_roll) + " for " +
-				  oneloot->item->GetColoredName() + "|X by " + looter_iter->ch->GetName() + "\n\r");
+				  oneloot->item->GetColoredName() + "|X by " + looter_iter->ch->GetName() + "\r\n");
 			}
 		}
 	}
@@ -162,13 +162,13 @@ void NPC::DoLootRoll(OneLoot * oneloot)
 	{
 		if (looter_iter->ch != winner)
 		{
-			looter_iter->ch->Send(winner->GetName() + " receives loot: " + oneloot->item->GetColoredName() + "|X\n\r");
+			looter_iter->ch->Send(winner->GetName() + " receives loot: " + oneloot->item->GetColoredName() + "|X\r\n");
 		}
 	}
-	winner->Send("You receive loot: " + oneloot->item->GetColoredName() + "|X\n\r");
+	winner->Send("You receive loot: " + oneloot->item->GetColoredName() + "|X\r\n");
 	if (!winner->AddItemInventory(oneloot->item)) //if additeminventory fails, leave it in the corpse for cmd_loot
 	{
-		winner->Send("Your inventory is full.\n\r");
+		winner->Send("Your inventory is full.\r\n");
 		oneloot->roll_timer = 0;
 	}
 	else
@@ -246,11 +246,11 @@ void NPC::SetRollType(Player * who, int corpse_id, NPC::Looter::RollType type)
 			{
 				if (looter_iter2->ch != looter_iter->ch)
 				{
-					looter_iter2->ch->Send(looter_iter->ch->GetName() + " has" + roll_msg + oneloot->item->GetColoredName() + "|X\n\r");
+					looter_iter2->ch->Send(looter_iter->ch->GetName() + " has" + roll_msg + oneloot->item->GetColoredName() + "|X\r\n");
 				}
 				else if (looter_iter2->ch == looter_iter->ch)
 				{
-					looter_iter2->ch->Send("You have" + roll_msg + oneloot->item->GetColoredName() + "|X\n\r");
+					looter_iter2->ch->Send("You have" + roll_msg + oneloot->item->GetColoredName() + "|X\r\n");
 				}
 			}
 		}
@@ -373,20 +373,20 @@ void NPC::Cast(std::string argument)
 	if ((spell->targetType == Skill::TARGET_OTHER || spell->targetType == Skill::TARGET_HOSTILE)
 		&& (!arg_target || arg_target == this)) //Requires a target
 	{
-		//Send("You must target someone with this skill.\n\r");
+		//Send("You must target someone with this skill.\r\n");
 		return;
 	}
 
 	if (spell->targetType == Skill::TARGET_HOSTILE
 		&& arg_target->FlagIsSet(NPCIndex::FLAG_FRIENDLY))
 	{
-		//Send("That target is friendly.\n\r");
+		//Send("That target is friendly.\r\n");
 		return;
 	}
 
 	if (spell->targetType == Skill::TARGET_FRIENDLY && arg_target && IsFighting(arg_target))
 	{
-		//ch->Send("You can't cast this spell on that target.\n\r");
+		//ch->Send("You can't cast this spell on that target.\r\n");
 		return;
 	}
 
@@ -422,7 +422,7 @@ void NPC::Cast(std::string argument)
 	if (spell->castTime != 0)
 	{
 		Message("|W" + GetName() + " begins to cast " + spell->long_name + "...|X", Character::MSG_ROOM_NOTCHAR);
-		//Send("|WYou begin to cast " + spell->long_name + "...|X\n\r");
+		//Send("|WYou begin to cast " + spell->long_name + "...|X\r\n");
 		//json casttime = { { "time", spell->castTime } };
 		//ch->SendGMCP("char.casttime " + casttime.dump());
 	}

@@ -112,15 +112,15 @@ void Character::Message(const string & txt, MessageType msg_type, Character * vi
 	{
 		case MSG_CHAR:
         {
-            Send(txt + "\n\r");
+            Send(txt + "\r\n");
 			//mob trigger on msg here
 			break;
         }
 
         case MSG_CHAR_VICT:
         {
-            Send(txt + "\n\r");
-            vict->Send(txt + "\n\r");
+            Send(txt + "\r\n");
+            vict->Send(txt + "\r\n");
 			//mob trigger on msg here
             break;
         }
@@ -133,7 +133,7 @@ void Character::Message(const string & txt, MessageType msg_type, Character * vi
 			for(iter = room->characters.begin(); iter != room->characters.end(); iter++)
 			{
 				if(!(*iter)->IsGhost())
-					(*iter)->Send(txt + "\n\r");
+					(*iter)->Send(txt + "\r\n");
 			    //mob trigger on msg here
 			}
 			break;
@@ -147,7 +147,7 @@ void Character::Message(const string & txt, MessageType msg_type, Character * vi
 			for(iter = room->characters.begin(); iter != room->characters.end(); iter++)
 			{
                 if((*iter) != this && !(*iter)->IsGhost())
-                    (*iter)->Send(txt + "\n\r");
+                    (*iter)->Send(txt + "\r\n");
 			    //mob trigger on msg here
 			}
             break;
@@ -161,7 +161,7 @@ void Character::Message(const string & txt, MessageType msg_type, Character * vi
 			for(iter = room->characters.begin(); iter != room->characters.end(); iter++)
 			{
                 if((*iter) != vict && !(*iter)->IsGhost())
-                    (*iter)->Send(txt + "\n\r");
+                    (*iter)->Send(txt + "\r\n");
 			    //mob trigger on msg here
 			}
             break;
@@ -175,7 +175,7 @@ void Character::Message(const string & txt, MessageType msg_type, Character * vi
 			for(iter = room->characters.begin(); iter != room->characters.end(); iter++)
 			{
                 if((*iter) != vict && (*iter) != this && !(*iter)->IsGhost())
-                    (*iter)->Send(txt + "\n\r");
+                    (*iter)->Send(txt + "\r\n");
 			    //mob trigger on msg here
 			}
             break;
@@ -189,7 +189,7 @@ void Character::Message(const string & txt, MessageType msg_type, Character * vi
 			{
 				if (GetGroup()->members[i] != nullptr)
 				{
-					GetGroup()->members[i]->Send(txt + "\n\r");
+					GetGroup()->members[i]->Send(txt + "\r\n");
 				}
 			}
 			break;
@@ -203,7 +203,7 @@ void Character::Message(const string & txt, MessageType msg_type, Character * vi
 			{
 				if (GetGroup()->members[i] != nullptr && GetGroup()->members[i] != this)
 				{
-					GetGroup()->members[i]->Send(txt + "\n\r");
+					GetGroup()->members[i]->Send(txt + "\r\n");
 				}
 			}
 			break;
@@ -373,7 +373,7 @@ void Character::Move(int direction)
     if(delay_active)
     {
 		CancelActiveDelay();
-        Send("Action interrupted!\n\r");
+        Send("Action interrupted!\r\n");
     }
     
 	Room * toroom;
@@ -381,7 +381,7 @@ void Character::Move(int direction)
     //Regular rooms
 	if(room->exits[direction] == nullptr || room->exits[direction]->to == nullptr)
 	{
-		Send("You cannot move in that direction.\n\r");
+		Send("You cannot move in that direction.\r\n");
 		return;
 	}
 
@@ -411,7 +411,7 @@ void Character::Move(int direction)
 			{
 				(*iter)->EnterCombat(this);
 				EnterCombat(*iter);
-				Send((*iter)->GetName() + " begins attacking you!\n\r");
+				Send((*iter)->GetName() + " begins attacking you!\r\n");
 			}
 		}
 	}
@@ -551,10 +551,10 @@ int Character::CleanseSpellAffect(Character * cleanser, int category, int howMan
         iter++;
         if((*thisiter)->affectCategory == category)
         {
-            Send("Your '" + (*thisiter)->name + "' has been removed.\n\r");
+            Send("Your '" + (*thisiter)->name + "' has been removed.\r\n");
             if(cleanser != this)
             {
-                cleanser->Send("Removed '" + (*thisiter)->name + "'.\n\r");
+                cleanser->Send("Removed '" + (*thisiter)->name + "'.\r\n");
             }
             removed_count++;
             (*thisiter)->auraAffects.clear();
@@ -1079,15 +1079,15 @@ void Character::AutoAttack(Character * victim)
 		switch (DoAttackRoll(victim, Game::SCHOOL_PHYSICAL))
 		{
 			case ATTACK_MISS:
-				victim->Send("|Y" + GetName() + "'s attack misses you.|X\n\r");
+				victim->Send("|Y" + GetName() + "'s attack misses you.|X\r\n");
 				return;
 				break;
 			case ATTACK_DODGE:
-				victim->Send("|YYou dodge " + GetName() + "'s attack.|X\n\r");
+				victim->Send("|YYou dodge " + GetName() + "'s attack.|X\r\n");
 				return;
 				break;
 			case ATTACK_PARRY:
-				victim->Send("|YYou parry " + GetName() + "'s attack.|X\n\r");
+				victim->Send("|YYou parry " + GetName() + "'s attack.|X\r\n");
 				return;
 				break;
 			case ATTACK_BLOCK:
@@ -1100,7 +1100,7 @@ void Character::AutoAttack(Character * victim)
 				victim->Send("|Y" + GetName() + "'s attack CRITS you for " + Utilities::itos(damage - absorbed) + " damage");
 				if(absorbed > 0)
 					victim->Send(" |W(" + Utilities::itos(absorbed) + " absorbed)|Y");
-				victim->Send(".|X\n\r");
+				victim->Send(".|X\r\n");
 				damage -= absorbed;
 				break;
 			}
@@ -1111,7 +1111,7 @@ void Character::AutoAttack(Character * victim)
 				victim->Send("|Y" + GetName() + "'s attack hits you for " + Utilities::itos(damage - absorbed) + " damage");
 				if (absorbed > 0)
 					victim->Send(" |W(" + Utilities::itos(absorbed) + " absorbed)|Y");
-				victim->Send(".|X\n\r");
+				victim->Send(".|X\r\n");
 				damage -= absorbed;
 				break;
 			}
@@ -1159,18 +1159,18 @@ void Character::AutoAttack(Character * victim)
 			switch (DoAttackRoll(victim, Game::SCHOOL_PHYSICAL))
 			{
 				case ATTACK_MISS:
-					Send(tapcolor + "Your attack misses " + victim->GetName() + "|X\n\r");
-					victim->Send("|Y" + GetName() + "'s attack misses you.|X\n\r");
+					Send(tapcolor + "Your attack misses " + victim->GetName() + "|X\r\n");
+					victim->Send("|Y" + GetName() + "'s attack misses you.|X\r\n");
 					return;
 					break;
 				case ATTACK_DODGE:
-					Send(tapcolor + victim->GetName() + " dodges your attack.|X\n\r");
-					victim->Send("|YYou dodge " + GetName() + "'s attack.|X\n\r");
+					Send(tapcolor + victim->GetName() + " dodges your attack.|X\r\n");
+					victim->Send("|YYou dodge " + GetName() + "'s attack.|X\r\n");
 					return;
 					break;
 				case ATTACK_PARRY:
-					Send(tapcolor + victim->GetName() + " parries your attack.|X\n\r");
-					victim->Send("|YYou parry " + GetName() + "'s attack.|X\n\r");
+					Send(tapcolor + victim->GetName() + " parries your attack.|X\r\n");
+					victim->Send("|YYou parry " + GetName() + "'s attack.|X\r\n");
 					return;
 					break;
 				case ATTACK_BLOCK:
@@ -1187,8 +1187,8 @@ void Character::AutoAttack(Character * victim)
 						Send(" |W(" + Utilities::itos(absorbed) + " absorbed)" + tapcolor);
 						victim->Send(" |W(" + Utilities::itos(absorbed) + " absorbed)|Y");
 					}
-					Send(".|X\n\r");
-					victim->Send(".|X\n\r");
+					Send(".|X\r\n");
+					victim->Send(".|X\r\n");
 					damage_main -= absorbed;
 					GenerateRageOnAttack(damage_main, weaponSpeed_main, true, true);
 					break;
@@ -1204,8 +1204,8 @@ void Character::AutoAttack(Character * victim)
 						Send(" |W(" + Utilities::itos(absorbed) + " absorbed)" + tapcolor);
 						victim->Send(" |W(" + Utilities::itos(absorbed) + " absorbed)|Y");
 					}
-					Send(".|X\n\r");
-					victim->Send(".|X\n\r");
+					Send(".|X\r\n");
+					victim->Send(".|X\r\n");
 					damage_main -= absorbed;
 					GenerateRageOnAttack(damage_main, weaponSpeed_main, true, false);
 					break;
@@ -1235,18 +1235,18 @@ void Character::AutoAttack(Character * victim)
 			switch (DoAttackRoll(victim, Game::SCHOOL_PHYSICAL))
 			{
 				case ATTACK_MISS:
-					Send(tapcolor + "Your attack misses " + victim->GetName() + "|X\n\r");
-					victim->Send("|Y" + GetName() + "'s attack misses you.|X\n\r");
+					Send(tapcolor + "Your attack misses " + victim->GetName() + "|X\r\n");
+					victim->Send("|Y" + GetName() + "'s attack misses you.|X\r\n");
 					return;
 					break;
 				case ATTACK_DODGE:
-					Send(tapcolor + victim->GetName() + " dodges your attack.|X\n\r");
-					victim->Send("|YYou dodge " + GetName() + "'s attack.|X\n\r");
+					Send(tapcolor + victim->GetName() + " dodges your attack.|X\r\n");
+					victim->Send("|YYou dodge " + GetName() + "'s attack.|X\r\n");
 					return;
 					break;
 				case ATTACK_PARRY:
-					Send(tapcolor + victim->GetName() + " parries your attack.|X\n\r");
-					victim->Send("|YYou parry " + GetName() + "'s attack.|X\n\r");
+					Send(tapcolor + victim->GetName() + " parries your attack.|X\r\n");
+					victim->Send("|YYou parry " + GetName() + "'s attack.|X\r\n");
 					return;
 					break;
 				case ATTACK_BLOCK:
@@ -1263,8 +1263,8 @@ void Character::AutoAttack(Character * victim)
 						Send(" |W(" + Utilities::itos(absorbed) + " absorbed)" + tapcolor);
 						victim->Send(" |W(" + Utilities::itos(absorbed) + " absorbed)|Y");
 					}
-					Send(".|X\n\r");
-					victim->Send(".|X\n\r");
+					Send(".|X\r\n");
+					victim->Send(".|X\r\n");
 					damage_off -= absorbed;
 					GenerateRageOnAttack(damage_off, weaponSpeed_off, false, true);
 					break;
@@ -1280,8 +1280,8 @@ void Character::AutoAttack(Character * victim)
 						Send(" |W(" + Utilities::itos(absorbed) + " absorbed)" + tapcolor);
 						victim->Send(" |W(" + Utilities::itos(absorbed) + " absorbed)|Y");
 					}
-					Send(".|X\n\r");
-					victim->Send(".|X\n\r");
+					Send(".|X\r\n");
+					victim->Send(".|X\r\n");
 					damage_off -= absorbed;
 					GenerateRageOnAttack(damage_off, weaponSpeed_off, false, false);
 					break;
@@ -1389,11 +1389,11 @@ void Character::OneHit(Character * victim, int damage)
 		//Keep track of threat unless BOTH are players or victim is (somehow, "peace", leash with dots) not in combat
     {
         victim->UpdateThreat(this, damage, Threat::Type::THREAT_DAMAGE);
-        //Send("My threat on " + victim->name + " is " + Utilities::itos(victim->GetThreat(this)) + "\n\r");
+        //Send("My threat on " + victim->name + " is " + Utilities::itos(victim->GetThreat(this)) + "\r\n");
     }
 
 	if (damage > 0 && victim->CancelCastOnHit())
-		victim->Send("Action Interrupted!\n\r");
+		victim->Send("Action Interrupted!\r\n");
 
 	if (victim->IsPlayer())
 		((Player*)(victim))->GenerateRageOnTakeDamage(damage);
@@ -1584,7 +1584,7 @@ void Character::OnDeath()
 									one_loot.roll_timer = Game::currentTime + 60;
 									group_member->Send(" |Y(60 seconds to roll: #" + Utilities::itos(my_id) + ")|X");
 								}
-								group_member->Send("\n\r");
+								group_member->Send("\r\n");
 							}
 						}
 					}
@@ -1593,7 +1593,7 @@ void Character::OnDeath()
 						one_loot.looters.push_back(NPC::Looter(tap_player));
 						tap->AddSubscriber(this);
 
-						tap->Send(GetName() + " drops loot: " + drop->GetColoredName() + "|X\n\r");
+						tap->Send(GetName() + " drops loot: " + drop->GetColoredName() + "|X\r\n");
 					}
 					if(!one_loot.looters.empty()) //Don't actually drop this loot if no one can loot it
 						thisnpc->loot.push_back(one_loot);
@@ -1659,8 +1659,8 @@ void Character::AdjustHealth(Character * source, int amount)
 	if (GetHealth() == 0)
 	{
 		Message("|R" + GetName() + " has been slain!|X", Character::MSG_ROOM_NOTCHARVICT, source);
-		source->Send("|R" + GetName() + " has been slain!|X\n\r");
-		Send("|RYou have been slain!|X\n\r");
+		source->Send("|R" + GetName() + " has been slain!|X\r\n");
+		Send("|RYou have been slain!|X\r\n");
 
 		OnDeath(); //The source of damage shouldn't matter except where cases of "killing blow" matters (none so far?)
 	}

@@ -55,7 +55,7 @@ void cmd_castCallback(Character::DelayData delayData)
 
     if(delayData.charTarget == nullptr) //target will never be null from cmd_cast, only from Subscriber::Notify 
     {
-        delayData.caster->Send("Your target is no longer here.\n\r");
+        delayData.caster->Send("Your target is no longer here.\r\n");
         return;
     }
 	
@@ -64,7 +64,7 @@ void cmd_castCallback(Character::DelayData delayData)
 		if (!delayData.caster->GetCharacterRoom(delayData.charTarget) 
 			&& FindDirection(delayData.caster, delayData.charTarget, 3) == Exit::DIR_LAST)
 		{
-			delayData.caster->Send("Your target is no longer here.\n\r");
+			delayData.caster->Send("Your target is no longer here.\r\n");
 			return;
 		}
     }
@@ -72,7 +72,7 @@ void cmd_castCallback(Character::DelayData delayData)
     if(delayData.charTarget == delayData.caster && (delayData.sk->targetType == Skill::TARGET_OTHER ||
         delayData.sk->targetType == Skill::TARGET_HOSTILE))
     {
-        delayData.caster->Send("You must target someone else with this skill.\n\r");
+        delayData.caster->Send("You must target someone else with this skill.\r\n");
         return;
     }
     /*if(!delayData.charTarget && (delayData.sk->targetType == Skill::TARGET_SELF || delayData.sk->targetType == Skill::TARGET_ANY
@@ -83,7 +83,7 @@ void cmd_castCallback(Character::DelayData delayData)
     if(delayData.sk->targetType == Skill::TARGET_FRIENDLY && delayData.charTarget != delayData.caster 
         && delayData.caster->IsFighting(delayData.charTarget))
     {
-        delayData.caster->Send("You can't cast this spell on that target.\n\r");
+        delayData.caster->Send("You can't cast this spell on that target.\r\n");
         return;
     }
 
@@ -149,13 +149,13 @@ void cmd_cast(Player * ch, string argument)
 
     if(ch->delay_active)
     {
-        ch->Send("Another action is in progress!\n\r");
+        ch->Send("Another action is in progress!\r\n");
         return;
     }
 
     if(argument.empty())
     {
-        ch->Send("Cast what spell?\n\r");
+        ch->Send("Cast what spell?\r\n");
         return;
     }
 
@@ -176,14 +176,14 @@ void cmd_cast(Player * ch, string argument)
 
     if(spell == nullptr)
     {
-        ch->Send("You don't know that skill.\n\r");
+        ch->Send("You don't know that skill.\r\n");
         return;
     }
 
     double cd;
     if((cd = ch->GetCooldownRemaining(spell)) > 0)
     {
-        ch->Send(spell->long_name + " will be ready in " + Utilities::dtos(cd, 1) + " seconds.\n\r");
+        ch->Send(spell->long_name + " will be ready in " + Utilities::dtos(cd, 1) + " seconds.\r\n");
         return;
     }
     
@@ -193,7 +193,7 @@ void cmd_cast(Player * ch, string argument)
         arg_target = ch->GetCharacterRoom(arg2);
         if(arg_target == nullptr)
         {
-            ch->Send("They aren't here.\n\r");
+            ch->Send("They aren't here.\r\n");
             return;
         }
     }
@@ -206,7 +206,7 @@ void cmd_cast(Player * ch, string argument)
     if((spell->targetType == Skill::TARGET_OTHER || spell->targetType == Skill::TARGET_HOSTILE)
         && (!arg_target || arg_target == ch)) //Requires a target
     {
-        ch->Send("You must target someone with this skill.\n\r");
+        ch->Send("You must target someone with this skill.\r\n");
         return;
     }
 
@@ -215,14 +215,14 @@ void cmd_cast(Player * ch, string argument)
 		&& arg_target->FlagIsSet(NPCIndex::FLAG_FRIENDLY)
 		&& (!ch->IsImmortal()))
 	{
-		ch->Send("That target is friendly.\n\r");
+		ch->Send("That target is friendly.\r\n");
 		return;
 	}
     
 
     if(spell->targetType == Skill::TARGET_FRIENDLY && arg_target && ch->IsFighting(arg_target))
     {
-        ch->Send("You can't cast this spell on that target.\n\r");
+        ch->Send("You can't cast this spell on that target.\r\n");
         return;
     }
 
@@ -258,7 +258,7 @@ void cmd_cast(Player * ch, string argument)
 	if (spell->castTime != 0)
 	{
 		ch->Message("|W" + ch->GetName() + " begins to cast " + spell->long_name + "...|X", Character::MSG_ROOM_NOTCHAR);
-		ch->Send("|WYou begin to cast " + spell->long_name + "...|X\n\r");
+		ch->Send("|WYou begin to cast " + spell->long_name + "...|X\r\n");
 		json casttime = { { "time", spell->castTime } };
 		ch->SendGMCP("char.casttime " + casttime.dump());
 	}
@@ -289,7 +289,7 @@ void cmd_skills(Player * ch, string argument)
     if(!ch)
         return;
 
-    ch->Send("|MKnown spells/skills:|X\n\r");
+    ch->Send("|MKnown spells/skills:|X\r\n");
     std::stringstream skill_string;
 	std::map<string, Skill *>::iterator iter;
     for(iter = ch->knownSkills.begin(); iter != ch->knownSkills.end(); ++iter)
@@ -298,7 +298,7 @@ void cmd_skills(Player * ch, string argument)
 		skill_string << " |MCast time:|G " << std::setw(5) << Utilities::dtos((*iter).second->castTime, 2);
 		skill_string << " |MCooldown:|G " << std::setw(7) << Utilities::dtos((*iter).second->cooldown, 2);
 		skill_string << " |MCost: |G" << iter->second->costDescription;
-		skill_string << "\n\r  |Y-- " << (*iter).second->description << "|X\n\r";
+		skill_string << "\r\n  |Y-- " << (*iter).second->description << "|X\r\n";
 		ch->Send(skill_string.str());
 		skill_string.str("");
     }
@@ -306,7 +306,7 @@ void cmd_skills(Player * ch, string argument)
 
 void cmd_cooldowns(Player * ch, string argument)
 {
-    ch->Send("|MCooldowns greater than 1.5 seconds:|X\n\r");
+    ch->Send("|MCooldowns greater than 1.5 seconds:|X\r\n");
 
     std::map<string, Skill *>::iterator iter;
     for(iter = ch->knownSkills.begin(); iter != ch->knownSkills.end(); ++iter)
@@ -314,7 +314,7 @@ void cmd_cooldowns(Player * ch, string argument)
         double cd;
         if((cd = ch->GetCooldownRemaining((*iter).second)) > 1.5)
         {
-            ch->Send("|MSpell:|G " + (*iter).second->long_name + " |MTime Left:|G " + Utilities::dtos(cd, 1) + "|X\n\r");
+            ch->Send("|MSpell:|G " + (*iter).second->long_name + " |MTime Left:|G " + Utilities::dtos(cd, 1) + "|X\r\n");
         }
     }
 }
@@ -325,7 +325,7 @@ void cmd_learn(Player * ch, string argument)
 {
     if(argument.empty())
     {
-        ch->Send("Skills available to learn: \n\r");
+        ch->Send("Skills available to learn: \r\n");
 		std::set<int> foundskills;
         std::list<Player::ClassData>::iterator classdata;
         //For each player class
@@ -342,11 +342,11 @@ void cmd_learn(Player * ch, string argument)
 					{
 						stringstream learnstring;
 						learnstring << "|G" << left << setw(40) << sk->long_name << " |MCast name:|G " << setw(20);
-						learnstring << sk->name << " |MDesc:|G " << sk->description << "|X\n\r";
+						learnstring << sk->name << " |MDesc:|G " << sk->description << "|X\r\n";
 						ch->Send(learnstring.str());
 						learnstring.str("");
 
-						//ch->Send("|MSpell:|G " + sk->long_name + " |MName:|G " + sk->name + " |MDesc:|G " + sk->affectDescription + "|X\n\r");
+						//ch->Send("|MSpell:|G " + sk->long_name + " |MName:|G " + sk->name + " |MDesc:|G " + sk->affectDescription + "|X\r\n");
 					}
 					foundskills.insert(sk->id);
                 }
@@ -369,21 +369,21 @@ void cmd_learn(Player * ch, string argument)
                 {
                     if(dupe->id == (*skilliter).second->id)
                     {
-                        ch->Send("You already know this skill.\n\r");
+                        ch->Send("You already know this skill.\r\n");
                         return;
                     }
-                    ch->Send("Learning this skill will replace " + dupe->long_name + ".\n\r");
+                    ch->Send("Learning this skill will replace " + dupe->long_name + ".\r\n");
 					ch->SetQuery("Replace (" + dupe->long_name + ") with (" + (*skilliter).second->long_name + ")? (y/n) ", (*skilliter).second, cmd_learn_Query);
                 }
                 else
                 {
                     ch->AddSkill((*skilliter).second);
-                    ch->Send("You have learned " + (*skilliter).second->long_name + ".\n\r");
+                    ch->Send("You have learned " + (*skilliter).second->long_name + ".\r\n");
                 }
                 return;
             }
         }
-        ch->Send("That skill is not available to learn.\n\r");
+        ch->Send("That skill is not available to learn.\r\n");
         return;
     }
 
@@ -433,7 +433,7 @@ void cmd_learn(Player * ch, string argument)
                 }
                 if(!found)
                 {
-                    ch->Send("You need to visit a " + currClass->name + " trainer to learn this skill.\n\r");
+                    ch->Send("You need to visit a " + currClass->name + " trainer to learn this skill.\r\n");
                     return;
                 }
 
@@ -442,22 +442,22 @@ void cmd_learn(Player * ch, string argument)
                 {
                     if(dupe->id == (*classSkill).skill->id)
                     {
-                        ch->Send("You already know this skill.\n\r");
+                        ch->Send("You already know this skill.\r\n");
                         return;
                     }
-                    ch->Send("Learning this skill will replace " + dupe->long_name + ".\n\r");
+                    ch->Send("Learning this skill will replace " + dupe->long_name + ".\r\n");
 					ch->SetQuery("Replace (" + dupe->long_name + ") with (" + (*classSkill).skill->long_name + ")? (y/n) ", (*classSkill).skill, cmd_learn_Query);
                 }
                 else
                 {
                     ch->AddSkill((*classSkill).skill);
-                    ch->Send("You have learned " + (*classSkill).skill->long_name + ".\n\r");
+                    ch->Send("You have learned " + (*classSkill).skill->long_name + ".\r\n");
                 }
                 return;
             }
         }
     }
-    ch->Send("That skill is not available to learn.\n\r");
+    ch->Send("That skill is not available to learn.\r\n");
 }
 */
 
@@ -475,7 +475,7 @@ void cmd_learn(Player * ch, string argument)
     {
         //learn newskill
         ch->AddSkill(newskill);
-        ch->Send("You have learned " + newskill->long_name + ".\n\r");
+        ch->Send("You have learned " + newskill->long_name + ".\r\n");
         ch->QueryClear();
         return true;
     }
@@ -499,7 +499,7 @@ void cmd_affects(Player * ch, string argument)
 
     if(arg1.empty())
     {
-        ch->Send("|MYou are affected by the following spells:|X\n\r");
+        ch->Send("|MYou are affected by the following spells:|X\r\n");
         for(iter = ch->buffs.begin(); iter != ch->buffs.end(); ++iter)
         {
             if((*iter)->skill != nullptr && (!(*iter)->hidden || ch->IsImmortal()))
@@ -511,7 +511,7 @@ void cmd_affects(Player * ch, string argument)
                 {
                     oneaffect += (*iter)->GetAffectCategoryName() + " || ";
                 }
-                oneaffect += (*iter)->affectDescription + "\n\r";
+                oneaffect += (*iter)->affectDescription + "\r\n";
                 ch->Send(oneaffect);
             }
         }
@@ -525,14 +525,14 @@ void cmd_affects(Player * ch, string argument)
                 {
                     oneaffect += (*iter)->GetAffectCategoryName() + " || ";
                 }
-                oneaffect += (*iter)->affectDescription + "\n\r";
+                oneaffect += (*iter)->affectDescription + "\r\n";
                 ch->Send(oneaffect);
             }
         }
     }
     else if(!Utilities::str_prefix(arg1, "buff"))
     {
-        ch->Send("|MYou are affected by the following beneficial spells:|X\n\r");
+        ch->Send("|MYou are affected by the following beneficial spells:|X\r\n");
         for(iter = ch->buffs.begin(); iter != ch->buffs.end(); ++iter)
         {
             if(!(*iter)->hidden)
@@ -544,14 +544,14 @@ void cmd_affects(Player * ch, string argument)
                 {
                     oneaffect += (*iter)->GetAffectCategoryName() + " || ";
                 }
-                oneaffect += (*iter)->affectDescription + "\n\r";
+                oneaffect += (*iter)->affectDescription + "\r\n";
                 ch->Send(oneaffect);            
             }
         }
     }
     else if(!Utilities::str_prefix(arg1, "debuff"))
     {
-        ch->Send("|MYou are affected by the following harmful spells:|X\n\r");
+        ch->Send("|MYou are affected by the following harmful spells:|X\r\n");
         for(iter = ch->debuffs.begin(); iter != ch->debuffs.end(); ++iter)
         {
             if(!(*iter)->hidden)
@@ -562,7 +562,7 @@ void cmd_affects(Player * ch, string argument)
                 {
                     oneaffect += (*iter)->GetAffectCategoryName() + " || ";
                 }
-                oneaffect += (*iter)->affectDescription + "\n\r";
+                oneaffect += (*iter)->affectDescription + "\r\n";
                 ch->Send(oneaffect);
             }
         }
@@ -573,53 +573,53 @@ void cmd_train(Player * ch, string argument)
 {
 	if (argument.empty())
 	{
-		ch->Send("Specify an attribute to increase: agility intellect strength stamina wisdom spirit\n\r");
+		ch->Send("Specify an attribute to increase: agility intellect strength stamina wisdom spirit\r\n");
 		return;
 	}
 	if (ch->statPoints <= 0)
 	{
-		ch->Send("You don't have any attribute points.\n\r");
+		ch->Send("You don't have any attribute points.\r\n");
 		return;
 	}
 	if (!Utilities::str_cmp(argument, "agility"))
 	{
 		ch->statPoints--;
 		ch->SetAgility(ch->GetBaseAgility()+1);
-		ch->Send("|WAgility increased: " + Utilities::itos(ch->GetBaseAgility()) + "|X\n\r");
+		ch->Send("|WAgility increased: " + Utilities::itos(ch->GetBaseAgility()) + "|X\r\n");
 	}
 	else if (!Utilities::str_cmp(argument, "intellect"))
 	{
 		ch->statPoints--;
 		ch->SetIntellect(ch->GetBaseIntellect() + 1);
-		ch->Send("|WIntellect increased: " + Utilities::itos(ch->GetBaseIntellect()) + "|X\n\r");
+		ch->Send("|WIntellect increased: " + Utilities::itos(ch->GetBaseIntellect()) + "|X\r\n");
 	}
 	else if (!Utilities::str_cmp(argument, "strength"))
 	{
 		ch->statPoints--;
 		ch->SetStrength(ch->GetBaseStrength() + 1);
-		ch->Send("|WStrength increased: " + Utilities::itos(ch->GetBaseStrength()) + "|X\n\r");
+		ch->Send("|WStrength increased: " + Utilities::itos(ch->GetBaseStrength()) + "|X\r\n");
 	}
 	else if (!Utilities::str_cmp(argument, "stamina"))
 	{
 		ch->statPoints--;
 		ch->SetStamina(ch->GetBaseStamina() + 1);
-		ch->Send("|WStamina increased: " + Utilities::itos(ch->GetBaseStamina()) + "|X\n\r");
+		ch->Send("|WStamina increased: " + Utilities::itos(ch->GetBaseStamina()) + "|X\r\n");
 	}
 	else if (!Utilities::str_cmp(argument, "wisdom"))
 	{
 		ch->statPoints--;
 		ch->SetWisdom(ch->GetBaseWisdom() + 1);
-		ch->Send("|WWisdom increased: " + Utilities::itos(ch->GetBaseWisdom()) + "|X\n\r");
+		ch->Send("|WWisdom increased: " + Utilities::itos(ch->GetBaseWisdom()) + "|X\r\n");
 	}
 	else if (!Utilities::str_cmp(argument, "spirit"))
 	{
 		ch->statPoints--;
 		ch->SetSpirit(ch->GetBaseSpirit() + 1);
-		ch->Send("|WSpirit increased: " + Utilities::itos(ch->GetBaseSpirit()) + "|X\n\r");
+		ch->Send("|WSpirit increased: " + Utilities::itos(ch->GetBaseSpirit()) + "|X\r\n");
 	}
 	else
 	{
-		ch->Send("Specify an attribute to increase: agility intellect strength stamina wisdom spirit\n\r");
+		ch->Send("Specify an attribute to increase: agility intellect strength stamina wisdom spirit\r\n");
 		return;
 	}
 	ch->ResetMaxStats();

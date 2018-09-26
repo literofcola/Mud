@@ -62,12 +62,12 @@ void cmd_sit(Player * ch, string argument)
 {
 	if (ch->InCombat())
 	{
-		ch->Send("You can't do that while in combat!\n\r");
+		ch->Send("You can't do that while in combat!\r\n");
 		return;
 	}
 	if (ch->position == Player::Position::POSITION_SITTING)
 	{
-		ch->Send("You are already sitting.\n\r");
+		ch->Send("You are already sitting.\r\n");
 		return;
 	}
 	ch->Sit();
@@ -77,7 +77,7 @@ void cmd_stand(Player * ch, string argument)
 {
 	if (ch->position == Player::Position::POSITION_STANDING)
 	{
-		ch->Send("You are already standing.\n\r");
+		ch->Send("You are already standing.\r\n");
 		return;
 	}
 	ch->Stand();
@@ -85,12 +85,12 @@ void cmd_stand(Player * ch, string argument)
 
 void cmd_sleep(Player * ch, string argument)
 {
-    ch->Send("cmd_sleep\n\r");
+    ch->Send("cmd_sleep\r\n");
 }
 
 void cmd_wake(Player * ch, string argument)
 {
-    ch->Send("cmd_wake\n\r");
+    ch->Send("cmd_wake\r\n");
 }
 
 void cmd_recall(Player * ch, string argument)
@@ -98,11 +98,11 @@ void cmd_recall(Player * ch, string argument)
 	Room * current = Game::GetGame()->GetRoom(ch->recall);
 	if (current != nullptr)
 	{
-		ch->Send("Your current recall room is: " + current->name + "\n\r");
+		ch->Send("Your current recall room is: " + current->name + "\r\n");
 	}
 	if(ch->room == nullptr || !Utilities::FlagIsSet(ch->room->flags, Room::FLAG_RECALL))
 	{
-		ch->Send("You cannot set your recall location here.\n\r");
+		ch->Send("You cannot set your recall location here.\r\n");
 		return;
 	}
 	ch->SetQuery("Set recall location to: |W" + ch->room->name + "|X? (y/n) ", ch->room, cmd_recall_Query);
@@ -114,7 +114,7 @@ bool cmd_recall_Query(Player * ch, string argument)
 	{
 		Room * recall = (Room*)ch->GetQueryData();
 		ch->recall = recall->id;
-		ch->Send("Recall location set.\n\r");
+		ch->Send("Recall location set.\r\n");
 	}
 	ch->QueryClear();
 	return true;

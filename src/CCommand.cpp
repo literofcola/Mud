@@ -533,14 +533,14 @@ bool Command::Interpret(Player * ch, string argument)
 
 	if(!found)
 	{
-		ch->Send("Invalid command. Type \"commands\" for a list of valid commands.\n\r");
+		ch->Send("Invalid command. Type \"commands\" for a list of valid commands.\r\n");
 		return true;
 	}
 
     if((ch->IsCorpse() && !whichTable[cmd].whileCorpse)
      ||(ch->IsGhost() && !whichTable[cmd].whileGhost))
     {
-        ch->Send("You can't do that while dead!\n\r");
+        ch->Send("You can't do that while dead!\r\n");
         return true;
     }
 
