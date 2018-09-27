@@ -668,6 +668,7 @@ void Player::Stand()
 	}
 
 	Send("You stand up.\r\n");
+    Message(GetName() + " stands up.", Character::MSG_ROOM_NOTCHAR);
 	position = Position::POSITION_STANDING;
 }
 
@@ -677,6 +678,7 @@ void Player::Sit()
 		return;
 
 	Send("You sit down.\r\n");
+    Message(GetName() + " sits down.", Character::MSG_ROOM_NOTCHAR);
 	position = Position::POSITION_SITTING;
 }
 
