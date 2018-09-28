@@ -1296,6 +1296,11 @@ void Character::AutoAttack(Character * victim)
     }
 }
 
+void Character::CancelAutoAttack()
+{
+    meleeActive = false;
+}
+
 //returns the outcome of the attack, miss dodge parry block crit resist absorb?
 /*
 SCHOOL_PHYSICAL=1, SCHOOL_FIRE, SCHOOL_FROST, SCHOOL_ARCANE, SCHOOL_NATURE, SCHOOL_SHADOW, SCHOOL_HOLY
@@ -1952,14 +1957,21 @@ void Character::RemoveThreat(Character * ch, bool removeall)
 
 bool Character::HasTap(Character * target)
 {
-	std::list<Threat>::iterator iter;
-	for (iter = target->threatList.begin(); iter != target->threatList.end(); ++iter)
-	{
-		if (iter->ch == this && iter->tapped == true)
-		{
-			return true;
-		}
-	}
+    if(target->GetTap() == this)
+        return true;
+
+    //Also check if we're in a group that has the tap
+    if (HasGroup())
+    {
+        for (int i = 0; i < Group::MAX_RAID_SIZE; i++)
+        {
+            if (GetGroup()->members[i] != nullptr)
+            {
+                if(target->GetTap() == GetGroup()->members[i])
+                    return true;
+            }
+        }
+    }
 	return false;
 }
 
@@ -1974,6 +1986,13 @@ Character * Character::GetTap()
 		}
 	}
 	return nullptr;
+}
+
+bool Character::IsTapped()
+{
+    if(GetTap() == nullptr)
+        return false;
+    return true;
 }
 
 double Character::GetThreat(Character * ch)

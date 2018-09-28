@@ -128,6 +128,7 @@ public:
 	bool InCombat();
 	bool IsFighting(Character * target);
 	void AutoAttack(Character * victim);
+    void CancelAutoAttack();
 	void OneHit(Character * victim, int damage);
 	void OneHeal(Character * target, int heal);
 	bool CheckThreatCombat();
@@ -138,6 +139,7 @@ public:
 	void RemoveThreat(Character * ch, bool removeall);
 	bool HasTap(Character * target);
 	Character * GetTap();
+    bool IsTapped();
 	std::string AggressionColor(Character * target);
 	std::string AggressionLightColor(Character * target);
 	virtual double GetDodge() = 0;

@@ -18,6 +18,7 @@ const struct SpellAffect::AuraTable aura_table[] =
 	{ "DRINKING", SpellAffect::AURA_DRINKING },
 	{ "TAUNT", SpellAffect::AURA_TAUNT },
 	{ "DAMAGE_ABSORB", SpellAffect::AURA_DAMAGE_ABSORB },
+    { "INCAPACITATE", SpellAffect::AURA_INCAPACITATE },
     { "", 0 }
 };
 
@@ -139,6 +140,11 @@ void SpellAffect::SetAuraModifier(int aura_id, int modifier)
 		}
 	}
 	LogFile::Log("error", "SpellAffect::SetAuraModifier: aura_id not found in this spell affect!");
+}
+
+Character * SpellAffect::GetCaster()
+{
+    return caster;
 }
 
 std::string SpellAffect::GetCasterName()

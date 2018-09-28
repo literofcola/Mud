@@ -1753,7 +1753,14 @@ void Game::LoadSkills(Server * server)
     }
 
 	//Load functions in lua_skills.lua (override any from db)
-	Server::lua.script_file("lua_skills.lua");
+    try
+    {
+        Server::lua.script_file("lua_skills.lua");
+    }
+    catch (const std::exception & e)
+    {
+        LogFile::Log("error", "Loading lua_skills.lua FAILED: " + std::string(e.what()));
+    }
 }
 
 void Game::LoadQuests(Server * server)
