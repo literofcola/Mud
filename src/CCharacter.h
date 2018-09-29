@@ -167,9 +167,9 @@ public:
 	SpellAffect * HasSpellAffect(std::string name);
 	SpellAffect * GetFirstSpellAffectWithAura(int aura_id);
 	int CleanseSpellAffect(Character * cleanser, int category, int howMany = -1);
-	bool RemoveSpellAffectsByAura(int isDebuff, int auraid);
-	void RemoveSpellAffect(int isDebuff, int id);
-	void RemoveSpellAffect(int isDebuff, std::string name);
+	bool RemoveSpellAffectsByAura(bool isDebuff, int auraid);
+	void RemoveSpellAffect(bool isDebuff, int id);
+	void RemoveSpellAffect(bool isDebuff, std::string name);
 	void RemoveSpellAffect(SpellAffect * remove);
 	void RemoveAllSpellAffects();
 	int GetAuraModifier(int aura_id, int whatModifier);

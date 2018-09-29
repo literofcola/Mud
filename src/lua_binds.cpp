@@ -71,6 +71,7 @@ void Lua_DefineClasses(sol::state * lua)
 			"Message", &Character::Message,
 			"AddSpellAffect", &Character::AddSpellAffect,
 			"CleanseSpellAffect", &Character::CleanseSpellAffect,
+            "RemoveSpellAffect", (void(Character::*)(bool, std::string))&Character::RemoveSpellAffect,
 			"HasSpellAffect", &Character::HasSpellAffect,
 			"GetHealth", &Character::GetHealth,
 			"GetMana", &Character::GetMana,

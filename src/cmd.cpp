@@ -15,6 +15,7 @@
 #include "CArea.h"
 #include "CCommand.h"
 #include "CCharacter.h"
+#include "CSpellAffect.h"
 #include "utils.h"
 #include "CHelp.h"
 #include "CLogFile.h"
@@ -260,6 +261,7 @@ void cmd_look(Player * ch, std::string argument)
 				std::string fighting = ".";
 				std::string level = "";
 				std::string aggressionColor = "|G";
+                std::string crowd_control = "";
 				std::string tapped = "";
 
 				Player * inroom_player = nullptr;
@@ -294,12 +296,17 @@ void cmd_look(Player * ch, std::string argument)
 						fighting = ", fighting " + (*i)->GetTarget()->GetName() + ".";
 				}
 				aggressionColor = ch->AggressionColor((*i));
+                SpellAffect * cc = (*i)->GetFirstSpellAffectWithAura(SpellAffect::AURA_INCAPACITATE);
+                if (cc != nullptr)
+                {
+                    crowd_control = cc->GetDataString("cmd_look_cc");
+                }
 				Character * tappedBy = (*i)->GetTap();
 				if (tappedBy)
 				{
 					tapped = " |D(tapped by " + tappedBy->GetName() + ")";
 				}
-				ch->Send(disconnected + level + questicon + aggressionColor + corpse + (*i)->GetName() + title + " is here" + fighting + tapped + "|X\r\n");
+				ch->Send(disconnected + level + questicon + aggressionColor + corpse + (*i)->GetName() + title + " is here" + fighting + crowd_control + tapped + "|X\r\n");
 			}
 			ch->Send("\r\n");	
 		}

@@ -6,6 +6,9 @@
 #include <vector>
 #include <map>
 
+class Character;
+class SpellAffect;
+
 class Skill
 {
 public:
@@ -43,6 +46,12 @@ public:
     std::string applyScript;
     std::string tickScript;
     std::string removeScript;
+
+    int CallLuaCost(Character * caster, Character * target);
+    void CallLuaCast(Character * caster, Character * target);
+    void CallLuaApply(Character * caster, Character * target, SpellAffect * affect);
+    void CallLuaTick(Character * caster, Character * target, SpellAffect * affect);
+    void CallLuaRemove(Character * caster, Character * target, SpellAffect * affect);
     
     
     bool changed;

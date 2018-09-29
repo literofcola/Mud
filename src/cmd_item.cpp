@@ -688,23 +688,6 @@ void cmd_eat(Player * ch, string argument)
 		ch->RemoveItemInventory(eat);
 		ch->Send("You start eating " + eat->GetName() + ".\r\n");
 
-		string func = sk->function_name + "_cast";
-		try
-		{
-			sol::function lua_cast_func = Server::lua[func.c_str()];
-			sol::protected_function_result result = lua_cast_func(ch, ch, sk);
-			if (!result.valid())
-			{
-				// Call failed
-				sol::error err = result;
-				std::string what = err.what();
-				LogFile::Log("error", "cmd_eat _cast call failed, sol::error::what() is: " + what);
-			}
-
-		}
-		catch (const std::exception & e)
-		{
-			LogFile::Log("error", e.what());
-		}
+        sk->CallLuaCast(ch, ch);
 	}
 }

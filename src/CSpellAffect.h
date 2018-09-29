@@ -30,7 +30,7 @@ public:
     int affectCategory;
     bool remove_me;
     
-    //std::map<std::string, boost::any> affectData; //some generic data when we need to pass between lua functions
+    //some generic data (to pass between lua functions, save crowd control strings...)
     std::map<std::string, int> affectDataInt;
     std::map<std::string, double> affectDataDouble;
     std::map<std::string, std::string> affectDataString;

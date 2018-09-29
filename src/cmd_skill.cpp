@@ -87,28 +87,7 @@ void cmd_castCallback(Character::DelayData delayData)
         return;
     }
 
-    int lua_ret = 0;
-    string cost_func = delayData.sk->function_name + "_cost";
-	try
-	{
-		sol::function lua_cost_func = Server::lua[cost_func.c_str()];
-		sol::protected_function_result result = lua_cost_func(delayData.caster, delayData.charTarget, delayData.sk);
-		if (!result.valid())
-		{
-			// Call failed
-			sol::error err = result;
-			std::string what = err.what();
-			LogFile::Log("error", "_cost call failed, sol::error::what() is: " + what);
-		}
-		else
-		{
-			lua_ret = result;
-		}
-	}
-	catch (const std::exception & e)
-	{
-		LogFile::Log("error", e.what());
-	}
+    int lua_ret = delayData.sk->CallLuaCost(delayData.caster, delayData.charTarget);
 
     if(lua_ret == 0)
     {
@@ -122,23 +101,7 @@ void cmd_castCallback(Character::DelayData delayData)
         return;
     }
 
-    string func = delayData.sk->function_name + "_cast";
-	try
-	{
-		sol::function lua_cast_func = Server::lua[func.c_str()];
-		sol::protected_function_result result = lua_cast_func(delayData.caster, delayData.charTarget, delayData.sk);
-		if (!result.valid())
-		{
-			// Call failed
-			sol::error err = result;
-			std::string what = err.what();
-			LogFile::Log("error", "_cast call failed, sol::error::what() is: " + what);
-		}
-	}
-	catch (const std::exception & e)
-	{
-		LogFile::Log("error", e.what());
-	}
+    delayData.sk->CallLuaCast(delayData.caster, delayData.charTarget);
 	delayData.caster->SetCooldown(delayData.sk, -1);
 }
 
@@ -226,28 +189,7 @@ void cmd_cast(Player * ch, string argument)
         return;
     }
 
-    int lua_ret = 0;
-    string cost_func = spell->function_name + "_cost";
-    try
-    {
-		sol::function lua_cost_func = Server::lua[cost_func.c_str()];
-		sol::protected_function_result result = lua_cost_func(ch, arg_target, spell);
-		if (!result.valid())
-		{
-			// Call failed
-			sol::error err = result;
-			std::string what = err.what();
-			LogFile::Log("error", "_cost call failed, sol::error::what() is: " + what);
-		}
-		else
-		{
-			lua_ret = result;
-		}
-    }
-	catch (const std::exception & e)
-	{
-		LogFile::Log("error", e.what());
-	}
+    int lua_ret = spell->CallLuaCost(ch, arg_target);
     
     if(lua_ret == 0)
     {

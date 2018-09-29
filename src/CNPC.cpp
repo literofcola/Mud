@@ -390,28 +390,7 @@ void NPC::Cast(std::string argument)
 		return;
 	}
 
-	int lua_ret = 0;
-	string cost_func = spell->function_name + "_cost";
-	try
-	{
-		sol::function lua_cost_func = Server::lua[cost_func.c_str()];
-		sol::protected_function_result result = lua_cost_func(this, arg_target, spell);
-		if (!result.valid())
-		{
-			// Call failed
-			sol::error err = result;
-			std::string what = err.what();
-			LogFile::Log("error", "_cost call failed, sol::error::what() is: " + what);
-		}
-		else
-		{
-			lua_ret = result;
-		}
-	}
-	catch (const std::exception & e)
-	{
-		LogFile::Log("error", e.what());
-	}
+	int lua_ret = spell->CallLuaCost(this, arg_target);
 
 	if (lua_ret == 0)
 	{

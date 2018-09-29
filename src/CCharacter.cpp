@@ -476,23 +476,7 @@ SpellAffect * Character::AddSpellAffect(int isDebuff, Character * caster, string
 
     if(sk != nullptr)
     {
-        string func = sk->function_name + "_apply";
-        try
-        {
-			sol::function lua_apply_func = Server::lua[func.c_str()];
-			sol::protected_function_result result = lua_apply_func(caster, this, sa);
-			if (!result.valid())
-			{
-				// Call failed
-				sol::error err = result;
-				std::string what = err.what();
-				LogFile::Log("error", "_apply call failed, sol::error::what() is: " + what);
-			}
-        }
-		catch (const std::exception & e)
-		{
-			LogFile::Log("error", e.what());
-		}
+        sk->CallLuaApply(caster, this, sa);
     }
     return sa;
 }
@@ -558,6 +542,7 @@ int Character::CleanseSpellAffect(Character * cleanser, int category, int howMan
             }
             removed_count++;
             (*thisiter)->auraAffects.clear();
+            (*thisiter)->skill->CallLuaRemove((*thisiter)->caster, this, (*thisiter));
             delete (*thisiter);
             debuffs.erase(thisiter);
             if(removed_count >= howMany)
@@ -567,7 +552,7 @@ int Character::CleanseSpellAffect(Character * cleanser, int category, int howMan
     return removed_count;
 }
 
-bool Character::RemoveSpellAffectsByAura(int isDebuff, int auraid)
+bool Character::RemoveSpellAffectsByAura(bool isDebuff, int auraid)
 {
 	std::list<SpellAffect*>::iterator iter;
 	bool removed = false;
@@ -582,6 +567,9 @@ bool Character::RemoveSpellAffectsByAura(int isDebuff, int auraid)
 			{
 				removed = true;
 				(*iter)->auraAffects.clear();
+
+                (*iter)->skill->CallLuaRemove((*iter)->caster, this, (*iter));
+
 				delete (*iter);
 				iter = debuffs.erase(iter);
 				break;
@@ -603,6 +591,9 @@ bool Character::RemoveSpellAffectsByAura(int isDebuff, int auraid)
 			{
 				removed = true;
 				(*iter)->auraAffects.clear();
+
+                (*iter)->skill->CallLuaRemove((*iter)->caster, this, (*iter));
+
 				delete (*iter);
 				iter = buffs.erase(iter);
 				break;
@@ -616,7 +607,7 @@ bool Character::RemoveSpellAffectsByAura(int isDebuff, int auraid)
 	return removed;
 }
 
-void Character::RemoveSpellAffect(int isDebuff, int id)
+void Character::RemoveSpellAffect(bool isDebuff, int id)
 {
     std::list<SpellAffect*>::iterator iter;
     if(isDebuff)
@@ -626,6 +617,7 @@ void Character::RemoveSpellAffect(int isDebuff, int id)
             if((*iter)->id == id)
             {
                 (*iter)->auraAffects.clear();
+                (*iter)->skill->CallLuaRemove((*iter)->caster, this, (*iter));
                 delete (*iter);
                 debuffs.erase(iter);
                 break;
@@ -639,6 +631,7 @@ void Character::RemoveSpellAffect(int isDebuff, int id)
             if((*iter)->id == id)
             {
                 (*iter)->auraAffects.clear();
+                (*iter)->skill->CallLuaRemove((*iter)->caster, this, (*iter));
                 delete (*iter);
                 buffs.erase(iter);
                 break;
@@ -647,7 +640,7 @@ void Character::RemoveSpellAffect(int isDebuff, int id)
     }
 }
 
-void Character::RemoveSpellAffect(int isDebuff, string name)
+void Character::RemoveSpellAffect(bool isDebuff, string name)
 {
     std::list<SpellAffect*>::iterator iter;
     if(isDebuff)
@@ -657,6 +650,7 @@ void Character::RemoveSpellAffect(int isDebuff, string name)
             if((*iter)->name == name)
             {
                 (*iter)->auraAffects.clear();
+                (*iter)->skill->CallLuaRemove((*iter)->caster, this, (*iter));
                 delete (*iter);
                 debuffs.erase(iter);
                 break;
@@ -670,6 +664,7 @@ void Character::RemoveSpellAffect(int isDebuff, string name)
             if((*iter)->name == name)
             {
                 (*iter)->auraAffects.clear();
+                (*iter)->skill->CallLuaRemove((*iter)->caster, this, (*iter));
                 delete (*iter);
                 buffs.erase(iter);
                 break;
@@ -685,6 +680,7 @@ void Character::RemoveSpellAffect(SpellAffect * remove)
 		if ((*iter) == remove)
 		{
 			(*iter)->auraAffects.clear();
+            (*iter)->skill->CallLuaRemove((*iter)->caster, this, (*iter));
 			delete (*iter);
 			buffs.erase(iter);
 			break;
@@ -695,6 +691,7 @@ void Character::RemoveSpellAffect(SpellAffect * remove)
 		if ((*iter) == remove)
 		{
 			(*iter)->auraAffects.clear();
+            (*iter)->skill->CallLuaRemove((*iter)->caster, this, (*iter));
 			delete (*iter);
 			debuffs.erase(iter);
 			return;
@@ -706,19 +703,19 @@ void Character::RemoveAllSpellAffects()
 {
     while(!debuffs.empty())
     {
+        debuffs.front()->skill->CallLuaRemove(debuffs.front()->caster, this, debuffs.front());
         delete debuffs.front();
         debuffs.pop_front();
     }
     debuffs.clear();
     while(!buffs.empty())
     {
+        buffs.front()->skill->CallLuaRemove(buffs.front()->caster, this, buffs.front());
         delete buffs.front();
         buffs.pop_front();
     }
     buffs.clear();
 }
-
-
 
 int Character::GetAuraModifier(int aura_id, int whatModifier)
 {
@@ -1399,6 +1396,12 @@ void Character::OneHit(Character * victim, int damage)
 
 	if (damage > 0 && victim->CancelCastOnHit())
 		victim->Send("Action Interrupted!\r\n");
+
+    //Check for crowd control affects that dispel on hit
+    while (victim->RemoveSpellAffectsByAura(true, SpellAffect::AURA_INCAPACITATE))
+    {
+
+    }
 
 	if (victim->IsPlayer())
 		((Player*)(victim))->GenerateRageOnTakeDamage(damage);

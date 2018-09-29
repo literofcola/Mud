@@ -807,57 +807,26 @@ void Game::WorldUpdate(Server * server)
                 if(sa->ticksRemaining > 0 
                    && Game::currentTime > sa->appliedTime + ((sa->ticks - sa->ticksRemaining+1)*(sa->duration / sa->ticks)))
                 {
-                    string func = sa->skill->function_name + "_tick";
-                    if(!sa->caster)
+                    if (!sa->caster)
                     {
                         sa->caster = GetPlayerByName(sa->casterName);
                     }
                     sa->ticksRemaining--;
-                    try
-                    {
-						sol::function lua_tick_func = Server::lua[func.c_str()];
-						sol::protected_function_result result = lua_tick_func(sa->caster, currChar, sa);
-						if (!result.valid())
-						{
-							// Call failed
-							sol::error err = result;
-							std::string what = err.what();
-							LogFile::Log("error", "_tick call failed, sol::error::what() is: " + what);
-						}
-                    }
-                    catch(const std::exception & e)
-			        {
-				        LogFile::Log("error", e.what());
-			        }
                     
+                    sa->skill->CallLuaTick(sa->caster, currChar, sa);
+
                     //Reset the loop, who knows what happened to our debuffs during the tick
                     buffiter = currChar->buffs.begin();
                     continue;
                 }
                 if(!sa->remove_me && sa->duration > 0 && Game::currentTime - sa->appliedTime > sa->duration) //Expired
                 {
-                    string func = sa->skill->function_name + "_remove";
-                    sa->remove_me = true;
                     if(!sa->caster)
                     {
                         sa->caster = GetPlayerByName(sa->casterName);
                     }
-					try
-					{
-						sol::function lua_remove_func = Server::lua[func.c_str()];
-						sol::protected_function_result result = lua_remove_func(sa->caster, currChar, sa);
-						if (!result.valid())
-						{
-							// Call failed
-							sol::error err = result;
-							std::string what = err.what();
-							LogFile::Log("error", "_remove call failed, sol::error::what() is: " + what);
-						}
-					}
-					catch (const std::exception & e)
-					{
-						LogFile::Log("error", e.what());
-					}
+                    sa->skill->CallLuaRemove(sa->caster, currChar, sa);
+
                     //Reset the loop, who knows what happened to our buffs during the remove
                     sa->remove_me = true;
                     buffiter = currChar->buffs.begin();
@@ -891,28 +860,13 @@ void Game::WorldUpdate(Server * server)
                 if(sa->ticksRemaining > 0 
                    && Game::currentTime > sa->appliedTime + ((sa->ticks - sa->ticksRemaining+1)*(sa->duration / sa->ticks)))
                 {
-                    sa->ticksRemaining--;
-                    string func = sa->skill->function_name + "_tick";
-                    if(!sa->caster)
+                    if (!sa->caster)
                     {
                         sa->caster = GetPlayerByName(sa->casterName);
                     }
-					try
-					{
-						sol::function lua_tick_func = Server::lua[func.c_str()];
-						sol::protected_function_result result = lua_tick_func(sa->caster, currChar, sa);
-						if (!result.valid())
-						{
-							// Call failed
-							sol::error err = result;
-							std::string what = err.what();
-							LogFile::Log("error", "_tick call failed, sol::error::what() is: " + what);
-						}
-					}
-					catch (const std::exception & e)
-					{
-						LogFile::Log("error", e.what());
-					}
+                    sa->ticksRemaining--;
+
+                    sa->skill->CallLuaTick(sa->caster, currChar, sa);
                     
                     //Reset the loop, who knows what happened to our debuffs during the tick
                     debuffiter = currChar->debuffs.begin();
@@ -920,28 +874,13 @@ void Game::WorldUpdate(Server * server)
                 }
                 if(!sa->remove_me && sa->duration > 0 && Game::currentTime - sa->appliedTime > sa->duration) //Expired
                 {
-                    sa->remove_me = true;
-                    string func = sa->skill->function_name + "_remove";
                     if(!sa->caster)
                     {
                         sa->caster = GetPlayerByName(sa->casterName);
                     }
-					try
-					{
-						sol::function lua_remove_func = Server::lua[func.c_str()];
-						sol::protected_function_result result = lua_remove_func(sa->caster, currChar, sa);
-						if (!result.valid())
-						{
-							// Call failed
-							sol::error err = result;
-							std::string what = err.what();
-							LogFile::Log("error", "_remove call failed, sol::error::what() is: " + what);
-						}
-					}
-					catch (const std::exception & e)
-					{
-						LogFile::Log("error", e.what());
-					}
+
+                    sa->skill->CallLuaRemove(sa->caster, currChar, sa);
+
                     //Reset the loop, who knows what happened to our debuffs during the remove
                     sa->remove_me = true;
                     debuffiter = currChar->debuffs.begin();

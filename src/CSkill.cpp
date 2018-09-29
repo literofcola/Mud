@@ -1,6 +1,9 @@
 #include "stdafx.h"
 #include "CSkill.h"
 #include "CServer.h"
+#include "CCharacter.h"
+#include "CSpellAffect.h"
+#include "CLogFile.h"
 #include "utils.h"
 
 Skill::flag_type Skill::flag_table[] =
@@ -54,6 +57,118 @@ Skill::Skill(int id_, std::string long_name_)
 Skill::~Skill()
 {
 
+}
+
+int Skill::CallLuaCost(Character * caster, Character * target)
+{
+    std::string cost_func = function_name + "_cost";
+    int lua_ret = 0;
+    try
+    {
+        sol::function lua_cost_func = Server::lua[cost_func.c_str()];
+        sol::protected_function_result result = lua_cost_func(caster, target, this);
+        if (!result.valid())
+        {
+            // Call failed
+            sol::error err = result;
+            std::string what = err.what();
+            LogFile::Log("error", "_cost call failed, sol::error::what() is: " + what);
+        }
+        else
+        {
+            lua_ret = result;
+        }
+    }
+    catch (const std::exception & e)
+    {
+        LogFile::Log("error", e.what());
+    }
+    return lua_ret;
+}
+
+void Skill::CallLuaCast(Character * caster, Character * target)
+{
+    std::string func = function_name + "_cast";
+    try
+    {
+        sol::function lua_cast_func = Server::lua[func.c_str()];
+        sol::protected_function_result result = lua_cast_func(caster, target, this);
+        if (!result.valid())
+        {
+            // Call failed
+            sol::error err = result;
+            std::string what = err.what();
+            LogFile::Log("error", "_cast call failed, sol::error::what() is: " + what);
+        }
+
+    }
+    catch (const std::exception & e)
+    {
+        LogFile::Log("error", e.what());
+    }
+}
+
+void Skill::CallLuaApply(Character * caster, Character * target, SpellAffect * affect)
+{
+    std::string func = function_name + "_apply";
+    try
+    {
+        sol::function lua_apply_func = Server::lua[func.c_str()];
+        sol::protected_function_result result = lua_apply_func(caster, target, affect);
+        if (!result.valid())
+        {
+            // Call failed
+            sol::error err = result;
+            std::string what = err.what();
+            LogFile::Log("error", "_apply call failed, sol::error::what() is: " + what);
+        }
+    }
+    catch (const std::exception & e)
+    {
+        LogFile::Log("error", e.what());
+    }
+}
+
+void Skill::CallLuaTick(Character * caster, Character * target, SpellAffect * affect)
+{
+    std::string func = function_name + "_tick";
+    try
+    {
+        sol::function lua_tick_func = Server::lua[func.c_str()];
+        sol::protected_function_result result = lua_tick_func(caster, target, affect);
+        if (!result.valid())
+        {
+            // Call failed
+            sol::error err = result;
+            std::string what = err.what();
+            LogFile::Log("error", "_tick call failed, sol::error::what() is: " + what);
+        }
+    }
+    catch (const std::exception & e)
+    {
+        LogFile::Log("error", e.what());
+    }
+}
+
+void Skill::CallLuaRemove(Character * caster, Character * target, SpellAffect * affect)
+{
+    std::string func = function_name + "_remove";
+    try
+    {
+        sol::function lua_remove_func = Server::lua[func.c_str()];
+        sol::protected_function_result result = lua_remove_func(caster, target, affect);
+        if (!result.valid())
+        {
+            // Call failed
+            sol::error err = result;
+            std::string what = err.what();
+            LogFile::Log("error", "_remove call failed, sol::error::what() is: " + what);
+        }
+    }
+    catch (const std::exception & e)
+    {
+        LogFile::Log("error", e.what());
+    }
 }
 
 void Skill::Save()
