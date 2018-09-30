@@ -403,7 +403,7 @@ void Character::Move(int direction)
 		cmd_look((Player*)this, ""); //eww
 
     //check npc aggro
-	if (IsAlive())
+	if (IsAlive() && IsPlayer())
 	{
 		for (std::list<Character*>::iterator iter = room->characters.begin(); iter != room->characters.end(); ++iter)
 		{

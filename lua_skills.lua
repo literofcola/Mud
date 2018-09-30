@@ -48,11 +48,15 @@ function skill_polymorph_4_cast(caster, target, skill)
   end
 end
 function skill_polymorph_4_apply(caster, target, affect)
+  if(affect.name == "Polymorph") then
     affect:ApplyAura(AURA_INCAPACITATE, 1)
     affect:SaveDataString("cmd_look_cc", "|W(Polymorphed by " .. caster:GetName() .. ")|X") --used in cmd_look
+  end
 end
 function skill_polymorph_4_tick(caster, target, affect)
+  if(affect.name == "Polymorph") then
     target:AdjustHealth(target, target:GetMaxHealth())
+  end
 end
 function skill_polymorph_4_remove(caster, target, affect)
   if(affect.name == "Polymorph") then

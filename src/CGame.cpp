@@ -699,6 +699,11 @@ void Game::WorldUpdate(Server * server)
 			}
             else if(currChar->IsNPC() && currNPC->GetTopThreat())
             {
+                if (currChar->GetAuraModifier(SpellAffect::AURA_INCAPACITATE, 1))
+                {
+                    currNPC->movementQueue.clear();
+                }
+
 				if (!currNPC->movementQueue.empty()) //We have a movement pending, see if we can move...
 				{
 					if(currNPC->CanMove()) //Move! (checks movespeed auras and movement speed timestamp)
@@ -739,8 +744,8 @@ void Game::WorldUpdate(Server * server)
 						}
 					}
 				}
-                else if(currNPC->GetTopThreat()->room != currNPC->room && currNPC->movementQueue.empty()) //We need to chase threat target, and not already pending a move...
-                {
+                else if(currNPC->GetTopThreat()->room != currNPC->room && currNPC->movementQueue.empty() && !currChar->GetAuraModifier(SpellAffect::AURA_INCAPACITATE, 1))
+                { //We need to chase threat target, and not already pending a move...
 					//Decide if we should try to chase based on how far we are from our reset
 					int leashdist = Reset::RESET_LEASH_DEFAULT;
 					if (currNPC->reset && currNPC->reset->leashDistance != 0)

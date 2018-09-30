@@ -217,6 +217,30 @@ INSERT INTO `npc_drops` VALUES (1,'1;',100),(1,'2;',100),(1,'3;',100),(1,'10;',1
 UNLOCK TABLES;
 
 --
+-- Table structure for table `npc_skills`
+--
+
+DROP TABLE IF EXISTS `npc_skills`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `npc_skills` (
+  `npc` int(11) NOT NULL,
+  `skill` int(11) NOT NULL,
+  PRIMARY KEY (`npc`,`skill`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `npc_skills`
+--
+
+LOCK TABLES `npc_skills` WRITE;
+/*!40000 ALTER TABLE `npc_skills` DISABLE KEYS */;
+INSERT INTO `npc_skills` VALUES (1,10);
+/*!40000 ALTER TABLE `npc_skills` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `npcs`
 --
 
@@ -478,7 +502,7 @@ CREATE TABLE `players` (
 
 LOCK TABLES `players` WRITE;
 /*!40000 ALTER TABLE `players` DISABLE KEYS */;
-INSERT INTO `players` VALUES ('Bob','\r\Z',0,'',61309521,35,240,1,0,139,512,118,446,269,102,4460,2690,4,0,0,0,1758),('Bobo','\r\Z',0,'',1268,123,2,1,0,5,5,5,5,5,5,50,50,2,2,0,0,6),('Boris','\r\Z',10,'',61309521,124,240,1,7,296,261,565,877,285,261,7108,2860,2,2,0,0,3815),('Castertest','\r\Z',0,'',61309521,123,240,1,4,5,363,5,376,365,363,3910,3670,3,2,0,0,0),('Dpstest','\r\Z',0,'',61309521,126,240,1,6,818,5,5,209,202,5,2051,2020,2,2,0,0,220),('Maikeru','\0W',0,'',1356,121,2,1,0,5,5,5,11,5,5,0,50,4,2,1532997372,92,0),('Momo','\r\Z',0,'',300,33,1,1,0,5,5,5,5,5,5,50,50,1,2,0,0,0),('Tanktest','\r\Z',0,'',61309521,126,240,1,4,250,7,242,514,7,7,3076,90,1,2,0,0,0),('Tash','FCU',0,'',1451,3,2,1,2,5,5,5,5,5,0,50,100,1,2,0,0,6);
+INSERT INTO `players` VALUES ('Bob','\r\Z',0,'',61309521,35,240,1,0,139,512,118,446,269,102,4460,2690,4,0,0,0,1758),('Bobo','\r\Z',0,'',1268,123,2,1,0,5,5,5,5,5,5,50,50,2,2,0,0,6),('Boris','\r\Z',10,'',61309521,126,240,1,7,296,261,565,877,285,261,10240,2860,2,2,0,0,3815),('Castertest','\r\Z',0,'',61309521,123,240,1,4,5,363,5,376,365,363,3910,3670,3,2,0,0,0),('Dpstest','\r\Z',0,'',61309521,126,240,1,6,818,5,5,209,202,5,2051,2020,2,2,0,0,220),('Maikeru','\0W',0,'',1356,121,2,1,0,5,5,5,11,5,5,0,50,4,2,1532997372,92,0),('Momo','\r\Z',0,'',300,33,1,1,0,5,5,5,5,5,5,50,50,1,2,0,0,0),('Tanktest','\r\Z',0,'',61309521,126,240,1,4,250,7,242,514,7,7,3076,90,1,2,0,0,0),('Tash','FCU',0,'',1451,3,2,1,2,5,5,5,5,5,0,50,100,1,2,0,0,6);
 /*!40000 ALTER TABLE `players` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -702,4 +726,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-09-28 17:53:34
+-- Dump completed on 2018-09-29 23:12:37
