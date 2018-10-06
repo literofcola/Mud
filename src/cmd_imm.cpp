@@ -43,7 +43,7 @@ void cmd_goto(Player * ch, string argument)
         return;
     }
     ch->Message(ch->GetName() + " appears in a puff of smoke.", Character::MSG_ROOM_NOTCHAR);
-    cmd_look(ch, "");
+    ch->Look("");
 }
 
 void cmd_restore(Player * ch, string argument)
@@ -254,7 +254,7 @@ void cmd_transfer(Player * ch, string argument)
     chtran->ChangeRoomsID(getroom->id);
     chtran->Message(chtran->GetName() + " appears in a puff of smoke.", Character::MSG_ROOM_NOTCHAR);
     
-    cmd_look(chtran, "");
+    chtran->Look("");
 }
 
 void cmd_advance(Player * ch, string argument)

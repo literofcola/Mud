@@ -106,7 +106,7 @@ void cmd_cancel(Player * ch, std::string argument)
     else if(ch && ch->meleeActive)
     {
         ch->Send("Melee attack cancelled.\r\n");
-        ch->meleeActive = false;
+        ch->CancelAutoAttack();
     }
     else
     {
@@ -258,11 +258,12 @@ void cmd_look(Player * ch, std::string argument)
 				std::string disconnected = "";
 				std::string title = "";
 				std::string corpse = "";
-				std::string fighting = ".";
+				std::string targeting = ".";
 				std::string level = "";
 				std::string aggressionColor = "|G";
                 std::string crowd_control = "";
 				std::string tapped = "";
+                std::string in_combat = "";
 
 				Player * inroom_player = nullptr;
 				if ((*i)->IsPlayer())
@@ -290,10 +291,17 @@ void cmd_look(Player * ch, std::string argument)
 				}
 				if ((*i)->InCombat())
 				{
-					if ((*i)->IsFighting(ch))
+                    in_combat = "|R(X)|X ";
+                    if((*i)->GetTarget() && (*i)->GetTarget() == ch)
+                        targeting = ", targeting YOU!";
+                    else if ((*i)->GetTarget())
+                        targeting = ", fighting " + (*i)->GetTarget()->GetName() + ".";
+					/*
+                    if ((*i)->IsFighting(ch))
 						fighting = ", fighting YOU!";
 					else if ((*i)->GetTarget() != nullptr && (*i)->IsFighting((*i)->GetTarget()))
 						fighting = ", fighting " + (*i)->GetTarget()->GetName() + ".";
+                    */
 				}
 				aggressionColor = ch->AggressionColor((*i));
                 SpellAffect * cc = (*i)->GetFirstSpellAffectWithAura(SpellAffect::AURA_INCAPACITATE);
@@ -304,15 +312,20 @@ void cmd_look(Player * ch, std::string argument)
 				Character * tappedBy = (*i)->GetTap();
 				if (tappedBy)
 				{
-					tapped = " |D(tapped by " + tappedBy->GetName() + ")";
+					tapped = "|D(tapped by " + tappedBy->GetName() + ")";
 				}
-				ch->Send(disconnected + level + questicon + aggressionColor + corpse + (*i)->GetName() + title + " is here" + fighting + crowd_control + tapped + "|X\r\n");
+				ch->Send(disconnected + level + questicon + in_combat + aggressionColor + corpse + (*i)->GetName() + title + " is here" + targeting + crowd_control + tapped + "|X\r\n");
 			}
 			ch->Send("\r\n");	
 		}
     }
+    else if (!Utilities::str_cmp(arg1, "north"))
+    {
+        
+    }
     else // "look argument" //TODO, look at things in the room with higher priority
     {
+        //Search for a player to look at
 		Character * ch_inspect = ch->GetCharacterRoom(arg1);
 		if (ch_inspect != nullptr && ch_inspect->IsPlayer())
 		{
@@ -321,6 +334,7 @@ void cmd_look(Player * ch, std::string argument)
 			return;
 		}
 
+        //Search for an inventory/equipped item to look at
         Item * inspect = ch->GetItemInventory(arg1);
         if(inspect == nullptr)
         {
@@ -344,7 +358,7 @@ void cmd_target(Player * ch, std::string argument)
 	{
 		ch->Send("Target cleared.\r\n");
 		ch->ClearTarget();
-        ch->meleeActive = false; //Any target change stops auto attack
+        ch->CancelAutoAttack(); //Any target change stops auto attack
 		return;
 	}
 
@@ -359,7 +373,7 @@ void cmd_target(Player * ch, std::string argument)
          && (vch = Game::GetGame()->GetPlayerWorld(ch, arg1)) != nullptr))
 	{
         if(ch->GetTarget() != vch)
-            ch->meleeActive = false; //Any target change stops auto attack
+            ch->CancelAutoAttack(); //Any target change stops auto attack
 		ch->SetTarget(vch);
 		ch->Send("Targeting " + vch->GetName() + "\r\n");
 	}
@@ -1855,7 +1869,7 @@ bool releaseSpiritQuery(Player * ch, std::string argument)
 		ch->MakeCorpse();
 		ch->ChangeRooms(graveyard);
 		ch->graveyard_room = graveyard->id;
-		cmd_look(ch, "");
+		ch->Look("");
 
 		int res_at_graveyard = ch->death_timer - ch->TimeSinceDeath();
 		int res_at_corpse = ch->death_timer_runback - ch->TimeSinceDeath();
@@ -1893,7 +1907,7 @@ bool returnToGYQuery(Player * ch, std::string argument)
 	{
 		ch->ChangeRooms(Game::GetGame()->GetRoom(ch->graveyard_room));
 		ch->QueryClear();
-		cmd_look(ch, "");
+        ch->Look("");
 		return true;
 	}
 	return false;

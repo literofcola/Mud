@@ -176,6 +176,7 @@ public:
 	int GetTotalAuraModifier(int aura_id);
 	int GetSmallestAuraModifier(int aura_id);
 	int GetLargestAuraModifier(int aura_id);
+    bool IsCrowdControlled();
 
 	//Stats
 	void AdjustMana(Character * source, int amount);
@@ -221,7 +222,7 @@ public:
 	virtual void RemoveAllLootRolls() { };
 	virtual void RemoveAllLooters() { };
 
-	//Lua friendly "commands"
+	//Inheritence friendly "commands"
 	virtual void Look(std::string argument) {};
 	virtual void Cast(std::string argument) {};
 

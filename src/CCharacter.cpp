@@ -399,8 +399,9 @@ void Character::Move(int direction)
 		Message(GetName() + " has arrived from " + ((direction != Exit::DIR_UP && direction != Exit::DIR_DOWN) ? "the " : "") + Exit::reverseExitNames[direction] + ".", MSG_ROOM_NOTCHAR);
 	}
 
-	if(IsPlayer())					 //ew
-		cmd_look((Player*)this, ""); //eww
+    Look("");
+	//if(IsPlayer())					 //ew
+	//	cmd_look((Player*)this, ""); //eww
 
     //check npc aggro
 	if (IsAlive() && IsPlayer())
@@ -858,6 +859,13 @@ int Character::GetLargestAuraModifier(int aura_id)
         }
     }
     return largest;
+}
+
+bool Character::IsCrowdControlled()
+{
+    if(GetAuraModifier(SpellAffect::AURA_INCAPACITATE, 1))
+        return true;
+    return false;
 }
 
 int Character::GetSmallestAuraModifier(int aura_id)

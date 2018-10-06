@@ -657,18 +657,24 @@ void Game::WorldUpdate(Server * server)
 
             if(!currChar->GetTarget() || currChar->GetTarget() == currChar)
             {  //Turn off auto attack. cmd_target should take care of this, but just in case
-				currChar->meleeActive = false;
+				currChar->CancelAutoAttack();
             }
-            else if(currChar->meleeActive && currChar->GetTarget()->room == currChar->room && !currChar->delay_active) //No auto attack while casting
-            {
+            else if(currChar->meleeActive && currChar->GetTarget()->room == currChar->room && !currChar->delay_active) 
+            {   //Auto attack but not while casting
 				currChar->AutoAttack(currChar->GetTarget());
             }
+            else if (currChar->IsNPC() && !currChar->meleeActive && !currChar->IsCrowdControlled() && currChar->GetTarget() && currChar->GetTarget()->room == currChar->room)
+            {   //Allows NPC to resume attacking after crowd control expires
+                currChar->meleeActive = true;
+                currChar->AutoAttack(currChar->GetTarget());
+            }
+            /*
             else if(!currChar->meleeActive && currChar->GetTarget() && currChar->GetTarget()->GetTarget() && currChar->GetTarget()->GetTarget() == currChar
                 && currChar->GetTarget()->meleeActive && currChar->GetTarget()->room == currChar->room)
             { //So... If we're not attacking, we have a target, our target's target is us, and is attacking us, and theyre in the same room, start attacking them back
 				currChar->AutoAttack(currChar->GetTarget());
             }
-
+            */
 			//Players exit combat after 5 seconds of no activity AND when we have no npcs on our threat list
             if(currChar->IsPlayer() && currPlayer->lastCombatAction + 5 <= currentTime && !currPlayer->CheckThreatCombat())
             {   
@@ -699,7 +705,7 @@ void Game::WorldUpdate(Server * server)
 			}
             else if(currChar->IsNPC() && currNPC->GetTopThreat())
             {
-                if (currChar->GetAuraModifier(SpellAffect::AURA_INCAPACITATE, 1))
+                if (currChar->IsCrowdControlled())
                 {
                     currNPC->movementQueue.clear();
                 }
@@ -744,7 +750,7 @@ void Game::WorldUpdate(Server * server)
 						}
 					}
 				}
-                else if(currNPC->GetTopThreat()->room != currNPC->room && currNPC->movementQueue.empty() && !currChar->GetAuraModifier(SpellAffect::AURA_INCAPACITATE, 1))
+                else if(currNPC->GetTopThreat()->room != currNPC->room && currNPC->movementQueue.empty() && !currChar->IsCrowdControlled())
                 { //We need to chase threat target, and not already pending a move...
 					//Decide if we should try to chase based on how far we are from our reset
 					int leashdist = Reset::RESET_LEASH_DEFAULT;
@@ -776,7 +782,7 @@ void Game::WorldUpdate(Server * server)
 						//Just push a placeholder that indicates we have a movement pending, since we're going to "track" the target after movespeed delay
 						currNPC->movementQueue.push_back(nullptr);
 						currNPC->lastMoveTime = currentTime; //queue up the next move after delay
-						currNPC->meleeActive = false;		  //target isn't in the room...
+						currNPC->CancelAutoAttack();		  //target isn't in the room...
 					}
                 }
 				//Check for taunt and highest threat
@@ -1449,7 +1455,7 @@ void Game::LoginHandler(Server * server, User * user, string argument)
                 user->character->LoadCooldowns();
                 if(!user->character->IsGhost())
 					user->character->Message(user->character->GetName() + " has entered the game.", Character::MSG_ROOM_NOTCHAR);				
-                cmd_look(user->character, "");
+                user->character->Look("");
                 break;
             }
             else if(arg1[0] == '2') //change password

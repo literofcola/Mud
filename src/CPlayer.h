@@ -268,7 +268,7 @@ public:
 	inline int GetImmLevel() override { return immlevel; };
 	int GetArmor() override { return armor; };
 
-	//Lua friendly "commands"
+	//Inheritence friendly "commands"
 	void Look(std::string argument) override { ::cmd_look(this, argument); };
 	void Cast(std::string argument) override { ::cmd_cast(this, argument); };
 
