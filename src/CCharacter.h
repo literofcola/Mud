@@ -177,6 +177,7 @@ public:
 	int GetSmallestAuraModifier(int aura_id);
 	int GetLargestAuraModifier(int aura_id);
     bool IsCrowdControlled();
+    void RemoveCrowdControlOnHit();
 
 	//Stats
 	void AdjustMana(Character * source, int amount);

@@ -400,8 +400,6 @@ void Character::Move(int direction)
 	}
 
     Look("");
-	//if(IsPlayer())					 //ew
-	//	cmd_look((Player*)this, ""); //eww
 
     //check npc aggro
 	if (IsAlive() && IsPlayer())
@@ -413,6 +411,7 @@ void Character::Move(int direction)
 				(*iter)->EnterCombat(this);
 				EnterCombat(*iter);
 				Send((*iter)->GetName() + " begins attacking you!\r\n");
+                (*iter)->AutoAttack(this);
 			}
 		}
 	}
@@ -868,6 +867,12 @@ bool Character::IsCrowdControlled()
     return false;
 }
 
+void Character::RemoveCrowdControlOnHit()
+{
+    while (RemoveSpellAffectsByAura(true, SpellAffect::AURA_INCAPACITATE))
+    { }
+}
+
 int Character::GetSmallestAuraModifier(int aura_id)
 {
     int smallest = 0;
@@ -907,17 +912,17 @@ void Character::EnterCombat(Character * victim)
 		return;
 	}
 
-    if(target == nullptr || target == victim)
+    /*if(target == nullptr || target == victim)
     {
         SetTarget(victim);
         meleeActive = true;
-    }
+    }*/
     //if(victim->target == nullptr || victim->target == this)
-    if((victim->IsNPC() && victim->meleeActive == false) || victim->target == nullptr || victim->target == this)
+    /*if((victim->IsNPC() && victim->meleeActive == false) || victim->target == nullptr || victim->target == this)
     {
         victim->SetTarget(this);
         victim->meleeActive = true;
-    }
+    }*/
     combat = true;
     victim->combat = true;
 
@@ -933,7 +938,7 @@ void Character::EnterCombat(Character * victim)
 
 		if (IsNPC())
 		{
-			//Check for other hostile npcs in the room to see if we need to chain aggro (pull from adjacent room)
+			//Check for other hostile npcs in the room to see if we need to chain aggro (like a pull from adjacent room)
 			for (auto iter = room->characters.begin(); iter != room->characters.end(); ++iter)
 			{
 				if ((*iter)->IsNPC() && (*iter)->FlagIsSet(NPCIndex::FLAG_AGGRESSIVE) && !(*iter)->InCombat())
@@ -1063,16 +1068,23 @@ void Character::AutoAttack(Character * victim)
     bool attack_mh = true;
     bool attack_oh = false; //weapon required for offhand attack (no unarmed)
 
+    meleeActive = true;
+
 	//NPC autoattack
     if(IsNPC() && lastAutoAttack_main + ((NPC*)(this))->GetNPCIndex()->npcAttackSpeed <= Game::currentTime)
     {
 		NPC * thisnpc = (NPC*)this;
-        if(victim->target == nullptr) //Force a target on our victim
+        if (thisnpc->GetTarget() == nullptr) //possible for a npc here
+        {
+            thisnpc->SetTarget(victim);
+        }
+        if(victim->GetTarget() == nullptr) //Force a target on our victim
         {
             victim->SetTarget(this);
             //Have the victim retaliate when attacked with no target set
             victim->meleeActive = true;
         }
+
         if(victim->IsPlayer())
             ((Player*)(victim))->lastCombatAction = Game::currentTime;
         lastAutoAttack_main = Game::currentTime;
@@ -1150,7 +1162,7 @@ void Character::AutoAttack(Character * victim)
         if(attack_mh && thisplayer->lastAutoAttack_main + weaponSpeed_main <= Game::currentTime)
         {
 			damage_main += (int)ceil((thisplayer->GetStrength() * Player::STRENGTH_DAMAGE_MODIFIER) / weaponSpeed_main);
-            if(victim->target == nullptr) //Force a target on our victim
+            if(victim->GetTarget() == nullptr) //Force a target on our victim
             {     
                 victim->SetTarget(this);
                 //Have the victim retaliate when attacked with no target set
@@ -1164,7 +1176,7 @@ void Character::AutoAttack(Character * victim)
 			switch (DoAttackRoll(victim, Game::SCHOOL_PHYSICAL))
 			{
 				case ATTACK_MISS:
-					Send(tapcolor + "Your attack misses " + victim->GetName() + "|X\r\n");
+					Send(tapcolor + "Your attack misses " + victim->GetName() + ".|X\r\n");
 					victim->Send("|Y" + GetName() + "'s attack misses you.|X\r\n");
 					return;
 					break;
@@ -1240,7 +1252,7 @@ void Character::AutoAttack(Character * victim)
 			switch (DoAttackRoll(victim, Game::SCHOOL_PHYSICAL))
 			{
 				case ATTACK_MISS:
-					Send(tapcolor + "Your attack misses " + victim->GetName() + "|X\r\n");
+					Send(tapcolor + "Your attack misses " + victim->GetName() + ".|X\r\n");
 					victim->Send("|Y" + GetName() + "'s attack misses you.|X\r\n");
 					return;
 					break;
@@ -1406,10 +1418,7 @@ void Character::OneHit(Character * victim, int damage)
 		victim->Send("Action Interrupted!\r\n");
 
     //Check for crowd control affects that dispel on hit
-    while (victim->RemoveSpellAffectsByAura(true, SpellAffect::AURA_INCAPACITATE))
-    {
-
-    }
+    victim->RemoveCrowdControlOnHit();
 
 	if (victim->IsPlayer())
 		((Player*)(victim))->GenerateRageOnTakeDamage(damage);

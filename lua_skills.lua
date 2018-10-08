@@ -23,7 +23,6 @@ function skill_polymorph_4_cost(caster, target, skill)
 end
 function skill_polymorph_4_cast(caster, target, skill)
   caster:ConsumeMana(150)
-  target:AddSpellAffect(1, caster, "Polymorph", false, false, 25, 50, AFFECT_MAGIC, skill, "Incapacitated. Cannot attack or cast spells. Increased health regeneration.")
   --if caster has spell affect mypolymorphtarget, find that affect's target (via affect caster field) and unpolymorph them
   local polytarget_affect = caster:HasSpellAffect("MyPolymorphTarget")
   if(polytarget_affect) then
@@ -33,6 +32,7 @@ function skill_polymorph_4_cast(caster, target, skill)
         polytarget_ch:RemoveSpellAffect(true, "Polymorph")
     end
   end
+  target:AddSpellAffect(1, caster, "Polymorph", false, false, 25, 50, AFFECT_MAGIC, skill, "Incapacitated. Cannot attack or cast spells. Increased health regeneration.")
   caster:AddSpellAffect(1, target, "MyPolymorphTarget", true, false, 0, 50, AFFECT_NONE, skill, target:GetName() .. " is my Polymorph target")
   caster:EnterCombat(target)
   target:EnterCombat(caster)
@@ -42,9 +42,9 @@ function skill_polymorph_4_cast(caster, target, skill)
   target:CancelAutoAttack()
   caster:Send("|W" .. target:GetName() .. " is affected by your Polymorph.|X\r\n")
   target:Send("|WYou are affected by " ..  caster:GetName() .. "'s Polymorph.|X\r\n")
-  caster:Message("|W" .. target:GetName() .. " is affected by " .. caster:GetName() .. "'s Polymorph.|X\r\n", MSG_ROOM_NOTCHARVICT, target)
+  caster:Message("|W" .. target:GetName() .. " is affected by " .. caster:GetName() .. "'s Polymorph.|X", MSG_ROOM_NOTCHARVICT, target)
   if(caster:GetRoom() ~= target:GetRoom()) then
-    target:Message("|W" .. target:GetName() .. " is affected by " .. caster:GetName() .. "'s Polymorph.|X\r\n", MSG_ROOM_NOTCHARVICT, caster)
+    target:Message("|W" .. target:GetName() .. " is affected by " .. caster:GetName() .. "'s Polymorph.|X", MSG_ROOM_NOTCHARVICT, caster)
   end
 end
 function skill_polymorph_4_apply(caster, target, affect)
@@ -63,9 +63,9 @@ function skill_polymorph_4_remove(caster, target, affect)
     target:Send("|WPolymorph fades from you.|X\r\n")
     if(caster ~= nil) then
       caster:Send("|WYour Polymorph fades from " .. target:GetName() .. ".|X\r\n")
-      target:Message("|WPolymorph fades from " .. target:GetName() .. ".|X\r\n", MSG_ROOM_NOTCHARVICT, caster)
+      target:Message("|WPolymorph fades from " .. target:GetName() .. ".|X", MSG_ROOM_NOTCHARVICT, caster)
     else
-      target:Message("|WPolymorph fades from " .. target:GetName() .. ".|X\r\n", MSG_ROOM_NOTCHAR, nil)
+      target:Message("|WPolymorph fades from " .. target:GetName() .. ".|X", MSG_ROOM_NOTCHAR, nil)
     end
   end
   if(affect.name == "MyPolymorphTarget") then

@@ -295,7 +295,7 @@ void cmd_look(Player * ch, std::string argument)
                     if((*i)->GetTarget() && (*i)->GetTarget() == ch)
                         targeting = ", targeting YOU!";
                     else if ((*i)->GetTarget())
-                        targeting = ", fighting " + (*i)->GetTarget()->GetName() + ".";
+                        targeting = ", targeting " + (*i)->GetTarget()->GetName() + ".";
 					/*
                     if ((*i)->IsFighting(ch))
 						fighting = ", fighting YOU!";

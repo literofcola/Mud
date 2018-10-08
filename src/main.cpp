@@ -72,7 +72,7 @@ int main(int argc, char * argv[])
 
 	LogFile::Log("status", "Server listening on port 4000");
 	
-	//todo: consider reordering here to load game from db prior to server accept
+	//todo: Initialization of everything is haphazard and unorganized. also consider reordering here to load game from db prior to server listen
 
     theserver->Start();
     thegame->GameLoop(theserver);
