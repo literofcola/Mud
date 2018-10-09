@@ -410,7 +410,8 @@ void Character::Move(int direction)
 			{
 				(*iter)->EnterCombat(this);
 				EnterCombat(*iter);
-				Send((*iter)->GetName() + " begins attacking you!\r\n");
+				Send((*iter)->GetName() + " begins attacking YOU!\r\n");
+                Message((*iter)->GetName() + " begins attacking " + GetName() + "!", MSG_ROOM_NOTCHAR);
                 (*iter)->AutoAttack(this);
 			}
 		}
@@ -912,6 +913,10 @@ void Character::EnterCombat(Character * victim)
 		return;
 	}
 
+    if (target == nullptr)
+    {
+        SetTarget(victim);
+    }
     /*if(target == nullptr || target == victim)
     {
         SetTarget(victim);
@@ -1068,6 +1073,11 @@ void Character::AutoAttack(Character * victim)
     bool attack_mh = true;
     bool attack_oh = false; //weapon required for offhand attack (no unarmed)
 
+    if (meleeActive == false)
+    {
+        Message(GetName() + " begins attacking " + victim->GetName() + "!", MSG_ROOM_NOTCHARVICT, victim);
+        victim->Send(GetName() + " begins attacking YOU!\r\n");
+    }
     meleeActive = true;
 
 	//NPC autoattack
@@ -1315,6 +1325,8 @@ void Character::AutoAttack(Character * victim)
 
 void Character::CancelAutoAttack()
 {
+    if(meleeActive)
+        Message(GetName() + " stops attacking.", MSG_ROOM_NOTCHAR);
     meleeActive = false;
 }
 

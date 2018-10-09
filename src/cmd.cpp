@@ -83,7 +83,7 @@ void cmd_attack(Player * ch, std::string argument)
     ch->SetTarget(target);
     ch->Send("You begin attacking " + target->GetName() + "!\r\n");
     target->Send(ch->GetName() + " begins attacking you!\r\n");
-	ch->Message(ch->GetName() + " begins attacking " + target->GetName() + "!", Character::MSG_ROOM_NOTCHARVICT, target);
+	//ch->Message(ch->GetName() + " begins attacking " + target->GetName() + "!", Character::MSG_ROOM_NOTCHARVICT, target);
 
     ch->EnterCombat(target);
     target->EnterCombat(ch);

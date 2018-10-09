@@ -97,12 +97,18 @@ Game::Game()
 Game::~Game()
 {
     DeleteCriticalSection(&userListCS);
-    std::map<int, Skill *>::iterator iter;
-    for(iter = skills.begin(); iter != skills.end(); ++iter)
+
+    while (!characters.empty())
     {
-        delete (*iter).second;
+        characters.front()->NotifySubscribers();
+        delete characters.front();
+        characters.pop_front();
     }
-    skills.clear();
+    while (!users.empty())
+    {
+        delete users.front();
+        users.pop_front();
+    }
 
     std::map<int, NPCIndex *>::iterator iter2;
     for(iter2 = npcIndex.begin(); iter2 != npcIndex.end(); ++iter2)
@@ -111,16 +117,13 @@ Game::~Game()
     }
 	npcIndex.clear();
 
-    while(!characters.empty())
+    std::map<int, Skill *>::iterator iter;
+    for (iter = skills.begin(); iter != skills.end(); ++iter)
     {
-        delete characters.front();
-        characters.pop_front();
+        delete (*iter).second;
     }
-    while(!users.empty())
-    {
-        delete users.front();
-        users.pop_front();
-    }
+    skills.clear();
+    
     std::map<int, Room *>::iterator iter3;
     for(iter3 = rooms.begin(); iter3 != rooms.end(); ++iter3)
     {
@@ -634,7 +637,8 @@ void Game::WorldUpdate(Server * server)
 					{
 						currChar->EnterCombat((*aggroiter));
 						(*aggroiter)->EnterCombat(currChar);
-						(*aggroiter)->Send(currChar->GetName() + " begins attacking you!\r\n");
+						//(*aggroiter)->Send(currChar->GetName() + " begins attacking YOU!\r\n");
+                        //(*aggroiter)->Message(currChar->GetName() + " begins attacking " + (*aggroiter)->GetName() + "!", Character::MSG_ROOM_NOTCHAR);
 						currChar->AutoAttack((*aggroiter));
 						break;
 					}
@@ -665,7 +669,7 @@ void Game::WorldUpdate(Server * server)
             }
             else if (currChar->IsNPC() && !currChar->meleeActive && !currChar->IsCrowdControlled() && currChar->GetTarget() && currChar->GetTarget()->room == currChar->room)
             {   //Allows NPC to resume attacking after crowd control expires
-                currChar->meleeActive = true;
+                //currChar->meleeActive = true;
                 currChar->AutoAttack(currChar->GetTarget());
             }
             /*
@@ -726,7 +730,8 @@ void Game::WorldUpdate(Server * server)
 							currNPC->leashPath.push_back(std::make_pair(currNPC->room, chasedir));
 							currNPC->Move(chasedir);
 							if(currNPC->GetTopThreat()->room == currNPC->room)
-								currNPC->EnterCombat(currNPC->GetTopThreat());
+								//currNPC->EnterCombat(currNPC->GetTopThreat());
+                                currNPC->AutoAttack(currNPC->GetTopThreat());
 						}
 						else
 						{
@@ -792,8 +797,8 @@ void Game::WorldUpdate(Server * server)
 				{
 					if (currNPC->GetTarget() != taunt->caster)
 					{
-						taunt->caster->Send(currNPC->GetName() + " changes " + currNPC->HisHer() + " target and begins attacking you!\r\n");
-						taunt->caster->Message(currNPC->GetName() + " changes " + currNPC->HisHer() + " target and begins attacking " + taunt->caster->GetName() + "!",
+						taunt->caster->Send(currNPC->GetName() + " changes " + currNPC->HisHer() + " target to YOU!\r\n");
+						taunt->caster->Message(currNPC->GetName() + " changes " + currNPC->HisHer() + " target to " + taunt->caster->GetName() + "!",
 							Character::MessageType::MSG_ROOM_NOTCHARVICT, currNPC);
 					}
 					currNPC->SetTarget(taunt->caster);
@@ -801,8 +806,8 @@ void Game::WorldUpdate(Server * server)
                 else if(topthreat && topthreat != currNPC->GetTarget() && (currNPC->GetThreat(currNPC->GetTarget()) + currNPC->GetThreat(currNPC->GetTarget()) * .1) < currNPC->GetThreat(topthreat))
                 {
 					currNPC->SetTarget(currNPC->GetTopThreat());
-					currNPC->GetTarget()->Send(currNPC->GetName() + " changes " + currNPC->HisHer() + " target and begins attacking you!\r\n");
-					currNPC->Message(currNPC->GetName() + " changes " + currNPC->HisHer() + " target and begins attacking " + currNPC->GetTarget()->GetName() + "!",
+					currNPC->GetTarget()->Send(currNPC->GetName() + " changes " + currNPC->HisHer() + " target to YOU!\r\n");
+					currNPC->Message(currNPC->GetName() + " changes " + currNPC->HisHer() + " target to " + currNPC->GetTarget()->GetName() + "!",
 						Character::MessageType::MSG_ROOM_NOTCHARVICT, currNPC->GetTarget());
                 }
             }
