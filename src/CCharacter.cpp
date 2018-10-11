@@ -871,7 +871,9 @@ bool Character::IsCrowdControlled()
 void Character::RemoveCrowdControlOnHit()
 {
     while (RemoveSpellAffectsByAura(true, SpellAffect::AURA_INCAPACITATE))
-    { }
+    { 
+        
+    }
 }
 
 int Character::GetSmallestAuraModifier(int aura_id)
@@ -1450,6 +1452,7 @@ void Character::OneHeal(Character * victim, int heal)
 
 	EnterCombatAssist(victim);
 
+    //Healing threat is divided by number of characters aware of us (if they're on our threat list we're on theirs)
 	for (auto threatiter = threatList.begin(); threatiter != threatList.end(); threatiter++)
 	{
 		Threat * threat = &(*threatiter);

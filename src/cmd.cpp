@@ -185,10 +185,12 @@ void cmd_look(Player * ch, std::string argument)
 	        ch->Send("  " + inroom->description);
 
 		cmd_scan(ch, "");
-		ch->Send("\r\n");
 
 		if (!ch->IsGhost() || (ch->IsGhost() && (inroom->id == ch->corpse_room || inroom->id == ch->graveyard_room)))
 		{
+            if(!inroom->items.empty() || inroom->characters.size() > 1)
+                ch->Send("\r\n");
+
 			for (auto itemiter = inroom->items.begin(); itemiter != inroom->items.end(); itemiter++)
 			{
 				if(!itemiter->first->inroom_name.empty())
@@ -312,19 +314,227 @@ void cmd_look(Player * ch, std::string argument)
 				Character * tappedBy = (*i)->GetTap();
 				if (tappedBy)
 				{
-					tapped = "|D(tapped by " + tappedBy->GetName() + ")";
+                    if (tappedBy->InSameGroup(ch))
+                        tapped += "|G";
+                    else
+                        tapped += "|D";
+                    tapped += "(tapped by ";
+                    if (tappedBy == ch)
+                        tapped += "YOU!)";
+                    else
+                        tapped += tappedBy->GetName() + ")";
 				}
 				ch->Send(disconnected + level + questicon + in_combat + aggressionColor + corpse + (*i)->GetName() + title + " is here" + targeting + crowd_control + tapped + "|X\r\n");
 			}
-			ch->Send("\r\n");	
+			//ch->Send("\r\n");	
 		}
     }
-    else if (!Utilities::str_cmp(arg1, "north"))
+    else // "look argument"
     {
-        
-    }
-    else // "look argument" //TODO, look at things in the room with higher priority
-    {
+        //look <direction>
+        for (int i = 0; i < Exit::DIR_LAST; i++)
+        {
+            if (!Utilities::str_cmp(arg1, Exit::exitNames[i]))
+            {
+                if (!ch->room->exits[i] || !ch->room->exits[i]->to)
+                {
+                    ch->Send("There is no exit in that direction.\r\n");
+                    return;
+                }
+                Room * inroom = ch->room->exits[i]->to;
+                bool exitstatus[Exit::DIR_LAST];
+                for (int i = 0; i < Exit::DIR_LAST; i++)
+                {
+                    if (inroom->exits[i] && inroom->exits[i]->to)
+                        exitstatus[i] = true;
+                    else
+                        exitstatus[i] = false;
+                }
+                std::stringstream roomstream;
+                roomstream << " |W" << std::left << std::setw(55) << inroom->name <<
+                    std::setw(8) << (exitstatus[7] ? "|WNW" : "|B--") <<
+                    std::setw(7) << (exitstatus[0] ? "|WN" : "|B-") <<
+                    (exitstatus[1] ? "|WNE" : "|B--") << "|X\r\n";
+                roomstream << std::left << std::setw(58) << "|B(-------------------------------------------------)" <<
+                    (exitstatus[6] ? "|WW" : "|B-") << "|Y <-" << (exitstatus[8] ? "|WU|Y" : "-") << "-X-" <<
+                    (exitstatus[9] ? "|WD|Y" : "-") << "-> " << (exitstatus[2] ? "|WE" : "|B-") << "|X\r\n";
+
+                std::string areaname = "|X";
+                Area * this_area = Game::GetGame()->GetArea(inroom->area);
+                if (this_area != nullptr)
+                {
+                    //TODO add pvp room rules to Game somewhere...
+                    if (this_area->pvp == 0) //no pvp whatsoever
+                        areaname = "|C";
+                    else if (this_area->pvp == 1) //dueling and guild pvp
+                        areaname = "|G";
+                    else if (this_area->pvp == 2) //everyone attacks everyone
+                        areaname = "|Y";
+                    else if (this_area->pvp == 3) //everyone attacks everyone, lose all your equipment?
+                        areaname = "|R";
+
+                    areaname += this_area->name;
+                }
+
+                roomstream << " " << std::left << std::setw(26) << areaname;
+                std::string roomflags = "";
+                if (Utilities::FlagIsSet(inroom->flags, Room::Flags::FLAG_RECALL))
+                    roomflags += "[Recall]";
+                if (ch && ch->IsImmortal())
+                    roomflags += "[Room ID: " + Utilities::itos(inroom->id) + "]";
+
+                roomstream << "|Y" << std::right << std::setw(26) << roomflags;
+                roomstream << std::right << std::setw(9) << (exitstatus[5] ? "|WSW" : "|B--") <<
+                    std::setw(7) << (exitstatus[4] ? "|WS" : "|B-") <<
+                    std::setw(8) << (exitstatus[3] ? "|WSE" : "|B--") << "|X\r\n\r\n";
+
+                ch->Send(roomstream.str());
+
+                if (!inroom->description.empty())
+                    ch->Send("  " + inroom->description);
+
+                if (!ch->IsGhost() || (ch->IsGhost() && (inroom->id == ch->corpse_room || inroom->id == ch->graveyard_room)))
+                {
+                    for (auto itemiter = inroom->items.begin(); itemiter != inroom->items.end(); itemiter++)
+                    {
+                        if (!itemiter->first->inroom_name.empty())
+                            ch->Send(itemiter->first->inroom_name + "\r\n");
+                        else
+                            ch->Send(itemiter->first->GetName() + "\r\n");
+                    }
+
+                    std::list<Character *>::iterator i;
+                    for (i = inroom->characters.begin(); i != inroom->characters.end(); i++)
+                    {
+                        if (ch == (*i))
+                            continue;
+
+                        if (!ch->IsImmortal() && (*i)->IsGhost())
+                        {
+                            continue;
+                        }
+
+                        //Determine appropriate quest icon. Hierarchy |Y?, |Y!, |W?, |D!
+                        //Search quests this npc ends
+                        std::string questicon = "";
+                        if ((*i)->IsNPC())
+                        {
+                            NPC * inroom_npc = (NPC*)(*i);
+                            bool foundyellow = false; bool foundwhite = false;
+                            if (!inroom_npc->GetNPCIndex()->questEnd.empty())
+                            {
+                                std::vector<Quest *>::iterator questiter;
+                                for (questiter = inroom_npc->GetNPCIndex()->questEnd.begin(); questiter != inroom_npc->GetNPCIndex()->questEnd.end(); ++questiter)
+                                {
+                                    if (ch->QuestObjectivesComplete(*questiter))
+                                    {
+                                        questicon = "|Y[?] ";
+                                        foundyellow = true;
+                                        break;
+                                    }
+                                    else if (ch->QuestActive(*questiter))
+                                    {
+                                        questicon = "|W[?] ";
+                                        foundwhite = true;
+                                    }
+                                }
+                            }
+                            //Search quests this npc starts
+                            if (!foundyellow && !inroom_npc->GetNPCIndex()->questStart.empty())
+                            {
+                                std::vector<Quest *>::iterator questiter;
+                                for (questiter = inroom_npc->GetNPCIndex()->questStart.begin(); questiter != inroom_npc->GetNPCIndex()->questStart.end(); ++questiter)
+                                {
+                                    if (ch->QuestEligible(*questiter))
+                                    {
+                                        //TODO: white ! for soon to be available quests
+                                        if (!foundwhite && Quest::GetDifficulty(ch->GetLevel(), (*questiter)->level) == 0)
+                                        {
+                                            questicon = "|Y[|D!|Y] ";
+                                        }
+                                        else
+                                        {
+                                            questicon = "|Y[!] ";
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        std::string disconnected = "";
+                        std::string title = "";
+                        std::string corpse = "";
+                        std::string targeting = ".";
+                        std::string level = "";
+                        std::string aggressionColor = "|G";
+                        std::string crowd_control = "";
+                        std::string tapped = "";
+                        std::string in_combat = "";
+
+                        Player * inroom_player = nullptr;
+                        if ((*i)->IsPlayer())
+                            inroom_player = (Player*)(*i);
+
+                        if ((*i)->IsPlayer() && inroom_player->user && !inroom_player->user->IsConnected())
+                            disconnected = "|Y[DISCONNECTED] |X";
+
+                        if ((*i)->IsPlayer())
+                            title = (*i)->GetTitle();
+                        else if (!(*i)->GetTitle().empty())
+                            title = " <" + (*i)->GetTitle() + ">";
+
+                        level += "<" +
+                            Game::LevelDifficultyColor(Game::LevelDifficulty(ch->GetLevel(), (*i)->GetLevel()))
+                            + Utilities::itos((*i)->GetLevel()) + "|X> ";
+
+                        if ((*i)->IsCorpse())
+                        {
+                            corpse = "|DThe corpse of ";
+                        }
+                        if (ch->IsImmortal() && (*i)->IsGhost())
+                        {
+                            corpse = "The ghost of ";
+                        }
+                        if ((*i)->InCombat())
+                        {
+                            in_combat = "|R(X)|X ";
+                            if ((*i)->GetTarget() && (*i)->GetTarget() == ch)
+                                targeting = ", targeting YOU!";
+                            else if ((*i)->GetTarget())
+                                targeting = ", targeting " + (*i)->GetTarget()->GetName() + ".";
+                            /*
+                            if ((*i)->IsFighting(ch))
+                            fighting = ", fighting YOU!";
+                            else if ((*i)->GetTarget() != nullptr && (*i)->IsFighting((*i)->GetTarget()))
+                            fighting = ", fighting " + (*i)->GetTarget()->GetName() + ".";
+                            */
+                        }
+                        aggressionColor = ch->AggressionColor((*i));
+                        SpellAffect * cc = (*i)->GetFirstSpellAffectWithAura(SpellAffect::AURA_INCAPACITATE);
+                        if (cc != nullptr)
+                        {
+                            crowd_control = cc->GetDataString("cmd_look_cc");
+                        }
+                        Character * tappedBy = (*i)->GetTap();
+                        if (tappedBy)
+                        {
+                            if (tappedBy->InSameGroup(ch))
+                                tapped += "|G";
+                            else
+                                tapped += "|D";
+                            tapped += "(tapped by ";
+                            if(tappedBy == ch)
+                                tapped += "YOU!)";
+                            else
+                                tapped += tappedBy->GetName() + ")";
+                        }
+                        ch->Send(disconnected + level + questicon + in_combat + aggressionColor + corpse + (*i)->GetName() + title + " is here" + targeting + crowd_control + tapped + "|X\r\n");
+                    }
+                }
+                return;
+            }
+        }
+
         //Search for a player to look at
 		Character * ch_inspect = ch->GetCharacterRoom(arg1);
 		if (ch_inspect != nullptr && ch_inspect->IsPlayer())
