@@ -406,12 +406,12 @@ void Character::Move(int direction)
 	{
 		for (std::list<Character*>::iterator iter = room->characters.begin(); iter != room->characters.end(); ++iter)
 		{
-			if ((*iter)->IsNPC() && (*iter)->IsAlive() && (*iter)->FlagIsSet(NPCIndex::FLAG_AGGRESSIVE) && !(*iter)->InCombat() && !IsImmortal())
+			if ((*iter)->IsNPC() && (*iter)->IsAlive() && (*iter)->FlagIsSet(NPCIndex::FLAG_AGGRESSIVE) && !(*iter)->GetTarget() && !IsImmortal())
 			{
 				(*iter)->EnterCombat(this);
 				EnterCombat(*iter);
-				Send((*iter)->GetName() + " begins attacking YOU!\r\n");
-                Message((*iter)->GetName() + " begins attacking " + GetName() + "!", MSG_ROOM_NOTCHAR);
+				//Send((*iter)->GetName() + " begins attacking YOU!\r\n");
+                //Message((*iter)->GetName() + " begins attacking " + GetName() + "!", MSG_ROOM_NOTCHAR);
                 (*iter)->AutoAttack(this);
 			}
 		}
