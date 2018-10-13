@@ -2205,16 +2205,16 @@ bool acceptResOrReleaseQuery(Player * ch, std::string argument)
         ch->SetRage(0);
 
         ch->ChangeRooms(resroom);
-        ch->RemoveCorpse();
 
         ch->Message("|W" + ch->GetName() + " appears in a shimmering silver mist.|X", Character::MessageType::MSG_ROOM_NOTCHAR);
         ch->SetAlive();
         ch->QueryClear();
+        ch->Look("");
         return true;
     }
     if (!Utilities::str_cmp(argument, "release"))
     {
-        releaseSpiritQuery(ch, argument);
+        return releaseSpiritQuery(ch, argument);
     }
     return false;
 }

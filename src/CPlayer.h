@@ -191,6 +191,7 @@ public:
 	void SendGMCP(char * str) override;
 	void QueryClear();
 	void SetQuery(std::string prompt, void * data, bool(*queryFunction)(Player *, std::string));
+    void LuaSetQuery(std::string prompt, sol::userdata * data, std::string whichQuery);
 	void * GetQueryData();
 	bool HasQuery();
 	bool(*GetQueryFunc())(Player *, std::string);

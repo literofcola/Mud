@@ -123,6 +123,17 @@ void Player::SetQuery(std::string prompt, void * data, bool(*func)(Player *, std
 	queryPrompt = prompt;
 }
 
+void Player::LuaSetQuery(std::string prompt, sol::userdata * data, std::string whichQuery)
+{
+    if (whichQuery == "PlayerResQuery")
+    {
+        hasQuery = true;
+        queryData = data;
+        queryPrompt = prompt;
+        queryFunction = acceptResOrReleaseQuery;
+    }
+}
+
 void * Player::GetQueryData()
 {
 	return queryData;
