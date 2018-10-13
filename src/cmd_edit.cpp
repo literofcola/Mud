@@ -394,9 +394,16 @@ void cmd_edit(Player * ch, std::string argument)
 	}
 	else if (!Utilities::str_cmp(arg1, "reloadlua"))
 	{
-		Server::lua.script_file("lua_constants.lua");
-		Server::lua.script_file("lua_skills.lua");
-		ch->Send("Reloaded files: lua_constants.lua, lua_skills.lua\r\n");
+        try 
+        {
+            Server::lua.script_file("lua_constants.lua");
+            Server::lua.script_file("lua_skills.lua");
+            ch->Send("Reloaded files: lua_constants.lua, lua_skills.lua\r\n");
+        }
+        catch (const std::exception & e)
+        {
+            LogFile::Log("error", e.what());
+        }
 	}
 	else
 	{
@@ -1520,7 +1527,7 @@ void skillEditCmd_interrupt_flags(Player * ch, std::string argument)
 		ch->Send("Interrupt flags: 0 INTERRUPT_MOVE, 1 INTERRUPT_HIT, 2 INTERRUPT_NOPUSHBACK\r\n");
 		return;
 	}
-	pSkill->interruptFlags.set(flag);
+	pSkill->interruptFlags.flip(flag);
 	pSkill->changed = true;
 	ch->Send("interrupt_flag set.\r\n");
 }

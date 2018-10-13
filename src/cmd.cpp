@@ -82,8 +82,6 @@ void cmd_attack(Player * ch, std::string argument)
 
     ch->SetTarget(target);
     ch->Send("You begin attacking " + target->GetName() + "!\r\n");
-    //target->Send(ch->GetName() + " begins attacking YOU!\r\n");
-	//ch->Message(ch->GetName() + " begins attacking " + target->GetName() + "!", Character::MSG_ROOM_NOTCHARVICT, target);
 
     ch->EnterCombat(target);
     target->EnterCombat(ch);
@@ -1501,6 +1499,104 @@ even if they are outside.
 Movement is allowed at a rate of three rooms per second, which can be altered by spell affects or the use of a mount.
 */
 
+void cmd_alias(Player * ch, std::string argument)
+{
+    if (ch->IsNPC())
+        return;
+
+    std::string new_alias;
+    argument = Utilities::one_argument(argument, new_alias);
+
+    if (new_alias.empty())
+    {
+        if (ch->alias.empty())
+        {
+            ch->Send("You have no aliases.\r\n");
+            ch->Send("Use: alias <word>\r\n     alias <word> <substitution>\r\n");
+        }
+        else
+        {
+            ch->Send("Existing aliases:\r\n");
+            for (auto iter = ch->alias.begin(); iter != ch->alias.end(); iter++)
+            {
+                ch->Send("'" + iter->first + "' : '" + iter->second + "'\r\n");
+            }
+        }
+        return;
+    }
+
+    if (!Utilities::str_cmp(new_alias, "alias") || !Utilities::str_cmp(new_alias, "unalias"))
+    {
+        ch->Send("That word is reserved.\r\n");
+        return;
+    }
+
+    auto alias_iter = ch->alias.find(new_alias);
+    if (alias_iter != ch->alias.end())
+    {
+        if (!argument.empty())
+        {
+            ch->Send("That alias already exists.\r\n");
+        }
+        ch->Send(new_alias + ": " + alias_iter->second + "\r\n");
+        return;
+    }
+    if (argument.empty())
+    {
+        ch->Send("Alias '" + new_alias + "' to what?\r\n");
+        return;
+    }
+    if (argument.length() > MAX_COMMAND_LENGTH)
+    {
+        ch->Send("That alias substitution is too long. Maximum length is " + Utilities::itos(MAX_COMMAND_LENGTH) + " characters.\r\n");
+        return;
+    }
+    if (new_alias.length() > 25)
+    {
+        ch->Send("That alias keyword is too long. Maximum length is 25 characters.\r\n");
+        return;
+    }
+    ch->alias[new_alias] = argument;
+    ch->Send("Alias created: '" + new_alias + "': " + argument + "\r\n");
+}
+
+void cmd_unalias(Player * ch, std::string argument)
+{
+    if (ch->IsNPC())
+        return;
+
+    if (ch->alias.empty())
+    {
+        ch->Send("You have no aliases.\r\n");
+        ch->Send("Use: unalias <word>\r\n");
+        return;
+    }
+
+    std::string remove_alias;
+    argument = Utilities::one_argument(argument, remove_alias);
+
+    if (remove_alias.empty())
+    {
+        ch->Send("Use: unalias <word>\r\n");
+        ch->Send("Existing aliases:\r\n");
+        for (auto iter = ch->alias.begin(); iter != ch->alias.end(); iter++)
+        {
+            ch->Send("'" + iter->first + "' : '" + iter->second + "'\r\n");
+        }
+        return;
+    }
+
+    auto iter = ch->alias.find(remove_alias);
+    if (iter == ch->alias.end())
+    {
+        ch->Send("You don't have an alias with that name.\r\n");
+        return;
+    }
+
+    ch->alias.erase(remove_alias);
+    ch->Send("Alias '" + remove_alias + "' deleted.\r\n");
+}
+
 void cmd_quest(Player * ch, std::string argument)
 {
     if(argument.empty())
@@ -2092,6 +2188,37 @@ bool releaseSpiritQuery(Player * ch, std::string argument)
     return false;
 }
 
+bool acceptResOrReleaseQuery(Player * ch, std::string argument)
+{
+    if (!Utilities::str_cmp(argument, "accept"))
+    {
+        Room * resroom = (Room*)ch->GetQueryData();
+        if (resroom == nullptr)
+        {
+            LogFile::Log("error", "acceptResOrReleaseQuery, null res room");
+            ch->QueryClear();
+            return true;
+        }
+        ch->SetHealth(ch->GetMaxHealth() / 4);
+        ch->SetMana(ch->GetMaxMana() / 4);
+        ch->SetEnergy(0);
+        ch->SetRage(0);
+
+        ch->ChangeRooms(resroom);
+        ch->RemoveCorpse();
+
+        ch->Message("|W" + ch->GetName() + " appears in a shimmering silver mist.|X", Character::MessageType::MSG_ROOM_NOTCHAR);
+        ch->SetAlive();
+        ch->QueryClear();
+        return true;
+    }
+    if (!Utilities::str_cmp(argument, "release"))
+    {
+        releaseSpiritQuery(ch, argument);
+    }
+    return false;
+}
+
 bool acceptResQuery(Player * ch, std::string argument)
 {
 	if (!Utilities::str_cmp(argument, "accept"))
@@ -2121,102 +2248,4 @@ bool returnToGYQuery(Player * ch, std::string argument)
 		return true;
 	}
 	return false;
-}
-
-void cmd_alias(Player * ch, std::string argument)
-{
-	if (ch->IsNPC())
-		return;
-
-	std::string new_alias;
-	argument = Utilities::one_argument(argument, new_alias);
-
-	if (new_alias.empty())
-	{
-		if (ch->alias.empty())
-		{
-			ch->Send("You have no aliases.\r\n");
-			ch->Send("Use: alias <word>\r\n     alias <word> <substitution>\r\n");
-		}
-		else
-		{
-			ch->Send("Existing aliases:\r\n");
-			for (auto iter = ch->alias.begin(); iter != ch->alias.end(); iter++)
-			{
-				ch->Send("'" + iter->first + "' : '" + iter->second + "'\r\n");
-			}
-		}
-		return;
-	}
-
-	if (!Utilities::str_cmp(new_alias, "alias") || !Utilities::str_cmp(new_alias, "unalias"))
-	{
-		ch->Send("That word is reserved.\r\n");
-		return;
-	}
-
-	auto alias_iter = ch->alias.find(new_alias);
-	if (alias_iter != ch->alias.end())
-	{
-		if (!argument.empty())
-		{
-			ch->Send("That alias already exists.\r\n");
-		}
-		ch->Send(new_alias + ": " + alias_iter->second + "\r\n");
-		return;
-	}
-	if (argument.empty())
-	{
-		ch->Send("Alias '" + new_alias + "' to what?\r\n");
-		return;
-	}
-	if (argument.length() > MAX_COMMAND_LENGTH)
-	{
-		ch->Send("That alias substitution is too long. Maximum length is " + Utilities::itos(MAX_COMMAND_LENGTH) + " characters.\r\n");
-		return;
-	}
-	if (new_alias.length() > 25)
-	{
-		ch->Send("That alias keyword is too long. Maximum length is 25 characters.\r\n");
-		return;
-	}
-	ch->alias[new_alias] = argument;
-	ch->Send("Alias created: '" + new_alias + "': " + argument + "\r\n");
-}
-
-void cmd_unalias(Player * ch, std::string argument)
-{
-	if (ch->IsNPC())
-		return;
-
-	if (ch->alias.empty())
-	{
-		ch->Send("You have no aliases.\r\n");
-		ch->Send("Use: unalias <word>\r\n");
-		return;
-	}
-
-	std::string remove_alias;
-	argument = Utilities::one_argument(argument, remove_alias);
-
-	if (remove_alias.empty())
-	{
-		ch->Send("Use: unalias <word>\r\n");
-		ch->Send("Existing aliases:\r\n");
-		for (auto iter = ch->alias.begin(); iter != ch->alias.end(); iter++)
-		{
-			ch->Send("'" + iter->first + "' : '" + iter->second + "'\r\n");
-		}
-		return;
-	}
-
-	auto iter = ch->alias.find(remove_alias);
-	if (iter == ch->alias.end())
-	{
-		ch->Send("You don't have an alias with that name.\r\n");
-		return;
-	}
-
-	ch->alias.erase(remove_alias);
-	ch->Send("Alias '" + remove_alias + "' deleted.\r\n");
 }

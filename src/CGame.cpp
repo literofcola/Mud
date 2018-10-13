@@ -637,8 +637,6 @@ void Game::WorldUpdate(Server * server)
 					{
 						currChar->EnterCombat((*aggroiter));
 						(*aggroiter)->EnterCombat(currChar);
-						//(*aggroiter)->Send(currChar->GetName() + " begins attacking YOU!\r\n");
-                        //(*aggroiter)->Message(currChar->GetName() + " begins attacking " + (*aggroiter)->GetName() + "!", Character::MSG_ROOM_NOTCHAR);
 						currChar->AutoAttack((*aggroiter));
 						break;
 					}

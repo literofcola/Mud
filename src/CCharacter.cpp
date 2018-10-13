@@ -410,8 +410,6 @@ void Character::Move(int direction)
 			{
 				(*iter)->EnterCombat(this);
 				EnterCombat(*iter);
-				//Send((*iter)->GetName() + " begins attacking YOU!\r\n");
-                //Message((*iter)->GetName() + " begins attacking " + GetName() + "!", MSG_ROOM_NOTCHAR);
                 (*iter)->AutoAttack(this);
 			}
 		}

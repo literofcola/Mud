@@ -29,6 +29,7 @@ void Lua_DefineFunctions(sol::state * lua)
 	//lua->set_function("cmd_cast", cmd_cast); //cmd_cast(Player * ch, string argument);
 	//lua->set_function("cmd_look", cmd_look); //cmd_look(Player * ch, string argument);
 	lua->set_function("FlagIsSet", Utilities::FlagIsSet); //bool FlagIsSet(std::vector<int> & flags, const int flag)	
+    lua->set_function("ResQuery", acceptResOrReleaseQuery);
 
 	Server::lua.script(R"(
 						function getinfowrapper(whichfunc)
@@ -138,7 +139,10 @@ void Lua_DefineClasses(sol::state * lua)
 		(*lua).new_usertype<Player>("Player",
 			sol::base_classes, sol::bases<Character>(),
 			"GetClassLevel", &Player::GetClassLevel,
-			"SetLevel", &Player::SetLevel
+			"SetLevel", &Player::SetLevel,
+            "SetQuery", (void(Player::*)(std::string, void*, sol::function))&Player::SetQuery
+            //(void(Character::*)(bool, std::string))
+            //void SetQuery(std::string prompt, void * data, bool(*queryFunction)(Player *, std::string));
 			);
 
 		(*lua).new_usertype<Room>("Room",
