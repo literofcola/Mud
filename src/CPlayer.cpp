@@ -67,9 +67,6 @@ Player::Player(std::string name_, User * user_) : Character()
 	currentClass = nullptr;
 	comboPoints = 0;
 	maxComboPoints = 5;
-	hasQuery = false;
-	queryFunction = nullptr;
-	queryData = nullptr;
 	isGhost = false;
 
 	health = GetMaxHealth();
@@ -107,46 +104,101 @@ void Player::SendGMCP(char * str)
 	user->SendGMCP(str);
 }
 
-void Player::QueryClear()
+void Player::QueryClearAll()
 {
-	queryData = nullptr;
-	queryFunction = nullptr;
-	queryPrompt = "";
-	hasQuery = false;
+    queryList.clear();
 }
 
-void Player::SetQuery(std::string prompt, void * data, bool(*func)(Player *, std::string))
+void Player::QueryClear(bool(*whichFunc)(Player *, std::string))
 {
-	hasQuery = true;
-	queryFunction = func;
-	queryData = data;
-	queryPrompt = prompt;
-}
-
-void Player::LuaSetQuery(std::string prompt, sol::userdata * data, std::string whichQuery)
-{
-    if (whichQuery == "PlayerResQuery")
+    for (auto iter = begin(queryList); iter != end(queryList); ++iter)
     {
-        hasQuery = true;
-        queryData = data;
-        queryPrompt = prompt;
-        queryFunction = acceptResOrReleaseQuery;
+        if (iter->queryFunction == whichFunc)
+        {
+            queryList.erase(iter);
+            return;
+        }
     }
 }
 
-void * Player::GetQueryData()
+void Player::AddQuery(std::string prompt, void * data, bool(*func)(Player *, std::string))
 {
-	return queryData;
+    Query q;
+    q.queryDataPtr = data;
+    q.queryFunction = func;
+    q.queryPrompt = prompt;
+    queryList.push_back(q);
+}
+
+void Player::AddQuery(std::string prompt, int data, bool(*func)(Player *, std::string))
+{
+    Query q;
+    q.queryDataInt = data;
+    q.queryFunction = func;
+    q.queryPrompt = prompt;
+    queryList.push_back(q);
+}
+
+//Couldn't figure out how to pass a function pointer through Lua so needed a Lua specific version
+void Player::LuaAddQuery(std::string prompt, sol::userdata * data, std::string whichQuery)
+{
+    if (whichQuery == "PlayerResQuery")
+    {
+        Query q;
+        q.queryDataPtr = data;
+        q.queryFunction = acceptPlayerRes;
+        q.queryPrompt = prompt;
+        queryList.push_back(q);
+    }
+}
+
+void * Player::GetQueryDataPtr(bool(*whichFunc)(Player *, std::string))
+{
+    for (auto iter = begin(queryList); iter != end(queryList); ++iter)
+    {
+        if (iter->queryFunction == whichFunc)
+            return iter->queryDataPtr;
+    }
+    return nullptr;
+}
+
+int Player::GetQueryDataInt(bool(*whichFunc)(Player *, std::string))
+{
+    for (auto iter = begin(queryList); iter != end(queryList); ++iter)
+    {
+        if (iter->queryFunction == whichFunc)
+            return iter->queryDataInt;
+    }
+    return -1;
 }
 
 bool Player::HasQuery()
 {
-	return hasQuery;
+    if (!queryList.empty())
+        return true;
+    return false;
 }
 
-bool(*Player::GetQueryFunc())(Player *, std::string)
+bool Player::HasQuery(bool(*whichFunc)(Player *, std::string))
 {
-	return queryFunction;
+    for (auto iter = begin(queryList); iter != end(queryList); ++iter)
+    {
+        if(iter->queryFunction == whichFunc)
+            return true;
+    }
+	return false;
+}
+
+bool(*Player::GetQueryFunc(int queryindex))(Player *, std::string)
+{
+    int ctr = 0;
+    for (auto iter = begin(queryList); iter != end(queryList); ++iter)
+    {
+        if (ctr == queryindex)
+            return iter->queryFunction;
+        ctr++;
+    }
+    return nullptr;
 }
 
 void Player::AddSkill(Skill * newskill)
@@ -586,9 +638,12 @@ void Player::GeneratePrompt(double currentTime)
 		Send(prompt);
 	}
 
-	if (hasQuery)
+	if (HasQuery())
 	{
-		Send(queryPrompt + "\r\n");
+        for (auto iter = begin(queryList); iter != end(queryList); ++iter)
+        {
+            Send(iter->queryPrompt + "\r\n");
+        }
 	}
 }
 
@@ -1949,7 +2004,8 @@ void Player::RemoveCorpse()
 {
 	if (corpse_room == 0)
 	{
-		LogFile::Log("error", "Character::RemoveCorpse() with bad player->corpse_room");
+        //Not really an error... sometimes call RemoveCorpse when we're not sure if it exists or not
+		//LogFile::Log("error", "Character::RemoveCorpse() with bad player->corpse_room");
 		return;
 	}
 
@@ -2008,12 +2064,17 @@ void Player::Notify(SubscriberManager * lm)
 		comboPointTarget = nullptr;
 	}
 
-	if (hasQuery && (Character *)queryData == (Character *)lm) //We have a query pending where the 'data' payload is the Character being deleted (group invite)
-	{
-		lm->RemoveSubscriber(this);
-		QueryClear();
-	}
-
+    if (HasQuery())
+    {
+        for (auto iter = begin(queryList); iter != end(queryList);)
+        {
+            if ((Character *)iter->queryDataPtr == (Character *)lm) //We have a query pending where the 'data' payload is the Character being deleted (group invite)
+            {
+                lm->RemoveSubscriber(this);
+                queryList.erase(iter++);
+            }
+        }
+    }
 	RemoveLootRoll((Character *)lm);
 }
 

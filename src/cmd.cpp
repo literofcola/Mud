@@ -963,13 +963,13 @@ void cmd_group(Player * ch, std::string argument)
 				ch->Send("That player already has a group.\r\n");
 				return;
 			}
-			if (vch->HasQuery())
+			if (vch->HasQuery(cmd_groupQuery))
 			{
-				ch->Send("That player is busy.\r\n");
+				ch->Send("That player has a pending group invitation.\r\n");
 				return;
 			}
 			ch->Send("You invite " + vch->GetName() + " to join your group.\r\n");
-			vch->SetQuery(ch->GetName() + " has invited you to join " + ch->HisHer() + " group ('accept'/'decline') ", (void*)ch, cmd_groupQuery);
+			vch->AddQuery(ch->GetName() + " has invited you to join " + ch->HisHer() + " group ('accept'/'decline') ", (void*)ch, cmd_groupQuery);
 			ch->AddSubscriber(vch); //If the person asking us to join disappears before we answer it's a problem
 			vch->Send("\r\n");
 		}
@@ -1296,12 +1296,12 @@ void cmd_group(Player * ch, std::string argument)
 
 bool cmd_groupQuery(Player *ch, std::string argument)
 {
-	Player * vch = (Player *)ch->GetQueryData();
+	Player * vch = (Player *)ch->GetQueryDataPtr(cmd_groupQuery);
 
 	if (!Utilities::str_cmp(argument, "accept"))
 	{
 		vch->RemoveSubscriber(ch);
-		ch->QueryClear();
+		ch->QueryClear(cmd_groupQuery);
 
 		if (ch->HasGroup())
 		{
@@ -1338,7 +1338,7 @@ bool cmd_groupQuery(Player *ch, std::string argument)
 	else if (!Utilities::str_cmp(argument, "decline"))
 	{
 		vch->Send(ch->GetName() + " declines your group invitation.\r\n");
-		ch->QueryClear();
+		ch->QueryClear(cmd_groupQuery);
 		vch->RemoveSubscriber(ch);
 		return true;
 	}
@@ -1942,7 +1942,7 @@ void cmd_quest(Player * ch, std::string argument)
 			}
 			rewardQueryString += "): ";
 			ch->Send(combinedRewards);
-			ch->SetQuery(rewardQueryString, (void*)qnum, questCompleteQuery); //Yes I'm casting an int to void*. Investigated templates, but...
+			ch->AddQuery(rewardQueryString, qnum, questCompleteQuery);
 		}
 		else
 		{
@@ -2043,9 +2043,9 @@ void cmd_quest(Player * ch, std::string argument)
 
 bool questCompleteQuery(Player * ch, std::string argument)
 {
-	int qnum = (int)ch->GetQueryData();
+	int qnum = ch->GetQueryDataInt(questCompleteQuery);
 	Quest * quest = ch->questLog[qnum - 1];
-	ch->QueryClear();
+	ch->QueryClear(questCompleteQuery);
 
 	std::string arg1;
 	Utilities::one_argument(argument, arg1);
@@ -2122,12 +2122,12 @@ void cmd_quit(Player * ch, std::string argument)
 	{
 		qp += "|R(Level one characters will not be saved)|X: ";
 	}
-	ch->SetQuery(qp, nullptr, cmd_quit_Query);
+	ch->AddQuery(qp, nullptr, cmd_quit_Query);
 }
 
 bool cmd_quit_Query(Player * ch, std::string argument)
 {
-    ch->QueryClear();
+    ch->QueryClear(cmd_quit_Query);
     if(!Utilities::str_cmp(argument, "yes") || !Utilities::str_cmp(argument, "y"))
 	{
         if(ch && ch->InCombat())
@@ -2158,7 +2158,8 @@ bool releaseSpiritQuery(Player * ch, std::string argument)
     {
 		ch->corpse_room = ch->room->id;
 		ch->SetGhost();
-        ch->QueryClear();
+        ch->QueryClear(releaseSpiritQuery);
+        ch->QueryClear(acceptPlayerRes);
 		Area * this_area = Game::GetGame()->GetArea(ch->room->area);
 		if (!this_area)
 		{
@@ -2188,15 +2189,15 @@ bool releaseSpiritQuery(Player * ch, std::string argument)
     return false;
 }
 
-bool acceptResOrReleaseQuery(Player * ch, std::string argument)
+bool acceptPlayerRes(Player * ch, std::string argument)
 {
     if (!Utilities::str_cmp(argument, "accept"))
     {
-        Room * resroom = (Room*)ch->GetQueryData();
+        Room * resroom = (Room*)ch->GetQueryDataPtr(acceptPlayerRes);
         if (resroom == nullptr)
         {
             LogFile::Log("error", "acceptResOrReleaseQuery, null res room");
-            ch->QueryClear();
+            ch->QueryClear(acceptPlayerRes);
             return true;
         }
         ch->SetHealth(ch->GetMaxHealth() / 4);
@@ -2205,16 +2206,16 @@ bool acceptResOrReleaseQuery(Player * ch, std::string argument)
         ch->SetRage(0);
 
         ch->ChangeRooms(resroom);
+        ch->RemoveCorpse();
 
         ch->Message("|W" + ch->GetName() + " appears in a shimmering silver mist.|X", Character::MessageType::MSG_ROOM_NOTCHAR);
         ch->SetAlive();
-        ch->QueryClear();
+        ch->QueryClear(acceptPlayerRes);
+        ch->QueryClear(acceptResQuery);
+        ch->QueryClear(returnToGYQuery);
+        ch->QueryClear(releaseSpiritQuery);
         ch->Look("");
         return true;
-    }
-    if (!Utilities::str_cmp(argument, "release"))
-    {
-        return releaseSpiritQuery(ch, argument);
     }
     return false;
 }
@@ -2232,7 +2233,10 @@ bool acceptResQuery(Player * ch, std::string argument)
 		
 		ch->Message("|W" + ch->GetName() + " appears in a shimmering silver mist.|X", Character::MessageType::MSG_ROOM_NOTCHAR);
 		ch->SetAlive();
-		ch->QueryClear();
+        ch->QueryClear(acceptPlayerRes);
+        ch->QueryClear(acceptResQuery);
+        ch->QueryClear(returnToGYQuery);
+        ch->QueryClear(releaseSpiritQuery);
 		return true;
 	}
 	return false;
@@ -2242,8 +2246,9 @@ bool returnToGYQuery(Player * ch, std::string argument)
 {
 	if (!Utilities::str_cmp(argument, "return"))
 	{
+        ch->QueryClear(acceptResQuery);
+        ch->QueryClear(returnToGYQuery);
 		ch->ChangeRooms(Game::GetGame()->GetRoom(ch->graveyard_room));
-		ch->QueryClear();
         ch->Look("");
 		return true;
 	}

@@ -34,7 +34,7 @@ void cmd_quit(Player * ch, std::string argument);
 bool cmd_quit_Query(Player * ch, std::string argument);
 bool releaseSpiritQuery(Player * ch, std::string argument);
 bool acceptResQuery(Player * ch, std::string argument);
-bool acceptResOrReleaseQuery(Player * ch, std::string argument);
+bool acceptPlayerRes(Player * ch, std::string argument);
 bool returnToGYQuery(Player * ch, std::string argument);
 bool questCompleteQuery(Player * ch, std::string argument);
 bool cmd_groupQuery(Player *ch, std::string argument);

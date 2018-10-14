@@ -429,9 +429,13 @@ bool Command::Interpret(Player * ch, string argument)
 
 	if(ch->HasQuery())
 	{
-		if((ch->GetQueryFunc())(ch, argument))
-			return true;
-		//if the question wasn't answered, interpret normally
+        int queryindex = 0;
+        bool (*queryfunc)(Player*,std::string);
+        while ((queryfunc = ch->GetQueryFunc(queryindex++)) != nullptr)
+        {
+            if (queryfunc(ch, argument)) //returns true if the question was answered, otherwise interpret normally
+                return true;
+        }
 	}
 
 	//Alias handling

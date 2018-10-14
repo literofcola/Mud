@@ -189,12 +189,16 @@ public:
 	void Send(char * str) override;
 	void SendGMCP(std::string str) override;
 	void SendGMCP(char * str) override;
-	void QueryClear();
-	void SetQuery(std::string prompt, void * data, bool(*queryFunction)(Player *, std::string));
-    void LuaSetQuery(std::string prompt, sol::userdata * data, std::string whichQuery);
-	void * GetQueryData();
-	bool HasQuery();
-	bool(*GetQueryFunc())(Player *, std::string);
+	void QueryClear(bool(*whichFunc)(Player *, std::string));
+    void QueryClearAll();
+	void AddQuery(std::string prompt, void * data, bool(*queryFunction)(Player *, std::string));
+    void AddQuery(std::string prompt, int data, bool(*func)(Player *, std::string));
+    void LuaAddQuery(std::string prompt, sol::userdata * data, std::string whichQuery);
+	void * GetQueryDataPtr(bool(*whichFunc)(Player *, std::string));
+    int GetQueryDataInt(bool(*whichFunc)(Player *, std::string));
+    bool HasQuery();
+	bool HasQuery(bool(*whichFunc)(Player *, std::string));
+	bool(*GetQueryFunc(int queryindex))(Player *, std::string);
 
 	//Inventory and equipment
 	int AddLootRoll(int corpse_id, NPC * corpse);
@@ -305,11 +309,17 @@ private:
 	int maxRage;
 	int comboPoints;
 	int maxComboPoints;
-	bool hasQuery;
-	bool(*queryFunction)(Player *, std::string);
-	void * queryData;
-	std::string queryPrompt;
-	bool isGhost;
+    bool isGhost;
+
+    struct Query
+    {
+        //bool hasQuery;
+        bool(*queryFunction)(Player *, std::string);
+        void * queryDataPtr;
+        int queryDataInt;
+        std::string queryPrompt;
+    };
+    std::list<Query> queryList; //Only one query per Query::queryFunction allowed
 };
 
 #endif

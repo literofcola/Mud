@@ -993,6 +993,15 @@ void Character::EnterCombatAssist(Character * friendly)
 		return;
 	}
 
+    if (IsNPC() && target == nullptr) //If we're a NPC entering combat via assist, target our friend's target
+    {
+        SetTarget(friendly->GetTarget());
+    }
+    else if(IsPlayer() && target == nullptr) //If we're a player entering combat via assist, target our friend
+    {
+        SetTarget(friendly);
+    }
+
 	combat = true;
     if(IsPlayer())
 		((Player*)(this))->lastCombatAction = Game::currentTime;
@@ -1080,14 +1089,16 @@ void Character::AutoAttack(Character * victim)
     }
     meleeActive = true;
 
+    Player * thisplayer = (Player*)this;
+    NPC * thisnpc = (NPC*)this;
+    if (thisnpc->GetTarget() == nullptr) //possible for a npc here
+    {
+        thisnpc->SetTarget(victim);
+    }
+
 	//NPC autoattack
     if(IsNPC() && lastAutoAttack_main + ((NPC*)(this))->GetNPCIndex()->npcAttackSpeed <= Game::currentTime)
     {
-		NPC * thisnpc = (NPC*)this;
-        if (thisnpc->GetTarget() == nullptr) //possible for a npc here
-        {
-            thisnpc->SetTarget(victim);
-        }
         if(victim->GetTarget() == nullptr) //Force a target on our victim
         {
             victim->SetTarget(this);
@@ -1151,7 +1162,6 @@ void Character::AutoAttack(Character * victim)
     }
     else if(IsPlayer()) //Player autoattack
     {
-		Player * thisplayer = (Player*)this;
 		weaponSpeed_main = thisplayer->GetMainhandWeaponSpeed();
 		damage_main = thisplayer->GetMainhandDamageRandomHit();
 		if(damage_main == 0)
@@ -1522,7 +1532,7 @@ void Character::OnDeath()
 	{
 		Player * thisplayer = (Player *)this;
 		ExitCombat();			//Removes our threat list
-		thisplayer->SetQuery("Release spirit? ('release') ", nullptr, releaseSpiritQuery);
+		thisplayer->AddQuery("Release spirit? ('release') ", nullptr, releaseSpiritQuery);
 	}
 	else if (IsNPC()) //NPC killed, figure out by who...
 	{
@@ -2391,6 +2401,9 @@ int Character::TimeSinceDeath()
 
 void Character::SetTarget(Character * t)
 {
+    if(t == nullptr)
+        return;
+
     if(target == t)
         return;
     if(target != nullptr)

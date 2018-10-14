@@ -287,27 +287,27 @@ void cmd_drop(Player * ch, string argument)
         ch->Send("You're not carrying that item.\r\n");
         return;
     }
-	ch->SetQuery("Destroy " + item->GetColoredName() + "|X? (y/n) ", item, cmd_drop_Query);
+	ch->AddQuery("Destroy " + item->GetColoredName() + "|X? (y/n) ", item, cmd_drop_Query);
 }
 
 bool cmd_drop_Query(Player * ch, string argument)
 {
     if(!ch)
     {
-        ch->QueryClear();
+        ch->QueryClear(cmd_drop_Query);
         return true;
     }
     if(ch->delay_active)
     {
         ch->Send("You can't do that while casting.\r\n");
-        ch->QueryClear();
+        ch->QueryClear(cmd_drop_Query);
         return true;
     }
 
     if(!Utilities::str_cmp(argument, "yes") || !Utilities::str_cmp(argument, "y"))
     {
-        Item * item = (Item*)ch->GetQueryData(); //the query data is the Item Index just in case it got deleted in the meantime
-        ch->QueryClear();
+        Item * item = (Item*)ch->GetQueryDataPtr(cmd_drop_Query); //the query data is the Item Index just in case it got deleted in the meantime
+        ch->QueryClear(cmd_drop_Query);
         if((item = ch->GetItemInventory(item->GetID())) == nullptr)
         {
             ch->Send("You're not carrying that item.\r\n");
@@ -316,7 +316,7 @@ bool cmd_drop_Query(Player * ch, string argument)
         ch->RemoveItemInventory(item->GetID());
         return true;
     }
-    ch->QueryClear();
+    ch->QueryClear(cmd_drop_Query);
     return true;
 }
 

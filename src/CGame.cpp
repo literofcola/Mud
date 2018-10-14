@@ -512,34 +512,33 @@ void Game::WorldUpdate(Server * server)
 
         if(!currChar->IsAlive())
         {
-			//todo: release spirit timer
+			//todo: release spirit timer?
 			if (!currChar->IsNPC() && currChar->IsGhost())
 			{
-				//I came up with the probably absurd logic here at 5am. I feel like it could be a lot cleaner
 				//if we have a query and its 'acceptres' and we don't meet criteria, clear it
-				if (currPlayer->HasQuery() && currPlayer->GetQueryFunc() == acceptResQuery
+				if (currPlayer->HasQuery(acceptResQuery)
 					&& ((!currPlayer->CanRes(currPlayer->TimeSinceDeath()) || currPlayer->room->id != currPlayer->graveyard_room)
 					&&  (!currPlayer->CanResAtCorpse(currPlayer->TimeSinceDeath()) || currPlayer->room->id != currPlayer->corpse_room)))
 				{
-					currPlayer->QueryClear();
+					currPlayer->QueryClear(acceptResQuery);
 				}
 				//if we have a query and its 'returnToGYQuery' and we don't meet criteria, clear it
-				if (currPlayer->HasQuery() && currPlayer->GetQueryFunc() == returnToGYQuery
+				if (currPlayer->HasQuery(returnToGYQuery)
 					&& (currPlayer->room->id == currPlayer->graveyard_room)
 					|| (currPlayer->room->id == currPlayer->corpse_room && currPlayer->CanResAtCorpse(currPlayer->TimeSinceDeath())))
 				{
-					currPlayer->QueryClear();
+					currPlayer->QueryClear(returnToGYQuery);
 				}
 
-				if(!currPlayer->HasQuery()
+				if(!currPlayer->HasQuery(acceptResQuery)
 			      &&((currPlayer->CanRes(currPlayer->TimeSinceDeath()) && currPlayer->room->id == currPlayer->graveyard_room)
 				  ||(currPlayer->CanResAtCorpse(currPlayer->TimeSinceDeath()) && currPlayer->room->id == currPlayer->corpse_room)))
 				{
-					currPlayer->SetQuery("Resurrect now? ('accept') ", nullptr, acceptResQuery);
+					currPlayer->AddQuery("Resurrect now? ('accept') ", nullptr, acceptResQuery);
 				}
-				else if (!currPlayer->HasQuery() && currPlayer->room->id != currPlayer->graveyard_room)
+				if (!currPlayer->HasQuery(returnToGYQuery) && currPlayer->room->id != currPlayer->graveyard_room)
 				{
-					currPlayer->SetQuery("Return to Graveyard? ('return') ", nullptr, returnToGYQuery);
+					currPlayer->AddQuery("Return to Graveyard? ('return') ", nullptr, returnToGYQuery);
 				}
 			}
 			if(currChar->IsNPC())
@@ -661,7 +660,7 @@ void Game::WorldUpdate(Server * server)
             {  //Turn off auto attack. cmd_target should take care of this, but just in case
 				currChar->CancelAutoAttack();
             }
-            else if(currChar->meleeActive && currChar->GetTarget()->room == currChar->room && !currChar->delay_active) 
+            if(currChar->meleeActive && currChar->GetTarget() && currChar->GetTarget()->room == currChar->room && !currChar->delay_active)
             {   //Auto attack but not while casting
 				currChar->AutoAttack(currChar->GetTarget());
             }
@@ -791,6 +790,7 @@ void Game::WorldUpdate(Server * server)
 				//Check for taunt and highest threat
 				SpellAffect * taunt = currNPC->GetFirstSpellAffectWithAura(SpellAffect::AURA_TAUNT);
 				Character * topthreat = currNPC->GetTopThreat();
+                //Being taunted
 				if (taunt != nullptr && taunt->caster != nullptr)
 				{
 					if (currNPC->GetTarget() != taunt->caster)
@@ -801,12 +801,21 @@ void Game::WorldUpdate(Server * server)
 					}
 					currNPC->SetTarget(taunt->caster);
 				}
+                //Aggro change without taunt
                 else if(topthreat && topthreat != currNPC->GetTarget() && (currNPC->GetThreat(currNPC->GetTarget()) + currNPC->GetThreat(currNPC->GetTarget()) * .1) < currNPC->GetThreat(topthreat))
                 {
 					currNPC->SetTarget(currNPC->GetTopThreat());
 					currNPC->GetTarget()->Send(currNPC->GetName() + " changes " + currNPC->HisHer() + " target to YOU!\r\n");
 					currNPC->Message(currNPC->GetName() + " changes " + currNPC->HisHer() + " target to " + currNPC->GetTarget()->GetName() + "!",
 						Character::MessageType::MSG_ROOM_NOTCHARVICT, currNPC->GetTarget());
+                }
+                //No target but have targets on threat meter (just killed top threat?), aquire new target
+                else if (topthreat && currNPC->GetTarget() == nullptr)
+                {
+                    currNPC->SetTarget(currNPC->GetTopThreat());
+                    currNPC->GetTarget()->Send(currNPC->GetName() + " changes " + currNPC->HisHer() + " target to YOU!\r\n");
+                    currNPC->Message(currNPC->GetName() + " changes " + currNPC->HisHer() + " target to " + currNPC->GetTarget()->GetName() + "!",
+                        Character::MessageType::MSG_ROOM_NOTCHARVICT, currNPC->GetTarget());
                 }
             }
         }

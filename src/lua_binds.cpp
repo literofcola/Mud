@@ -104,6 +104,7 @@ void Lua_DefineClasses(sol::state * lua)
 			"IsFighting", &Character::IsFighting,
 			"InCombat", &Character::InCombat,
 			"IsAlive", &Character::IsAlive,
+            "IsGhost", &Character::IsGhost,
 			"IsNPC", &Character::IsNPC,
 			"IsPlayer", &Character::IsPlayer,
 			"AsPlayer", &Character::AsPlayer,
@@ -139,7 +140,7 @@ void Lua_DefineClasses(sol::state * lua)
 			sol::base_classes, sol::bases<Character>(),
 			"GetClassLevel", &Player::GetClassLevel,
 			"SetLevel", &Player::SetLevel,
-            "LuaSetQuery", &Player::LuaSetQuery
+            "LuaAddQuery", &Player::LuaAddQuery
 			);
 
 		(*lua).new_usertype<Room>("Room",
