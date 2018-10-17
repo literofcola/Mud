@@ -100,23 +100,6 @@ std::string SubscriberManager::DebugPrintSubscribers()
 
 void SubscriberManager::NotifySubscribers()
 {
-	//If we're a Character about to notify our subscribers, we need to make sure we're not subscribed to anyone else either
-	//Clear target, combopointtarget, delaydata, and threat
-	//TODO: really this should all be done before every call to NotifySubscribers as a CCharacter 
-	//	class function, not in CSubManager. Also to avoid this hacky? dynamic_cast type check
-	Character * submanager_as_char;
-	if (submanager_as_char = dynamic_cast<Character*>(this))
-	{
-		submanager_as_char->ClearTarget();
-		submanager_as_char->ClearComboPointTarget();
-		submanager_as_char->CancelActiveDelay();
-		submanager_as_char->RemoveThreat(nullptr, true);
-		submanager_as_char->RemoveAllSpellAffects();
-
-		submanager_as_char->RemoveAllLooters();
-		submanager_as_char->RemoveAllLootRolls();
-	}
-
     std::list<SubscriberCount>::iterator iter = subscribers_.begin();
     while(iter != subscribers_.end()) //This form allows for a call to RemoveSubscriber from within Notify, maybe??
     {

@@ -2191,7 +2191,7 @@ bool releaseSpiritQuery(Player * ch, std::string argument)
 
 bool acceptPlayerRes(Player * ch, std::string argument)
 {
-    if (!Utilities::str_cmp(argument, "accept"))
+    if (!Utilities::str_cmp(argument, "res"))
     {
         Room * resroom = (Room*)ch->GetQueryDataPtr(acceptPlayerRes);
         if (resroom == nullptr)
@@ -2222,7 +2222,7 @@ bool acceptPlayerRes(Player * ch, std::string argument)
 
 bool acceptResQuery(Player * ch, std::string argument)
 {
-	if (!Utilities::str_cmp(argument, "accept"))
+	if (!Utilities::str_cmp(argument, "res"))
 	{
 		ch->SetHealth(ch->GetMaxHealth() / 2);
 		ch->SetMana(ch->GetMaxMana() / 2);

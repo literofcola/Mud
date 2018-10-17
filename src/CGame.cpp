@@ -427,6 +427,8 @@ void Game::GameLoop(Server * server)
 						cmd_group(user->character, "leave");
 					user->character->ExitCombat();
 					user->character->ClearTarget();
+                    if(user->character->HasQuery(cmd_groupQuery))
+                        cmd_groupQuery(user->character, "decline");
 					if (!user->character->IsGhost())
 						user->character->Message(user->character->GetName() + " has left the game.", Character::MSG_ROOM_NOTCHAR);
 					user->character->ChangeRooms(nullptr);
@@ -534,7 +536,7 @@ void Game::WorldUpdate(Server * server)
 			      &&((currPlayer->CanRes(currPlayer->TimeSinceDeath()) && currPlayer->room->id == currPlayer->graveyard_room)
 				  ||(currPlayer->CanResAtCorpse(currPlayer->TimeSinceDeath()) && currPlayer->room->id == currPlayer->corpse_room)))
 				{
-					currPlayer->AddQuery("Resurrect now? ('accept') ", nullptr, acceptResQuery);
+					currPlayer->AddQuery("Resurrect now? ('res') ", nullptr, acceptResQuery);
 				}
 				if (!currPlayer->HasQuery(returnToGYQuery) && currPlayer->room->id != currPlayer->graveyard_room)
 				{

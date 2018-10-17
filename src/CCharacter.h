@@ -277,7 +277,8 @@ public:
 	Character * GetCharacterAdjacentRoom(Character * target);
 	virtual bool FlagIsSet(const int flag) { return false; };
 	virtual void Save() { };
-	virtual void Notify(SubscriberManager *);
+	virtual void Notify(SubscriberManager *) override;
+    virtual void NotifySubscribers() override;
 	//These aren't really in the spirit of inheritance but this whole OO design is bad so who cares
 	virtual bool IsNPC() = 0;
 	virtual bool IsPlayer() = 0;
@@ -297,6 +298,8 @@ protected:
 
 	bool isCorpse;
 	double deathTime; //timestamp for res timer and npc corpse decay
+
+    
 };
 
 #endif

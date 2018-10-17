@@ -231,11 +231,11 @@ void cmd_wear(Player * ch, string argument)
 
 void cmd_drop(Player * ch, string argument)
 {
-    if(ch->HasQuery())
+    /*if(ch->HasQuery())
     {
         ch->Send("Answer your current question first.\r\n");
         return;
-    }
+    }*/
     if(ch->delay_active)
     {
         ch->Send("You can't do that while casting.\r\n");

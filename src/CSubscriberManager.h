@@ -13,7 +13,7 @@ public:
     void RemoveSubscriber(Subscriber *);
     bool HasSubscriber(Subscriber *);
 	std::string DebugPrintSubscribers();
-    void NotifySubscribers();
+    virtual void NotifySubscribers();
 
 protected:
 	struct SubscriberCount

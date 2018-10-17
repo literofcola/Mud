@@ -2470,7 +2470,20 @@ void Character::Notify(SubscriberManager * lm)
 	}
 }
 
+void Character::NotifySubscribers()
+{
+    //If we're a Character about to notify our subscribers, we need to make sure we're not subscribed to anyone else either
+    //Clear anything that causes us to subscribe to something
+    ClearTarget();
+    ClearComboPointTarget();
+    CancelActiveDelay();
+    RemoveThreat(nullptr, true);
+    RemoveAllSpellAffects();
+    RemoveAllLooters();
+    RemoveAllLootRolls();
 
+    SubscriberManager::NotifySubscribers();
+}
 
 bool Character::InSameGroup(Character * ch)
 {
