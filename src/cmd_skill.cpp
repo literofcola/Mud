@@ -261,7 +261,7 @@ void cmd_cooldowns(Player * ch, string argument)
     }
 }
 
-//todo: learn is outdated, new plan is to figure out known skills via class skills only. Saving this function for immortal use
+//learn is outdated, new plan is to figure out known skills via class skills only. Saving this function for immortal use
 /*
 void cmd_learn(Player * ch, string argument)
 {

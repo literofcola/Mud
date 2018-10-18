@@ -419,6 +419,8 @@ void Character::Move(int direction)
 SpellAffect * Character::AddSpellAffect(int isDebuff, Character * caster, string name,
                                bool hidden, bool stackable, int ticks, double duration, int category, Skill * sk, string affect_description)
 {
+    //TODO: different ways affects can be stackable, and maximum stacks (sunder armor for example)
+
     if(!stackable) //if name and skill are the same as an existing affect, dont add it
     {
         std::list<SpellAffect*>::iterator iter, end;
@@ -1895,8 +1897,6 @@ void Character::SetRage(int amount)
 	vitals = { { "ragepercent", percent } };
 	SendTargetSubscriberGMCP("target.vitals " + vitals.dump());
 }
-
-
 
 void Character::UpdateThreat(Character * ch, double value, int type)
 {
