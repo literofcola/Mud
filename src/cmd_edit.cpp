@@ -405,6 +405,138 @@ void cmd_edit(Player * ch, std::string argument)
             LogFile::Log("error", e.what());
         }
 	}
+    else if (!Utilities::str_cmp(arg1, "importall"))
+    {
+        for (auto iter = Game::GetGame()->skills.begin(); iter != Game::GetGame()->skills.end(); ++iter)
+        {
+            Skill * pSkill = iter->second;
+
+            std::string func_name[5] = { "_cost", "_cast", "_apply", "_tick", "_remove" };
+            sol::function getinfowrapper = Server::lua["getinfowrapper"];
+            std::tuple<std::string, int, int> return_values;
+            sol::protected_function_result result;
+            sol::protected_function skill_func;
+
+            for (int i = 0; i <= 4; ++i)
+            {
+                try
+                {
+                    skill_func = Server::lua[pSkill->function_name + func_name[i]];
+                    if (skill_func == sol::nil)
+                        continue;
+                    result = getinfowrapper(skill_func);
+                    if (!result.valid())
+                    {
+                        sol::error err = result;
+                        std::string what = err.what();
+                        LogFile::Log("error", "getinfo call failed, sol::error::what() is: " + what);
+                    }
+                    return_values = result;
+                }
+                catch (const std::exception & e)
+                {
+                    LogFile::Log("error", e.what());
+                }
+
+                std::string short_src = std::get<0>(return_values);
+                if (short_src == "lua_skills.lua")
+                {
+                    ch->Send(pSkill->function_name + func_name[i] + " found in lua_skills.lua\r\n");
+                    std::string variable_lookup[5] = { "cost_script", "cast_script", "apply_script", "tick_script", "remove_script" };
+                    int first_line = std::get<1>(return_values);
+                    int last_line = std::get<2>(return_values);
+                    std::stringstream new_file;
+                    std::fstream importfile("lua_skills.lua", std::fstream::in);
+                    std::string one_line;
+                    std::string imported_function;
+                    for (int line_number = 1; !importfile.eof(); ++line_number)
+                    {
+                        std::getline(importfile, one_line);
+                        if (line_number < first_line || line_number > last_line) //not part of the function we're looking for
+                        {   //copy to new file
+                            new_file << one_line << '\n';
+                        }
+                        else //import this to pSkill
+                        {
+                            imported_function += one_line + '\n';
+                        }
+                    }
+                    importfile.close();
+                    *(pSkill->stringTable[variable_lookup[i].c_str()]) = imported_function;
+                    pSkill->changed = true;
+                    importfile.open("lua_skills.lua", std::fstream::out | std::fstream::trunc);
+                    importfile << new_file.str();
+                    importfile.close();
+                    
+                    ch->Send("Reloading LUA scripts (overrides lua_skills.lua)\r\n");
+                    try {
+                        Server::lua.script(pSkill->costScript.c_str());
+                        Server::lua.script(pSkill->castScript.c_str());
+                        Server::lua.script(pSkill->applyScript.c_str());
+                        Server::lua.script(pSkill->tickScript.c_str());
+                        Server::lua.script(pSkill->removeScript.c_str());
+                    }
+                    catch (const std::exception & e)
+                    {
+                        LogFile::Log("error", e.what());
+                    }
+
+                    Server::lua.script_file("lua_skills.lua");
+                    ch->Send("Reloaded file lua_skills.lua\r\n");
+                }
+            }
+        }
+    }
+    else if (!Utilities::str_cmp(arg1, "exportall"))
+    {
+        for (auto iter = Game::GetGame()->skills.begin(); iter != Game::GetGame()->skills.end(); ++iter)
+        {
+            Skill * pSkill = iter->second;
+
+            std::string func_name[5] = { "_cost", "_cast", "_apply", "_tick", "_remove" };
+            sol::function getinfowrapper = Server::lua["getinfowrapper"];
+            std::tuple<std::string, int, int> return_values;
+            sol::protected_function_result result;
+            sol::protected_function skill_func;
+
+            for (int i = 0; i <= 4; ++i)
+            {
+                try
+                {
+                    skill_func = Server::lua[pSkill->function_name + func_name[i]];
+                    if (skill_func == sol::nil)
+                        continue;
+                    result = getinfowrapper(skill_func);
+                    if (!result.valid())
+                    {
+                        sol::error err = result;
+                        std::string what = err.what();
+                        LogFile::Log("error", "getinfo call failed, sol::error::what() is: " + what);
+                    }
+                    return_values = result;
+                }
+                catch (const std::exception & e)
+                {
+                    LogFile::Log("error", e.what());
+                    continue;
+                }
+
+                std::string short_src = std::get<0>(return_values);
+                if (short_src == "lua_skills.lua")
+                {
+                    ch->Send(pSkill->function_name + func_name[i] + " found in lua_skills.lua, unable to export\r\n");
+                    continue;
+                }
+                std::fstream exportfile("lua_skills.lua", std::fstream::binary | std::fstream::out | std::fstream::app);
+                std::string variable_lookup[5] = { "cost_script", "cast_script", "apply_script", "tick_script", "remove_script" };
+                exportfile.write((pSkill->stringTable[variable_lookup[i].c_str()])->c_str(), pSkill->stringTable[variable_lookup[i].c_str()]->length());
+                exportfile.close();
+                ch->Send("exported " + pSkill->function_name + func_name[i] + "\r\n");
+            }
+            Server::lua.script_file("lua_skills.lua");
+            ch->Send("Reloaded file lua_skills.lua\r\n");
+        }
+    }
 	else
 	{
 		//this should be a help file

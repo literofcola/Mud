@@ -18,7 +18,8 @@ public:
     bool debuff;
     bool hidden;
     int id;
-    bool stackable;
+    int maxStacks;
+    int currentStacks;
     int ticks;
     int ticksRemaining;
     double duration;
@@ -84,7 +85,7 @@ public:
     enum Auras
     {
         AURA_MOVE_SPEED = 1, AURA_RESOURCE_COST = 2, AURA_EATING = 3, AURA_DRINKING = 4, 
-        AURA_TAUNT = 5, AURA_DAMAGE_ABSORB = 6, AURA_INCAPACITATE = 7
+        AURA_TAUNT = 5, AURA_DAMAGE_ABSORB = 6, AURA_INCAPACITATE = 7, AURA_MODIFY_ARMOR = 8
     };
 
 	//Comparison functor

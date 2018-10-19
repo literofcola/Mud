@@ -36,13 +36,15 @@ const struct SpellAffect::CategoryType category_table[] =
 
 SpellAffect::SpellAffect()
 {
-    debuff = hidden = stackable = false;
+    debuff = hidden = false;
     id = ticks = ticksRemaining = 0;
     duration = appliedTime = 0;
     caster = nullptr;
     skill = nullptr;
     affectCategory = SpellAffect::AFFECT_NONE;
     remove_me = false;
+    maxStacks = 1;
+    currentStacks = 1;
 }
 
 SpellAffect::~SpellAffect()
@@ -203,7 +205,7 @@ void SpellAffect::Save(std::string charname)
 {
     double timeleft = (appliedTime + duration) - Game::currentTime;
 
-	std::string affectsql = "INSERT INTO player_spell_affects (player, caster, skill, ticks, duration, timeleft, stackable, hidden, debuff, ";
+	std::string affectsql = "INSERT INTO player_spell_affects (player, caster, skill, ticks, duration, timeleft, max_stacks, current_stacks, hidden, debuff, ";
 	affectsql += "category, auras, data, name, affect_description) ";
 	affectsql += "values ('" + charname + "','" + casterName + "',";
 	if (skill)
@@ -211,7 +213,7 @@ void SpellAffect::Save(std::string charname)
 	else
 		affectsql += "0";
 	affectsql += "," + Utilities::itos(ticks) + "," + Utilities::dtos(duration, 1) + "," + Utilities::dtos(timeleft, 1);
-	affectsql += "," + Utilities::itos(stackable) + "," + Utilities::itos(hidden) + "," + Utilities::itos(debuff);
+	affectsql += "," + Utilities::itos(maxStacks) + "," + Utilities::itos(currentStacks)  + "," + Utilities::itos(hidden) + "," + Utilities::itos(debuff);
 	affectsql += "," + Utilities::itos(affectCategory) + ",'";
 
     std::list<struct AuraAffect>::iterator iter;
@@ -261,13 +263,13 @@ void SpellAffect::Load(Character * ch)
             continue;
         }
 
-        //ch->AddSpellAffect(row["is_debuff"], ch, sk->long_name, row["hidden"], row["stackable"], row["ticks"], row["duration"], sk); 
-        //don't use AddSpellAffect since we don't want to call the _apply function
+        //don't use AddSpellAffect since we don't want to call the _apply function (can't call apply with a null caster)
         SpellAffect * sa = new SpellAffect();
         sa->name = row["name"];
 		sa->affectDescription = row["affect_description"];
         sa->hidden = row["hidden"];
-        sa->stackable = row["stackable"];
+        sa->maxStacks = row["max_stacks"];
+        sa->currentStacks = row["current_stacks"];
         sa->ticks = row["ticks"];
         sa->duration = row["duration"];
         sa->appliedTime = Utilities::GetTime() - ((double)row["duration"] - row["timeleft"]); //Game::currentTime isn't initialized until after one update...

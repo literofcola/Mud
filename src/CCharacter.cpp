@@ -417,37 +417,59 @@ void Character::Move(int direction)
 }
 
 SpellAffect * Character::AddSpellAffect(int isDebuff, Character * caster, string name,
-                               bool hidden, bool stackable, int ticks, double duration, int category, Skill * sk, string affect_description)
+                               bool hidden, int maxStacks, int ticks, double duration, int category, Skill * sk, string affect_description)
 {
-    //TODO: different ways affects can be stackable, and maximum stacks (sunder armor for example)
+    if(maxStacks <= 0) //but why?
+        return nullptr;
 
-    if(!stackable) //if name and skill are the same as an existing affect, dont add it
+    //find any existing affects matching name/skill/buff/debuff
+    std::list<SpellAffect*>::iterator iter, end;
+    if (isDebuff)
     {
-        std::list<SpellAffect*>::iterator iter, end;
-        if(isDebuff)
+        iter = debuffs.begin(); end = debuffs.end();
+    }
+    else
+    {
+        iter = buffs.begin(); end = buffs.end();
+    }
+    for (; iter != end; ++iter)
+    {
+        if (!Utilities::str_cmp((*iter)->name, name) && (*iter)->skill == sk)
         {
-            iter = debuffs.begin(); end = debuffs.end();
+            //found an affect to replace or add a stack or refresh the duration
+            if (((*iter)->caster && (*iter)->caster != caster) || ((*iter)->casterName != caster->GetName()))
+            {   //Caster is different, remove and replace the entire affect
+                RemoveSpellAffect(*iter);
+                SpellAffect * copy = AddSpellAffect(isDebuff, caster, name, hidden, maxStacks, ticks, duration, category, sk, affect_description);
+                return copy;
+            }
+            else if ((*iter)->currentStacks >= maxStacks)
+            {
+                //stacks already maxed out, refresh the duration
+                (*iter)->duration = duration;
+                (*iter)->ticksRemaining = ticks;
+                (*iter)->appliedTime = Game::currentTime;
+                return (*iter);
+            }
+            else if ((*iter)->currentStacks < maxStacks)
+            {
+                //add a stack
+                (*iter)->currentStacks++;
+                if (sk != nullptr)
+                {
+                    sk->CallLuaApply(caster, this, (*iter));
+                }
+                return (*iter);
+            }
         }
-        else
-        {
-            iter = buffs.begin(); end = buffs.end();
-        }
-        for(; iter != end; ++iter)
-        {
-			if (!Utilities::str_cmp((*iter)->name, name) && (*iter)->skill == sk)
-			{
-				//Found it, remove the existing affect, and re-add
-				RemoveSpellAffect(*iter);
-				SpellAffect * copy = AddSpellAffect(isDebuff, caster, name, hidden, stackable, ticks, duration, category, sk, affect_description);
-				return copy;
-			}
-		}
     }
 
+    //Didn't find existing affect, add a new one
     SpellAffect * sa = new SpellAffect();
     sa->name = name;
     sa->hidden = hidden;
-    sa->stackable = stackable;
+    sa->maxStacks = maxStacks;
+    sa->currentStacks = 1;
     sa->ticks = ticks;
     sa->duration = duration;
 	sa->affectDescription = affect_description;

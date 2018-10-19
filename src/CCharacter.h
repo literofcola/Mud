@@ -163,7 +163,7 @@ public:
 	virtual double GetGlobalCooldown() { return 0; };
 	virtual void SetGlobalCooldown(double time) { };
 	SpellAffect * AddSpellAffect(int isDebuff, Character * caster, std::string name,
-		bool hidden, bool stackable, int ticks, double duration, int category, Skill * sk, std::string affect_description);
+		bool hidden, int maxStacks, int ticks, double duration, int category, Skill * sk, std::string affect_description);
 	SpellAffect * HasSpellAffect(std::string name);
 	SpellAffect * GetFirstSpellAffectWithAura(int aura_id);
 	int CleanseSpellAffect(Character * cleanser, int category, int howMany = -1);

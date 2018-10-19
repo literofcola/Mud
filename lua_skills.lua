@@ -39,13 +39,21 @@ function skill_sunder_armor_cast(caster, target, skill)
     caster:Message("|W" .. target:GetName() .. " parries " .. caster:GetName() .. "'s Sunder Armor.|X", MSG_ROOM_NOTCHARVICT, target)
     return
   end
-  target:AddSpellAffect(SPELLAFFECT_DEBUFF, caster, "Sunder Armor", false, true, 0, 30, AFFECT_NONE, skill, "Armor decreased by 4% per stack")
-  --need to change how stackable affects work
+  caster:Send("|Wsunder armor hit|X\r\n")
+  target:AddSpellAffect(SPELLAFFECT_DEBUFF, caster, "Sunder Armor", SPELLAFFECT_VISIBLE, 5, 0, 30, AFFECT_NONE, skill, "Armor decreased by 4% per stack")
   target:UpdateThreat(caster, threat, THREAT_OTHER)
 end
 function skill_sunder_armor_apply(caster, target, affect)
-  --apply / update aura armor reduction
+  caster:Send("|Wsunder armor stack applied|X\r\n")
+  local mod = 0
+  if(affect:HasAura(AURA_MODIFY_ARMOR)) then
+    mod = affect:GetAuraModifier(AURA_MODIFY_ARMOR)
+  end
+  affect:RemoveAura(AURA_MODIFY_ARMOR)
+  affect:ApplyAura(AURA_MODIFY_ARMOR, mod - (caster:GetStrength() * 0.30))
 end
 function skill_sunder_armor_remove(caster, target, affect)
-
+  if(caster ~= nil) then
+    caster:Send("|Wyour sunder armor fades from target|X\r\n")
+  end
 end
