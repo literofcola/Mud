@@ -438,6 +438,7 @@ void cmd_affects(Player * ch, string argument)
     argument = Utilities::one_argument(argument, arg1);
     std::list<SpellAffect*>::iterator iter;
     int i = 1;
+    bool found = false;
 
     if(arg1.empty())
     {
@@ -455,6 +456,7 @@ void cmd_affects(Player * ch, string argument)
                 }
                 oneaffect += (*iter)->affectDescription + "\r\n";
                 ch->Send(oneaffect);
+                found = true;
             }
         }
         for(iter = ch->debuffs.begin(); iter != ch->debuffs.end(); ++iter)
@@ -469,8 +471,34 @@ void cmd_affects(Player * ch, string argument)
                 }
                 oneaffect += (*iter)->affectDescription + "\r\n";
                 ch->Send(oneaffect);
+                found = true;
             }
         }
+        if (!found)
+            ch->Send("None\r\n");
+        found = false;
+        if (ch->GetTarget())
+        {
+            ch->Send("|MYour target is affected by the following debuffs:|X\r\n");
+            for (auto iter = ch->GetTarget()->debuffs.begin(); iter != ch->GetTarget()->debuffs.end(); ++iter)
+            {
+                if ((*iter)->skill != nullptr && (!(*iter)->hidden || ch->IsImmortal()))
+                {
+                    double timeleft = ((*iter)->appliedTime + (*iter)->duration) - Game::currentTime;
+                    string oneaffect = Utilities::itos(i++) + ". |R" + (*iter)->name + "|X " + Utilities::dtos(timeleft, 1) + " seconds || ";
+                    if ((*iter)->affectCategory != SpellAffect::AFFECT_NONE)
+                    {
+                        oneaffect += (*iter)->GetAffectCategoryName() + " || ";
+                    }
+                    oneaffect += (*iter)->affectDescription + "\r\n";
+                    ch->Send(oneaffect);
+                    found = true;
+                }
+            }
+            if (!found)
+                ch->Send("None\r\n");
+        }
+        return;
     }
     else if(!Utilities::str_prefix(arg1, "buff"))
     {
@@ -490,6 +518,7 @@ void cmd_affects(Player * ch, string argument)
                 ch->Send(oneaffect);            
             }
         }
+        return;
     }
     else if(!Utilities::str_prefix(arg1, "debuff"))
     {
@@ -508,7 +537,33 @@ void cmd_affects(Player * ch, string argument)
                 ch->Send(oneaffect);
             }
         }
+        return;
     }
+    else if (!Utilities::str_prefix(arg1, "target"))
+    {
+        if (!ch->GetTarget())
+        {
+            ch->Send("You don't have a target.\r\n");
+            return;
+        }
+        ch->Send("|MYour target is affected by the following debuffs:|X\r\n");
+        for (auto iter = ch->GetTarget()->debuffs.begin(); iter != ch->GetTarget()->debuffs.end(); ++iter)
+        {
+            if ((*iter)->skill != nullptr && (!(*iter)->hidden || ch->IsImmortal()))
+            {
+                double timeleft = ((*iter)->appliedTime + (*iter)->duration) - Game::currentTime;
+                string oneaffect = Utilities::itos(i++) + ". |R" + (*iter)->name + "|X " + Utilities::dtos(timeleft, 1) + " seconds || ";
+                if ((*iter)->affectCategory != SpellAffect::AFFECT_NONE)
+                {
+                    oneaffect += (*iter)->GetAffectCategoryName() + " || ";
+                }
+                oneaffect += (*iter)->affectDescription + "\r\n";
+                ch->Send(oneaffect);
+            }
+        }
+        return;
+    }
+    ch->Send("affect 'buff'||'debuff'||'target'\r\n");
 }
 
 void cmd_train(Player * ch, string argument)

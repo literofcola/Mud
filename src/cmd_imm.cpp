@@ -305,41 +305,6 @@ void cmd_threat(Player * ch, string argument)
 	//Roll this into this command because lazy
 	ch->Send("My Subscribers: ");
 	ch->Send(ch->DebugPrintSubscribers() + "\r\n");
-
-    //More debug stuff here for convenience
-    if (ch->GetTarget())
-    {
-        int i = 1;
-        for (auto iter = ch->GetTarget()->buffs.begin(); iter != ch->GetTarget()->buffs.end(); ++iter)
-        {
-            if ((*iter)->skill != nullptr && (!(*iter)->hidden || ch->IsImmortal()))
-            {
-                double timeleft = ((*iter)->appliedTime + (*iter)->duration) - Game::currentTime;
-                string oneaffect;
-                oneaffect = Utilities::itos(i++) + ". |G" + (*iter)->name + " " + Utilities::itos((*iter)->currentStacks) + "|X " + Utilities::dtos(timeleft, 1) + " seconds || ";
-                if ((*iter)->affectCategory != SpellAffect::AFFECT_NONE)
-                {
-                    oneaffect += (*iter)->GetAffectCategoryName() + " || ";
-                }
-                oneaffect += (*iter)->affectDescription + "\r\n";
-                ch->Send(oneaffect);
-            }
-        }
-        for (auto iter = ch->GetTarget()->debuffs.begin(); iter != ch->GetTarget()->debuffs.end(); ++iter)
-        {
-            if ((*iter)->skill != nullptr && (!(*iter)->hidden || ch->IsImmortal()))
-            {
-                double timeleft = ((*iter)->appliedTime + (*iter)->duration) - Game::currentTime;
-                string oneaffect = Utilities::itos(i++) + ". |R" + (*iter)->name + " " + Utilities::itos((*iter)->currentStacks) + "|X " + Utilities::dtos(timeleft, 1) + " seconds || ";
-                if ((*iter)->affectCategory != SpellAffect::AFFECT_NONE)
-                {
-                    oneaffect += (*iter)->GetAffectCategoryName() + " || ";
-                }
-                oneaffect += (*iter)->affectDescription + "\r\n";
-                ch->Send(oneaffect);
-            }
-        }
-    }
 }
 
 void cmd_sql(Player * ch, string argument)

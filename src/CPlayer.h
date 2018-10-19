@@ -1,6 +1,7 @@
 #ifndef CPLAYER_H
 #define CPLAYER_H
 
+#include "CSpellAffect.h"
 #include "CCharacter.h"
 #include "CServer.h"
 #include "mud.h"
@@ -90,7 +91,6 @@ public:
 	Group * group;
 
 	//Inventory and equipment
-	int armor;
 	std::vector<Item *> equipped;
 	std::list<std::pair<Item *, int>> inventory;	//structured this way to support item stacks
 	int inventorySize;
@@ -271,7 +271,7 @@ public:
 	inline virtual std::string GetTitle() override { return title; };
 	inline bool IsImmortal() override { return (immlevel > 0); };
 	inline int GetImmLevel() override { return immlevel; };
-	int GetArmor() override { return armor; };
+	int GetArmor() override { return (armor + GetAuraModifier(SpellAffect::AURA_MODIFY_ARMOR, 1)) <= 0 ? 0 : (armor + GetAuraModifier(SpellAffect::AURA_MODIFY_ARMOR, 1)); };
 
 	//Inheritence friendly "commands"
 	void Look(std::string argument) override { ::cmd_look(this, argument); };
@@ -309,6 +309,7 @@ private:
 	int maxRage;
 	int comboPoints;
 	int maxComboPoints;
+    int armor;
     bool isGhost;
 
     struct Query

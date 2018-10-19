@@ -436,7 +436,7 @@ SpellAffect * Character::AddSpellAffect(int isDebuff, Character * caster, string
     {
         if (!Utilities::str_cmp((*iter)->name, name) && (*iter)->skill == sk)
         {
-            //found an affect to replace or add a stack or refresh the duration
+            //found an affect to replace, or add a stack, or refresh the duration
             if (((*iter)->caster && (*iter)->caster != caster) || ((*iter)->casterName != caster->GetName()))
             {   //Caster is different, remove and replace the entire affect
                 RemoveSpellAffect(*iter);
@@ -453,8 +453,11 @@ SpellAffect * Character::AddSpellAffect(int isDebuff, Character * caster, string
             }
             else if ((*iter)->currentStacks < maxStacks)
             {
-                //add a stack
+                //add a stack (and refresh duration)
                 (*iter)->currentStacks++;
+                (*iter)->duration = duration;
+                (*iter)->ticksRemaining = ticks;
+                (*iter)->appliedTime = Game::currentTime;
                 if (sk != nullptr)
                 {
                     sk->CallLuaApply(caster, this, (*iter));

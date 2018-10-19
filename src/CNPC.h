@@ -1,6 +1,7 @@
 #ifndef CNPC_H
 #define CNPC_H
 
+#include "CSpellAffect.h"
 #include "CNPCIndex.h"
 #include "CCharacter.h"
 #include "CServer.h"
@@ -90,7 +91,7 @@ public:
 	double GetDodge() override { return 5;  }; //todo: npcindex needs these fields, no stats!
 	double GetCrit() override { return 5; };
 	double GetParry() override { return 5; };
-	int GetArmor() override { return GetNPCIndex()->armor; };
+	int GetArmor() override { return (GetNPCIndex()->armor + GetAuraModifier(SpellAffect::AURA_MODIFY_ARMOR, 1)) <= 0 ? 0 : GetNPCIndex()->armor + GetAuraModifier(SpellAffect::AURA_MODIFY_ARMOR, 1); };
 	void Cast(std::string argument) override;
 
 private:
