@@ -186,6 +186,7 @@ void Server::DeInitialize()
 	//Let Accept thread go down
 	WaitForSingleObject(hAcceptThread, INFINITE);
 
+    /* this cleanup already done in gameloop
     std::list<User *>::iterator iter;
     iter = mygame->users.begin();
 	while(iter != mygame->users.end())
@@ -198,26 +199,30 @@ void Server::DeInitialize()
         //Save user/player
         if(user->character)
         {
-			if (user->character->HasGroup())
-				cmd_group(user->character, "leave"); //maybe we need a leavegroup function eh
-			user->character->ExitCombat();
-			user->character->ClearTarget();
-			if (!user->character->IsAlive())
-				user->character->ChangeRooms(Game::GetGame()->GetRoom(user->character->graveyard_room));
-			user->character->NotifySubscribers();
-
-            //if(user->connectedState == User::CONN_PLAYING && user->character->level > 1) //don't save fresh characters
-			{
-				user->character->SaveSpellAffects();
-				user->character->SaveCooldowns();
-				user->character->Save();
-			}
+            if (!user->character->IsAlive())
+                user->character->ChangeRooms(Game::GetGame()->GetRoom(user->character->graveyard_room));
+            if (user->connectedState == User::CONN_PLAYING && user->character->GetLevel() > 1) //don't save fresh characters
+            {
+                user->character->SaveSpellAffects();
+                user->character->SaveCooldowns();
+                user->character->Save();
+            }
+            if (user->character->HasGroup())
+                cmd_group(user->character, "leave");
+            user->character->ExitCombat();
+            user->character->ClearTarget();
+            if (user->character->HasQuery(cmd_groupQuery))
+                cmd_groupQuery(user->character, "decline");
+            if (!user->character->IsGhost())
+                user->character->Message(user->character->GetName() + " has left the game.", Character::MSG_ROOM_NOTCHAR);
+            user->character->ChangeRooms(nullptr);
+            user->character->NotifySubscribers();
             mygame->characters.remove(user->character);
         }
         delete user;
         iter = mygame->users.erase(iter);
     }
-
+    */
 	for(int i = 0; i < nThreads; i++)
 	{
 		//Help threads get out of blocking - GetQueuedCompletionStatus()

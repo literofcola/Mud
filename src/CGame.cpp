@@ -98,9 +98,12 @@ Game::~Game()
 {
     DeleteCriticalSection(&userListCS);
 
+    for(auto iter = characters.begin(); iter != characters.end(); ++iter)
+    {
+        (*iter)->NotifySubscribers();
+    }
     while (!characters.empty())
     {
-        characters.front()->NotifySubscribers();
         delete characters.front();
         characters.pop_front();
     }
@@ -457,10 +460,42 @@ void Game::GameLoop(Server * server)
 		currentTime = ((int)time_secs + ((double)time_millis / 1000.0));	//Don't set currentTime before the first WorldUpdate so all the updates fire immediately
 	}
 
-	
+    //Server is going down!
+    iter = users.begin();
+    while (iter != users.end())
+    {
+        User * user = (*iter);
+        if (user->GetClient())
+            closesocket(user->GetClient()->Socket());
+        user->ImmediateDisconnect();
 
-    //Server is going down! Cleanup in main() with the server
-    
+        //Save user/player
+        if (user->character)
+        {
+            if (!user->character->IsAlive())
+                user->character->ChangeRooms(Game::GetGame()->GetRoom(user->character->graveyard_room));
+            if (user->connectedState == User::CONN_PLAYING && user->character->GetLevel() > 1) //don't save fresh characters
+            {
+                user->character->SaveSpellAffects();
+                user->character->SaveCooldowns();
+                user->character->Save();
+            }
+            if (user->character->HasGroup())
+                cmd_group(user->character, "leave");
+            user->character->ExitCombat();
+            user->character->ClearTarget();
+            if (user->character->HasQuery(cmd_groupQuery))
+                cmd_groupQuery(user->character, "decline");
+            if (!user->character->IsGhost())
+                user->character->Message(user->character->GetName() + " has left the game.", Character::MSG_ROOM_NOTCHAR);
+            user->character->ChangeRooms(nullptr);
+            user->character->NotifySubscribers();
+            characters.remove(user->character);
+        }
+        delete user;
+        iter = users.erase(iter);
+    }
+
     //duration = timer.ElapsedMicro();
     LogFile::Log("status", "GameLoop() end");
 }

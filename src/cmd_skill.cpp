@@ -448,8 +448,10 @@ void cmd_affects(Player * ch, string argument)
             if((*iter)->skill != nullptr && (!(*iter)->hidden || ch->IsImmortal()))
             {
                 double timeleft = ((*iter)->appliedTime + (*iter)->duration) - Game::currentTime;
-                string oneaffect;
-                oneaffect = Utilities::itos(i++) + ". |G" + (*iter)->name + "|X " + Utilities::dtos(timeleft, 1) + " seconds || ";
+                string stacks;
+                if ((*iter)->currentStacks > 1)
+                    stacks = " |M(" + Utilities::itos((*iter)->currentStacks) + ")";
+                string oneaffect = Utilities::itos(i++) + ". |G" + (*iter)->name + stacks + "|X " + Utilities::dtos(timeleft, 1) + " seconds || ";
                 if((*iter)->affectCategory != SpellAffect::AFFECT_NONE)
                 {
                     oneaffect += (*iter)->GetAffectCategoryName() + " || ";
@@ -464,7 +466,10 @@ void cmd_affects(Player * ch, string argument)
             if((*iter)->skill != nullptr && (!(*iter)->hidden || ch->IsImmortal()))
             {
                 double timeleft = ((*iter)->appliedTime + (*iter)->duration) - Game::currentTime;
-                string oneaffect = Utilities::itos(i++) + ". |R" + (*iter)->name + "|X " + Utilities::dtos(timeleft, 1) + " seconds || ";
+                string stacks;
+                if ((*iter)->currentStacks > 1)
+                    stacks = " |M(" + Utilities::itos((*iter)->currentStacks) + ")";
+                string oneaffect = Utilities::itos(i++) + ". |R" + (*iter)->name + stacks + "|X " + Utilities::dtos(timeleft, 1) + " seconds || ";
                 if((*iter)->affectCategory != SpellAffect::AFFECT_NONE)
                 {
                     oneaffect += (*iter)->GetAffectCategoryName() + " || ";
@@ -485,7 +490,10 @@ void cmd_affects(Player * ch, string argument)
                 if ((*iter)->skill != nullptr && (!(*iter)->hidden || ch->IsImmortal()))
                 {
                     double timeleft = ((*iter)->appliedTime + (*iter)->duration) - Game::currentTime;
-                    string oneaffect = Utilities::itos(i++) + ". |R" + (*iter)->name + "|X " + Utilities::dtos(timeleft, 1) + " seconds || ";
+                    string stacks;
+                    if ((*iter)->currentStacks > 1)
+                        stacks = " |M(" + Utilities::itos((*iter)->currentStacks) + ")";
+                    string oneaffect = Utilities::itos(i++) + ". |R" + (*iter)->name + stacks + "|X " + Utilities::dtos(timeleft, 1) + " seconds || ";
                     if ((*iter)->affectCategory != SpellAffect::AFFECT_NONE)
                     {
                         oneaffect += (*iter)->GetAffectCategoryName() + " || ";
@@ -508,8 +516,10 @@ void cmd_affects(Player * ch, string argument)
             if(!(*iter)->hidden)
             {
                 double timeleft = ((*iter)->appliedTime + (*iter)->duration) - Game::currentTime;
-                string oneaffect;
-                oneaffect = Utilities::itos(i++) + ". |G" + (*iter)->name + "|X " + Utilities::dtos(timeleft, 1) + " seconds || ";
+                string stacks;
+                if ((*iter)->currentStacks > 1)
+                    stacks = " |M(" + Utilities::itos((*iter)->currentStacks) + ")";
+                string oneaffect = Utilities::itos(i++) + ". |G" + (*iter)->name + stacks + "|X " + Utilities::dtos(timeleft, 1) + " seconds || ";
                 if((*iter)->affectCategory != SpellAffect::AFFECT_NONE)
                 {
                     oneaffect += (*iter)->GetAffectCategoryName() + " || ";
@@ -528,7 +538,10 @@ void cmd_affects(Player * ch, string argument)
             if(!(*iter)->hidden)
             {
                 double timeleft = ((*iter)->appliedTime + (*iter)->duration) - Game::currentTime;
-                string oneaffect = Utilities::itos(i++) + ". |R" + (*iter)->name + "|X " + Utilities::dtos(timeleft, 1) + " seconds || ";
+                string stacks;
+                if ((*iter)->currentStacks > 1)
+                    stacks = " |M(" + Utilities::itos((*iter)->currentStacks) + ")";
+                string oneaffect = Utilities::itos(i++) + ". |R" + (*iter)->name + stacks + "|X " + Utilities::dtos(timeleft, 1) + " seconds || ";
                 if((*iter)->affectCategory != SpellAffect::AFFECT_NONE)
                 {
                     oneaffect += (*iter)->GetAffectCategoryName() + " || ";
@@ -552,7 +565,10 @@ void cmd_affects(Player * ch, string argument)
             if ((*iter)->skill != nullptr && (!(*iter)->hidden || ch->IsImmortal()))
             {
                 double timeleft = ((*iter)->appliedTime + (*iter)->duration) - Game::currentTime;
-                string oneaffect = Utilities::itos(i++) + ". |R" + (*iter)->name + "|X " + Utilities::dtos(timeleft, 1) + " seconds || ";
+                string stacks;
+                if ((*iter)->currentStacks > 1)
+                    stacks = " |M(" + Utilities::itos((*iter)->currentStacks) + ")";
+                string oneaffect = Utilities::itos(i++) + ". |R" + (*iter)->name + stacks + "|X " + Utilities::dtos(timeleft, 1) + " seconds || ";
                 if ((*iter)->affectCategory != SpellAffect::AFFECT_NONE)
                 {
                     oneaffect += (*iter)->GetAffectCategoryName() + " || ";

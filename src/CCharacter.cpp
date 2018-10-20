@@ -484,7 +484,7 @@ SpellAffect * Character::AddSpellAffect(int isDebuff, Character * caster, string
     if(sa->caster)
     {
         sa->caster->AddSubscriber(sa);
-		//std::cout << "AddSpellAffect AddSubscriber" << std::endl;
+		std::cout << "AddSpellAffect AddSubscriber" << std::endl;
         sa->casterName = caster->GetName();
     }
     sa->ticksRemaining = ticks;
@@ -593,9 +593,11 @@ bool Character::RemoveSpellAffectsByAura(bool isDebuff, int auraid)
 			{
 				removed = true;
 				(*iter)->auraAffects.clear();
-
                 (*iter)->skill->CallLuaRemove((*iter)->caster, this, (*iter));
-
+                if ((*iter)->caster)
+                {
+                    (*iter)->caster->RemoveSubscriber((*iter));
+                }
 				delete (*iter);
 				iter = debuffs.erase(iter);
 				break;
@@ -617,9 +619,11 @@ bool Character::RemoveSpellAffectsByAura(bool isDebuff, int auraid)
 			{
 				removed = true;
 				(*iter)->auraAffects.clear();
-
                 (*iter)->skill->CallLuaRemove((*iter)->caster, this, (*iter));
-
+                if ((*iter)->caster)
+                {
+                    (*iter)->caster->RemoveSubscriber((*iter));
+                }
 				delete (*iter);
 				iter = buffs.erase(iter);
 				break;
@@ -644,6 +648,10 @@ void Character::RemoveSpellAffect(bool isDebuff, int id)
             {
                 (*iter)->auraAffects.clear();
                 (*iter)->skill->CallLuaRemove((*iter)->caster, this, (*iter));
+                if ((*iter)->caster)
+                {
+                    (*iter)->caster->RemoveSubscriber((*iter));
+                }
                 delete (*iter);
                 debuffs.erase(iter);
                 break;
@@ -658,6 +666,10 @@ void Character::RemoveSpellAffect(bool isDebuff, int id)
             {
                 (*iter)->auraAffects.clear();
                 (*iter)->skill->CallLuaRemove((*iter)->caster, this, (*iter));
+                if ((*iter)->caster)
+                {
+                    (*iter)->caster->RemoveSubscriber((*iter));
+                }
                 delete (*iter);
                 buffs.erase(iter);
                 break;
@@ -677,6 +689,10 @@ void Character::RemoveSpellAffect(bool isDebuff, string name)
             {
                 (*iter)->auraAffects.clear();
                 (*iter)->skill->CallLuaRemove((*iter)->caster, this, (*iter));
+                if ((*iter)->caster)
+                {
+                    (*iter)->caster->RemoveSubscriber((*iter));
+                }
                 delete (*iter);
                 debuffs.erase(iter);
                 break;
@@ -691,6 +707,10 @@ void Character::RemoveSpellAffect(bool isDebuff, string name)
             {
                 (*iter)->auraAffects.clear();
                 (*iter)->skill->CallLuaRemove((*iter)->caster, this, (*iter));
+                if ((*iter)->caster)
+                {
+                    (*iter)->caster->RemoveSubscriber((*iter));
+                }
                 delete (*iter);
                 buffs.erase(iter);
                 break;
@@ -707,6 +727,10 @@ void Character::RemoveSpellAffect(SpellAffect * remove)
 		{
 			(*iter)->auraAffects.clear();
             (*iter)->skill->CallLuaRemove((*iter)->caster, this, (*iter));
+            if ((*iter)->caster)
+            {
+                (*iter)->caster->RemoveSubscriber((*iter));
+            }
 			delete (*iter);
 			buffs.erase(iter);
 			break;
@@ -718,6 +742,10 @@ void Character::RemoveSpellAffect(SpellAffect * remove)
 		{
 			(*iter)->auraAffects.clear();
             (*iter)->skill->CallLuaRemove((*iter)->caster, this, (*iter));
+            if ((*iter)->caster)
+            {
+                (*iter)->caster->RemoveSubscriber((*iter));
+            }
 			delete (*iter);
 			debuffs.erase(iter);
 			return;
@@ -730,6 +758,10 @@ void Character::RemoveAllSpellAffects()
     while(!debuffs.empty())
     {
         debuffs.front()->skill->CallLuaRemove(debuffs.front()->caster, this, debuffs.front());
+        if (debuffs.front()->caster)
+        {
+            debuffs.front()->caster->RemoveSubscriber(debuffs.front());
+        }
         delete debuffs.front();
         debuffs.pop_front();
     }
@@ -737,6 +769,10 @@ void Character::RemoveAllSpellAffects()
     while(!buffs.empty())
     {
         buffs.front()->skill->CallLuaRemove(buffs.front()->caster, this, buffs.front());
+        if (buffs.front()->caster)
+        {
+            buffs.front()->caster->RemoveSubscriber(buffs.front());
+        }
         delete buffs.front();
         buffs.pop_front();
     }
