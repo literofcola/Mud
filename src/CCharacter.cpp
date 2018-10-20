@@ -484,7 +484,7 @@ SpellAffect * Character::AddSpellAffect(int isDebuff, Character * caster, string
     if(sa->caster)
     {
         sa->caster->AddSubscriber(sa);
-		std::cout << "AddSpellAffect AddSubscriber" << std::endl;
+		//std::cout << "AddSpellAffect AddSubscriber" << std::endl;
         sa->casterName = caster->GetName();
     }
     sa->ticksRemaining = ticks;
@@ -924,7 +924,7 @@ int Character::GetLargestAuraModifier(int aura_id)
 
 bool Character::IsCrowdControlled()
 {
-    if(GetAuraModifier(SpellAffect::AURA_INCAPACITATE, 1))
+    if(GetAuraModifier(SpellAffect::AURA_INCAPACITATE, 1) || GetAuraModifier(SpellAffect::AURA_STUN, 1))
         return true;
     return false;
 }

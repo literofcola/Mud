@@ -20,6 +20,7 @@ const struct SpellAffect::AuraTable aura_table[] =
 	{ "DAMAGE_ABSORB", SpellAffect::AURA_DAMAGE_ABSORB },
     { "INCAPACITATE", SpellAffect::AURA_INCAPACITATE },
     { "MODIFY_ARMOR", SpellAffect::AURA_MODIFY_ARMOR },
+    { "STUN", SpellAffect::AURA_STUN },
     { "", 0 }
 };
 

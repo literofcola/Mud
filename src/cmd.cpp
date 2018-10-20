@@ -262,6 +262,7 @@ void cmd_look(Player * ch, std::string argument)
 				std::string level = "";
 				std::string aggressionColor = "|G";
                 std::string crowd_control = "";
+                std::string stunned = "";
 				std::string tapped = "";
                 std::string in_combat = "";
 
@@ -309,6 +310,11 @@ void cmd_look(Player * ch, std::string argument)
                 {
                     crowd_control = cc->GetDataString("cmd_look_cc");
                 }
+                cc = (*i)->GetFirstSpellAffectWithAura(SpellAffect::AURA_STUN);
+                if (cc != nullptr)
+                {
+                    stunned = "|C*";
+                }
 				Character * tappedBy = (*i)->GetTap();
 				if (tappedBy)
 				{
@@ -322,7 +328,7 @@ void cmd_look(Player * ch, std::string argument)
                     else
                         tapped += tappedBy->GetName() + ")";
 				}
-				ch->Send(disconnected + level + questicon + in_combat + aggressionColor + corpse + (*i)->GetName() + title + " is here" + targeting + crowd_control + tapped + "|X\r\n");
+				ch->Send(disconnected + level + questicon + in_combat + stunned + aggressionColor + corpse + (*i)->GetName() + title + " is here" + targeting + crowd_control + tapped + "|X\r\n");
 			}
 			//ch->Send("\r\n");	
 		}
@@ -466,6 +472,7 @@ void cmd_look(Player * ch, std::string argument)
                         std::string level = "";
                         std::string aggressionColor = "|G";
                         std::string crowd_control = "";
+                        std::string stunned = "";
                         std::string tapped = "";
                         std::string in_combat = "";
 
@@ -513,6 +520,11 @@ void cmd_look(Player * ch, std::string argument)
                         {
                             crowd_control = cc->GetDataString("cmd_look_cc");
                         }
+                        cc = (*i)->GetFirstSpellAffectWithAura(SpellAffect::AURA_STUN);
+                        if (cc != nullptr)
+                        {
+                            stunned = "|C*";
+                        }
                         Character * tappedBy = (*i)->GetTap();
                         if (tappedBy)
                         {
@@ -526,7 +538,7 @@ void cmd_look(Player * ch, std::string argument)
                             else
                                 tapped += tappedBy->GetName() + ")";
                         }
-                        ch->Send(disconnected + level + questicon + in_combat + aggressionColor + corpse + (*i)->GetName() + title + " is here" + targeting + crowd_control + tapped + "|X\r\n");
+                        ch->Send(disconnected + level + questicon + in_combat + stunned + aggressionColor + corpse + (*i)->GetName() + title + " is here" + targeting + crowd_control + tapped + "|X\r\n");
                     }
                 }
                 return;
