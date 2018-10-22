@@ -2036,6 +2036,9 @@ void Player::RemoveCorpse()
 void Player::StartGlobalCooldown()
 {
 	globalCooldown = Game::currentTime + 1.5;
+    json cooldown = { { "name", "global_cooldown" },
+                      { "time", 1.5 } };
+    SendGMCP("char.cooldown " + cooldown.dump());
 }
 
 void Player::ApplyExperience(int amount)

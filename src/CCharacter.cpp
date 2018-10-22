@@ -2283,8 +2283,6 @@ double Character::GetMoveSpeed()
     return newspeed / 100;
 }
 
-
-
 void Character::SetCooldown(Skill * sk, double length) //USE LENGTH -1 TO USE SKILL->COOLDOWN
 {
     if(length == 0)
@@ -2295,6 +2293,9 @@ void Character::SetCooldown(Skill * sk, double length) //USE LENGTH -1 TO USE SK
         if(length < 0) //if length default argument == -1, use sk->cooldown
             length = sk->cooldown;
         cooldowns[sk->id] = Game::currentTime + length;
+        json cooldown = { { "name", sk->name },
+                          { "time", length } };
+        SendGMCP("char.cooldown " + cooldown.dump());
     }
 }
 
