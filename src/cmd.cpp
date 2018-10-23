@@ -80,6 +80,12 @@ void cmd_attack(Player * ch, std::string argument)
 		return;
 	}
 
+    if (ch->delay_active)
+    {
+        ch->CancelActiveDelay();
+        ch->Send("Action interrupted!\r\n");
+    }
+
     ch->SetTarget(target);
     ch->Send("You begin attacking " + target->GetName() + "!\r\n");
 

@@ -1147,8 +1147,8 @@ void Character::AutoAttack(Character * victim)
 
     if (meleeActive == false)
     {
-        Message(GetName() + " begins attacking " + victim->GetName() + "!", MSG_ROOM_NOTCHARVICT, victim);
-        victim->Send(GetName() + " begins attacking YOU!\r\n");
+        Message("|R" + GetName() + " begins attacking " + victim->GetName() + "!", MSG_ROOM_NOTCHARVICT, victim);
+        victim->Send("|R" + GetName() + " begins attacking YOU!\r\n");
     }
     meleeActive = true;
 

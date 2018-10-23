@@ -482,7 +482,7 @@ void cmd_affects(Player * ch, string argument)
         if (!found)
             ch->Send("None\r\n");
         found = false;
-        if (ch->GetTarget())
+        if (ch->GetTarget() && ch->GetTarget() != ch)
         {
             ch->Send("|MYour target is affected by the following debuffs:|X\r\n");
             for (auto iter = ch->GetTarget()->debuffs.begin(); iter != ch->GetTarget()->debuffs.end(); ++iter)

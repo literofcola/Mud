@@ -832,8 +832,8 @@ void Game::WorldUpdate(Server * server)
 				{
 					if (currNPC->GetTarget() != taunt->caster)
 					{
-						taunt->caster->Send(currNPC->GetName() + " changes " + currNPC->HisHer() + " target to YOU!\r\n");
-						taunt->caster->Message(currNPC->GetName() + " changes " + currNPC->HisHer() + " target to " + taunt->caster->GetName() + "!",
+						taunt->caster->Send("|R" + currNPC->GetName() + " changes " + currNPC->HisHer() + " target to YOU!\r\n");
+						taunt->caster->Message("|R" + currNPC->GetName() + " changes " + currNPC->HisHer() + " target to " + taunt->caster->GetName() + "!",
 							Character::MessageType::MSG_ROOM_NOTCHARVICT, currNPC);
 					}
 					currNPC->SetTarget(taunt->caster);
@@ -842,16 +842,16 @@ void Game::WorldUpdate(Server * server)
                 else if(topthreat && topthreat != currNPC->GetTarget() && (currNPC->GetThreat(currNPC->GetTarget()) + currNPC->GetThreat(currNPC->GetTarget()) * .1) < currNPC->GetThreat(topthreat))
                 {
 					currNPC->SetTarget(currNPC->GetTopThreat());
-					currNPC->GetTarget()->Send(currNPC->GetName() + " changes " + currNPC->HisHer() + " target to YOU!\r\n");
-					currNPC->Message(currNPC->GetName() + " changes " + currNPC->HisHer() + " target to " + currNPC->GetTarget()->GetName() + "!",
+					currNPC->GetTarget()->Send("|R" + currNPC->GetName() + " changes " + currNPC->HisHer() + " target to YOU!\r\n");
+					currNPC->Message("|R" + currNPC->GetName() + " changes " + currNPC->HisHer() + " target to " + currNPC->GetTarget()->GetName() + "!",
 						Character::MessageType::MSG_ROOM_NOTCHARVICT, currNPC->GetTarget());
                 }
                 //No target but have targets on threat meter (just killed top threat?), aquire new target
                 else if (topthreat && currNPC->GetTarget() == nullptr)
                 {
                     currNPC->SetTarget(currNPC->GetTopThreat());
-                    currNPC->GetTarget()->Send(currNPC->GetName() + " changes " + currNPC->HisHer() + " target to YOU!\r\n");
-                    currNPC->Message(currNPC->GetName() + " changes " + currNPC->HisHer() + " target to " + currNPC->GetTarget()->GetName() + "!",
+                    currNPC->GetTarget()->Send("|R" + currNPC->GetName() + " changes " + currNPC->HisHer() + " target to YOU!\r\n");
+                    currNPC->Message("|R" + currNPC->GetName() + " changes " + currNPC->HisHer() + " target to " + currNPC->GetTarget()->GetName() + "!",
                         Character::MessageType::MSG_ROOM_NOTCHARVICT, currNPC->GetTarget());
                 }
             }
