@@ -2255,6 +2255,7 @@ bool acceptResQuery(Player * ch, std::string argument)
         ch->QueryClear(acceptResQuery);
         ch->QueryClear(returnToGYQuery);
         ch->QueryClear(releaseSpiritQuery);
+        ch->Look("");
 		return true;
 	}
 	return false;

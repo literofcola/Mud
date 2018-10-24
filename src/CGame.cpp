@@ -832,8 +832,8 @@ void Game::WorldUpdate(Server * server)
 				{
 					if (currNPC->GetTarget() != taunt->caster)
 					{
-						taunt->caster->Send("|R" + currNPC->GetName() + " changes " + currNPC->HisHer() + " target to YOU!\r\n");
-						taunt->caster->Message("|R" + currNPC->GetName() + " changes " + currNPC->HisHer() + " target to " + taunt->caster->GetName() + "!",
+						taunt->caster->Send("|R" + currNPC->GetName() + " changes " + currNPC->HisHer() + " target to YOU!|X\r\n");
+						taunt->caster->Message("|R" + currNPC->GetName() + " changes " + currNPC->HisHer() + " target to " + taunt->caster->GetName() + "!|X",
 							Character::MessageType::MSG_ROOM_NOTCHARVICT, currNPC);
 					}
 					currNPC->SetTarget(taunt->caster);
@@ -842,16 +842,16 @@ void Game::WorldUpdate(Server * server)
                 else if(topthreat && topthreat != currNPC->GetTarget() && (currNPC->GetThreat(currNPC->GetTarget()) + currNPC->GetThreat(currNPC->GetTarget()) * .1) < currNPC->GetThreat(topthreat))
                 {
 					currNPC->SetTarget(currNPC->GetTopThreat());
-					currNPC->GetTarget()->Send("|R" + currNPC->GetName() + " changes " + currNPC->HisHer() + " target to YOU!\r\n");
-					currNPC->Message("|R" + currNPC->GetName() + " changes " + currNPC->HisHer() + " target to " + currNPC->GetTarget()->GetName() + "!",
+					currNPC->GetTarget()->Send("|R" + currNPC->GetName() + " changes " + currNPC->HisHer() + " target to YOU!|X\r\n");
+					currNPC->Message("|R" + currNPC->GetName() + " changes " + currNPC->HisHer() + " target to " + currNPC->GetTarget()->GetName() + "!|X",
 						Character::MessageType::MSG_ROOM_NOTCHARVICT, currNPC->GetTarget());
                 }
                 //No target but have targets on threat meter (just killed top threat?), aquire new target
                 else if (topthreat && currNPC->GetTarget() == nullptr)
                 {
                     currNPC->SetTarget(currNPC->GetTopThreat());
-                    currNPC->GetTarget()->Send("|R" + currNPC->GetName() + " changes " + currNPC->HisHer() + " target to YOU!\r\n");
-                    currNPC->Message("|R" + currNPC->GetName() + " changes " + currNPC->HisHer() + " target to " + currNPC->GetTarget()->GetName() + "!",
+                    currNPC->GetTarget()->Send("|R" + currNPC->GetName() + " changes " + currNPC->HisHer() + " target to YOU!|X\r\n");
+                    currNPC->Message("|R" + currNPC->GetName() + " changes " + currNPC->HisHer() + " target to " + currNPC->GetTarget()->GetName() + "!|X",
                         Character::MessageType::MSG_ROOM_NOTCHARVICT, currNPC->GetTarget());
                 }
             }
@@ -965,9 +965,9 @@ void Game::WorldUpdate(Server * server)
             }
         }
         //Target range update
-        if(!currChar->IsImmortal() && currChar->GetTarget() && currChar->GetTarget()->room != currChar->room)
+        if(!currChar->IsImmortal() && !currChar->IsNPC() && currChar->GetTarget() && currChar->GetTarget()->room != currChar->room)
         {
-            //Allow target to remain active in same room and up to two rooms away
+            //Allow target to remain active in same room and up to two rooms away (for players, npcs keep target anywhere)
 			Exit::Direction dir = FindDirection(currChar, currChar->GetTarget(), 3);
 			if (dir == Exit::DIR_LAST) //Clear the target
 			{

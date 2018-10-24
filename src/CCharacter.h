@@ -122,6 +122,7 @@ public:
 	void GenerateRageOnAttack(int damage, double weapon_speed, bool mainhand, bool wascrit);
 	void GenerateRageOnTakeDamage(int damage);
 	bool CanAttack(Character * victim);
+    bool CanHeal(Character * victim);
 	void EnterCombat(Character * victim);
 	void EnterCombatAssist(Character * friendly);
 	void ExitCombat();

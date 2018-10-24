@@ -98,6 +98,7 @@ void Lua_DefineClasses(sol::state * lua)
 			"EnterCombatAssist", &Character::EnterCombatAssist,
             "CancelAutoAttack", &Character::CancelAutoAttack,
 			"CanAttack", &Character::CanAttack,
+            "CanHeal", &Character::CanHeal,
 			"DoAttackRoll", &Character::DoAttackRoll,
 			"CalculateArmorMitigation", &Character::CalculateArmorMitigation,
             "HandleDamageAbsorb", &Character::HandleDamageAbsorb,

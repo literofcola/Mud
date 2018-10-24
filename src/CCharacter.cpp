@@ -1147,8 +1147,8 @@ void Character::AutoAttack(Character * victim)
 
     if (meleeActive == false)
     {
-        Message("|R" + GetName() + " begins attacking " + victim->GetName() + "!", MSG_ROOM_NOTCHARVICT, victim);
-        victim->Send("|R" + GetName() + " begins attacking YOU!\r\n");
+        Message("|R" + GetName() + " begins attacking " + victim->GetName() + "!|X", MSG_ROOM_NOTCHARVICT, victim);
+        victim->Send("|R" + GetName() + " begins attacking YOU!|X\r\n");
     }
     meleeActive = true;
 
@@ -2251,6 +2251,16 @@ bool Character::CanAttack(Character * victim)
 		return false;
 	}
 	return true;
+}
+
+bool Character::CanHeal(Character * victim)
+{
+    if ((victim->IsNPC() && victim->FlagIsSet(NPCIndex::FLAG_AGGRESSIVE))
+        || (!victim->IsAlive()))
+    {
+        return false;
+    }
+    return true;
 }
 
 bool Character::CanMove()
