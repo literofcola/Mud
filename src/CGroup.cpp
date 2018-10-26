@@ -143,3 +143,10 @@ Player * Group::FindByName(std::string name)
 	}
 	return nullptr;
 }
+
+Player * Group::GetMember(int index)
+{
+    if(index < 0 || index > Group::MAX_RAID_SIZE)
+        return nullptr;
+    return members[index];
+}

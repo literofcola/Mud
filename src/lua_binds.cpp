@@ -7,6 +7,7 @@
 #include "CNPC.h"
 #include "CUser.h"
 #include "CSpellAffect.h"
+#include "CGroup.h"
 #include "CRoom.h"
 #include "CSkill.h"
 #include "utils.h"
@@ -127,6 +128,7 @@ void Lua_DefineClasses(sol::state * lua)
 			"GetMainhandDamageRandomHit", &Character::GetMainhandDamageRandomHit,
 			"GetCharacterRoom", (Character *(Character::*)(Character *)) &Character::GetCharacterRoom,
 			"GetCharacterAdjacentRoom", (Character *(Character::*)(Character *)) &Character::GetCharacterAdjacentRoom,
+            "GetGroup", &Character::GetGroup,
 			"Cast", &Character::Cast,
 			"Look", &Character::Look
 			//"level", &Character::level,
@@ -142,7 +144,7 @@ void Lua_DefineClasses(sol::state * lua)
 			"GetClassLevel", &Player::GetClassLevel,
 			"SetLevel", &Player::SetLevel,
             "LuaAddQuery", &Player::LuaAddQuery
-			);
+            );
 
 		(*lua).new_usertype<Room>("Room",
 			"characters", &Room::characters,
@@ -172,4 +174,9 @@ void Lua_DefineClasses(sol::state * lua)
 			"GetDataDouble", &SpellAffect::GetDataDouble,
 			"GetDataString", &SpellAffect::GetDataString
 			);
+
+        (*lua).new_usertype<Group>("Group",
+            //"MAX_RAID_SIZE", &Group::MAX_RAID_SIZE,
+            "GetMember", &Group::GetMember
+            );
 }

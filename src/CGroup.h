@@ -15,7 +15,6 @@ public:
 	Group(Player * l);
 	~Group();
 
-	Player * members[Group::MAX_RAID_SIZE];
 	Player * leader;
 
 	int FindNextEmptySlot();
@@ -30,12 +29,14 @@ public:
 	bool IsGroupLeader(Player * ch);
 	Player * FindByName(std::string name);
 	int GetMemberCount() { return count; };
+    Player * GetMember(int index);
 	bool IsRaidGroup() { return raid; };
 	void MakeRaidGroup() { raid = true; };
 
 private:
 	int count;
 	bool raid;
+    Player * members[Group::MAX_RAID_SIZE];
 };
 
 #endif //CGROUP_H

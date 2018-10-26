@@ -762,9 +762,9 @@ void Game::WorldUpdate(Server * server)
 						{
 							//record the path we take for backtracking
 							currNPC->leashPath.push_back(std::make_pair(currNPC->room, chasedir));
+                            currNPC->EnterCombat(currNPC->GetTopThreat()); //Enter Combat just so our aggro chains to anything else in the room
 							currNPC->Move(chasedir);
 							if(currNPC->GetTopThreat()->room == currNPC->room)
-								//currNPC->EnterCombat(currNPC->GetTopThreat());
                                 currNPC->AutoAttack(currNPC->GetTopThreat());
 						}
 						else

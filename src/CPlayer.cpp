@@ -590,7 +590,7 @@ void Player::GeneratePrompt(double currentTime)
 			int gmcpslot = 1;
 			for (int i = 0; i < Group::MAX_GROUP_SIZE; i++)
 			{
-				Character * current_member = group->members[firstingroup + i];
+				Character * current_member = group->GetMember(firstingroup + i);
 				if (current_member && current_member != this)
 				{
 					prompt += "|B<";

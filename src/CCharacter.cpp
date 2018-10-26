@@ -187,9 +187,9 @@ void Character::Message(const string & txt, MessageType msg_type, Character * vi
 				return;
 			for (int i = 0; i < Group::MAX_RAID_SIZE; i++)
 			{
-				if (GetGroup()->members[i] != nullptr)
+				if (GetGroup()->GetMember(i) != nullptr)
 				{
-					GetGroup()->members[i]->Send(txt + "\r\n");
+					GetGroup()->GetMember(i)->Send(txt + "\r\n");
 				}
 			}
 			break;
@@ -201,9 +201,9 @@ void Character::Message(const string & txt, MessageType msg_type, Character * vi
 				return;
 			for (int i = 0; i < Group::MAX_RAID_SIZE; i++)
 			{
-				if (GetGroup()->members[i] != nullptr && GetGroup()->members[i] != this)
+				if (GetGroup()->GetMember(i) != nullptr && GetGroup()->GetMember(i) != this)
 				{
-					GetGroup()->members[i]->Send(txt + "\r\n");
+					GetGroup()->GetMember(i)->Send(txt + "\r\n");
 				}
 			}
 			break;
@@ -980,17 +980,43 @@ void Character::EnterCombat(Character * victim)
     {
         SetTarget(victim);
     }
-    /*if(target == nullptr || target == victim)
+
+    //EnterCombat is called often when already in combat. Only send GMCP when combat state actually changes
+    json jsoncombat = { { "combat", 1 } };
+    if (combat == false)
     {
-        SetTarget(victim);
-        meleeActive = true;
-    }*/
-    //if(victim->target == nullptr || victim->target == this)
-    /*if((victim->IsNPC() && victim->meleeActive == false) || victim->target == nullptr || victim->target == this)
+        SendGMCP("char.vitals " + jsoncombat.dump());
+        SendTargetSubscriberGMCP("target.vitals " + jsoncombat.dump());
+        if (HasGroup())
+        {
+            jsoncombat = { { "name", GetName() },{ "combat", 1 } };
+            int first_slot = GetGroup()->FindFirstSlotInSubgroup((Player*)this);
+            for (int i = first_slot; i < first_slot + Group::MAX_GROUP_SIZE; i++)
+            {
+                if (GetGroup()->GetMember(i) != nullptr && GetGroup()->GetMember(i) != this)
+                {
+                    GetGroup()->GetMember(i)->SendGMCP("group.vitals " + jsoncombat.dump());
+                }
+            }
+        }
+    }
+    if (victim->combat == false)
     {
-        victim->SetTarget(this);
-        victim->meleeActive = true;
-    }*/
+        victim->SendGMCP("char.vitals " + jsoncombat.dump());
+        victim->SendTargetSubscriberGMCP("target.vitals " + jsoncombat.dump());
+        if (victim->HasGroup())
+        {
+            jsoncombat = { { "name", victim->GetName() },{ "combat", 1 } };
+            int first_slot = victim->GetGroup()->FindFirstSlotInSubgroup((Player*)this);
+            for (int i = first_slot; i < first_slot + Group::MAX_GROUP_SIZE; i++)
+            {
+                if (victim->GetGroup()->GetMember(i) != nullptr && victim->GetGroup()->GetMember(i) != this)
+                {
+                    victim->GetGroup()->GetMember(i)->SendGMCP("group.vitals " + jsoncombat.dump());
+                }
+            }
+        }
+    }
     combat = true;
     victim->combat = true;
 
@@ -1019,25 +1045,6 @@ void Character::EnterCombat(Character * victim)
 
     movementSpeed = Character::COMBAT_MOVE_SPEED;
     victim->movementSpeed = Character::COMBAT_MOVE_SPEED;
-	json combat = { { "combat", 1 } };
-	SendGMCP("char.vitals " + combat.dump());
-	victim->SendGMCP("char.vitals " + combat.dump());
-
-	SendTargetSubscriberGMCP("target.vitals " + combat.dump());
-	victim->SendTargetSubscriberGMCP("target.vitals " + combat.dump());
-
-	if (HasGroup())
-	{
-		combat = { { "name", GetName() },{ "combat", 1 } };
-		int first_slot = GetGroup()->FindFirstSlotInSubgroup((Player*)this);
-		for (int i = first_slot; i < first_slot + Group::MAX_GROUP_SIZE; i++)
-		{
-			if (GetGroup()->members[i] != nullptr && GetGroup()->members[i] != this)
-			{
-				GetGroup()->members[i]->SendGMCP("group.vitals " + combat.dump());
-			}
-		}
-	}
 }
 
 void Character::EnterCombatAssist(Character * friendly)
@@ -1065,6 +1072,25 @@ void Character::EnterCombatAssist(Character * friendly)
         SetTarget(friendly);
     }
 
+    //EnterCombat is called often when already in combat. Only send GMCP when combat state actually changes
+    json jsoncombat = { { "combat", 1 } };
+    if (combat == false)
+    {
+        SendGMCP("char.vitals " + jsoncombat.dump());
+        SendTargetSubscriberGMCP("target.vitals " + jsoncombat.dump());
+        if (HasGroup())
+        {
+            jsoncombat = { { "name", GetName() },{ "combat", 1 } };
+            int first_slot = GetGroup()->FindFirstSlotInSubgroup((Player*)this);
+            for (int i = first_slot; i < first_slot + Group::MAX_GROUP_SIZE; i++)
+            {
+                if (GetGroup()->GetMember(i) != nullptr && GetGroup()->GetMember(i) != this)
+                {
+                    GetGroup()->GetMember(i)->SendGMCP("group.vitals " + jsoncombat.dump());
+                }
+            }
+        }
+    }
 	combat = true;
     if(IsPlayer())
 		((Player*)(this))->lastCombatAction = Game::currentTime;
@@ -1079,25 +1105,7 @@ void Character::EnterCombatAssist(Character * friendly)
 			UpdateThreat(threat->ch, 0, Character::Threat::THREAT_DAMAGE);
 		}
 	}
-
     movementSpeed = Character::COMBAT_MOVE_SPEED;
-	json combat = { { "combat", 1 } };
-	SendGMCP("char.vitals " + combat.dump());
-
-	SendTargetSubscriberGMCP("target.vitals " + combat.dump());
-
-	if (HasGroup())
-	{
-		combat = { { "name", GetName() },{ "combat", 1 } };
-		int first_slot = GetGroup()->FindFirstSlotInSubgroup((Player*)this);
-		for (int i = first_slot; i < first_slot + Group::MAX_GROUP_SIZE; i++)
-		{
-			if (GetGroup()->members[i] != nullptr && GetGroup()->members[i] != this)
-			{
-				GetGroup()->members[i]->SendGMCP("group.vitals " + combat.dump());
-			}
-		}
-	}
 }
 
 void Character::ExitCombat()
@@ -1117,9 +1125,9 @@ void Character::ExitCombat()
 		int first_slot = GetGroup()->FindFirstSlotInSubgroup((Player*)this);
 		for (int i = first_slot; i < first_slot + Group::MAX_GROUP_SIZE; i++)
 		{
-			if (GetGroup()->members[i] != nullptr && GetGroup()->members[i] != this)
+			if (GetGroup()->GetMember(i) != nullptr && GetGroup()->GetMember(i) != this)
 			{
-				GetGroup()->members[i]->SendGMCP("group.vitals " + combat.dump());
+				GetGroup()->GetMember(i)->SendGMCP("group.vitals " + combat.dump());
 			}
 		}
 	}
@@ -1652,7 +1660,7 @@ void Character::OnDeath()
 			{
 				for (int i = 0; i < Group::MAX_RAID_SIZE; i++)
 				{
-					Player * group_member = tap_player->GetGroup()->members[i];
+					Player * group_member = tap_player->GetGroup()->GetMember(i);
 					if (group_member != nullptr && FindDistance(this->room, group_member->room, Player::GROUP_LOOT_DISTANCE) != -1)
 					{
 						group_member->HandleNPCKillRewards(this);
@@ -1681,7 +1689,7 @@ void Character::OnDeath()
 					{
 						for (int i = 0; i < Group::MAX_RAID_SIZE; i++)
 						{
-							Player * group_member = tap->GetGroup()->members[i];
+							Player * group_member = tap->GetGroup()->GetMember(i);
 							if (group_member != nullptr && (!drop->quest || group_member->ShouldDropQuestItem(drop))
 								&& FindDistance(this->room, group_member->room, Player::GROUP_LOOT_DISTANCE) != -1)
 							{
@@ -1809,10 +1817,10 @@ void Character::SetHealth(int amount)
 		int first_slot = GetGroup()->FindFirstSlotInSubgroup((Player *)this);
 		for (int i = first_slot; i < first_slot + Group::MAX_GROUP_SIZE; i++)
 		{
-			if (GetGroup()->members[i] != nullptr && GetGroup()->members[i] != this)
+			if (GetGroup()->GetMember(i) != nullptr && GetGroup()->GetMember(i) != this)
 			{
 				vitals = { { "name", GetName() }, { "hp", GetHealth() } };
-				GetGroup()->members[i]->SendGMCP("group.vitals " + vitals.dump());
+				GetGroup()->GetMember(i)->SendGMCP("group.vitals " + vitals.dump());
 			}
 		}
 	}
@@ -1870,10 +1878,10 @@ void Character::SetMana(int amount)
 		int first_slot = GetGroup()->FindFirstSlotInSubgroup((Player *)this);
 		for (int i = first_slot; i < first_slot + Group::MAX_GROUP_SIZE; i++)
 		{
-			if (GetGroup()->members[i] != nullptr && GetGroup()->members[i] != this)
+			if (GetGroup()->GetMember(i) != nullptr && GetGroup()->GetMember(i) != this)
 			{
 				vitals = { { "name", GetName() },{ "mp", GetMana() } };
-				GetGroup()->members[i]->SendGMCP("group.vitals " + vitals.dump());
+				GetGroup()->GetMember(i)->SendGMCP("group.vitals " + vitals.dump());
 			}
 		}
 	}
@@ -2069,9 +2077,9 @@ bool Character::HasTap(Character * target)
     {
         for (int i = 0; i < Group::MAX_RAID_SIZE; i++)
         {
-            if (GetGroup()->members[i] != nullptr)
+            if (GetGroup()->GetMember(i) != nullptr)
             {
-                if(target->GetTap() == GetGroup()->members[i])
+                if(target->GetTap() == GetGroup()->GetMember(i))
                     return true;
             }
         }

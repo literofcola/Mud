@@ -1055,9 +1055,9 @@ void cmd_group(Player * ch, std::string argument)
 			ch->Message("Your group has been disbanded.", Character::MSG_GROUP_NOTCHAR);
 			for (int i = 0; i < Group::MAX_RAID_SIZE; i++)
 			{
-				if (ch->group->members[i] != nullptr && ch->group->members[i] != ch)
+				if (ch->group->GetMember(i) != nullptr && ch->group->GetMember(i) != ch)
 				{
-					ch->group->members[i]->group = nullptr;
+					ch->group->GetMember(i)->group = nullptr;
 				}
 			}
 			delete ch->group;
@@ -1069,9 +1069,9 @@ void cmd_group(Player * ch, std::string argument)
 			{
 				for (int i = 0; i < Group::MAX_RAID_SIZE; i++)
 				{
-					if (ch->group->members[i] != ch && ch->group->members[i] != nullptr)
+					if (ch->group->GetMember(i) != ch && ch->group->GetMember(i) != nullptr)
 					{
-						ch->group->leader = ch->group->members[i];
+						ch->group->leader = ch->group->GetMember(i);
 						ch->group->leader->Message(ch->group->leader->GetName() + " is now the group leader.", Character::MSG_GROUP_NOTCHAR);
 						ch->group->leader->Send("You are now the group leader.\r\n");
 						break;
@@ -1196,10 +1196,10 @@ void cmd_group(Player * ch, std::string argument)
 		ch->group->Move(group_member, slot_num - 1);
 		for (int i = 0; i < Group::MAX_RAID_SIZE; i++)
 		{
-			if (ch->group->members[i] != nullptr)
+			if (ch->group->GetMember(i) != nullptr)
 			{
 				json groupstatus = { { "move", "playermoved" } };
-				ch->group->members[i]->SendGMCP("group.status " + groupstatus.dump());
+				ch->group->GetMember(i)->SendGMCP("group.status " + groupstatus.dump());
 			}
 		}
 		return;
@@ -1219,7 +1219,7 @@ void cmd_group(Player * ch, std::string argument)
 			group_format << "Your group (" << ch->group->GetMemberCount() << "/" << Group::MAX_GROUP_SIZE << "):\r\n";
 			for (int i = 0; i < Group::MAX_GROUP_SIZE; i++)
 			{
-				Character * current_member = ch->group->members[i];
+				Character * current_member = ch->group->GetMember(i);
 				if (current_member != nullptr)
 				{
 					current_member->InCombat() ? group_format << "|R(X)|X" : group_format << "   ";
@@ -1261,7 +1261,7 @@ void cmd_group(Player * ch, std::string argument)
 				{
 					for (int j = 0; j < 2; j++)
 					{
-						Character * current_member = ch->group->members[i + (format_loop * 8) + (j * 4)];
+						Character * current_member = ch->group->GetMember(i + (format_loop * 8) + (j * 4));
 						if (current_member != nullptr)
 						{
 							current_member->InCombat() ? group_format << "|R(X)|X" : group_format << "   ";
