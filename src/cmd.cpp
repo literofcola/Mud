@@ -190,7 +190,7 @@ void cmd_look(Player * ch, std::string argument)
 
 		cmd_scan(ch, "");
 
-		if (!ch->IsGhost() || (ch->IsGhost() && (inroom->id == ch->corpse_room || inroom->id == ch->graveyard_room)))
+		if (!ch->IsGhost() || (ch->IsGhost() && (FindDistance(inroom, Game::GetGame()->GetRoom(ch->corpse_room), 1) != -1 || inroom->id == ch->graveyard_room)))
 		{
             if(!inroom->items.empty() || inroom->characters.size() > 1)
                 ch->Send("\r\n");

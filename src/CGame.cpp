@@ -552,10 +552,12 @@ void Game::WorldUpdate(Server * server)
 			//todo: release spirit timer?
 			if (!currChar->IsNPC() && currChar->IsGhost())
 			{
+                Room * corpseroom = GetRoom(currPlayer->corpse_room);
+
 				//if we have a query and its 'acceptres' and we don't meet criteria, clear it
 				if (currPlayer->HasQuery(acceptResQuery)
 					&& ((!currPlayer->CanRes(currPlayer->TimeSinceDeath()) || currPlayer->room->id != currPlayer->graveyard_room)
-					&&  (!currPlayer->CanResAtCorpse(currPlayer->TimeSinceDeath()) || currPlayer->room->id != currPlayer->corpse_room)))
+					&&  (!currPlayer->CanResAtCorpse(currPlayer->TimeSinceDeath()) || FindDistance(currPlayer->room, corpseroom, 1) == -1)))
 				{
 					currPlayer->QueryClear(acceptResQuery);
 				}
@@ -569,7 +571,7 @@ void Game::WorldUpdate(Server * server)
 
 				if(!currPlayer->HasQuery(acceptResQuery)
 			      &&((currPlayer->CanRes(currPlayer->TimeSinceDeath()) && currPlayer->room->id == currPlayer->graveyard_room)
-				  ||(currPlayer->CanResAtCorpse(currPlayer->TimeSinceDeath()) && currPlayer->room->id == currPlayer->corpse_room)))
+				  ||(currPlayer->CanResAtCorpse(currPlayer->TimeSinceDeath()) && FindDistance(currPlayer->room, corpseroom, 1) != -1)))
 				{
 					currPlayer->AddQuery("Resurrect now? ('res') ", nullptr, acceptResQuery);
 				}
@@ -746,6 +748,7 @@ void Game::WorldUpdate(Server * server)
                 if (currChar->IsCrowdControlled())
                 {
                     currNPC->movementQueue.clear();
+                    currChar->EnterCombat(currNPC->GetTopThreat()); //Enter Combat just so our aggro chains to anything else in the room
                 }
 
 				if (!currNPC->movementQueue.empty()) //We have a movement pending, see if we can move...
@@ -789,7 +792,7 @@ void Game::WorldUpdate(Server * server)
 						}
 					}
 				}
-                else if(currNPC->GetTopThreat()->room != currNPC->room && currNPC->movementQueue.empty() && !currChar->IsCrowdControlled())
+                else if(currNPC->GetTopThreat()->room != currNPC->room && currNPC->movementQueue.empty() /*&& !currChar->IsCrowdControlled()*/)
                 { //We need to chase threat target, and not already pending a move...
 					//Decide if we should try to chase based on how far we are from our reset
 					int leashdist = Reset::RESET_LEASH_DEFAULT;
@@ -801,6 +804,7 @@ void Game::WorldUpdate(Server * server)
 					{
 						currNPC->ExitCombat();
 						currNPC->ClearTarget();
+                        currNPC->RemoveAllSpellAffects();
 						std::pair<Room *, int> path;
 						while (!currNPC->leashPath.empty() && currNPC->room != currNPC->leashOrigin)
 						{

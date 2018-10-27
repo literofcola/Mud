@@ -146,7 +146,7 @@ Player * Group::FindByName(std::string name)
 
 Player * Group::GetMember(int index)
 {
-    if(index < 0 || index > Group::MAX_RAID_SIZE)
+    if(index < 0 || index >= Group::MAX_RAID_SIZE)
         return nullptr;
     return members[index];
 }

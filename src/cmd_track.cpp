@@ -77,7 +77,6 @@ Exit::Direction FindDirection(Room * start, Room * end, int depth)
 	searchQ.push_back(start);
 	visited[start->id] = nullptr;
 	searchQ.push_back(nullptr); //nullptr as depth marker
-	currentDepth++;
 
 	while (/*!searchQ.empty()*/1) //searchQ will always have a room or nullptr
 	{
@@ -164,7 +163,6 @@ int FindDistance(Room * start, Room * end, int maxSearchDist)
 	searchQ.push_back(start);
 	visited[start->id] = nullptr;
 	searchQ.push_back(nullptr); //nullptr as depth marker
-	currentDepth++;
 
 	while (/*!searchQ.empty()*/1) //searchQ will always have a room or nullptr
 	{
