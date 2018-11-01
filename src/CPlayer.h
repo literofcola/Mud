@@ -257,12 +257,12 @@ public:
 	inline int GetStamina() override { return stamina + bonus_stamina; };
 	inline int GetWisdom() override { return wisdom + bonus_wisdom; };
 	inline int GetSpirit() override { return spirit + bonus_spirit; };
-	inline void SetAgility(int val) { agility <= 0 ? agility = val : agility = 1; };
-	inline void SetIntellect(int val) { intellect <= 0 ? intellect = val : intellect = 1; };
-	inline void SetStrength(int val) { strength <= 0 ? strength = val : strength = 1; };
-	inline void SetStamina(int val) { stamina <= 0 ? stamina = val : stamina = 1; };
-	inline void SetWisdom(int val) { wisdom <= 0 ? wisdom = val : wisdom = 1; };
-	inline void SetSpirit(int val) { spirit <= 0 ? spirit = val : spirit = 1; };
+	inline void SetAgility(int val) { agility <= 0 ? agility = 1 : agility = val; };
+	inline void SetIntellect(int val) { intellect <= 0 ? intellect = 1 : intellect = val; };
+	inline void SetStrength(int val) { strength <= 0 ? strength = 1 : strength = val; };
+	inline void SetStamina(int val) { stamina <= 0 ? stamina = 1 : stamina = val; };
+	inline void SetWisdom(int val) { wisdom <= 0 ? wisdom = 1 : wisdom = val; };
+	inline void SetSpirit(int val) { spirit <= 0 ? spirit = 1 : spirit = val; };
 	int GetLevel() override;
 	void SetLevel(int level);
 	inline std::string GetName() override { return name; };

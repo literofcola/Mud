@@ -584,50 +584,64 @@ void cmd_affects(Player * ch, string argument)
 
 void cmd_train(Player * ch, string argument)
 {
-	if (argument.empty())
+    std::string arg1;
+    std::string arg2;
+
+    argument = Utilities::one_argument(argument, arg1);
+    argument = Utilities::one_argument(argument, arg2);
+
+	if (arg1.empty())
 	{
 		ch->Send("Specify an attribute to increase: agility intellect strength stamina wisdom spirit\r\n");
 		return;
 	}
-	if (ch->statPoints <= 0)
+
+    int howmany = 1;
+    if (!arg2.empty() && Utilities::IsNumber(arg2))
+    {
+        howmany = Utilities::atoi(arg2);
+    }
+
+	if (ch->statPoints < howmany)
 	{
-		ch->Send("You don't have any attribute points.\r\n");
+		ch->Send("You don't have enough attribute points.\r\n");
 		return;
 	}
-	if (!Utilities::str_cmp(argument, "agility"))
+    
+	if (!Utilities::str_cmp(arg1, "agility"))
 	{
-		ch->statPoints--;
-		ch->SetAgility(ch->GetBaseAgility()+1);
+		ch->statPoints -= howmany;
+		ch->SetAgility(ch->GetBaseAgility() + howmany);
 		ch->Send("|WAgility increased: " + Utilities::itos(ch->GetBaseAgility()) + "|X\r\n");
 	}
-	else if (!Utilities::str_cmp(argument, "intellect"))
+	else if (!Utilities::str_cmp(arg1, "intellect"))
 	{
-		ch->statPoints--;
-		ch->SetIntellect(ch->GetBaseIntellect() + 1);
+        ch->statPoints -= howmany;
+        ch->SetIntellect(ch->GetBaseIntellect() + howmany);
 		ch->Send("|WIntellect increased: " + Utilities::itos(ch->GetBaseIntellect()) + "|X\r\n");
 	}
-	else if (!Utilities::str_cmp(argument, "strength"))
+	else if (!Utilities::str_cmp(arg1, "strength"))
 	{
-		ch->statPoints--;
-		ch->SetStrength(ch->GetBaseStrength() + 1);
+        ch->statPoints -= howmany;
+        ch->SetStrength(ch->GetBaseStrength() + howmany);
 		ch->Send("|WStrength increased: " + Utilities::itos(ch->GetBaseStrength()) + "|X\r\n");
 	}
-	else if (!Utilities::str_cmp(argument, "stamina"))
+	else if (!Utilities::str_cmp(arg1, "stamina"))
 	{
-		ch->statPoints--;
-		ch->SetStamina(ch->GetBaseStamina() + 1);
+        ch->statPoints -= howmany;
+        ch->SetStamina(ch->GetBaseStamina() + howmany);
 		ch->Send("|WStamina increased: " + Utilities::itos(ch->GetBaseStamina()) + "|X\r\n");
 	}
-	else if (!Utilities::str_cmp(argument, "wisdom"))
+	else if (!Utilities::str_cmp(arg1, "wisdom"))
 	{
-		ch->statPoints--;
-		ch->SetWisdom(ch->GetBaseWisdom() + 1);
+        ch->statPoints -= howmany;
+        ch->SetWisdom(ch->GetBaseWisdom() + howmany);
 		ch->Send("|WWisdom increased: " + Utilities::itos(ch->GetBaseWisdom()) + "|X\r\n");
 	}
-	else if (!Utilities::str_cmp(argument, "spirit"))
+	else if (!Utilities::str_cmp(arg1, "spirit"))
 	{
-		ch->statPoints--;
-		ch->SetSpirit(ch->GetBaseSpirit() + 1);
+        ch->statPoints -= howmany;
+        ch->SetSpirit(ch->GetBaseSpirit() + howmany);
 		ch->Send("|WSpirit increased: " + Utilities::itos(ch->GetBaseSpirit()) + "|X\r\n");
 	}
 	else

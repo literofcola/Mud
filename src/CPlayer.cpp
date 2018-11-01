@@ -1489,6 +1489,10 @@ Player * Player::LoadPlayer(std::string name, User * user)
 		}
 	}
 
+    //Set these again since wearing our items probably raised our maxes
+    loaded->health = row["health"];
+    loaded->mana = row["mana"];
+
 	loaded->ResetMaxStats(); //Set maxhealth/mana/energy/rage/combos based on post equipment stats
 
 	StoreQueryResult playerqcres = Server::sqlQueue->Read("SELECT * FROM player_completed_quests where player='" + loaded->name + "'");
