@@ -96,7 +96,12 @@ std::string Item::FormatItemInfo(Player * ch)
 {
 	std::string itemstring;
 
-	itemstring = (GetColoredName() + "|X\r\n");
+	itemstring = GetColoredName() + "|X";
+    if (ch->IsImmortal())
+    {
+        itemstring += " |Y[Item ID: " + Utilities::itos(id) + "]|X";
+    }
+    itemstring += "\r\n";
 
 	if (binds != Item::BIND_NONE)
 	{
