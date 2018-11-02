@@ -181,14 +181,14 @@ public:
     void RemoveCrowdControlOnHit();
 
 	//Stats
+    void AdjustHealth(Character * source, int amount);
 	void AdjustMana(Character * source, int amount);
 	void AdjustEnergy(Character * source, int amount);
 	void AdjustRage(Character * source, int amount);
-	bool HasResource(int which, int amount);
 	void ConsumeMana(int amount);
 	void ConsumeEnergy(int amount);
 	void ConsumeRage(int amount);
-	void AdjustHealth(Character * source, int amount);
+    bool HasResource(int which, int amount);
 	virtual void SetComboPoints(int howmany) { };
 	virtual void GenerateComboPoint(Character * target) { };
 	virtual int SpendComboPoints(Character * target) { return 0; };

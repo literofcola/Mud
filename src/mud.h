@@ -74,6 +74,7 @@ void cmd_drop(Player * ch, std::string argument);
 bool cmd_drop_Query(Player * ch, std::string argument);
 void cmd_eat(Player * ch, std::string argument);
 void cmd_drink(Player * ch, std::string argument);
+void cmd_use(Player * ch, std::string argument);
 void cmd_take(Player * ch, std::string argument);
 void cmd_takeCallback(Character::DelayData delayData);
 void cmd_loot(Player * ch, std::string argument);

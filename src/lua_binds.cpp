@@ -115,6 +115,7 @@ void Lua_DefineClasses(sol::state * lua)
             "HasTap", &Character::HasTap,
             "IsTapped", &Character::IsTapped,
 			"SetCooldown", &Character::SetCooldown,
+            "GetCooldownRemaining", &Character::GetCooldownRemaining,
 			"ChangeRoomsID", &Character::ChangeRoomsID,
 			"GetAuraModifier", &Character::GetAuraModifier,
 			"GetTarget", &Character::GetTarget,

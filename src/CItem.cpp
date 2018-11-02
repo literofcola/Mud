@@ -2,6 +2,8 @@
 #include "CItem.h"
 #include "CPlayer.h"
 #include "CServer.h"
+#include "CSkill.h"
+#include "CGame.h"
 #include "utils.h"
 #include <string>
 
@@ -31,11 +33,11 @@ const char * Item::bind_strings[] =
 
 const char * Item::type_strings[] =
 {
-    "Cloth", "Leather", "Mail", "Plate", "Sword", "Dagger", "Mace", "Axe", "Polearm", "Staff", "Container", "Food", "Consumable", "", "Shield", ""
+    "Cloth", "Leather", "Mail", "Plate", "Sword", "Dagger", "Mace", "Axe", "Polearm", "Staff", "Container", "Food", "Consumable", "", "Shield", "Drink", ""
 };
 /*
 ARMOR_CLOTH, ARMOR_LEATHER, ARMOR_MAIL, ARMOR_PLATE, WEAPON_SWORD, WEAPON_DAGGER, WEAPON_MACE, 
-WEAPON_AXE, WEAPON_POLEARM, WEAPON_STAFF, CONTAINER, FOOD, CONSUMABLE, TYPE_MISC, TYPE_SHIELD, TYPE_LAST
+WEAPON_AXE, WEAPON_POLEARM, WEAPON_STAFF, CONTAINER, FOOD, CONSUMABLE, TYPE_MISC, TYPE_SHIELD, TYPE_DRINK, TYPE_LAST
 */
 
 Item::flag_type Item::flag_table[] =
@@ -85,6 +87,7 @@ Item::Item(std::string name_, int id_)
 	intTable["damageHigh"] = &damageHigh;
 	doubleTable["speed"] = &speed;
 	intTable["value"] = &value;
+    intTable["skillid"] = &useSkillID;
 }
 
 Item::~Item()
@@ -178,6 +181,15 @@ std::string Item::FormatItemInfo(Player * ch)
 		itemstring += "Item Level " + Utilities::itos(itemLevel) + "\r\n";
 	if (value > 0)
 		itemstring += "Sell Price: " + Utilities::itos(value) + "\r\n";
+
+    if (useSkillID != 0)
+    {
+        Skill * on_use = Game::GetGame()->GetSkill(useSkillID);
+        if (on_use != nullptr)
+        {
+            itemstring += "|GUse: " + on_use->description + "|X\r\n";
+        }
+    }
 
 	return itemstring;
 }

@@ -633,11 +633,6 @@ void cmd_loot(Player * ch, string argument)
 	ch->Send("loot info roll||target <loot id>\r\n");
 }
 
-void cmd_drink(Player * ch, string argument)
-{
-
-}
-
 void cmd_eat(Player * ch, string argument)
 {
 	if (ch->delay_active)
@@ -683,11 +678,147 @@ void cmd_eat(Player * ch, string argument)
 			return;
 		}
 
+        double cd;
+        if ((cd = ch->GetCooldownRemaining(sk)) > 0)
+        {
+            ch->Send(sk->long_name + " will be ready in " + Utilities::dtos(cd, 1) + " seconds.\r\n");
+            return;
+        }
+
+        int lua_ret = sk->CallLuaCost(ch, ch);
+
+        if (lua_ret == 0)
+        {
+            return;
+        }
 
 		ch->Sit();
 		ch->RemoveItemInventory(eat);
+        ch->Message(ch->GetName() + " starts eating " + eat->GetName() + ".\r\n", Character::MSG_ROOM_NOTCHAR);
 		ch->Send("You start eating " + eat->GetName() + ".\r\n");
 
         sk->CallLuaCast(ch, ch);
 	}
+}
+
+void cmd_drink(Player * ch, string argument)
+{
+    if (ch->delay_active)
+    {
+        ch->Send("Another action is in progress!\r\n");
+        return;
+    }
+
+    string arg1;
+    Utilities::one_argument(argument, arg1);
+
+    if (arg1.empty())
+    {
+        ch->Send("Drink what?\r\n");
+        return;
+    }
+
+    Item * drink = ch->GetItemInventory(arg1);
+
+    if (!drink)
+    {
+        ch->Send("You're not carrying that item.\r\n");
+        return;
+    }
+
+    if (drink->type != Item::TYPE_DRINK && drink->type != Item::TYPE_CONSUMABLE)
+    {
+        ch->Send("You can't drink that.\r\n");
+        return;
+    }
+
+    if (drink->type == Item::TYPE_DRINK)
+    {
+        if (ch->InCombat())
+        {
+            ch->Send("You can't do that while in combat.\r\n");
+            return;
+        }
+        Skill * sk = Game::GetGame()->GetSkill(drink->useSkillID);
+        if (sk == nullptr)
+        {
+            LogFile::Log("error", "Item \"" + drink->GetName() + "\": cmd_drink bad skillid");
+            return;
+        }
+
+        double cd;
+        if ((cd = ch->GetCooldownRemaining(sk)) > 0)
+        {
+            ch->Send(sk->long_name + " will be ready in " + Utilities::dtos(cd, 1) + " seconds.\r\n");
+            return;
+        }
+
+        int lua_ret = sk->CallLuaCost(ch, ch);
+
+        if (lua_ret == 0)
+        {
+            return;
+        }
+
+        ch->Sit();
+        ch->RemoveItemInventory(drink);
+        ch->Message(ch->GetName() + " starts drinking " + drink->GetName() + ".\r\n", Character::MSG_ROOM_NOTCHAR);
+        ch->Send("You start drinking " + drink->GetName() + ".\r\n");
+
+        sk->CallLuaCast(ch, ch);
+    }
+}
+
+void cmd_use(Player * ch, string argument)
+{
+    if (ch->delay_active)
+    {
+        ch->Send("Another action is in progress!\r\n");
+        return;
+    }
+
+    string arg1;
+    Utilities::one_argument(argument, arg1);
+
+    if (arg1.empty())
+    {
+        ch->Send("Use what?\r\n");
+        return;
+    }
+
+    Item * use = ch->GetItemInventory(arg1);
+    if(use == nullptr)
+        use = ch->GetItemEquipped(arg1);
+
+    if (!use)
+    {
+        ch->Send("You don't have that item.\r\n");
+        return;
+    }
+
+    Skill * sk = Game::GetGame()->GetSkill(use->useSkillID);
+    if (sk == nullptr)
+    {
+        ch->Send("You can't use that item.\r\n");
+        return;
+    }
+
+    double cd;
+    if ((cd = ch->GetCooldownRemaining(sk)) > 0)
+    {
+        ch->Send(sk->long_name + " will be ready in " + Utilities::dtos(cd, 1) + " seconds.\r\n");
+        return;
+    }
+
+    int lua_ret = sk->CallLuaCost(ch, ch);
+
+    if (lua_ret == 0)
+    {
+        return;
+    }
+
+    ch->Message("|W" + ch->GetName() + " uses " + use->GetName() + ".|X\r\n", Character::MSG_ROOM_NOTCHAR);
+    ch->Send("|WYou use " + use->GetName() + ".|X\r\n");
+
+    sk->CallLuaCast(ch, ch);
 }

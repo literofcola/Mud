@@ -129,6 +129,7 @@ class Command cmd_table[] =
 	{ "get",		cmd_take,		1, 0, 0, 0, Player::POSITION_ANY },
 	{ "take",		cmd_take,		1, 0, 0, 0, Player::POSITION_ANY },
 	{ "gather",		cmd_take,		1, 0, 0, 0, Player::POSITION_ANY },
+    { "use",        cmd_use,        1, 0, 0, 0, Player::POSITION_ANY },
 
     /*
      * Miscellaneous commands.

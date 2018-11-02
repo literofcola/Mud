@@ -250,13 +250,13 @@ void cmd_cooldowns(Player * ch, string argument)
 {
     ch->Send("|MCooldowns greater than 1.5 seconds:|X\r\n");
 
-    std::map<string, Skill *>::iterator iter;
-    for(iter = ch->knownSkills.begin(); iter != ch->knownSkills.end(); ++iter)
+    for (auto iter = begin(ch->cooldowns); iter != end(ch->cooldowns); ++iter)
     {
         double cd;
-        if((cd = ch->GetCooldownRemaining((*iter).second)) > 1.5)
+        Skill * cdskill = Game::GetGame()->GetSkill(iter->first);
+        if ((cd = ch->GetCooldownRemaining(cdskill)) > 1.5)
         {
-            ch->Send("|MSpell:|G " + (*iter).second->long_name + " |MTime Left:|G " + Utilities::dtos(cd, 1) + "|X\r\n");
+            ch->Send("|MSpell:|G " + cdskill->long_name + " |MTime Left:|G " + Utilities::dtos(cd, 1) + "|X\r\n");
         }
     }
 }
