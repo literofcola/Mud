@@ -1724,7 +1724,7 @@ void Character::OnDeath()
 	SetCorpse();
 }
 
-//To be used in spell _cost function. Checks AURA_RESOURCE_COST
+//To be used in spell _cost function. Checks AURA_RESOURCE_COST (and other resource adjusting auras)
 bool Character::HasResource(int which, int amount)
 {
     int resource_cost = GetAuraModifier(SpellAffect::AURA_RESOURCE_COST, 1);
@@ -1735,28 +1735,42 @@ bool Character::HasResource(int which, int amount)
     switch(which)
     {
         case RESOURCE_HEALTH:
-            if(health >= amount)
+        {
+            if (health >= amount)
                 return true;
             break;
+        }
         case RESOURCE_MANA:
-            if(mana >= amount)
+        {
+            int mana_adjust = GetAuraModifier(SpellAffect::AURA_MANA_COST, 1);
+            amount += mana_adjust;
+            if (mana >= amount)
                 return true;
             break;
+        }
         case RESOURCE_ENERGY:
-            if(energy >= amount)
+        {
+            if (energy >= amount)
                 return true;
             break;
+        }
 		case RESOURCE_RAGE:
-			if (rage >= amount)
-				return true;
-			break;
+        {
+            if (rage >= amount)
+                return true;
+            break;
+        }
 		case RESOURCE_COMBO:
-			if (GetComboPoints() >= amount)
-				return true;
-			break;
+        {
+            if (GetComboPoints() >= amount)
+                return true;
+            break;
+        }
         default:
+        {
             LogFile::Log("error", "Character::HasResource, bad resource id");
             return false;
+        }
     }
     return false;
 }
@@ -1833,6 +1847,9 @@ void Character::ConsumeMana(int amount)
     int resource_cost = GetAuraModifier(SpellAffect::AURA_RESOURCE_COST, 1);
     double increase = amount * (resource_cost / 100.0);
     amount += (int)increase;
+
+    int mana_cost = GetAuraModifier(SpellAffect::AURA_MANA_COST, 1);
+    amount += mana_cost;
 
 	//start 5 second rule if we lost mana
 	if (amount > 0)
