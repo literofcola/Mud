@@ -1849,7 +1849,10 @@ void Character::ConsumeMana(int amount)
     amount += (int)increase;
 
     int mana_cost = GetAuraModifier(SpellAffect::AURA_MANA_COST, 1);
-    amount += mana_cost;
+    if (amount > 0 && mana_cost < 0)
+    {
+        (amount + mana_cost) < 0 ? amount = 0 : amount += mana_cost;
+    }
 
 	//start 5 second rule if we lost mana
 	if (amount > 0)
