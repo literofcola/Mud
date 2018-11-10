@@ -78,6 +78,11 @@ void cmd_remove(Player * ch, string argument)
         {
             if(ch->equipped[i] != nullptr)
             {
+                if (ch->IsInventoryFull() && !ch->IsImmortal())
+                {
+                    ch->Send("Your inventory is full.\r\n");
+                    break;
+                }
                 Item * remove = ch->RemoveItemEquipped(i);
                 if(!remove)
                 {
@@ -99,8 +104,7 @@ void cmd_remove(Player * ch, string argument)
         return;
     }
 
-    if(ch->inventorySize >= ch->maxInventorySize
-        && !ch->IsImmortal())
+    if(ch->IsInventoryFull() && !ch->IsImmortal())
     {
         ch->Send("Your inventory is full.\r\n");
         return;
@@ -381,33 +385,37 @@ void cmd_takeCallback(Character::DelayData delayData)
 		LogFile::Log("error", "cmd_takeCallback: nullptr caster");
 		return;
 	}
+    Player * ch = (Player*)delayData.caster;
 	delayData.caster->delay_active = false;
 
 	json casttime = { { "time", 0 } };
-	delayData.caster->SendGMCP("char.casttime " + casttime.dump());
+	ch->SendGMCP("char.casttime " + casttime.dump());
 
 	if (delayData.itemTarget == nullptr) //target will never be null from cmd_take, only from Subscriber::Notify 
 	{
-		delayData.caster->Send("That item is no longer here.\r\n");
+        ch->Send("That item is no longer here.\r\n");
 		return;
 	}
 
-	delayData.itemTarget->RemoveSubscriber(delayData.caster);
+	delayData.itemTarget->RemoveSubscriber(ch);
 	delayData.itemTarget->NotifySubscribers();
 
-	if (!delayData.caster->IsItemInRoom(delayData.itemTarget))
+	if (!ch->IsItemInRoom(delayData.itemTarget))
 	{
-		delayData.caster->Send("That item is no longer here.\r\n");
+        ch->Send("That item is no longer here.\r\n");
 		return;
 	}
 
-	delayData.caster->room->RemoveItem(delayData.itemTarget);
-	if (delayData.caster->IsPlayer())
-	{
-		((Player*)(delayData.caster))->AddItemInventory(delayData.itemTarget);
-	}
-	delayData.caster->Send("You take " + delayData.itemTarget->GetName() + "\r\n");
-	delayData.caster->Message(delayData.caster->GetName() + " takes " + delayData.itemTarget->GetName(), Character::MSG_ROOM_NOTCHAR);
+    if (ch->IsInventoryFull() && !ch->IsImmortal())
+    {
+        ch->Send("Your inventory is full.\r\n");
+        return;
+    }
+
+    ch->room->RemoveItem(delayData.itemTarget);
+    ch->AddItemInventory(delayData.itemTarget);
+    ch->Send("You take " + delayData.itemTarget->GetName() + "\r\n");
+    ch->Message(ch->GetName() + " takes " + delayData.itemTarget->GetName(), Character::MSG_ROOM_NOTCHAR);
 }
 
 void cmd_loot(Player * ch, string argument)
@@ -497,8 +505,9 @@ void cmd_loot(Player * ch, string argument)
 				if (oneloot->roll_timer == 0 && can_loot != std::end(oneloot->looters))
 				{
 					Item * theitem = oneloot->item;
-					if (ch->AddItemInventory(theitem))
+					if (!ch->IsInventoryFull() || ch->IsImmortal())
 					{
+                        ch->AddItemInventory(theitem);
 						//send to other looters
 						for (auto looter_iter = oneloot->looters.begin(); looter_iter != oneloot->looters.end(); ++looter_iter)
 						{
@@ -658,7 +667,7 @@ void cmd_eat(Player * ch, string argument)
 		return;
 	}
 
-	if (eat->type != Item::TYPE_FOOD && eat->type != Item::TYPE_CONSUMABLE)
+	if (eat->type != Item::TYPE_FOOD && eat->type != Item::TYPE_CONSUMABLE && !ch->IsImmortal())
 	{
 		ch->Send("That's not edible.\r\n");
 		return;
@@ -699,6 +708,12 @@ void cmd_eat(Player * ch, string argument)
 
         sk->CallLuaCast(ch, ch);
 	}
+    else
+    {
+        ch->RemoveItemInventory(eat);
+        ch->Message(ch->GetName() + " eats " + eat->GetName() + ".\r\n", Character::MSG_ROOM_NOTCHAR);
+        ch->Send("You eat " + eat->GetName() + ".\r\n");
+    }
 }
 
 void cmd_drink(Player * ch, string argument)

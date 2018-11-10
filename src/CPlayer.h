@@ -207,7 +207,8 @@ public:
 	void RemoveLootRoll(Character * corpse); //Remove all pending rolls that point to a specific corpse
 	void RemoveLootRoll(Character * corpse, int corpse_id); //Remove only one pending roll for specific corpse/ID combo
 	void RemoveAllLootRolls();
-	bool AddItemInventory(Item * item);
+    bool IsInventoryFull();
+	void AddItemInventory(Item * item);
 	Item * GetItemInventory(int id);
 	Item * GetItemInventory(std::string name);
 	Item * RemoveItemInventory(int id);

@@ -960,10 +960,13 @@ bool Player::QuestObjectivesComplete(Quest * quest)
     return false;
 }
 
-bool Player::AddItemInventory(Item * item)
+void Player::AddItemInventory(Item * item)
 {
-	if (inventorySize >= maxInventorySize && !IsImmortal())
-		return false;
+    if (IsInventoryFull() && !IsImmortal())
+    {
+        //Allow the item and print error... There are cases we might want to allow this. Do this check higher up when needed
+        LogFile::Log("error", "Player::AddItemInventory, added item to full inventory: " + GetName() + "::" + item->GetName());
+    }
 
 	QuestCompleteObjective(Quest::OBJECTIVE_ITEM, (void*)item);
 	for (auto iter = inventory.begin(); iter != inventory.end(); iter++)
@@ -971,12 +974,11 @@ bool Player::AddItemInventory(Item * item)
 		if (iter->first->GetID() == item->GetID())
 		{
 			iter->second++;
-			return true;
+            return;
 		}
 	}
     inventory.push_front(std::make_pair(item, 1));
     inventorySize++;
-	return true;
 }
 
 Item * Player::GetItemInventory(int id)
@@ -1731,6 +1733,13 @@ void Player::RemoveAllLootRolls() //for subscriber/subscribermanager considerati
 		iter = pending_loot_rolls.erase(iter);
 	}
 	pending_loot_rolls.clear();
+}
+
+bool Player::IsInventoryFull()
+{
+    if(inventorySize >= maxInventorySize)
+        return true;
+    return false;
 }
 
 void Player::SetLevel(int newlevel)

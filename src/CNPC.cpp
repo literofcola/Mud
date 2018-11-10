@@ -165,15 +165,17 @@ void NPC::DoLootRoll(OneLoot * oneloot)
 			looter_iter->ch->Send(winner->GetName() + " receives loot: " + oneloot->item->GetColoredName() + "|X\r\n");
 		}
 	}
-	winner->Send("You receive loot: " + oneloot->item->GetColoredName() + "|X\r\n");
-	if (!winner->AddItemInventory(oneloot->item)) //if additeminventory fails, leave it in the corpse for cmd_loot
+
+    if (!winner->IsInventoryFull() || winner->IsImmortal())
+    {
+        winner->Send("You receive loot: " + oneloot->item->GetColoredName() + "|X\r\n");
+        winner->AddItemInventory(oneloot->item);
+        this->RemoveLoot(oneloot);
+    }
+    else //if inventory full leave it in the corpse for cmd_loot
 	{
 		winner->Send("Your inventory is full.\r\n");
 		oneloot->roll_timer = 0;
-	}
-	else
-	{
-		this->RemoveLoot(oneloot);
 	}
 }
 
