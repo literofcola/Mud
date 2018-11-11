@@ -116,6 +116,7 @@ void Lua_DefineClasses(sol::state * lua)
 			"SetCooldown", &Character::SetCooldown,
             "GetCooldownRemaining", &Character::GetCooldownRemaining,
 			"ChangeRoomsID", &Character::ChangeRoomsID,
+            "Move", &Character::Move,
 			"GetAuraModifier", &Character::GetAuraModifier,
 			"GetTarget", &Character::GetTarget,
 			"GetRoom", &Character::GetRoom,

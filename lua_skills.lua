@@ -16,23 +16,26 @@ function skill_charge_cost(caster, target, skill)
     return 0
   end
 end
-
 function skill_charge_cast(caster, target, skill)
-  --find which direction target is
-  --print charging cast/exit messages
-  --move
-  --print charge enter/stun messages
+  local exit_dir = FindDirection(caster, target, 1)
+  if(exit_dir == DIR_LAST) then
+    caster:Send("Can't find a path to that target.\r\n")
+    return
+  end
+  caster:Message("|W" .. caster:GetName() .. " charges " .. target:GetName() .. "!|X", MSG_ROOM_NOTCHAR, nil)
+  caster:Move(exit_dir)
+  caster:Send("|W" .. target:GetName() .. " is stunned by your Charge.|X\r\n")
+  target:Send("|WYou are stunned by " .. caster:GetName() .. "'s Charge.|X\r\n")
+  target:Message("|W" .. target:GetName() .. " is stunned by " .. caster:GetName() .. "'s Charge.|X", MSG_ROOM_NOTCHARVICT, caster)
   target:CancelAutoAttack()
   target:AddSpellAffect(SPELLAFFECT_DEBUFF, caster, "Charge Stun", SPELLAFFECT_VISIBLE, 1, 0, 2, AFFECT_NONE, skill, "Stunned")
   caster:EnterCombat(target)
   target:EnterCombat(caster)
   caster:AdjustRage(caster, 10)
 end
-
 function skill_charge_apply(caster, target, affect)
   affect:ApplyAura(AURA_STUN, 1)
 end
-
 function skill_charge_remove(caster, target, affect)
   if(affect.name == "Charge Stun") then
     target:Send("|WCharge Stun fades from you.|X\r\n")
