@@ -1559,12 +1559,19 @@ void Character::GenerateRageOnAttack(int damage, double weapon_speed, bool mainh
 		hitfactor *= 2;
 	if (wascrit)
 		hitfactor *= 2;
-	int limit = (int)ceil((15 * damage) / conversionvalue);
+	//int limit = (int)ceil((15 * damage) / conversionvalue); // Trying to up rage generation a bit, limit seemed too restrictive 
 	int ragegen = (int)ceil(((15 * damage) / (4 * conversionvalue)) + ((hitfactor * weapon_speed) / 2));
-	if (ragegen > limit)
-		AdjustRage(this, limit);
-	else
+	//if (ragegen > limit)
+	//	AdjustRage(this, limit);
+	//else
 		AdjustRage(this, ragegen);
+/*
+    LogFile::Log("ragedebug", "damage: " + Utilities::itos(damage));
+    LogFile::Log("ragedebug", "conversionvalue: " + Utilities::dtos(conversionvalue, 2));
+    LogFile::Log("ragedebug", "hitfactor: " + Utilities::dtos(hitfactor, 2));
+    LogFile::Log("ragedebug", "limit: " + Utilities::itos(limit));
+    LogFile::Log("ragedebug", "ragegen: " + Utilities::itos(ragegen));
+*/
 }
 
 void Character::GenerateRageOnTakeDamage(int damage)
