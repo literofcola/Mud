@@ -9,10 +9,6 @@
 
 using std::string;
 
-Exit::Direction FindDirection(Character * ch, Character * target, int depth);
-Exit::Direction FindDirection(Room * start, Room * end, int depth);
-int FindDistance(Room * start, Room * end, int maxSearchDist);
-
 void cmd_track(Player * ch, string argument)
 {
     string arg1;
@@ -140,7 +136,6 @@ Exit::Direction FindDirection(Character * ch, Character * target, int depth)
 {
 	if (!ch->room || !target->room)
 		return Exit::DIR_LAST;
-
 	return FindDirection(ch->room, target->room, depth);
 }
 

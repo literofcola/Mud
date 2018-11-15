@@ -9,6 +9,7 @@
 #include "CSpellAffect.h"
 #include "CGroup.h"
 #include "CRoom.h"
+#include "CExit.h"
 #include "CSkill.h"
 #include "utils.h"
 #include "mud.h"
@@ -43,6 +44,8 @@ void Lua_DefineClasses(sol::state * lua)
 		(*lua).new_usertype<Subscriber>("Subscriber");
 
 		(*lua).new_usertype<SubscriberManager>("SubscriberManager");
+
+        (*lua).new_usertype<Exit>("Exit");
 
 		/*
 		(*lua).new_usertype<Server>("Server", 
