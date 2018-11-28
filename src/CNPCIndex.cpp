@@ -117,7 +117,7 @@ void NPCIndex::Save()
 	sql = "INSERT INTO npcs (id, name, keywords, level, gender, race, ";
 	sql += "health, mana, energy, rage, armor, title, attack_speed, damage_low, damage_high, flags, speechtext) values (";
 	sql += Utilities::itos(id) + ", '";
-	sql += name + "', '" + keywords + "', " + Utilities::itos(level) + "," + Utilities::itos(gender) + "," + Utilities::itos(race) + ",";
+	sql += Utilities::SQLFixQuotes(name) + "', '" + Utilities::SQLFixQuotes(keywords) + "', " + Utilities::itos(level) + "," + Utilities::itos(gender) + "," + Utilities::itos(race) + ",";
 	sql += Utilities::itos(maxHealth) + "," + Utilities::itos(maxMana) + "," + Utilities::itos(maxEnergy) + "," + Utilities::itos(maxRage);
 	sql += "," + Utilities::itos(armor) + ",'" + fixtitle + "', " + Utilities::dtos(npcAttackSpeed, 2) + ", " + Utilities::itos(npcDamageLow) + ", ";
 	sql += Utilities::itos(npcDamageHigh) + ",'";
