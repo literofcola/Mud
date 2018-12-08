@@ -690,6 +690,42 @@ void Game::WorldUpdate(Server * server)
         //Combat update
         if(currChar->InCombat())
         {
+            //Check COMBAT_TIMER triggers but only on 2 second tick
+            if (doTwoSecondTick)
+            {
+                Trigger * trig = nullptr;
+                int ctr = 0;
+                while (currChar->IsNPC() && (trig = currNPC->GetNPCIndex()->GetTrigger(ctr, Trigger::COMBAT_TIMER)) != nullptr)
+                {
+                    ctr++;
+                    if (!trig->IsTimerExpired())
+                        continue;
+
+                    trig->StartTimer();
+
+                    string func = trig->GetFunction();
+                    try
+                    {
+                        //TODO: dont load the script every time?
+                        //LogFile::Log("status", "Loading lua trigger script " + Utilities::itos(trig->id) + " for NPC " + Utilities::itos(curr->id));
+                        Server::lua.script(trig->GetScript().c_str());
+                        sol::function lua_trig_func = Server::lua[func.c_str()];
+                        sol::protected_function_result result = lua_trig_func(currChar);
+                        if (!result.valid())
+                        {
+                            // Call failed
+                            sol::error err = result;
+                            std::string what = err.what();
+                            LogFile::Log("error", "NPC COMBAT_TIMER trigger call failed, sol::error::what() is: " + what);
+                        }
+                    }
+                    catch (const std::exception & e)
+                    {
+                        LogFile::Log("error", e.what());
+                    }
+                }
+            }
+
 			if (currChar->IsNPC() && currChar->GetTarget() && !currChar->GetTarget()->IsAlive())
 			{
 				currChar->ClearTarget();

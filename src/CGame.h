@@ -96,7 +96,8 @@ public:
 	User * GetUserByPCName(std::string name);
 	Player * GetPlayerByName(std::string name);
 	Player * GetPlayerWorld(Player * ch, std::string name);
-    
+    Character * LoadNPCRoom(int id, Room * toroom);
+
 	void GlobalMessage(std::string);
 
     static int ExperienceForLevel(int level);
@@ -104,7 +105,6 @@ public:
     static int LevelDifficulty(int ch, int vict);
 	static std::string LevelDifficultyColor(int leveldifficulty);
 	static std::string LevelDifficultyLightColor(int leveldifficulty);
-    static Character * LoadNPCRoom(int id, Room * toroom);
 	
     struct SearchInfo
     {

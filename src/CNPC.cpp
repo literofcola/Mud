@@ -402,7 +402,7 @@ void NPC::Cast(std::string argument)
 
 	if (spell->castTime != 0)
 	{
-		Message("|W" + GetName() + " begins to cast " + spell->long_name + "...|X", Character::MSG_ROOM_NOTCHAR);
+		Message("|W" + GetName() + " begins to cast " + spell->name + "...|X", Character::MSG_ROOM_NOTCHAR);
 		//Send("|WYou begin to cast " + spell->long_name + "...|X\r\n");
 		//json casttime = { { "time", spell->castTime } };
 		//ch->SendGMCP("char.casttime " + casttime.dump());

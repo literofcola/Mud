@@ -1017,6 +1017,29 @@ void Character::EnterCombat(Character * victim)
             }
         }
     }
+
+    //Start any COMBAT_TIMER triggers only when combat state actually changes
+    if (combat == false && IsNPC())
+    {
+        Trigger * trig = nullptr;
+        int ctr = 0;
+        while ((trig = this->GetNPCIndex()->GetTrigger(ctr, Trigger::COMBAT_TIMER)) != nullptr)
+        {
+            ctr++;
+            trig->StartTimer();
+        }
+    }
+    if (victim->combat == false && victim->IsNPC())
+    {
+        Trigger * trig = nullptr;
+        int ctr = 0;
+        while ((trig = victim->GetNPCIndex()->GetTrigger(ctr, Trigger::COMBAT_TIMER)) != nullptr)
+        {
+            ctr++;
+            trig->StartTimer();
+        }
+    }
+
     combat = true;
     victim->combat = true;
 
@@ -1091,6 +1114,19 @@ void Character::EnterCombatAssist(Character * friendly)
             }
         }
     }
+
+    //Start any COMBAT_TIMER triggers only when combat state actually changes
+    if (combat == false && IsNPC())
+    {
+        Trigger * trig = nullptr;
+        int ctr = 0;
+        while ((trig = this->GetNPCIndex()->GetTrigger(ctr, Trigger::COMBAT_TIMER)) != nullptr)
+        {
+            ctr++;
+            trig->StartTimer();
+        }
+    }
+
 	combat = true;
     if(IsPlayer())
 		((Player*)(this))->lastCombatAction = Game::currentTime;

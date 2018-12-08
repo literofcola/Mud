@@ -2215,7 +2215,7 @@ void npcEditCmd_trigger(Player * ch, std::string argument)
             }
             else
             {
-                ch->Send("NPC trigger types are: 0 ENTER_CHAR, 1 ENTER_NPC, 2 ENTER_PC, 3 EXIT_CHAR, 4 EXIT_NPC, 5 EXIT_PC, 6 TIMER");
+                ch->Send("NPC trigger types are: 0 ENTER_CHAR, 1 ENTER_NPC, 2 ENTER_PC, 3 EXIT_CHAR, 4 EXIT_NPC, 5 EXIT_PC, 6 TIMER, 7 COMBAT_TIMER");
                 return;
             }
         }
@@ -2249,7 +2249,7 @@ void npcEditCmd_trigger(Player * ch, std::string argument)
         int trigtype;
         if(!Utilities::IsNumber(arg2) || (trigtype = Utilities::atoi(arg2)) < 0 || trigtype >= Trigger::TRIG_LAST)
         {
-            ch->Send("NPC trigger types are: 0 ENTER_CHAR, 1 ENTER_NPC, 2 ENTER_PC, 3 EXIT_CHAR, 4 EXIT_NPC, 5 EXIT_PC, 6 TIMER");
+            ch->Send("NPC trigger types are: 0 ENTER_CHAR, 1 ENTER_NPC, 2 ENTER_PC, 3 EXIT_CHAR, 4 EXIT_NPC, 5 EXIT_PC, 6 TIMER, 7 COMBAT_TIMER");
             return;
         }
         Trigger new_trig;

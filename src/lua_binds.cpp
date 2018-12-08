@@ -27,7 +27,6 @@ void Lua_DefineFunctions(sol::state * lua)
 {
 	(*lua)["ExperienceForLevel"] = Game::ExperienceForLevel; //static int ExperienceForLevel(int level);
 	lua->set("LevelDifficulty", Game::LevelDifficulty); //static int LevelDifficulty(int level1, int level2);
-	lua->set_function("LoadNPCRoom", Game::LoadNPCRoom); //LoadNPCRoom(int id, Room * toroom);
 	lua->set_function("FlagIsSet", Utilities::FlagIsSet); //bool FlagIsSet(std::vector<int> & flags, const int flag)
     lua->set_function("FindDirection", (Exit::Direction(*)(Character *, Character *, int))FindDirection);
 
@@ -59,7 +58,8 @@ void Lua_DefineClasses(sol::state * lua)
 
 		(*lua).new_usertype<Game>("Game",
 			"GetGame", &Game::GetGame,
-			"GetSkill", (Skill *(Game::*)(int)) &Game::GetSkill
+			"GetSkill", (Skill *(Game::*)(int)) &Game::GetSkill,
+            "LoadNPCRoom", &Game::LoadNPCRoom   //LoadNPCRoom(int id, Room * toroom);
 			);
 
 		(*lua).new_usertype<User>("User",
