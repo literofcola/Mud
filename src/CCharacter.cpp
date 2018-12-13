@@ -1019,6 +1019,7 @@ void Character::EnterCombat(Character * victim)
     }
 
     //Start any COMBAT_TIMER triggers only when combat state actually changes
+    //Check ENTER_COMBAT triggers only when combat state actually changes
     if (combat == false && IsNPC())
     {
         Trigger * trig = nullptr;
@@ -1027,6 +1028,31 @@ void Character::EnterCombat(Character * victim)
         {
             ctr++;
             trig->StartTimer();
+        }
+        ctr = 0;
+        while ((trig = this->GetNPCIndex()->GetTrigger(ctr, Trigger::ENTER_COMBAT)) != nullptr)
+        {
+            ctr++;
+            string func = trig->GetFunction();
+            try
+            {
+                //TODO: dont load the script every time?
+                //LogFile::Log("status", "Loading lua trigger script " + Utilities::itos(trig->id) + " for NPC " + Utilities::itos(curr->id));
+                Server::lua.script(trig->GetScript().c_str());
+                sol::function lua_trig_func = Server::lua[func.c_str()];
+                sol::protected_function_result result = lua_trig_func(this);
+                if (!result.valid())
+                {
+                    // Call failed
+                    sol::error err = result;
+                    std::string what = err.what();
+                    LogFile::Log("error", "NPC ENTER_COMBAT trigger call failed, sol::error::what() is: " + what);
+                }
+            }
+            catch (const std::exception & e)
+            {
+                LogFile::Log("error", e.what());
+            }
         }
     }
     if (victim->combat == false && victim->IsNPC())
@@ -1037,6 +1063,31 @@ void Character::EnterCombat(Character * victim)
         {
             ctr++;
             trig->StartTimer();
+        }
+        ctr = 0;
+        while ((trig = victim->GetNPCIndex()->GetTrigger(ctr, Trigger::ENTER_COMBAT)) != nullptr)
+        {
+            ctr++;
+            string func = trig->GetFunction();
+            try
+            {
+                //TODO: dont load the script every time?
+                //LogFile::Log("status", "Loading lua trigger script " + Utilities::itos(trig->id) + " for NPC " + Utilities::itos(curr->id));
+                Server::lua.script(trig->GetScript().c_str());
+                sol::function lua_trig_func = Server::lua[func.c_str()];
+                sol::protected_function_result result = lua_trig_func(victim);
+                if (!result.valid())
+                {
+                    // Call failed
+                    sol::error err = result;
+                    std::string what = err.what();
+                    LogFile::Log("error", "NPC ENTER_COMBAT trigger call failed, sol::error::what() is: " + what);
+                }
+            }
+            catch (const std::exception & e)
+            {
+                LogFile::Log("error", e.what());
+            }
         }
     }
 
@@ -1116,6 +1167,7 @@ void Character::EnterCombatAssist(Character * friendly)
     }
 
     //Start any COMBAT_TIMER triggers only when combat state actually changes
+    //Check ENTER_COMBAT triggers only when combat state actually changes
     if (combat == false && IsNPC())
     {
         Trigger * trig = nullptr;
@@ -1124,6 +1176,31 @@ void Character::EnterCombatAssist(Character * friendly)
         {
             ctr++;
             trig->StartTimer();
+        }
+        ctr = 0;
+        while ((trig = this->GetNPCIndex()->GetTrigger(ctr, Trigger::ENTER_COMBAT)) != nullptr)
+        {
+            ctr++;
+            string func = trig->GetFunction();
+            try
+            {
+                //TODO: dont load the script every time?
+                //LogFile::Log("status", "Loading lua trigger script " + Utilities::itos(trig->id) + " for NPC " + Utilities::itos(curr->id));
+                Server::lua.script(trig->GetScript().c_str());
+                sol::function lua_trig_func = Server::lua[func.c_str()];
+                sol::protected_function_result result = lua_trig_func(this);
+                if (!result.valid())
+                {
+                    // Call failed
+                    sol::error err = result;
+                    std::string what = err.what();
+                    LogFile::Log("error", "NPC ENTER_COMBAT trigger call failed, sol::error::what() is: " + what);
+                }
+            }
+            catch (const std::exception & e)
+            {
+                LogFile::Log("error", e.what());
+            }
         }
     }
 
@@ -1146,6 +1223,37 @@ void Character::EnterCombatAssist(Character * friendly)
 
 void Character::ExitCombat()
 {
+    //Check EXIT_COMBAT trigger only if actually in combat
+    if (InCombat() && IsNPC())
+    {
+        Trigger * trig = nullptr;
+        int ctr = 0;
+        while ((trig = this->GetNPCIndex()->GetTrigger(ctr, Trigger::EXIT_COMBAT)) != nullptr)
+        {
+            ctr++;
+            string func = trig->GetFunction();
+            try
+            {
+                //TODO: dont load the script every time?
+                //LogFile::Log("status", "Loading lua trigger script " + Utilities::itos(trig->id) + " for NPC " + Utilities::itos(curr->id));
+                Server::lua.script(trig->GetScript().c_str());
+                sol::function lua_trig_func = Server::lua[func.c_str()];
+                sol::protected_function_result result = lua_trig_func(this);
+                if (!result.valid())
+                {
+                    // Call failed
+                    sol::error err = result;
+                    std::string what = err.what();
+                    LogFile::Log("error", "NPC EXIT_COMBAT trigger call failed, sol::error::what() is: " + what);
+                }
+            }
+            catch (const std::exception & e)
+            {
+                LogFile::Log("error", e.what());
+            }
+        }
+    }
+
     combat = false;
     meleeActive = false;
     RemoveThreat(nullptr, true);
@@ -1171,7 +1279,7 @@ void Character::ExitCombat()
 
 bool Character::InCombat()
 {
-    if(combat)// && meleeActive)
+    if(combat)
         return true;
     return false;
 }
