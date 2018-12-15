@@ -154,31 +154,25 @@ void NPCIndex::Save()
 	}
 
 	//save Triggers
-	std::map<int, Trigger>::iterator trigiter = triggers.begin();
-	while (trigiter != triggers.end())
+    string triggersql = "DELETE FROM triggers where triggers.parent_type=" + Utilities::itos(Trigger::PARENT_NPC)
+        + " and triggers.parent_id=" + Utilities::itos(id);
+    Server::sqlQueue->Write(triggersql);
+
+	for(auto trigiter = begin(triggers); trigiter != end(triggers); ++trigiter)
 	{
-		Trigger * t = &((*trigiter).second);
-		++trigiter;
-		if (t->removeme)
-		{
-			string triggersql = "DELETE FROM triggers where triggers.parent_type=" + Utilities::itos(Trigger::PARENT_NPC)
-				+ " and triggers.parent_id=" + Utilities::itos(id) + " and triggers.id=" + Utilities::itos(t->id);
-			Server::sqlQueue->Write(triggersql);
-			triggers.erase(t->id);
-			t = nullptr;
-		}
-		else
-		{
-			string triggersql = "INSERT INTO triggers (parent_id, id, parent_type, type, argument, script, function) values ";
-			triggersql += "(" + Utilities::itos(id) + ", " + Utilities::itos(t->id) + ", " + Utilities::itos(Trigger::PARENT_NPC) + ", ";
-			triggersql += Utilities::itos(t->GetType()) + ", '" + Utilities::SQLFixQuotes(t->GetArgument()) + "', '";
-			triggersql += Utilities::SQLFixQuotes(t->GetScript()) + "', '" + Utilities::SQLFixQuotes(t->GetFunction()) + "')";
+        Trigger * t = &(trigiter->second);
 
-			triggersql += " ON DUPLICATE KEY UPDATE parent_id=VALUES(parent_id), id=VALUES(id), parent_type=VALUES(parent_type), ";
-			triggersql += "type=VALUES(type), argument=VALUES(argument), script=VALUES(script), function=VALUES(function)";
+		string triggersql = "INSERT INTO triggers (parent_id, id, parent_type, type, argument, script, function) values ";
+		triggersql += "(" + Utilities::itos(id) + ", " + Utilities::itos(t->id) + ", " + Utilities::itos(Trigger::PARENT_NPC) + ", ";
+		triggersql += Utilities::itos(t->GetType()) + ", '" + Utilities::SQLFixQuotes(t->GetArgument()) + "', '";
+		triggersql += Utilities::SQLFixQuotes(t->GetScript()) + "', '" + Utilities::SQLFixQuotes(t->GetFunction()) + "')";
 
-			Server::sqlQueue->Write(triggersql);
-		}
+		triggersql += " ON DUPLICATE KEY UPDATE parent_id=VALUES(parent_id), id=VALUES(id), parent_type=VALUES(parent_type), ";
+		triggersql += "type=VALUES(type), argument=VALUES(argument), script=VALUES(script), function=VALUES(function)";
+
+		Server::sqlQueue->Write(triggersql);
 	}
 	Server::sqlQueue->Write(sql);
+
+    changed = false;
 }

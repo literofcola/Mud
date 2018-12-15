@@ -372,6 +372,9 @@ void NPC::Cast(std::string argument)
 
 	Character * arg_target = GetTarget();
 
+    if (spell->targetType == Skill::TARGET_SELF)
+        arg_target = this;
+
 	if ((spell->targetType == Skill::TARGET_OTHER || spell->targetType == Skill::TARGET_HOSTILE)
 		&& (!arg_target || arg_target == this)) //Requires a target
 	{

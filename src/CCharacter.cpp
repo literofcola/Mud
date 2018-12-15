@@ -1332,15 +1332,15 @@ void Character::AutoAttack(Character * victim)
 		switch (DoAttackRoll(victim, Game::SCHOOL_PHYSICAL))
 		{
 			case ATTACK_MISS:
-				victim->Send("|Y" + GetName() + "'s attack misses you.|X\r\n");
+				victim->Send("|Y[X] " + GetName() + "'s attack misses you.|X\r\n");
 				return;
 				break;
 			case ATTACK_DODGE:
-				victim->Send("|YYou dodge " + GetName() + "'s attack.|X\r\n");
+				victim->Send("|Y[X] You dodge " + GetName() + "'s attack.|X\r\n");
 				return;
 				break;
 			case ATTACK_PARRY:
-				victim->Send("|YYou parry " + GetName() + "'s attack.|X\r\n");
+				victim->Send("|Y[X] You parry " + GetName() + "'s attack.|X\r\n");
 				return;
 				break;
 			case ATTACK_BLOCK:
@@ -1350,7 +1350,7 @@ void Character::AutoAttack(Character * victim)
 				damage = (int)(damage * CRIT_DAMAGE_BONUS);
 				damage -= (int)(damage * victim->CalculateArmorMitigation());
 				int absorbed = victim->HandleDamageAbsorb(damage);
-				victim->Send("|Y" + GetName() + "'s attack CRITS you for " + Utilities::itos(damage - absorbed) + " damage");
+				victim->Send("|Y[X] " + GetName() + "'s attack CRITS you for " + Utilities::itos(damage - absorbed) + " damage");
 				if(absorbed > 0)
 					victim->Send(" |W(" + Utilities::itos(absorbed) + " absorbed)|Y");
 				victim->Send(".|X\r\n");
@@ -1361,7 +1361,7 @@ void Character::AutoAttack(Character * victim)
 			{
 				damage -= (int)(damage * victim->CalculateArmorMitigation());
 				int absorbed = victim->HandleDamageAbsorb(damage);
-				victim->Send("|Y" + GetName() + "'s attack hits you for " + Utilities::itos(damage - absorbed) + " damage");
+				victim->Send("|Y[X] " + GetName() + "'s attack hits you for " + Utilities::itos(damage - absorbed) + " damage");
 				if (absorbed > 0)
 					victim->Send(" |W(" + Utilities::itos(absorbed) + " absorbed)|Y");
 				victim->Send(".|X\r\n");
@@ -1411,18 +1411,18 @@ void Character::AutoAttack(Character * victim)
 			switch (DoAttackRoll(victim, Game::SCHOOL_PHYSICAL))
 			{
 				case ATTACK_MISS:
-					Send(tapcolor + "Your attack misses " + victim->GetName() + ".|X\r\n");
-					victim->Send("|Y" + GetName() + "'s attack misses you.|X\r\n");
+					Send(tapcolor + "[X] Your attack misses " + victim->GetName() + ".|X\r\n");
+					victim->Send("|Y[X] " + GetName() + "'s attack misses you.|X\r\n");
 					return;
 					break;
 				case ATTACK_DODGE:
-					Send(tapcolor + victim->GetName() + " dodges your attack.|X\r\n");
-					victim->Send("|YYou dodge " + GetName() + "'s attack.|X\r\n");
+					Send(tapcolor + "[X] " + victim->GetName() + " dodges your attack.|X\r\n");
+					victim->Send("|Y[X] You dodge " + GetName() + "'s attack.|X\r\n");
 					return;
 					break;
 				case ATTACK_PARRY:
-					Send(tapcolor + victim->GetName() + " parries your attack.|X\r\n");
-					victim->Send("|YYou parry " + GetName() + "'s attack.|X\r\n");
+					Send(tapcolor + "[X] " + victim->GetName() + " parries your attack.|X\r\n");
+					victim->Send("|Y[X] You parry " + GetName() + "'s attack.|X\r\n");
 					return;
 					break;
 				case ATTACK_BLOCK:
@@ -1432,8 +1432,8 @@ void Character::AutoAttack(Character * victim)
 					damage_main = (int)(damage_main * CRIT_DAMAGE_BONUS);
 					damage_main -= (int)(damage_main * victim->CalculateArmorMitigation());
 					int absorbed = victim->HandleDamageAbsorb(damage_main);
-					Send(tapcolor + "Your attack CRITS " + victim->GetName() + " for " + Utilities::itos(damage_main - absorbed) + " damage");
-					victim->Send("|Y" + GetName() + "'s attack CRITS you for " + Utilities::itos(damage_main - absorbed) + " damage");
+					Send(tapcolor + "[X] Your attack CRITS " + victim->GetName() + " for " + Utilities::itos(damage_main - absorbed) + " damage");
+					victim->Send("|Y[X] " + GetName() + "'s attack CRITS you for " + Utilities::itos(damage_main - absorbed) + " damage");
 					if (absorbed > 0)
 					{
 						Send(" |W(" + Utilities::itos(absorbed) + " absorbed)" + tapcolor);
@@ -1449,8 +1449,8 @@ void Character::AutoAttack(Character * victim)
 				{
 					damage_main -= (int)(damage_main * victim->CalculateArmorMitigation());
 					int absorbed = victim->HandleDamageAbsorb(damage_main);
-					Send(tapcolor + "Your attack hits " + victim->GetName() + " for " + Utilities::itos(damage_main - absorbed) + " damage");
-					victim->Send("|Y" + GetName() + "'s attack hits you for " + Utilities::itos(damage_main - absorbed) + " damage");
+					Send(tapcolor + "[X] Your attack hits " + victim->GetName() + " for " + Utilities::itos(damage_main - absorbed) + " damage");
+					victim->Send("|Y[X] " + GetName() + "'s attack hits you for " + Utilities::itos(damage_main - absorbed) + " damage");
 					if (absorbed > 0)
 					{
 						Send(" |W(" + Utilities::itos(absorbed) + " absorbed)" + tapcolor);
@@ -1487,18 +1487,18 @@ void Character::AutoAttack(Character * victim)
 			switch (DoAttackRoll(victim, Game::SCHOOL_PHYSICAL))
 			{
 				case ATTACK_MISS:
-					Send(tapcolor + "Your attack misses " + victim->GetName() + ".|X\r\n");
-					victim->Send("|Y" + GetName() + "'s attack misses you.|X\r\n");
+					Send(tapcolor + "[X] Your attack misses " + victim->GetName() + ".|X\r\n");
+					victim->Send("|Y[X] " + GetName() + "'s attack misses you.|X\r\n");
 					return;
 					break;
 				case ATTACK_DODGE:
-					Send(tapcolor + victim->GetName() + " dodges your attack.|X\r\n");
-					victim->Send("|YYou dodge " + GetName() + "'s attack.|X\r\n");
+					Send(tapcolor + "[X] " + victim->GetName() + " dodges your attack.|X\r\n");
+					victim->Send("|Y[X] You dodge " + GetName() + "'s attack.|X\r\n");
 					return;
 					break;
 				case ATTACK_PARRY:
-					Send(tapcolor + victim->GetName() + " parries your attack.|X\r\n");
-					victim->Send("|YYou parry " + GetName() + "'s attack.|X\r\n");
+					Send(tapcolor + "[X] " + victim->GetName() + " parries your attack.|X\r\n");
+					victim->Send("|Y[X] You parry " + GetName() + "'s attack.|X\r\n");
 					return;
 					break;
 				case ATTACK_BLOCK:
@@ -1508,8 +1508,8 @@ void Character::AutoAttack(Character * victim)
 					damage_off = (int)(damage_off * CRIT_DAMAGE_BONUS);
 					damage_off -= (int)(damage_off * victim->CalculateArmorMitigation());
 					int absorbed = victim->HandleDamageAbsorb(damage_off);
-					Send(tapcolor + "Your attack CRITS " + victim->GetName() + " for " + Utilities::itos(damage_off - absorbed) + " damage");
-					victim->Send("|Y" + GetName() + "'s attack CRITS you for " + Utilities::itos(damage_off - absorbed) + " damage");
+					Send(tapcolor + "[X] Your attack CRITS " + victim->GetName() + " for " + Utilities::itos(damage_off - absorbed) + " damage");
+					victim->Send("|Y[X] " + GetName() + "'s attack CRITS you for " + Utilities::itos(damage_off - absorbed) + " damage");
 					if (absorbed > 0)
 					{
 						Send(" |W(" + Utilities::itos(absorbed) + " absorbed)" + tapcolor);
@@ -1525,8 +1525,8 @@ void Character::AutoAttack(Character * victim)
 				{
 					damage_off -= (int)(damage_off * victim->CalculateArmorMitigation());
 					int absorbed = victim->HandleDamageAbsorb(damage_off);
-					Send(tapcolor + "Your attack hits " + victim->GetName() + " for " + Utilities::itos(damage_off - absorbed) + " damage");
-					victim->Send("|Y" + GetName() + "'s attack hits you for " + Utilities::itos(damage_off - absorbed) + " damage");
+					Send(tapcolor + "[X] Your attack hits " + victim->GetName() + " for " + Utilities::itos(damage_off - absorbed) + " damage");
+					victim->Send("|Y[X] " + GetName() + "'s attack hits you for " + Utilities::itos(damage_off - absorbed) + " damage");
 					if (absorbed > 0)
 					{
 						Send(" |W(" + Utilities::itos(absorbed) + " absorbed)" + tapcolor);

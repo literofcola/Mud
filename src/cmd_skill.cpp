@@ -151,7 +151,11 @@ void cmd_cast(Player * ch, string argument)
     }
     
     Character * arg_target = nullptr;
-    if(!arg2.empty())
+
+    if(spell->targetType == Skill::TARGET_SELF)
+        arg_target = ch;
+
+    if(!arg2.empty() && arg_target == nullptr)
     {
         arg_target = ch->GetCharacterRoom(arg2);
         if(arg_target == nullptr)

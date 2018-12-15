@@ -458,13 +458,13 @@ DROP TABLE IF EXISTS `triggers`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `triggers` (
   `parent_id` int(11) NOT NULL,
-  `id` int(11) DEFAULT NULL,
-  `parent_type` int(11) DEFAULT NULL,
+  `id` int(11) NOT NULL,
+  `parent_type` int(11) NOT NULL,
   `type` int(11) DEFAULT NULL,
   `argument` varchar(45) DEFAULT NULL,
   `script` text,
   `function` varchar(45) DEFAULT NULL,
-  PRIMARY KEY (`parent_id`)
+  PRIMARY KEY (`parent_id`,`id`,`parent_type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -477,4 +477,4 @@ CREATE TABLE `triggers` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-12-12 20:35:52
+-- Dump completed on 2018-12-14 17:45:52

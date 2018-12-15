@@ -2269,16 +2269,8 @@ void npcEditCmd_trigger(Player * ch, std::string argument)
         Trigger * deleteme = pChar->GetTrigger(delid);
         if(deleteme != nullptr)
         {
-            if(!deleteme->removeme)
-            {
-                deleteme->removeme = true;
-                ch->Send("Trigger marked for deletion. Save npcs to delete.\r\n");
-            }
-            else
-            {
-                deleteme->removeme = false;
-                ch->Send("Trigger unmarked for deletion.\r\n");
-            }
+            pChar->triggers.erase(deleteme->id);
+            ch->Send("Trigger deleted!\r\n");
             pChar->changed = true;
             return;
         }
