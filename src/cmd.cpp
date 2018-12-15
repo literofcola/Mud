@@ -1988,8 +1988,11 @@ void cmd_quest(Player * ch, std::string argument)
 
 			ch->Send(complete->name + " completed!\r\n");
 			ch->Send(complete->completionMessage + "\r\n");
-			ch->Send("|BYou have gained |Y" + Utilities::itos(complete->experienceReward) + "|B experience.|X\r\n");
-			ch->ApplyExperience(complete->experienceReward);
+            if (complete->experienceReward > 0)
+            {
+                ch->Send("|BYou have gained |Y" + Utilities::itos(complete->experienceReward) + "|B experience.|X\r\n");
+                ch->ApplyExperience(complete->experienceReward);
+            }
 		}
         return;
     }
@@ -2111,8 +2114,11 @@ bool questCompleteQuery(Player * ch, std::string argument)
 		ch->AddItemInventory(myreward);
 	}
 
-	ch->Send("|BYou have gained |Y" + Utilities::itos(quest->experienceReward) + "|B experience.|X\r\n");
-	ch->ApplyExperience(quest->experienceReward);
+    if (quest->experienceReward > 0)
+    {
+        ch->Send("|BYou have gained |Y" + Utilities::itos(quest->experienceReward) + "|B experience.|X\r\n");
+        ch->ApplyExperience(quest->experienceReward);
+    }
 	return true;
 }
 

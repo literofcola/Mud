@@ -1370,8 +1370,11 @@ std::stringstream Player::FormatEquipment()
 void Player::HandleNPCKillRewards(Character * killed)
 {
 	int exp = Game::CalculateExperience(this, killed);
-	Send("|BYou have gained |Y" + Utilities::itos(exp) + "|B experience.|X\r\n");
-	ApplyExperience(exp);
+    if (exp > 0)
+    {
+        Send("|BYou have gained |Y" + Utilities::itos(exp) + "|B experience.|X\r\n");
+        ApplyExperience(exp);
+    }
 	QuestCompleteObjective(Quest::OBJECTIVE_KILLNPC, (void*)killed);
 }
 
@@ -1469,8 +1472,8 @@ Player * Player::LoadPlayer(std::string name, User * user)
 		case DB_INVENTORY_EQUIPPED:
 		{
 			Item * equip = Game::GetGame()->GetItem(id);
-			loaded->EquipItem(equip);
-			loaded->AddEquipmentStats(equip);
+			if(loaded->EquipItem(equip))
+			    loaded->AddEquipmentStats(equip);
 			break;
 		}
 

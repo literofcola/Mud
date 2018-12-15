@@ -1128,7 +1128,7 @@ void Character::EnterCombatAssist(Character * friendly)
 
 	if (!IsAlive() || !friendly->IsAlive())
 	{
-		LogFile::Log("error", "EnterCombatAssist called on !IsAlive ch or vict");
+		//LogFile::Log("error", "EnterCombatAssist called on !IsAlive ch or vict");
 		return;
 	}
 
