@@ -1354,12 +1354,25 @@ void Game::LoginHandler(Server * server, User * user, string argument)
 					}
 					for (int i = 0; i < count; i++)
 					{
+                        //We're making the assumption here that we're not giving a new player an armor type they can't wear
 						user->character->AddItemInventory(itemIndex);
-						if (itemIndex->equipLocation != Item::EquipLocation::EQUIP_NONE)
-						{
-							user->character->EquipItemFromInventory(itemIndex);
-							user->character->AddEquipmentStats(itemIndex);
-						}
+                        int equiploc = user->character->GetEquipLocation(itemIndex);
+                        if (equiploc == Player::EQUIP_LAST) //Can't wear this
+                        {
+                            continue;
+                        }
+                        if(equiploc == Player::EQUIP_MAINHAND 
+                            && user->character->equipped[Player::EQUIP_MAINHAND]
+                            && !user->character->equipped[Player::EQUIP_OFFHAND]
+                            && user->character->equipped[Player::EQUIP_MAINHAND]->equipLocation == Item::EQUIP_ONEHAND)
+                        {   //If we're trying to equip a mainhand but the slot is already occupied by a onehand, and the offhand is empty, move the onehand to the offhand
+                            user->character->equipped[Player::EQUIP_OFFHAND] = user->character->equipped[Player::EQUIP_MAINHAND];
+                            user->character->equipped[Player::EQUIP_MAINHAND] = nullptr;
+                        }
+                        if (user->character->EquipItemFromInventory(itemIndex))
+                        {
+                            user->character->AddEquipmentStats(itemIndex);
+                        }
 					}
 				}
 

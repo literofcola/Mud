@@ -1128,7 +1128,7 @@ bool Player::EquipItem(Item * wear)
 
 	if (equipSlot < 0 || equipSlot >= Player::EQUIP_LAST)
 	{
-		LogFile::Log("error", "EquipItemFromInventory, invalid equipSlot");
+		LogFile::Log("error", "EquipItem, invalid equipSlot");
 		return false;
 	}
 
@@ -1472,6 +1472,28 @@ Player * Player::LoadPlayer(std::string name, User * user)
 		case DB_INVENTORY_EQUIPPED:
 		{
 			Item * equip = Game::GetGame()->GetItem(id);
+
+            int equiploc = loaded->GetEquipLocation(equip);
+            //Can't wear this...even though it was saved while worn. Item must have been changed
+            if (equiploc == Player::EQUIP_LAST) 
+            {
+                continue;
+            }
+            //Can't wear this...even though it was saved while worn. Item must have been changed
+            if ((equip->type == Item::TYPE_ARMOR_CLOTH || equip->type == Item::TYPE_ARMOR_LEATHER
+                || equip->type == Item::TYPE_ARMOR_MAIL || equip->type == Item::TYPE_ARMOR_PLATE) && !loaded->CanWearArmor(equip->type))
+            {
+                continue;
+            }
+            //If we're trying to equip a mainhand but the slot is already occupied by a onehand, and the offhand is empty, move the onehand to the offhand
+            if (equiploc == Player::EQUIP_MAINHAND
+                && loaded->equipped[Player::EQUIP_MAINHAND]
+                && !loaded->equipped[Player::EQUIP_OFFHAND]
+                && loaded->equipped[Player::EQUIP_MAINHAND]->equipLocation == Item::EQUIP_ONEHAND)
+            {   
+                loaded->equipped[Player::EQUIP_OFFHAND] = loaded->equipped[Player::EQUIP_MAINHAND];
+                loaded->equipped[Player::EQUIP_MAINHAND] = nullptr;
+            }
 			if(loaded->EquipItem(equip))
 			    loaded->AddEquipmentStats(equip);
 			break;

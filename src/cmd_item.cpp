@@ -167,8 +167,8 @@ void cmd_wear(Player * ch, string argument)
 				{
 					continue;
 				}
-                ch->EquipItemFromInventory(wear);
-				ch->AddEquipmentStats(wear);
+                if(ch->EquipItemFromInventory(wear))
+				    ch->AddEquipmentStats(wear);
                 ch->Send("You wear " + wear->GetColoredName() + "|X\r\n");
 				ch->Message(ch->GetName() + " wears " + wear->GetColoredName() + "|X", Character::MSG_ROOM_NOTCHAR);
             }
@@ -227,8 +227,8 @@ void cmd_wear(Player * ch, string argument)
 			ch->Message(ch->GetName() + " removes " + mh->GetColoredName() + "|X", Character::MSG_ROOM_NOTCHAR);
         }
     }
-    ch->EquipItemFromInventory(wear);
-	ch->AddEquipmentStats(wear);
+    if(ch->EquipItemFromInventory(wear))
+	    ch->AddEquipmentStats(wear);
     ch->Send("You wear " + wear->GetColoredName() + "|X\r\n");
 	ch->Message(ch->GetName() + " wears " + wear->GetColoredName() + "|X", Character::MSG_ROOM_NOTCHAR);
 }
