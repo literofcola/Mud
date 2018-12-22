@@ -1675,6 +1675,12 @@ void Character::OneHeal(Character * victim, int heal)
 
 	EnterCombatAssist(victim);
 
+    int mod_healing = victim->GetAuraModifier(SpellAffect::AURA_HEALING_RECEIVED, 1);
+    if(mod_healing != 0)
+    {
+        heal += (int)ceil((heal * mod_healing * 0.01));
+    }
+
     //Healing threat is divided by number of characters aware of us (if they're on our threat list we're on theirs)
 	for (auto threatiter = threatList.begin(); threatiter != threatList.end(); threatiter++)
 	{
@@ -2546,7 +2552,7 @@ bool Character::ChangeRooms(Room * toroom)
 		}
 		
         room = toroom;
-        toroom->characters.push_front(this);
+        toroom->characters.push_back(this);
 
         //Check for room movement triggers
         Trigger * trig = nullptr;
