@@ -97,6 +97,9 @@ void Lua_DefineClasses(sol::state * lua)
 			"HisHer", &Character::HisHer,
 			"HimHer", &Character::HisHer,
 			"HisHers", &Character::HisHer,
+            "CancelActiveDelay", &Character::CancelActiveDelay,
+            "GetDelaySkill", &Character::GetDelaySkill,
+            "HasActiveDelay", &Character::HasActiveDelay,
 			"EnterCombat", &Character::EnterCombat,
 			"EnterCombatAssist", &Character::EnterCombatAssist,
             "CancelAutoAttack", &Character::CancelAutoAttack,
@@ -158,7 +161,9 @@ void Lua_DefineClasses(sol::state * lua)
 			);
 
 		(*lua).new_usertype<Skill>("Skill",
-			sol::constructors<Skill(int, std::string)>()
+			sol::constructors<Skill(int, std::string)>(),
+            "GetShortName", &Skill::GetShortName,
+            "GetLongName", &Skill::GetLongName
 			);
 
 		(*lua).new_usertype<SpellAffect>("SpellAffect",

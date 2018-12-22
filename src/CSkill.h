@@ -17,7 +17,7 @@ public:
     ~Skill();
 
     int id;
-    std::string name; //keyword name for cmd_cast, unique per character
+    std::string name; //keyword name for cmd_cast
     std::string long_name; //global unique name
     std::string function_name;
 	double castTime;
@@ -38,6 +38,9 @@ public:
 		std::string flag_name;
 	};
 	static flag_type flag_table[];
+
+    std::string GetShortName() { return name; };
+    std::string GetLongName() { return long_name; };
 
 	std::string description;
 	std::string costDescription;

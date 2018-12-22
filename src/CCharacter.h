@@ -157,6 +157,8 @@ public:
 	virtual void RemoveSkill(Skill * sk) { };
 	virtual void RemoveSkill(std::string name) { };
 	virtual Skill * GetSkillShortName(std::string name) { return nullptr; };
+    bool HasActiveDelay();
+    Skill * GetDelaySkill();
 	bool CancelActiveDelay();
 	bool CancelCastOnHit();
 	void SetCooldown(Skill * sk, double length);

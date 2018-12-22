@@ -412,7 +412,7 @@ void Player::GeneratePrompt(double currentTime)
 		prompt += "|B<|RX|B>|X";
 	}
 	//Cast timer
-	if (delay_active)
+	if (HasActiveDelay())
 	{
 		double timeleft = delay - currentTime;
 		prompt += "|Y[" + Utilities::dtos(timeleft, 1) + "s]|X";

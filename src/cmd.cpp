@@ -80,7 +80,7 @@ void cmd_attack(Player * ch, std::string argument)
 		return;
 	}
 
-    if (ch->delay_active)
+    if (ch->HasActiveDelay())
     {
         ch->CancelActiveDelay();
         ch->Send("Action interrupted!\r\n");
@@ -2135,7 +2135,7 @@ void cmd_quit(Player * ch, std::string argument)
         ch->Send("You can't do that while in combat!\r\n");
         return;
     }
-    if(ch->delay_active)
+    if(ch->HasActiveDelay())
     {
         ch->Send("You can't do that while casting.\r\n");
         return;
@@ -2159,7 +2159,7 @@ bool cmd_quit_Query(Player * ch, std::string argument)
             ch->Send("You can't do that while in combat!\r\n");
             return true;
         }
-        if(ch->delay_active)
+        if(ch->HasActiveDelay())
         {
             ch->Send("You can't do that while casting.\r\n");
             return true;

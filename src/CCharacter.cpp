@@ -370,7 +370,7 @@ void Character::Move(int direction)
     
 	Stand();
 
-    if(delay_active)
+    if(HasActiveDelay())
     {
 		CancelActiveDelay();
         Send("Action interrupted!\r\n");
@@ -2326,7 +2326,7 @@ bool Character::CheckThreatCombat()
 
 bool Character::CancelActiveDelay()
 {
-	if (delay_active)
+	if (HasActiveDelay())
 	{
 		if (delayData.charTarget && delayData.caster && delayData.charTarget != delayData.caster)
 		{
@@ -2344,9 +2344,26 @@ bool Character::CancelActiveDelay()
 	return false;
 }
 
+bool Character::HasActiveDelay()
+{
+    return delay_active;
+}
+
+Skill * Character::GetDelaySkill()
+{
+    if (HasActiveDelay())
+    {
+        if (delayData.sk)
+        {
+            return delayData.sk;
+        }
+    }
+    return nullptr;
+}
+
 bool Character::CancelCastOnHit()
 {
-	if(delay_active && (!delayData.sk || delayData.sk->interruptFlags.test(Skill::Interrupt::INTERRUPT_HIT)))
+	if(HasActiveDelay() && (!delayData.sk || delayData.sk->interruptFlags.test(Skill::Interrupt::INTERRUPT_HIT)))
 	{
 		CancelActiveDelay();
 		return true;
@@ -2706,7 +2723,7 @@ void Character::Notify(SubscriberManager * lm)
         target = nullptr;
     }
 
-    if(delay_active && delayData.charTarget == lm)
+    if(HasActiveDelay() && delayData.charTarget == lm)
     {
         delayData.charTarget->RemoveSubscriber(this);
 		//cout << "Character::Notify delaydata REMOVE" << endl;
@@ -2719,7 +2736,7 @@ void Character::Notify(SubscriberManager * lm)
         RemoveThreat((Character*)lm, false);
     }
 
-	if (delay_active && delayData.itemTarget == lm)
+	if (HasActiveDelay() && delayData.itemTarget == lm)
 	{
 		delayData.itemTarget->RemoveSubscriber(this);
 		delayData.itemTarget = nullptr;

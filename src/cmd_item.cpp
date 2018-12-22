@@ -240,7 +240,7 @@ void cmd_drop(Player * ch, string argument)
         ch->Send("Answer your current question first.\r\n");
         return;
     }*/
-    if(ch->delay_active)
+    if(ch->HasActiveDelay())
     {
         ch->Send("You can't do that while casting.\r\n");
         return;
@@ -301,7 +301,7 @@ bool cmd_drop_Query(Player * ch, string argument)
         ch->QueryClear(cmd_drop_Query);
         return true;
     }
-    if(ch->delay_active)
+    if(ch->HasActiveDelay())
     {
         ch->Send("You can't do that while casting.\r\n");
         ch->QueryClear(cmd_drop_Query);
@@ -329,7 +329,7 @@ void cmd_take(Player * ch, string argument)
 	if (!ch || !ch->room)
 		return;
 
-	if (ch->delay_active)
+	if (ch->HasActiveDelay())
 	{
 		ch->Send("Another action is in progress!\r\n");
 		return;
@@ -644,7 +644,7 @@ void cmd_loot(Player * ch, string argument)
 
 void cmd_eat(Player * ch, string argument)
 {
-	if (ch->delay_active)
+	if (ch->HasActiveDelay())
 	{
 		ch->Send("Another action is in progress!\r\n");
 		return;
@@ -718,7 +718,7 @@ void cmd_eat(Player * ch, string argument)
 
 void cmd_drink(Player * ch, string argument)
 {
-    if (ch->delay_active)
+    if (ch->HasActiveDelay())
     {
         ch->Send("Another action is in progress!\r\n");
         return;
@@ -786,7 +786,7 @@ void cmd_drink(Player * ch, string argument)
 
 void cmd_use(Player * ch, string argument)
 {
-    if (ch->delay_active)
+    if (ch->HasActiveDelay())
     {
         ch->Send("Another action is in progress!\r\n");
         return;

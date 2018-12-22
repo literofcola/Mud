@@ -683,7 +683,7 @@ void Game::WorldUpdate(Server * server)
         }
         
         //Delay Update
-        if(currChar->delay_active)
+        if(currChar->HasActiveDelay())
         {
             if (currChar->IsCrowdControlled())
             {
@@ -742,7 +742,7 @@ void Game::WorldUpdate(Server * server)
             {  //Turn off auto attack. cmd_target should take care of this, but just in case
 				currChar->CancelAutoAttack();
             }
-            if(currChar->meleeActive && currChar->GetTarget() && currChar->GetTarget()->room == currChar->room && !currChar->delay_active)
+            if(currChar->meleeActive && currChar->GetTarget() && currChar->GetTarget()->room == currChar->room && !currChar->HasActiveDelay())
             {   //Auto attack but not while casting
 				currChar->AutoAttack(currChar->GetTarget());
             }

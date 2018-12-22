@@ -110,7 +110,7 @@ void cmd_cast(Player * ch, string argument)
     if(!ch)
         return;
 
-    if(ch->delay_active)
+    if(ch->HasActiveDelay())
     {
         ch->Send("Another action is in progress!\r\n");
         return;

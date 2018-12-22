@@ -357,7 +357,7 @@ void NPC::Cast(std::string argument)
 	if (skillID <= 0)
 		return;
 
-	if (delay_active)
+	if (HasActiveDelay())
 		return;
 
 	Skill * spell;
