@@ -683,9 +683,16 @@ void Game::WorldUpdate(Server * server)
         }
         
         //Delay Update
-        if(currChar->delay_active && currChar->delay <= currentTime)
+        if(currChar->delay_active)
         {
-            (*currChar->delayFunction)(currChar->delayData);
+            if (currChar->IsCrowdControlled())
+            {
+                currChar->CancelActiveDelay();
+            }
+            else if (currChar->delay <= currentTime)
+            {
+                (*currChar->delayFunction)(currChar->delayData);
+            }
         }
         //Combat update
         if(currChar->InCombat())
