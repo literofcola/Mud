@@ -22,20 +22,8 @@
 #include "utils.h"
 #include "CLogFile.h"
 #include "mud.h"
-#include "json.hpp"
-// for convenience
-using json = nlohmann::json;
-#include <string>
-#include <sys/timeb.h>
-#include <time.h>
-#include <fstream>
 
-extern "C" 
-{
-#include "lua.h"
-#include "lualib.h"
-#include "lauxlib.h"
-}
+using json = nlohmann::json;
 
 using std::string;
 
