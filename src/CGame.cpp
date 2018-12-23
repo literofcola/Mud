@@ -675,6 +675,12 @@ void Game::WorldUpdate(Server * server)
         {
             if (currChar->IsCrowdControlled())
             {
+                Skill * casting = currChar->GetDelaySkill();
+                if (casting != nullptr)
+                {
+                    currChar->Send("|WYour " + casting->GetShortName() + " has been interrupted!|X\r\n");
+                    currChar->Message("|W" + currChar->GetName() + "'s " + casting->GetShortName() + " has been interrupted!|X", Character::MSG_ROOM_NOTCHAR);
+                }
                 currChar->CancelActiveDelay();
             }
             else if (currChar->delay <= currentTime)
