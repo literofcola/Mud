@@ -250,6 +250,236 @@ Trigger * Room::GetTrigger(int id, int type)
     return nullptr;
 }
 
+SpellAffect * Room::AddSpellAffect(Character * caster, string name,
+    bool hidden, int maxStacks, int ticks, double duration, int category, Skill * sk, string affect_description)
+{
+    if (maxStacks <= 0)
+        return nullptr;
+
+    //find any existing affects matching name/skill
+    for (auto iter = spell_affects.begin(); iter != spell_affects.end(); ++iter)
+    {
+        if (!Utilities::str_cmp((*iter)->name, name) && (*iter)->skill == sk)
+        {
+            //found an affect to replace, or add a stack, or refresh the duration
+            if (((*iter)->caster && (*iter)->caster != caster) || ((*iter)->casterName != caster->GetName()))
+            {   //Caster is different, remove and replace the entire affect
+                RemoveSpellAffect(*iter);
+                SpellAffect * copy = AddSpellAffect(caster, name, hidden, maxStacks, ticks, duration, category, sk, affect_description);
+                return copy;
+            }
+            else if ((*iter)->currentStacks >= maxStacks)
+            {
+                //stacks already maxed out, refresh the duration
+                (*iter)->duration = duration;
+                (*iter)->ticksRemaining = ticks;
+                (*iter)->appliedTime = Game::currentTime;
+                return (*iter);
+            }
+            else if ((*iter)->currentStacks < maxStacks)
+            {
+                //add a stack (and refresh duration)
+                (*iter)->currentStacks++;
+                (*iter)->duration = duration;
+                (*iter)->ticksRemaining = ticks;
+                (*iter)->appliedTime = Game::currentTime;
+                if (sk != nullptr)
+                {
+                    sk->CallLuaApply(caster, this, (*iter));
+                }
+                return (*iter);
+            }
+        }
+    }
+
+    //Didn't find existing affect, add a new one
+    SpellAffect * sa = new SpellAffect();
+    sa->name = name;
+    sa->hidden = hidden;
+    sa->maxStacks = maxStacks;
+    sa->currentStacks = 1;
+    sa->ticks = ticks;
+    sa->duration = duration;
+    sa->affectDescription = affect_description;
+    sa->skill = sk;
+    sa->appliedTime = Game::currentTime;
+    sa->caster = caster;
+    sa->affectCategory = category;
+    if (sa->caster)
+    {
+        sa->caster->AddSubscriber(sa);
+        //std::cout << "AddSpellAffect AddSubscriber" << std::endl;
+        sa->casterName = caster->GetName();
+    }
+    sa->ticksRemaining = ticks;
+
+    sa->id = (int)spell_affects.size() + 1;
+    spell_affects.push_front(sa);
+
+    if (sk != nullptr)
+    {
+        sk->CallLuaApply(caster, this, sa);
+    }
+    return sa;
+}
+
+
+SpellAffect * Room::HasSpellAffect(string name)
+{
+    std::list<SpellAffect*>::iterator iter;
+    for (iter = spell_affects.begin(); iter != spell_affects.end(); ++iter)
+    {
+        if ((*iter)->name == name)
+        {
+            return (*iter);
+        }
+    }
+    return nullptr;
+}
+
+SpellAffect * Room::GetFirstSpellAffectWithAura(int aura_id)
+{
+    for (auto iter = spell_affects.begin(); iter != spell_affects.end(); ++iter)
+    {
+        if ((*iter)->HasAura(aura_id))
+        {
+            return (*iter);
+        }
+    }
+    return nullptr;
+}
+
+int Room::CleanseSpellAffect(Character * cleanser, int category, int howMany)
+{
+    if (category < 0 || category >= SpellAffect::AFFECT_LAST)
+    {
+        LogFile::Log("error", "CleanseSpellAffect: bad category");
+        return 0;
+    }
+    int removed_count = 0;
+    std::list<SpellAffect*>::iterator iter = spell_affects.begin();
+    while (iter != spell_affects.end())
+    {
+        std::list<SpellAffect*>::iterator thisiter = iter;
+        iter++;
+        if ((*thisiter)->affectCategory == category)
+        {
+            cleanser->Send("Removed '" + (*thisiter)->name + "'.\r\n");
+            removed_count++;
+            (*thisiter)->auraAffects.clear();
+            (*thisiter)->skill->CallLuaRemove((*thisiter)->caster, this, (*thisiter));
+            delete (*thisiter);
+            spell_affects.erase(thisiter);
+            if (removed_count >= howMany)
+                break;
+        }
+    }
+    return removed_count;
+}
+
+bool Room::RemoveSpellAffectsByAura(int auraid)
+{
+    std::list<SpellAffect*>::iterator iter;
+    bool removed = false;
+
+    iter = spell_affects.begin();
+    while (iter != spell_affects.end())
+    {
+        std::list<SpellAffect::AuraAffect>::iterator findme;
+        findme = std::find_if((*iter)->auraAffects.begin(), (*iter)->auraAffects.end(), SpellAffect::CompareAuraByID(auraid));
+        if (findme != (*iter)->auraAffects.end())
+        {
+            removed = true;
+            (*iter)->auraAffects.clear();
+            (*iter)->skill->CallLuaRemove((*iter)->caster, this, (*iter));
+            if ((*iter)->caster)
+            {
+                (*iter)->caster->RemoveSubscriber((*iter));
+            }
+            delete (*iter);
+            iter = spell_affects.erase(iter);
+            break;
+        }
+        else
+        {
+            iter++;
+        }
+    }
+    return removed;
+}
+
+void Room::RemoveSpellAffect(int id)
+{
+    for (auto iter = spell_affects.begin(); iter != spell_affects.end(); ++iter)
+    {
+        if ((*iter)->id == id)
+        {
+            (*iter)->auraAffects.clear();
+            (*iter)->skill->CallLuaRemove((*iter)->caster, this, (*iter));
+            if ((*iter)->caster)
+            {
+                (*iter)->caster->RemoveSubscriber((*iter));
+            }
+            delete (*iter);
+            spell_affects.erase(iter);
+            break;
+        }
+    }
+}
+
+void Room::RemoveSpellAffect(string name)
+{
+    for (auto iter = spell_affects.begin(); iter != spell_affects.end(); ++iter)
+    {
+        if ((*iter)->name == name)
+        {
+            (*iter)->auraAffects.clear();
+            (*iter)->skill->CallLuaRemove((*iter)->caster, this, (*iter));
+            if ((*iter)->caster)
+            {
+                (*iter)->caster->RemoveSubscriber((*iter));
+            }
+            delete (*iter);
+            spell_affects.erase(iter);
+            break;
+        }
+    }
+}
+
+void Room::RemoveSpellAffect(SpellAffect * remove)
+{
+    for (auto iter = spell_affects.begin(); iter != spell_affects.end(); ++iter)
+    {
+        if ((*iter) == remove)
+        {
+            (*iter)->auraAffects.clear();
+            (*iter)->skill->CallLuaRemove((*iter)->caster, this, (*iter));
+            if ((*iter)->caster)
+            {
+                (*iter)->caster->RemoveSubscriber((*iter));
+            }
+            delete (*iter);
+            spell_affects.erase(iter);
+            break;
+        }
+    }
+}
+
+void Room::RemoveAllSpellAffects()
+{
+    while (!spell_affects.empty())
+    {
+        spell_affects.front()->skill->CallLuaRemove(spell_affects.front()->caster, this, spell_affects.front());
+        if (spell_affects.front()->caster)
+        {
+            spell_affects.front()->caster->RemoveSubscriber(spell_affects.front());
+        }
+        delete spell_affects.front();
+        spell_affects.pop_front();
+    }
+    spell_affects.clear();
+}
+
 void Room::Message(const std::string & text)
 {
 	std::list<Character *>::iterator iter;

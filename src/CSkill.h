@@ -1,10 +1,7 @@
 #ifndef CSKILL_H
 #define CSKILL_H
 
-#include <bitset>
-#include <string>
-#include <vector>
-#include <map>
+#include "CRoom.h"
 
 class Character;
 class SpellAffect;
@@ -55,6 +52,11 @@ public:
     void CallLuaApply(Character * caster, Character * target, SpellAffect * affect);
     void CallLuaTick(Character * caster, Character * target, SpellAffect * affect);
     void CallLuaRemove(Character * caster, Character * target, SpellAffect * affect);
+    int CallLuaCost(Character * caster, Room * target);
+    void CallLuaCast(Character * caster, Room * target);
+    void CallLuaApply(Character * caster, Room * target, SpellAffect * affect);
+    void CallLuaTick(Character * caster, Room * target, SpellAffect * affect);
+    void CallLuaRemove(Character * caster, Room * target, SpellAffect * affect);
     
     
     bool changed;

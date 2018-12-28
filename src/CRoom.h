@@ -2,13 +2,14 @@
 #define CROOM_H
 
 #include "CExit.h"
-#include <string>
-#include <vector>
 
 class Character;
 class Server;
 class Trigger;
 class Reset;
+class SpellAffect;
+class Item;
+class Skill;
 
 class Room
 {
@@ -27,6 +28,7 @@ public:
     std::map<int, Reset *> resets;
     std::map<int, Trigger> triggers;
 	std::list<std::pair<Item *, int>> items;
+    std::list<SpellAffect *> spell_affects;
 
     //For search  Store a reference to all searchable class data by type
     std::map<std::string, std::string*> stringTable;
@@ -52,7 +54,16 @@ public:
     Reset * GetReset(int id);
     void AddTrigger(Trigger & trig);
     Trigger * GetTrigger(int startid, int type = -1);
-	void Message(const std::string & text);
+    SpellAffect * AddSpellAffect(Character * caster, std::string name, bool hidden, int maxStacks, int ticks, double duration, int category, Skill * sk, std::string affect_description);
+    SpellAffect * HasSpellAffect(std::string name);
+    SpellAffect * GetFirstSpellAffectWithAura(int aura_id);
+    int CleanseSpellAffect(Character * cleanser, int category, int howMany = -1);
+    bool RemoveSpellAffectsByAura(int auraid);
+    void RemoveSpellAffect(int id);
+    void RemoveSpellAffect(std::string name);
+    void RemoveSpellAffect(SpellAffect * remove);
+    void RemoveAllSpellAffects();
+    void Message(const std::string & text);
 	bool HasLivingCharacters();
 	bool HasNonGhostCharacters();
 	bool HasCharacters();
