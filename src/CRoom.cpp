@@ -320,6 +320,9 @@ SpellAffect * Room::AddSpellAffect(Character * caster, string name,
     {
         sk->CallLuaApply(caster, this, sa);
     }
+
+    Game::GetGame()->rooms_with_spell_affects.push_back(this);
+
     return sa;
 }
 
@@ -361,7 +364,7 @@ int Room::CleanseSpellAffect(Character * cleanser, int category, int howMany)
     while (iter != spell_affects.end())
     {
         std::list<SpellAffect*>::iterator thisiter = iter;
-        iter++;
+        ++iter;
         if ((*thisiter)->affectCategory == category)
         {
             cleanser->Send("Removed '" + (*thisiter)->name + "'.\r\n");

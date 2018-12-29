@@ -122,6 +122,7 @@ public:
     std::list<Character *> characters; //All NPCs and Players currently loaded in the world //TODO: boost.multiIndex ???
     std::map<int, NPCIndex *> npcIndex; //NPC prototypes
     std::map<int, Room *> rooms;
+    std::list<Room *> rooms_with_spell_affects;
     std::map<int, Skill *> skills;
     std::map<int, Quest *> quests;
     std::map<int, Item *> items;

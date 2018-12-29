@@ -157,7 +157,11 @@ void Lua_DefineClasses(sol::state * lua)
 			"characters", &Room::characters,
 			"id", &Room::id,
 			"name", &Room::name,
-			"description", &Room::description
+			"description", &Room::description,
+            "AddSpellAffect", &Room::AddSpellAffect,
+            "CleanseSpellAffect", &Room::CleanseSpellAffect,
+            "RemoveSpellAffect", (void(Room::*)(std::string))&Room::RemoveSpellAffect,
+            "HasSpellAffect", &Room::HasSpellAffect
 			);
 
 		(*lua).new_usertype<Skill>("Skill",

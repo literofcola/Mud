@@ -1019,6 +1019,70 @@ void Game::WorldUpdate(Server * server)
         }
     }
 
+    //Check rooms with active spell affects
+    auto room_iter = begin(rooms_with_spell_affects);
+    while(room_iter != end(rooms_with_spell_affects))
+    {
+        Room * currRoom = (*room_iter);
+        if (currRoom->spell_affects.empty())
+        {
+            room_iter = rooms_with_spell_affects.erase(room_iter);
+            continue;
+        }
+        auto spell_iter = currRoom->spell_affects.begin();
+        while (spell_iter != currRoom->spell_affects.end())
+        {
+            SpellAffect * sa = (*spell_iter);
+
+            if (sa->ticksRemaining > 0
+                && Game::currentTime > sa->appliedTime + ((sa->ticks - sa->ticksRemaining + 1)*(sa->duration / sa->ticks)))
+            {
+                if (!sa->caster)
+                {
+                    sa->caster = GetPlayerByName(sa->casterName);
+                }
+                sa->ticksRemaining--;
+
+                sa->skill->CallLuaTick(sa->caster, currRoom, sa);
+
+                //Reset the loop, who knows what happened to our debuffs during the tick
+                spell_iter = currRoom->spell_affects.begin();
+                continue;
+            }
+            if (!sa->remove_me && sa->duration > 0 && Game::currentTime - sa->appliedTime > sa->duration) //Expired
+            {
+                if (!sa->caster)
+                {
+                    sa->caster = GetPlayerByName(sa->casterName);
+                }
+
+                sa->skill->CallLuaRemove(sa->caster, currRoom, sa);
+
+                //Reset the loop, who knows what happened to our debuffs during the remove
+                sa->remove_me = true;
+                spell_iter = currRoom->spell_affects.begin();
+                continue;
+            }
+            //else
+            ++spell_iter;
+        }
+        //Loop them again to remove any flagged
+        spell_iter = currRoom->spell_affects.begin();
+        while (spell_iter != currRoom->spell_affects.end())
+        {
+            if ((*spell_iter)->remove_me) //Expired
+            {
+                delete (*spell_iter);
+                spell_iter = currRoom->spell_affects.erase(spell_iter);
+            }
+            else
+            {
+                ++spell_iter;
+            }
+        }
+        ++room_iter;
+    }
+
     if(doThirtySecondTick)
     {
         //Check resets
