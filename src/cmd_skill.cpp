@@ -53,13 +53,13 @@ void cmd_castCallback(Character::DelayData delayData)
 		//cout << "cmd_castCallback REMOVE" << endl;
     }
 
-    if(delayData.charTarget == nullptr) //target will never be null from cmd_cast, only from Subscriber::Notify 
+    if(delayData.charTarget == nullptr && delayData.sk->targetType != Skill::TARGET_NONE) //target will never be null from cmd_cast, only from Subscriber::Notify 
     {
         delayData.caster->Send("Your target is no longer here.\r\n");
         return;
     }
 	
-    if(delayData.charTarget != delayData.caster)
+    if(delayData.charTarget != delayData.caster && delayData.sk->targetType != Skill::TARGET_NONE)
     {
 		if (!delayData.caster->GetCharacterRoom(delayData.charTarget) 
 			&& FindDirection(delayData.caster, delayData.charTarget, 3) == Exit::DIR_LAST)

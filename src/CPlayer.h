@@ -23,7 +23,7 @@ public:
     ~Player();
 
 	static const int HEALTH_FROM_STAMINA = 10;
-	static const int MANA_FROM_WISDOM = 10;
+	static const int MANA_FROM_WISDOM = 15;
 	static constexpr double DODGE_FROM_AGILITY = 0.035;
 	static constexpr double CRIT_FROM_AGILITY = 0.03;
 	static constexpr double STRENGTH_DAMAGE_MODIFIER = 0.10;	//auto attack damage increased by 10% of strength
