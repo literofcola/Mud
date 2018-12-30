@@ -778,13 +778,10 @@ void Player::Stand()
 	bool removed = false;
 	while (RemoveSpellAffectByAura(false, SpellAffect::Auras::AURA_EATING)) //true if we removed a spell affect
 	{
-		removed = true;
 	}
-	if (removed)
-	{
-		Send("You stop eating or drinking.\r\n");
-	}
-
+    while (RemoveSpellAffectByAura(false, SpellAffect::Auras::AURA_DRINKING)) //true if we removed a spell affect
+    {
+    }
 	Send("You stand up.\r\n");
     Message(GetName() + " stands up.", Character::MSG_ROOM_NOTCHAR);
 	position = Position::POSITION_STANDING;

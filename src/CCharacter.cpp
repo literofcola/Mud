@@ -420,7 +420,7 @@ SpellAffect * Character::AddSpellAffect(int isDebuff, Character * caster, string
     if(maxStacks <= 0) //but why?
         return nullptr;
 
-    //find any existing affects matching name/skill/buff/debuff
+    //find any existing affects matching name/skill
     for (auto iter = begin(spell_affects); iter != end(spell_affects); ++iter)
     {
         if (!Utilities::str_cmp((*iter)->name, name) && (*iter)->skill == sk)
@@ -565,31 +565,26 @@ bool Character::RemoveSpellAffectByAura(bool isDebuff, int auraid)
 {
 	std::list<SpellAffect*>::iterator iter;
 	bool removed = false;
-	iter = spell_affects.begin();
-	while ( iter != spell_affects.end())
+	for (auto iter = begin(spell_affects); iter != end(spell_affects); ++iter)
 	{
-        if(((*iter)->debuff && !isDebuff) || (!(*iter)->debuff && isDebuff))
-            continue;
-
-		std::list<SpellAffect::AuraAffect>::iterator findme;
-		findme = std::find_if((*iter)->auraAffects.begin(), (*iter)->auraAffects.end(), SpellAffect::CompareAuraByID(auraid));
-		if (findme != (*iter)->auraAffects.end())
-		{
-			removed = true;
-			(*iter)->auraAffects.clear();
-            (*iter)->skill->CallLuaRemove((*iter)->caster, this, (*iter));
-            if ((*iter)->caster)
+        if (((*iter)->debuff && isDebuff) || (!(*iter)->debuff && !isDebuff))
+        {
+            std::list<SpellAffect::AuraAffect>::iterator findme;
+            findme = std::find_if((*iter)->auraAffects.begin(), (*iter)->auraAffects.end(), SpellAffect::CompareAuraByID(auraid));
+            if (findme != (*iter)->auraAffects.end())
             {
-                (*iter)->caster->RemoveSubscriber((*iter));
+                removed = true;
+                (*iter)->auraAffects.clear();
+                (*iter)->skill->CallLuaRemove((*iter)->caster, this, (*iter));
+                if ((*iter)->caster)
+                {
+                    (*iter)->caster->RemoveSubscriber((*iter));
+                }
+                delete (*iter);
+                iter = spell_affects.erase(iter);
+                break;
             }
-			delete (*iter);
-			iter = spell_affects.erase(iter);
-			break;
-		}
-		else
-		{
-			iter++;
-		}
+        }
 	}
 	return removed;
 }
@@ -598,20 +593,20 @@ void Character::RemoveSpellAffect(bool isDebuff, int id)
 {
     for(auto iter = spell_affects.begin(); iter != spell_affects.end(); ++iter)
     {
-        if (((*iter)->debuff && !isDebuff) || (!(*iter)->debuff && isDebuff))
-            continue;
-
-        if((*iter)->id == id)
+        if (((*iter)->debuff && isDebuff) || (!(*iter)->debuff && !isDebuff))
         {
-            (*iter)->auraAffects.clear();
-            (*iter)->skill->CallLuaRemove((*iter)->caster, this, (*iter));
-            if ((*iter)->caster)
+            if ((*iter)->id == id)
             {
-                (*iter)->caster->RemoveSubscriber((*iter));
+                (*iter)->auraAffects.clear();
+                (*iter)->skill->CallLuaRemove((*iter)->caster, this, (*iter));
+                if ((*iter)->caster)
+                {
+                    (*iter)->caster->RemoveSubscriber((*iter));
+                }
+                delete (*iter);
+                spell_affects.erase(iter);
+                break;
             }
-            delete (*iter);
-            spell_affects.erase(iter);
-            break;
         }
     }
 }
@@ -620,20 +615,20 @@ void Character::RemoveSpellAffect(bool isDebuff, string name)
 {
     for(auto iter = spell_affects.begin(); iter != spell_affects.end(); ++iter)
     {
-        if (((*iter)->debuff && !isDebuff) || (!(*iter)->debuff && isDebuff))
-            continue;
-
-        if((*iter)->name == name)
+        if (((*iter)->debuff && isDebuff) || (!(*iter)->debuff && !isDebuff))
         {
-            (*iter)->auraAffects.clear();
-            (*iter)->skill->CallLuaRemove((*iter)->caster, this, (*iter));
-            if ((*iter)->caster)
+            if ((*iter)->name == name)
             {
-                (*iter)->caster->RemoveSubscriber((*iter));
+                (*iter)->auraAffects.clear();
+                (*iter)->skill->CallLuaRemove((*iter)->caster, this, (*iter));
+                if ((*iter)->caster)
+                {
+                    (*iter)->caster->RemoveSubscriber((*iter));
+                }
+                delete (*iter);
+                spell_affects.erase(iter);
+                break;
             }
-            delete (*iter);
-            spell_affects.erase(iter);
-            break;
         }
     }
 }

@@ -426,7 +426,9 @@ void cmd_affects(Player * ch, string argument)
         return;
 
     string arg1;
+    string arg2;
     argument = Utilities::one_argument(argument, arg1);
+    argument = Utilities::one_argument(argument, arg2);
     std::list<SpellAffect*>::iterator iter;
     int i = 1;
     bool found = false;
@@ -561,9 +563,34 @@ void cmd_affects(Player * ch, string argument)
         }
         return;
     }
-    else if (!Utilities::str_prefix(arg1, "target"))
+    else if (!Utilities::str_prefix(arg1, "cancel"))
     {
-
+        if (!Utilities::IsNumber(arg2))
+        {
+            ch->Send("affect 'cancel' <spell number>\r\n");
+            return;
+        }
+        int spell_number = Utilities::atoi(arg2);
+        if (spell_number <= 0)
+        {
+            ch->Send("affect 'cancel' <spell number>\r\n");
+            return;
+        }
+        for (iter = ch->spell_affects.begin(); iter != ch->spell_affects.end(); ++iter)
+        {
+            if (spell_number == (*iter)->id && !(*iter)->hidden)
+            {
+                if ((*iter)->debuff)
+                {
+                    ch->Send("You can't cancel a debuff.\r\n");
+                    return;
+                }
+                ch->RemoveSpellAffect(false, spell_number);
+                return;
+            }
+        }
+        ch->Send("Spell " + Utilities::itos(spell_number) + " not found.\r\n");
+        return;
     }
     ch->Send("affect 'buff'||'debuff'||'target'\r\n");
     ch->Send("affect 'cancel' <spell number>\r\n");
