@@ -1,9 +1,6 @@
 #include "stdafx.h"
 #include "CLogFile.h"
 #include "utils.h"
-#include <fstream>
-#include <map>
-#include <iostream>
 
 using std::string;
 

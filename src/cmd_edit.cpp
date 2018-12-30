@@ -17,7 +17,6 @@
 #include "CHelp.h"
 #include "utils.h"
 #include "CLogFile.h"
-#include <string>
 
 void cmd_edit(Player * ch, std::string argument)
 {

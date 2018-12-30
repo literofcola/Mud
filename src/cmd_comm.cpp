@@ -5,7 +5,6 @@
 #include "CCharacter.h"
 #include "CGame.h"
 #include "utils.h"
-#include <list>
 
 void cmd_shout(Player * ch, std::string argument)
 {

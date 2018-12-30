@@ -313,8 +313,23 @@ SpellAffect * Room::AddSpellAffect(Character * caster, string name,
     }
     sa->ticksRemaining = ticks;
 
-    sa->id = (int)spell_affects.size() + 1;
-    spell_affects.push_front(sa);
+    int ctr = 1;
+    bool blank_id_found = false;
+    while (!blank_id_found)
+    {
+        blank_id_found = true;
+        for (auto iter = spell_affects.begin(); iter != spell_affects.end(); ++iter)
+        {
+            if (ctr == (*iter)->id)
+            {
+                blank_id_found = false;
+            }
+
+        }
+        ctr++;
+    }
+    sa->id = ctr;
+    spell_affects.push_back(sa);
 
     if (sk != nullptr)
     {
@@ -380,7 +395,7 @@ int Room::CleanseSpellAffect(Character * cleanser, int category, int howMany)
     return removed_count;
 }
 
-bool Room::RemoveSpellAffectsByAura(int auraid)
+bool Room::RemoveSpellAffectByAura(int auraid)
 {
     std::list<SpellAffect*>::iterator iter;
     bool removed = false;
@@ -472,6 +487,7 @@ void Room::RemoveAllSpellAffects()
 {
     while (!spell_affects.empty())
     {
+        spell_affects.front()->auraAffects.clear();
         spell_affects.front()->skill->CallLuaRemove(spell_affects.front()->caster, this, spell_affects.front());
         if (spell_affects.front()->caster)
         {

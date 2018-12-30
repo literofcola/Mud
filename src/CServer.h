@@ -3,24 +3,6 @@
 
 #include "CmySQLQueue.h"
 
-extern "C"
-{
-#include "lua.h"
-#include "lualib.h"
-#include "lauxlib.h"
-}
-#define SOL_CHECK_ARGUMENTS
-#define SOL_PRINT_ERRORS
-#include <sol.hpp>
-
-#include <winsock2.h>
-#include <WS2tcpip.h>
-#include <windows.h>
-#include <string>
-#include <memory>
-#include <vector>
-#include <random>
-
 #define MXP_OPEN        "\033[0z" //Open 	Only open commands (eg. <B>) will be interpreted.
 #define MXP_SECURE      "\033[1z" //Secure 	All MXP tags are interpreted.
 #define MXP_LOCKED      "\033[2z" //Locked 	No MXP tags or entities will be interpreted.

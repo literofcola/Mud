@@ -1,10 +1,6 @@
 #ifndef CQUEST_H
 #define CQUEST_H
 
-#include <vector>
-#include <map>
-#include <string>
-
 class Character;
 
 class Quest

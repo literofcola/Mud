@@ -1,8 +1,6 @@
 #include "stdafx.h"
 #include "CmySQLQueue.h"
 #include "CLogFile.h"
-#include <process.h>
-#include <iostream>
 
 using std::string;
 using namespace mysqlpp;

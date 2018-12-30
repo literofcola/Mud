@@ -58,7 +58,7 @@ public:
     SpellAffect * HasSpellAffect(std::string name);
     SpellAffect * GetFirstSpellAffectWithAura(int aura_id);
     int CleanseSpellAffect(Character * cleanser, int category, int howMany = -1);
-    bool RemoveSpellAffectsByAura(int auraid);
+    bool RemoveSpellAffectByAura(int auraid);
     void RemoveSpellAffect(int id);
     void RemoveSpellAffect(std::string name);
     void RemoveSpellAffect(SpellAffect * remove);

@@ -7,7 +7,6 @@
 #include "CRoom.h"
 #include "CNPCIndex.h"
 #include "CItem.h"
-#include <string>
 
 using std::string;
 

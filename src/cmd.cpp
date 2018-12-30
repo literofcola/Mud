@@ -19,13 +19,8 @@
 #include "utils.h"
 #include "CHelp.h"
 #include "CLogFile.h"
-#include "json.hpp"
 // for convenience
 using json = nlohmann::json;
-#include <string>
-#include <sstream>
-#include <iostream>
-#include <iomanip>
 
 extern class Command cmd_table[];
 

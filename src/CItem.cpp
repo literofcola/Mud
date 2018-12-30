@@ -5,7 +5,6 @@
 #include "CSkill.h"
 #include "CGame.h"
 #include "utils.h"
-#include <string>
 
 //These tables must match the order of enums in class Item
 const char * Item::equip_strings[] = 

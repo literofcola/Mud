@@ -1,15 +1,6 @@
 #include "stdafx.h"
 #include "utils.h"
 #include "CLogFile.h"
-#include <string>
-#include <vector>
-#include <sstream>
-#include <iomanip>
-#include <winsock2.h>
-#include <WS2tcpip.h>
-#include <windows.h>
-#include <sys/timeb.h>
-#include <time.h>
 
 namespace Utilities
 {

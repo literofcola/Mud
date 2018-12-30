@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "CExit.h"
-#include <string>
 
 //DIR_NORTH, DIR_NORTHEAST, DIR_EAST, DIR_SOUTHEAST, DIR_SOUTH, DIR_SOUTHWEST, DIR_WEST, DIR_NORTHWEST, DIR_UP, DIR_DOWN, DIR_LAST
 std::string Exit::exitNames[Exit::DIR_LAST] = 

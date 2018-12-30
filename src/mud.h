@@ -1,7 +1,6 @@
 //#include "CUser.h"
 #include "CExit.h"
 #include "CCharacter.h"
-#include <string>
 
 class User;
 class Player;

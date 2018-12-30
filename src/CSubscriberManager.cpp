@@ -2,7 +2,6 @@
 #include "CSubscriberManager.h"
 #include "CSubscriber.h"
 #include "CCharacter.h"
-#include <string>
 
 SubscriberManager::~SubscriberManager()
 {

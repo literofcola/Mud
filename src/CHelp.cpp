@@ -2,7 +2,6 @@
 #include "CHelp.h"
 #include "utils.h"
 #include "CServer.h"
-#include <string>
 
 Help::Help()
 {

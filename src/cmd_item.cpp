@@ -11,20 +11,8 @@
 #include "CSpellAffect.h"
 #include "CItem.h"
 #include "CLogFile.h"
-#include "json.hpp"
 // for convenience
 using json = nlohmann::json;
-extern "C"
-{
-#include "lua.h"
-#include "lualib.h"
-#include "lauxlib.h"
-}
-#define SOL_CHECK_ARGUMENTS
-#define SOL_PRINT_ERRORS
-#include <sol.hpp>
-#include <sstream>
-#include <iomanip>
 
 using std::string;
 

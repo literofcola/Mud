@@ -7,7 +7,6 @@
 #include "CGame.h"
 #include "CLogFile.h"
 #include "mud.h"
-#include <string>
 
 using std::string;
 

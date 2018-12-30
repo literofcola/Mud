@@ -11,21 +11,8 @@
 #include "CServer.h"
 #include "CSkill.h"
 #include "utils.h"
-#include "json.hpp"
 // for convenience
 using json = nlohmann::json;
-extern "C"
-{
-#include "lua.h"
-#include "lualib.h"
-#include "lauxlib.h"
-}
-#define SOL_CHECK_ARGUMENTS
-#define SOL_PRINT_ERRORS
-#include <sol.hpp>
-#include <sstream>
-#include <iomanip>
-#include <iostream>
 
 using std::string;
 
@@ -447,7 +434,7 @@ void cmd_affects(Player * ch, string argument)
     if(arg1.empty())
     {
         ch->Send("|MYou are affected by the following spells:|X\r\n");
-        for(iter = ch->buffs.begin(); iter != ch->buffs.end(); ++iter)
+        for(iter = ch->spell_affects.begin(); iter != ch->spell_affects.end(); ++iter)
         {
             if((*iter)->skill != nullptr && (!(*iter)->hidden || ch->IsImmortal()))
             {
@@ -455,25 +442,16 @@ void cmd_affects(Player * ch, string argument)
                 string stacks;
                 if ((*iter)->currentStacks > 1)
                     stacks = " |M(" + Utilities::itos((*iter)->currentStacks) + ")";
-                string oneaffect = Utilities::itos(i++) + ". |G" + (*iter)->name + stacks + "|X " + Utilities::dtos(timeleft, 1) + " seconds || ";
-                if((*iter)->affectCategory != SpellAffect::AFFECT_NONE)
+                string oneaffect = Utilities::itos((*iter)->id);
+                if ((*iter)->debuff)
                 {
-                    oneaffect += (*iter)->GetAffectCategoryName() + " || ";
+                    oneaffect += ". |R";
                 }
-                oneaffect += (*iter)->affectDescription + "\r\n";
-                ch->Send(oneaffect);
-                found = true;
-            }
-        }
-        for(iter = ch->debuffs.begin(); iter != ch->debuffs.end(); ++iter)
-        {
-            if((*iter)->skill != nullptr && (!(*iter)->hidden || ch->IsImmortal()))
-            {
-                double timeleft = ((*iter)->appliedTime + (*iter)->duration) - Game::currentTime;
-                string stacks;
-                if ((*iter)->currentStacks > 1)
-                    stacks = " |M(" + Utilities::itos((*iter)->currentStacks) + ")";
-                string oneaffect = Utilities::itos(i++) + ". |R" + (*iter)->name + stacks + "|X " + Utilities::dtos(timeleft, 1) + " seconds || ";
+                else
+                {
+                    oneaffect += ". |G";
+                }
+                oneaffect += (*iter)->name + stacks + "|X " + Utilities::dtos(timeleft, 1) + " seconds || ";
                 if((*iter)->affectCategory != SpellAffect::AFFECT_NONE)
                 {
                     oneaffect += (*iter)->GetAffectCategoryName() + " || ";
@@ -489,9 +467,9 @@ void cmd_affects(Player * ch, string argument)
         if (ch->GetTarget() && ch->GetTarget() != ch)
         {
             ch->Send("|MYour target is affected by the following debuffs:|X\r\n");
-            for (auto iter = ch->GetTarget()->debuffs.begin(); iter != ch->GetTarget()->debuffs.end(); ++iter)
+            for (auto iter = ch->GetTarget()->spell_affects.begin(); iter != ch->GetTarget()->spell_affects.end(); ++iter)
             {
-                if ((*iter)->skill != nullptr && (!(*iter)->hidden || ch->IsImmortal()))
+                if ((*iter)->debuff && (*iter)->skill != nullptr && (!(*iter)->hidden || ch->IsImmortal()))
                 {
                     double timeleft = ((*iter)->appliedTime + (*iter)->duration) - Game::currentTime;
                     string stacks;
@@ -514,10 +492,10 @@ void cmd_affects(Player * ch, string argument)
     }
     else if(!Utilities::str_prefix(arg1, "buff"))
     {
-        ch->Send("|MYou are affected by the following beneficial spells:|X\r\n");
-        for(iter = ch->buffs.begin(); iter != ch->buffs.end(); ++iter)
+        ch->Send("|MYou are affected by the following buffs:|X\r\n");
+        for(iter = ch->spell_affects.begin(); iter != ch->spell_affects.end(); ++iter)
         {
-            if(!(*iter)->hidden)
+            if(!(*iter)->debuff && !(*iter)->hidden)
             {
                 double timeleft = ((*iter)->appliedTime + (*iter)->duration) - Game::currentTime;
                 string stacks;
@@ -536,10 +514,10 @@ void cmd_affects(Player * ch, string argument)
     }
     else if(!Utilities::str_prefix(arg1, "debuff"))
     {
-        ch->Send("|MYou are affected by the following harmful spells:|X\r\n");
-        for(iter = ch->debuffs.begin(); iter != ch->debuffs.end(); ++iter)
+        ch->Send("|MYou are affected by the following debuffs:|X\r\n");
+        for(iter = ch->spell_affects.begin(); iter != ch->spell_affects.end(); ++iter)
         {
-            if(!(*iter)->hidden)
+            if((*iter)->debuff && !(*iter)->hidden)
             {
                 double timeleft = ((*iter)->appliedTime + (*iter)->duration) - Game::currentTime;
                 string stacks;
@@ -564,9 +542,9 @@ void cmd_affects(Player * ch, string argument)
             return;
         }
         ch->Send("|MYour target is affected by the following debuffs:|X\r\n");
-        for (auto iter = ch->GetTarget()->debuffs.begin(); iter != ch->GetTarget()->debuffs.end(); ++iter)
+        for (auto iter = ch->GetTarget()->spell_affects.begin(); iter != ch->GetTarget()->spell_affects.end(); ++iter)
         {
-            if ((*iter)->skill != nullptr && (!(*iter)->hidden || ch->IsImmortal()))
+            if ((*iter)->debuff && (*iter)->skill != nullptr && (!(*iter)->hidden || ch->IsImmortal()))
             {
                 double timeleft = ((*iter)->appliedTime + (*iter)->duration) - Game::currentTime;
                 string stacks;
@@ -583,7 +561,12 @@ void cmd_affects(Player * ch, string argument)
         }
         return;
     }
+    else if (!Utilities::str_prefix(arg1, "target"))
+    {
+
+    }
     ch->Send("affect 'buff'||'debuff'||'target'\r\n");
+    ch->Send("affect 'cancel' <spell number>\r\n");
 }
 
 void cmd_train(Player * ch, string argument)

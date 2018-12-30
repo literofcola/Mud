@@ -1,11 +1,6 @@
 #ifndef CNPCINDEX_H
 #define CNPCINDEX_H
 
-#include <string>
-#include <vector>
-#include <list>
-#include <map>
-
 class Quest;
 class Skill;
 class Trigger;

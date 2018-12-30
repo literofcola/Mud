@@ -5,9 +5,6 @@
 #include "CServer.h"
 #include "CLogFile.h"
 #include "utils.h"
-#include <memory>
-#include <sys/timeb.h>
-#include <time.h>
 
 User::User(std::shared_ptr<Client> client_)
 {

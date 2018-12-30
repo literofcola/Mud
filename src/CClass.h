@@ -1,10 +1,6 @@
 #ifndef CCLASS_H
 #define CCLASS_H
 
-#include <string>
-#include <map>
-#include <list>
-
 class Skill;
 
 class Class

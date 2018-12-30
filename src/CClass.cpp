@@ -5,7 +5,6 @@
 #include "CSkill.h"
 #include "CLogFile.h"
 #include "utils.h"
-#include <string>
 
 using std::string;
 

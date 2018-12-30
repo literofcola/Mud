@@ -1,13 +1,6 @@
 #ifndef CCLIENT_H
 #define CCLIENT_H
 
-#include <list>
-#include <deque>
-#include <memory>
-#include <winsock2.h>
-#include <WS2tcpip.h>
-#include <windows.h>
-
 class User;
 
 #define NETWORK_BUFFER_SIZE 16384 //allow for rather large sends server->client

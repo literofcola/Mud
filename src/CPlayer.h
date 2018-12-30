@@ -5,9 +5,6 @@
 #include "CCharacter.h"
 #include "CServer.h"
 #include "mud.h"
-#include <set>
-#include <vector>
-#include <list>
 
 class Class;
 class Quest;
@@ -121,7 +118,7 @@ public:
 	
 	//FUNCTIONS
 	//Stats
-	void ResetMaxStats();
+	void ResetMaxStats() override;
 	void AddEquipmentStats(Item * add);
 	void RemoveEquipmentStats(Item * add);
 	void SetExperience(int newexp);
@@ -252,12 +249,12 @@ public:
 	inline int GetBaseStamina() override { return stamina; };
 	inline int GetBaseWisdom() override { return wisdom; };
 	inline int GetBaseSpirit() override { return spirit; };
-	inline int GetAgility() override { return agility + bonus_agility; };
-	inline int GetIntellect() override { return intellect + bonus_intellect; };
-	inline int GetStrength() override { return strength + bonus_strength; };
-	inline int GetStamina() override { return stamina + bonus_stamina; };
-	inline int GetWisdom() override { return wisdom + bonus_wisdom; };
-	inline int GetSpirit() override { return spirit + bonus_spirit; };
+	int GetAgility() override;
+	int GetIntellect() override;
+	int GetStrength() override;
+	int GetStamina() override;
+	int GetWisdom() override;
+	int GetSpirit() override;
 	inline void SetAgility(int val) { agility <= 0 ? agility = 1 : agility = val; };
 	inline void SetIntellect(int val) { intellect <= 0 ? intellect = 1 : intellect = val; };
 	inline void SetStrength(int val) { strength <= 0 ? strength = 1 : strength = val; };

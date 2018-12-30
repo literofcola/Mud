@@ -1,15 +1,6 @@
 #ifndef CGAME_H
 #define CGAME_H
 
-#include <string>
-#include <memory>
-#include <map>
-#include <list>
-#include <vector>
-#include <random>
-#include <winsock2.h>
-#include <WS2tcpip.h>
-#include <windows.h>
 #include "CHighResTimer.h"
 
 class Server;

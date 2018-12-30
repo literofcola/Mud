@@ -23,6 +23,12 @@ const struct SpellAffect::AuraTable aura_table[] =
     { "STUN", SpellAffect::AURA_STUN },
     { "MANA_COST", SpellAffect::AURA_MANA_COST },
     { "HEALING_RECEIVED", SpellAffect::AURA_HEALING_RECEIVED },
+    { "MODIFY_AGILITY", SpellAffect::AURA_MODIFY_AGILITY },
+    { "MODIFY_STRENGTH", SpellAffect::AURA_MODIFY_STRENGTH },
+    { "MODIFY_WISDOM", SpellAffect::AURA_MODIFY_WISDOM },
+    { "MODIFY_INTELLECT", SpellAffect::AURA_MODIFY_INTELLECT },
+    { "MODIFY_STAMINA", SpellAffect::AURA_MODIFY_STAMINA },
+    { "MODIFY_SPIRIT", SpellAffect::AURA_MODIFY_SPIRIT },
     { "", 0 }
 };
 
@@ -285,16 +291,24 @@ void SpellAffect::Load(Character * ch)
         double tick_interval = (double)row["duration"] / row["ticks"];
         sa->ticksRemaining = (int)(row["timeleft"] / tick_interval) + 1;
 
-        if(sa->debuff)
+        int ctr = 0;
+        bool blank_id_found = false;
+        while (!blank_id_found)
         {
-            sa->id = (int)ch->debuffs.size() + 1;
-            ch->debuffs.push_front(sa);
+            blank_id_found = true;
+            ++ctr;
+            for (auto iter = ch->spell_affects.begin(); iter != ch->spell_affects.end(); ++iter)
+            {
+                if (ctr == (*iter)->id)
+                {
+                    blank_id_found = false;
+                }
+
+            }
         }
-        else
-        {
-            sa->id = (int)ch->buffs.size() + 1;
-            ch->buffs.push_front(sa);
-        }
+        sa->id = ctr;
+        ch->spell_affects.push_back(sa);
+
 		std::string affect_data = (row["data"]).c_str();
         int first = 0, second = 0;
         while(first < (int)affect_data.length())

@@ -16,10 +16,8 @@
 #include "CClass.h"
 #include "CLogFile.h"
 #include "utils.h"
-#include "json.hpp"
 // for convenience
 using json = nlohmann::json;
-#include <string>
 
 using std::string;
 
@@ -312,6 +310,60 @@ void Player::RemoveEquipmentStats(Item * remove)
 	if (armor < 0) armor = 0;
 
 	ResetMaxStats();
+}
+
+int Player::GetAgility() 
+{ 
+    if (agility + bonus_agility + GetAuraModifier(SpellAffect::AURA_MODIFY_AGILITY, 1) < 0)
+    {
+        return 0;
+    }
+    return agility + bonus_agility + GetAuraModifier(SpellAffect::AURA_MODIFY_AGILITY, 1);
+}
+
+int Player::GetIntellect()
+{ 
+    if (intellect + bonus_intellect + GetAuraModifier(SpellAffect::AURA_MODIFY_INTELLECT, 1) < 0)
+    {
+        return 0;
+    }
+    return intellect + bonus_intellect + GetAuraModifier(SpellAffect::AURA_MODIFY_INTELLECT, 1);
+}
+
+int Player::GetStrength() 
+{ 
+    if (strength + bonus_strength + GetAuraModifier(SpellAffect::AURA_MODIFY_STRENGTH, 1) < 0)
+    {
+        return 0;
+    }
+    return strength + bonus_strength + GetAuraModifier(SpellAffect::AURA_MODIFY_STRENGTH, 1);
+}
+
+int Player::GetStamina() 
+{ 
+    if (stamina + bonus_stamina + GetAuraModifier(SpellAffect::AURA_MODIFY_STAMINA, 1) < 0)
+    {
+        return 0;
+    }
+    return stamina + bonus_stamina + GetAuraModifier(SpellAffect::AURA_MODIFY_STAMINA, 1);
+}
+
+int Player::GetWisdom() 
+{ 
+    if (wisdom + bonus_wisdom + GetAuraModifier(SpellAffect::AURA_MODIFY_WISDOM, 1) < 0)
+    {
+        return 0;
+    }
+    return wisdom + bonus_wisdom + GetAuraModifier(SpellAffect::AURA_MODIFY_WISDOM, 1);
+}
+
+int Player::GetSpirit() 
+{ 
+    if (spirit + bonus_spirit + GetAuraModifier(SpellAffect::AURA_MODIFY_SPIRIT, 1) < 0)
+    {
+        return 0;
+    }
+    return spirit + bonus_spirit + GetAuraModifier(SpellAffect::AURA_MODIFY_SPIRIT, 1);
 }
 
 void Player::GeneratePrompt(double currentTime)
@@ -724,7 +776,7 @@ void Player::Stand()
 		return;
 
 	bool removed = false;
-	while (RemoveSpellAffectsByAura(false, SpellAffect::Auras::AURA_EATING)) //true if we removed a spell affect
+	while (RemoveSpellAffectByAura(false, SpellAffect::Auras::AURA_EATING)) //true if we removed a spell affect
 	{
 		removed = true;
 	}
@@ -1853,11 +1905,7 @@ void Player::SaveSpellAffects()
 	Server::sqlQueue->Write(deletesql);
 
 	std::list<SpellAffect*>::iterator iter;
-	for (iter = buffs.begin(); iter != buffs.end(); ++iter)
-	{
-		(*iter)->Save(name);
-	}
-	for (iter = debuffs.begin(); iter != debuffs.end(); ++iter)
+	for (iter = spell_affects.begin(); iter != spell_affects.end(); ++iter)
 	{
 		(*iter)->Save(name);
 	}

@@ -19,10 +19,8 @@
 #include "utils.h"
 #include "CLogFile.h"
 #include "mud.h"
-#include "json.hpp"
 // for convenience
 using json = nlohmann::json;
-#include <string>
 
 class Subscriber;
 
@@ -423,16 +421,7 @@ SpellAffect * Character::AddSpellAffect(int isDebuff, Character * caster, string
         return nullptr;
 
     //find any existing affects matching name/skill/buff/debuff
-    std::list<SpellAffect*>::iterator iter, end;
-    if (isDebuff)
-    {
-        iter = debuffs.begin(); end = debuffs.end();
-    }
-    else
-    {
-        iter = buffs.begin(); end = buffs.end();
-    }
-    for (; iter != end; ++iter)
+    for (auto iter = begin(spell_affects); iter != end(spell_affects); ++iter)
     {
         if (!Utilities::str_cmp((*iter)->name, name) && (*iter)->skill == sk)
         {
@@ -489,16 +478,23 @@ SpellAffect * Character::AddSpellAffect(int isDebuff, Character * caster, string
     }
     sa->ticksRemaining = ticks;
 
-    if(isDebuff)
+    int ctr = 0;
+    bool blank_id_found = false;
+    while (!blank_id_found)
     {
-        sa->id = (int)debuffs.size() + 1;
-        debuffs.push_front(sa);
+        blank_id_found = true;
+        ++ctr;
+        for (auto iter = spell_affects.begin(); iter != spell_affects.end(); ++iter)
+        {
+            if (ctr == (*iter)->id)
+            {
+                blank_id_found = false;
+            }
+            
+        }
     }
-    else
-    {
-        sa->id = (int)buffs.size() + 1;
-        buffs.push_front(sa);
-    }
+    sa->id = ctr;
+    spell_affects.push_back(sa);
 
     if(sk != nullptr)
     {
@@ -510,14 +506,7 @@ SpellAffect * Character::AddSpellAffect(int isDebuff, Character * caster, string
 SpellAffect * Character::HasSpellAffect(string name)
 {
     std::list<SpellAffect*>::iterator iter;
-    for(iter = buffs.begin(); iter != buffs.end(); ++iter)
-    {
-        if((*iter)->name == name)
-        {
-            return (*iter);
-        }
-    }
-    for(iter = debuffs.begin(); iter != debuffs.end(); ++iter)
+    for(iter = spell_affects.begin(); iter != spell_affects.end(); ++iter)
     {
         if((*iter)->name == name)
         {
@@ -529,14 +518,7 @@ SpellAffect * Character::HasSpellAffect(string name)
 
 SpellAffect * Character::GetFirstSpellAffectWithAura(int aura_id)
 {
-	for (auto iter = buffs.begin(); iter != buffs.end(); ++iter)
-	{
-		if ((*iter)->HasAura(aura_id))
-		{
-			return (*iter);
-		}
-	}
-	for (auto iter = debuffs.begin(); iter != debuffs.end(); ++iter)
+	for (auto iter = spell_affects.begin(); iter != spell_affects.end(); ++iter)
 	{
 		if ((*iter)->HasAura(aura_id))
 		{
@@ -546,6 +528,7 @@ SpellAffect * Character::GetFirstSpellAffectWithAura(int aura_id)
 	return nullptr;
 }
 
+//"cleanse" only removes debuffs
 int Character::CleanseSpellAffect(Character * cleanser, int category, int howMany)
 {
     if(category < 0 || category >= SpellAffect::AFFECT_LAST)
@@ -554,12 +537,12 @@ int Character::CleanseSpellAffect(Character * cleanser, int category, int howMan
         return 0;
     }
     int removed_count = 0;
-    std::list<SpellAffect*>::iterator iter = debuffs.begin();
-    while(iter != debuffs.end())
+    std::list<SpellAffect*>::iterator iter = spell_affects.begin();
+    while(iter != spell_affects.end())
     {
         std::list<SpellAffect*>::iterator thisiter = iter;
         iter++;
-        if((*thisiter)->affectCategory == category)
+        if((*thisiter)->debuff && (*thisiter)->affectCategory == category)
         {
             Send("Your '" + (*thisiter)->name + "' has been removed.\r\n");
             if(cleanser != this)
@@ -570,7 +553,7 @@ int Character::CleanseSpellAffect(Character * cleanser, int category, int howMan
             (*thisiter)->auraAffects.clear();
             (*thisiter)->skill->CallLuaRemove((*thisiter)->caster, this, (*thisiter));
             delete (*thisiter);
-            debuffs.erase(thisiter);
+            spell_affects.erase(thisiter);
             if(removed_count >= howMany)
                 break;
         }
@@ -578,60 +561,34 @@ int Character::CleanseSpellAffect(Character * cleanser, int category, int howMan
     return removed_count;
 }
 
-bool Character::RemoveSpellAffectsByAura(bool isDebuff, int auraid)
+bool Character::RemoveSpellAffectByAura(bool isDebuff, int auraid)
 {
 	std::list<SpellAffect*>::iterator iter;
 	bool removed = false;
-	if (isDebuff)
+	iter = spell_affects.begin();
+	while ( iter != spell_affects.end())
 	{
-		iter = debuffs.begin();
-		while ( iter != debuffs.end())
+        if(((*iter)->debuff && !isDebuff) || (!(*iter)->debuff && isDebuff))
+            continue;
+
+		std::list<SpellAffect::AuraAffect>::iterator findme;
+		findme = std::find_if((*iter)->auraAffects.begin(), (*iter)->auraAffects.end(), SpellAffect::CompareAuraByID(auraid));
+		if (findme != (*iter)->auraAffects.end())
 		{
-			std::list<SpellAffect::AuraAffect>::iterator findme;
-			findme = std::find_if((*iter)->auraAffects.begin(), (*iter)->auraAffects.end(), SpellAffect::CompareAuraByID(auraid));
-			if (findme != (*iter)->auraAffects.end())
-			{
-				removed = true;
-				(*iter)->auraAffects.clear();
-                (*iter)->skill->CallLuaRemove((*iter)->caster, this, (*iter));
-                if ((*iter)->caster)
-                {
-                    (*iter)->caster->RemoveSubscriber((*iter));
-                }
-				delete (*iter);
-				iter = debuffs.erase(iter);
-				break;
-			}
-			else
-			{
-				iter++;
-			}
+			removed = true;
+			(*iter)->auraAffects.clear();
+            (*iter)->skill->CallLuaRemove((*iter)->caster, this, (*iter));
+            if ((*iter)->caster)
+            {
+                (*iter)->caster->RemoveSubscriber((*iter));
+            }
+			delete (*iter);
+			iter = spell_affects.erase(iter);
+			break;
 		}
-	}
-	else
-	{
-		iter = buffs.begin();
-		while (iter != buffs.end())
+		else
 		{
-			std::list<SpellAffect::AuraAffect>::iterator findme;
-			findme = std::find_if((*iter)->auraAffects.begin(), (*iter)->auraAffects.end(), SpellAffect::CompareAuraByID(auraid));
-			if (findme != (*iter)->auraAffects.end())
-			{
-				removed = true;
-				(*iter)->auraAffects.clear();
-                (*iter)->skill->CallLuaRemove((*iter)->caster, this, (*iter));
-                if ((*iter)->caster)
-                {
-                    (*iter)->caster->RemoveSubscriber((*iter));
-                }
-				delete (*iter);
-				iter = buffs.erase(iter);
-				break;
-			}
-			else
-			{
-				iter++;
-			}
+			iter++;
 		}
 	}
 	return removed;
@@ -639,89 +596,51 @@ bool Character::RemoveSpellAffectsByAura(bool isDebuff, int auraid)
 
 void Character::RemoveSpellAffect(bool isDebuff, int id)
 {
-    std::list<SpellAffect*>::iterator iter;
-    if(isDebuff)
+    for(auto iter = spell_affects.begin(); iter != spell_affects.end(); ++iter)
     {
-        for(iter = debuffs.begin(); iter != debuffs.end(); ++iter)
+        if (((*iter)->debuff && !isDebuff) || (!(*iter)->debuff && isDebuff))
+            continue;
+
+        if((*iter)->id == id)
         {
-            if((*iter)->id == id)
+            (*iter)->auraAffects.clear();
+            (*iter)->skill->CallLuaRemove((*iter)->caster, this, (*iter));
+            if ((*iter)->caster)
             {
-                (*iter)->auraAffects.clear();
-                (*iter)->skill->CallLuaRemove((*iter)->caster, this, (*iter));
-                if ((*iter)->caster)
-                {
-                    (*iter)->caster->RemoveSubscriber((*iter));
-                }
-                delete (*iter);
-                debuffs.erase(iter);
-                break;
+                (*iter)->caster->RemoveSubscriber((*iter));
             }
-        }
-    }
-    else
-    {
-        for(iter = buffs.begin(); iter != buffs.end(); ++iter)
-        {
-            if((*iter)->id == id)
-            {
-                (*iter)->auraAffects.clear();
-                (*iter)->skill->CallLuaRemove((*iter)->caster, this, (*iter));
-                if ((*iter)->caster)
-                {
-                    (*iter)->caster->RemoveSubscriber((*iter));
-                }
-                delete (*iter);
-                buffs.erase(iter);
-                break;
-            }
+            delete (*iter);
+            spell_affects.erase(iter);
+            break;
         }
     }
 }
 
 void Character::RemoveSpellAffect(bool isDebuff, string name)
 {
-    std::list<SpellAffect*>::iterator iter;
-    if(isDebuff)
+    for(auto iter = spell_affects.begin(); iter != spell_affects.end(); ++iter)
     {
-        for(iter = debuffs.begin(); iter != debuffs.end(); ++iter)
+        if (((*iter)->debuff && !isDebuff) || (!(*iter)->debuff && isDebuff))
+            continue;
+
+        if((*iter)->name == name)
         {
-            if((*iter)->name == name)
+            (*iter)->auraAffects.clear();
+            (*iter)->skill->CallLuaRemove((*iter)->caster, this, (*iter));
+            if ((*iter)->caster)
             {
-                (*iter)->auraAffects.clear();
-                (*iter)->skill->CallLuaRemove((*iter)->caster, this, (*iter));
-                if ((*iter)->caster)
-                {
-                    (*iter)->caster->RemoveSubscriber((*iter));
-                }
-                delete (*iter);
-                debuffs.erase(iter);
-                break;
+                (*iter)->caster->RemoveSubscriber((*iter));
             }
-        }
-    }
-    else
-    {
-        for(iter = buffs.begin(); iter != buffs.end(); ++iter)
-        {
-            if((*iter)->name == name)
-            {
-                (*iter)->auraAffects.clear();
-                (*iter)->skill->CallLuaRemove((*iter)->caster, this, (*iter));
-                if ((*iter)->caster)
-                {
-                    (*iter)->caster->RemoveSubscriber((*iter));
-                }
-                delete (*iter);
-                buffs.erase(iter);
-                break;
-            }
+            delete (*iter);
+            spell_affects.erase(iter);
+            break;
         }
     }
 }
 
 void Character::RemoveSpellAffect(SpellAffect * remove)
 {
-	for (auto iter = buffs.begin(); iter != buffs.end(); ++iter)
+	for (auto iter = spell_affects.begin(); iter != spell_affects.end(); ++iter)
 	{
 		if ((*iter) == remove)
 		{
@@ -732,51 +651,26 @@ void Character::RemoveSpellAffect(SpellAffect * remove)
                 (*iter)->caster->RemoveSubscriber((*iter));
             }
 			delete (*iter);
-			buffs.erase(iter);
+            spell_affects.erase(iter);
 			break;
-		}
-	}
-	for (auto iter = debuffs.begin(); iter != debuffs.end(); ++iter)
-	{
-		if ((*iter) == remove)
-		{
-			(*iter)->auraAffects.clear();
-            (*iter)->skill->CallLuaRemove((*iter)->caster, this, (*iter));
-            if ((*iter)->caster)
-            {
-                (*iter)->caster->RemoveSubscriber((*iter));
-            }
-			delete (*iter);
-			debuffs.erase(iter);
-			return;
 		}
 	}
 }
 
 void Character::RemoveAllSpellAffects()
 {
-    while(!debuffs.empty())
+    while(!spell_affects.empty())
     {
-        debuffs.front()->skill->CallLuaRemove(debuffs.front()->caster, this, debuffs.front());
-        if (debuffs.front()->caster)
+        spell_affects.front()->auraAffects.clear();
+        spell_affects.front()->skill->CallLuaRemove(spell_affects.front()->caster, this, spell_affects.front());
+        if (spell_affects.front()->caster)
         {
-            debuffs.front()->caster->RemoveSubscriber(debuffs.front());
+            spell_affects.front()->caster->RemoveSubscriber(spell_affects.front());
         }
-        delete debuffs.front();
-        debuffs.pop_front();
+        delete spell_affects.front();
+        spell_affects.pop_front();
     }
-    debuffs.clear();
-    while(!buffs.empty())
-    {
-        buffs.front()->skill->CallLuaRemove(buffs.front()->caster, this, buffs.front());
-        if (buffs.front()->caster)
-        {
-            buffs.front()->caster->RemoveSubscriber(buffs.front());
-        }
-        delete buffs.front();
-        buffs.pop_front();
-    }
-    buffs.clear();
+    spell_affects.clear();
 }
 
 int Character::GetAuraModifier(int aura_id, int whatModifier)
@@ -786,7 +680,7 @@ int Character::GetAuraModifier(int aura_id, int whatModifier)
 
     std::list<SpellAffect*>::iterator iter;
     std::list<struct SpellAffect::AuraAffect>::iterator iter2;
-    for(iter = buffs.begin(); iter != buffs.end(); ++iter)
+    for(iter = spell_affects.begin(); iter != spell_affects.end(); ++iter)
     {
         if(!(*iter)->auraAffects.empty())
         {
@@ -816,41 +710,6 @@ int Character::GetAuraModifier(int aura_id, int whatModifier)
                                 result = (*iter2).modifier;
                             break;
                     }
-                }
-            }
-        }
-    }
-    for(iter = debuffs.begin(); iter != debuffs.end(); ++iter)
-    {
-        if(!(*iter)->auraAffects.empty())
-        {
-            for(iter2 = (*iter)->auraAffects.begin(); iter2 != (*iter)->auraAffects.end(); ++iter2)
-            {
-                if((*iter2).auraID == aura_id)
-                {
-                    switch(whatModifier)
-                    {
-                        case 1:
-                            result += (*iter2).modifier;
-                            break;
-                        case 2:
-                            if(result < (*iter2).modifier || result == 0)
-                                result = (*iter2).modifier;
-                            break;
-                        case 3:
-                            if(result > (*iter2).modifier || result == 0)
-                                result = (*iter2).modifier;
-                            break;
-                        case 4:
-                            if(result < (*iter2).modifier)
-                                result = (*iter2).modifier;
-                            break;
-                        case 5:
-                            if(result > (*iter2).modifier)
-                                result = (*iter2).modifier;
-                            break;
-                    }
-
                 }
             }
         }
@@ -864,18 +723,7 @@ int Character::GetTotalAuraModifier(int aura_id)
 
     std::list<SpellAffect*>::iterator iter;
     std::list<struct SpellAffect::AuraAffect>::iterator iter2;
-    for(iter = buffs.begin(); iter != buffs.end(); ++iter)
-    {
-        if(!(*iter)->auraAffects.empty())
-        {
-            for(iter2 = (*iter)->auraAffects.begin(); iter2 != (*iter)->auraAffects.end(); ++iter2)
-            {
-                if((*iter2).auraID == aura_id)
-                    total += (*iter2).modifier;
-            }
-        }
-    }
-    for(iter = debuffs.begin(); iter != debuffs.end(); ++iter)
+    for(iter = spell_affects.begin(); iter != spell_affects.end(); ++iter)
     {
         if(!(*iter)->auraAffects.empty())
         {
@@ -897,18 +745,7 @@ int Character::GetLargestAuraModifier(int aura_id)
 
     std::list<SpellAffect*>::iterator iter;
     std::list<struct SpellAffect::AuraAffect>::iterator iter2;
-    for(iter = buffs.begin(); iter != buffs.end(); ++iter)
-    {
-        if(!(*iter)->auraAffects.empty())
-        {
-            for(iter2 = (*iter)->auraAffects.begin(); iter2 != (*iter)->auraAffects.end(); ++iter2)
-            {
-                if((*iter2).auraID == aura_id && (largest < (*iter2).modifier || largest == 0))
-                    largest = (*iter2).modifier;
-            }
-        }
-    }
-    for(iter = debuffs.begin(); iter != debuffs.end(); ++iter)
+    for(iter = spell_affects.begin(); iter != spell_affects.end(); ++iter)
     {
         if(!(*iter)->auraAffects.empty())
         {
@@ -931,7 +768,7 @@ bool Character::IsCrowdControlled()
 
 void Character::RemoveCrowdControlOnHit()
 {
-    while (RemoveSpellAffectsByAura(true, SpellAffect::AURA_INCAPACITATE))
+    while (RemoveSpellAffectByAura(true, SpellAffect::AURA_INCAPACITATE))
     { 
         
     }
@@ -943,24 +780,13 @@ int Character::GetSmallestAuraModifier(int aura_id)
 
     std::list<SpellAffect*>::iterator iter;
     std::list<struct SpellAffect::AuraAffect>::iterator iter2;
-    for(iter = buffs.begin(); iter != buffs.end(); ++iter)
+    for(iter = spell_affects.begin(); iter != spell_affects.end(); ++iter)
     {
         if(!(*iter)->auraAffects.empty())
         {
             for(iter2 = (*iter)->auraAffects.begin(); iter2 != (*iter)->auraAffects.end(); ++iter2)
             {
                 if((*iter2).auraID == aura_id && (smallest > (*iter2).modifier || smallest == 0))
-                    smallest = (*iter2).modifier;
-            }
-        }
-    }
-    for(iter = debuffs.begin(); iter != debuffs.end(); ++iter)
-    {
-        if(!(*iter)->auraAffects.empty())
-        {
-            for(iter2 = (*iter)->auraAffects.begin(); iter2 != (*iter)->auraAffects.end(); ++iter2)
-            {
-                if((*iter2).auraID == aura_id && (smallest < (*iter2).modifier || smallest == 0))
                     smallest = (*iter2).modifier;
             }
         }

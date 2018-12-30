@@ -1,8 +1,6 @@
 #ifndef CCOMMAND_H
 #define CCOMMAND_H
 
-#include <string>
-
 class Server;
 class Player;
 

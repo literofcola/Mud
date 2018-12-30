@@ -3,9 +3,6 @@
 
 #include "CSubscriber.h"
 #include "CSubscriberManager.h"
-#include <deque>
-#include <map>
-#include <string>
 
 class Server;
 class User;
@@ -88,8 +85,9 @@ public:
     DelayData delayData;
     bool delay_active;
     void (*delayFunction)(DelayData);
-    std::list<SpellAffect *> buffs;
-    std::list<SpellAffect *> debuffs;
+    //std::list<SpellAffect *> buffs;
+    //std::list<SpellAffect *> debuffs;
+    std::list<SpellAffect *> spell_affects;
     std::map<int, double> cooldowns;
     double lastSpellCast;  //time stamp for mana regen 5 second rule
 	double lastAutoAttack_main;
@@ -170,7 +168,7 @@ public:
 	SpellAffect * HasSpellAffect(std::string name);
 	SpellAffect * GetFirstSpellAffectWithAura(int aura_id);
 	int CleanseSpellAffect(Character * cleanser, int category, int howMany = -1);
-	bool RemoveSpellAffectsByAura(bool isDebuff, int auraid);
+	bool RemoveSpellAffectByAura(bool isDebuff, int auraid);
 	void RemoveSpellAffect(bool isDebuff, int id);
 	void RemoveSpellAffect(bool isDebuff, std::string name);
 	void RemoveSpellAffect(SpellAffect * remove);
@@ -198,6 +196,7 @@ public:
 	virtual bool HasComboPointTarget() { return false; };
 	virtual Character * GetComboPointTarget() { return nullptr; };
 	virtual int GetComboPoints() { return 0; };
+    virtual void ResetMaxStats() { };
 
 	//Communication
 	void Message(const std::string & txt, MessageType msg_type, Character * vict = nullptr);

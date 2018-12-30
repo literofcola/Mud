@@ -1,8 +1,6 @@
 #ifndef CGROUP_H
 #define CGROUP_H
 
-#include <string>
-
 class Character;
 class Player;
 

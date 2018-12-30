@@ -1,8 +1,6 @@
 #ifndef CAREA_H
 #define CAREA_H
 
-#include <string>
-
 class Area
 {
 public:

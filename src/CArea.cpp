@@ -2,7 +2,6 @@
 #include "CArea.h"
 #include "CServer.h"
 #include "utils.h"
-#include <string>
 
 Area::Area(int id_)
 {

@@ -898,13 +898,13 @@ void Game::WorldUpdate(Server * server)
             }
         }
         
-        //Buff/debuff update
-        if(!currChar->buffs.empty())
+        //Spell Affects update
+        if(!currChar->spell_affects.empty())
         {
-            std::list<SpellAffect*>::iterator buffiter = currChar->buffs.begin();
-            while(buffiter != currChar->buffs.end())
+            std::list<SpellAffect*>::iterator sa_iter = currChar->spell_affects.begin();
+            while(sa_iter != currChar->spell_affects.end())
             {
-                SpellAffect * sa = (*buffiter);
+                SpellAffect * sa = (*sa_iter);
                 if(sa->ticksRemaining > 0 
                    && Game::currentTime > sa->appliedTime + ((sa->ticks - sa->ticksRemaining+1)*(sa->duration / sa->ticks)))
                 {
@@ -916,8 +916,8 @@ void Game::WorldUpdate(Server * server)
                     
                     sa->skill->CallLuaTick(sa->caster, currChar, sa);
 
-                    //Reset the loop, who knows what happened to our debuffs during the tick
-                    buffiter = currChar->buffs.begin();
+                    //Reset the loop, who knows what happened to our affects during the tick
+                    sa_iter = currChar->spell_affects.begin();
                     continue;
                 }
                 if(!sa->remove_me && sa->duration > 0 && Game::currentTime - sa->appliedTime > sa->duration) //Expired
@@ -926,82 +926,29 @@ void Game::WorldUpdate(Server * server)
                     {
                         sa->caster = GetPlayerByName(sa->casterName);
                     }
+                    sa->auraAffects.clear();
                     sa->skill->CallLuaRemove(sa->caster, currChar, sa);
 
                     //Reset the loop, who knows what happened to our buffs during the remove
                     sa->remove_me = true;
-                    buffiter = currChar->buffs.begin();
+                    sa_iter = currChar->spell_affects.begin();
                     continue;
                 } 
                 //else
-                ++buffiter;
+                ++sa_iter;
             }
             //Loop them again to remove any flagged
-            buffiter = currChar->buffs.begin();
-            while(buffiter != currChar->buffs.end())
+            sa_iter = currChar->spell_affects.begin();
+            while(sa_iter != currChar->spell_affects.end())
             {
-                if((*buffiter)->remove_me) //Expired
+                if((*sa_iter)->remove_me) //Expired
                 {
-                    delete (*buffiter);
-                    buffiter = currChar->buffs.erase(buffiter);
+                    delete (*sa_iter);
+                    sa_iter = currChar->spell_affects.erase(sa_iter);
                 }
                 else
                 {
-                    ++buffiter;
-                }
-            }
-        }
-        if(!currChar->debuffs.empty())
-        {
-            std::list<SpellAffect*>::iterator debuffiter = currChar->debuffs.begin();
-            while(debuffiter != currChar->debuffs.end())
-            {
-                SpellAffect * sa = (*debuffiter);
-
-                if(sa->ticksRemaining > 0 
-                   && Game::currentTime > sa->appliedTime + ((sa->ticks - sa->ticksRemaining+1)*(sa->duration / sa->ticks)))
-                {
-                    if (!sa->caster)
-                    {
-                        sa->caster = GetPlayerByName(sa->casterName);
-                    }
-                    sa->ticksRemaining--;
-
-                    sa->skill->CallLuaTick(sa->caster, currChar, sa);
-                    
-                    //Reset the loop, who knows what happened to our debuffs during the tick
-                    debuffiter = currChar->debuffs.begin();
-                    continue;
-                }
-                if(!sa->remove_me && sa->duration > 0 && Game::currentTime - sa->appliedTime > sa->duration) //Expired
-                {
-                    if(!sa->caster)
-                    {
-                        sa->caster = GetPlayerByName(sa->casterName);
-                    }
-
-                    sa->skill->CallLuaRemove(sa->caster, currChar, sa);
-
-                    //Reset the loop, who knows what happened to our debuffs during the remove
-                    sa->remove_me = true;
-                    debuffiter = currChar->debuffs.begin();
-                    continue;
-                }
-                //else
-                ++debuffiter;
-            }
-            //Loop them again to remove any flagged
-            debuffiter = currChar->debuffs.begin();
-            while(debuffiter != currChar->debuffs.end())
-            {
-                if((*debuffiter)->remove_me) //Expired
-                {
-                    delete (*debuffiter);
-                    debuffiter = currChar->debuffs.erase(debuffiter);
-                }
-                else
-                {
-                    ++debuffiter;
+                    ++sa_iter;
                 }
             }
         }
@@ -1055,7 +1002,7 @@ void Game::WorldUpdate(Server * server)
                 {
                     sa->caster = GetPlayerByName(sa->casterName);
                 }
-
+                sa->auraAffects.clear();
                 sa->skill->CallLuaRemove(sa->caster, currRoom, sa);
 
                 //Reset the loop, who knows what happened to our debuffs during the remove

@@ -1,11 +1,6 @@
 #ifndef CUSER_H
 #define CUSER_H
 
-#include <memory>
-#include <deque>
-#define ZLIB_WINAPI
-#include "zlib.h"
-
 class Client;
 class Player;
 

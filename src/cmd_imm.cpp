@@ -14,7 +14,6 @@
 #include "utils.h"
 #include "CLogFile.h"
 #include "CmySQLQueue.h"
-#include <string>
 
 using std::string;
 

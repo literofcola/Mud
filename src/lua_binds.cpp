@@ -13,15 +13,6 @@
 #include "CSkill.h"
 #include "utils.h"
 #include "mud.h"
-extern "C"
-{
-#include "lua.h"
-#include "lualib.h"
-#include "lauxlib.h"
-}
-#define SOL_CHECK_ARGUMENTS
-#define SOL_PRINT_ERRORS
-#include <sol.hpp>
 
 void Lua_DefineFunctions(sol::state * lua)
 {
@@ -80,6 +71,7 @@ void Lua_DefineClasses(sol::state * lua)
 			"GetMana", &Character::GetMana,
 			"GetMaxMana", &Character::GetMaxMana,
 			"GetMaxHealth", &Character::GetMaxHealth,
+            "ResetMaxStats", &Character::ResetMaxStats,
 			"HasResource", &Character::HasResource,
 			"GetIntellect", &Character::GetIntellect,
 			"GetStrength", &Character::GetStrength,
@@ -148,6 +140,7 @@ void Lua_DefineClasses(sol::state * lua)
 
 		(*lua).new_usertype<Player>("Player",
 			sol::base_classes, sol::bases<Character>(),
+            "ResetMaxStats", &Player::ResetMaxStats,
 			"GetClassLevel", &Player::GetClassLevel,
 			"SetLevel", &Player::SetLevel,
             "LuaAddQuery", &Player::LuaAddQuery

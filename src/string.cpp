@@ -1,9 +1,6 @@
 #include "stdafx.h"
 #include "CUser.h"
 #include "utils.h"
-#include <string>
-#include <sstream>
-#include <iomanip>
 
 namespace StringEdit
 {

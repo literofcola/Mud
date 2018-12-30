@@ -6,16 +6,6 @@
 #include "CHighResTimer.h"
 #include "CLogFile.h"
 
-extern "C"
-{
-#include "lua.h"
-#include "lualib.h"
-#include "lauxlib.h"
-}
-#define SOL_CHECK_ARGUMENTS
-#define SOL_PRINT_ERRORS
-#include <sol.hpp>
-
 extern void Lua_DefineClasses(sol::state * lua);
 extern void Lua_DefineFunctions(sol::state * lua);
 

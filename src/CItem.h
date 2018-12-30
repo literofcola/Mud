@@ -2,8 +2,6 @@
 #define CITEM_H
 
 #include "CSubscriberManager.h"
-#include <vector>
-#include <map>
 
 class Server;
 class Player;

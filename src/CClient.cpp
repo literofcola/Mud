@@ -1,10 +1,6 @@
 #include "stdafx.h"
 #include "CClient.h"
 #include "CCommand.h"
-#include <string>
-#include <winsock2.h>
-#include <WS2tcpip.h>
-#include <windows.h>
 
 Client::Client(SOCKET s, std::string ipaddress) : socket_(s), ipaddress_(ipaddress)
 {

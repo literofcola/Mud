@@ -7,8 +7,6 @@
 #include "mud.h"
 #include "CLogFile.h"
 #include "utils.h"
-#include <random>
-#include <fstream>
 
 //Defines from telnet protocol we need for MXP, MCCP, etc
 const std::string Server::IAC = "\xFF";

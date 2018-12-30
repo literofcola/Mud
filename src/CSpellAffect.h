@@ -2,9 +2,6 @@
 #define CSPELLAFFECT_H
 
 #include "CSubscriber.h"
-#include <string>
-#include <map>
-#include <list>
 
 class Character;
 class Skill;
@@ -86,7 +83,9 @@ public:
     {
         AURA_MOVE_SPEED = 1, AURA_RESOURCE_COST = 2, AURA_EATING = 3, AURA_DRINKING = 4, 
         AURA_TAUNT = 5, AURA_DAMAGE_ABSORB = 6, AURA_INCAPACITATE = 7, AURA_MODIFY_ARMOR = 8,
-        AURA_STUN = 9, AURA_MANA_COST = 10, AURA_HEALING_RECEIVED = 11
+        AURA_STUN = 9, AURA_MANA_COST = 10, AURA_HEALING_RECEIVED = 11, AURA_MODIFY_AGILITY = 12,
+        AURA_MODIFY_STRENGTH = 13, AURA_MODIFY_WISDOM = 14, AURA_MODIFY_INTELLECT = 15,
+        AURA_MODIFY_STAMINA = 16, AURA_MODIFY_SPIRIT = 17
     };
 
 	//Comparison functor
