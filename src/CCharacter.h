@@ -150,11 +150,12 @@ public:
 
 	//Skills/Spell Affects
 	virtual bool HasSkill(Skill * sk) { return true; };
-	virtual bool HasSkillByName(std::string name) { return true; };
+    virtual bool HasSkill(std::string long_name) { return true; };
+    virtual Skill * GetSkillLongName(std::string long_name) { return nullptr; };
 	virtual void AddSkill(Skill * newskill) { };
 	virtual void RemoveSkill(Skill * sk) { };
 	virtual void RemoveSkill(std::string name) { };
-	virtual Skill * GetSkillShortName(std::string name) { return nullptr; };
+	//virtual Skill * GetSkillShortName(std::string name) { return nullptr; };
     bool HasActiveDelay();
     Skill * GetDelaySkill();
 	bool CancelActiveDelay();

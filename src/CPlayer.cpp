@@ -203,14 +203,14 @@ void Player::AddSkill(Skill * newskill)
 {
 	if (newskill == nullptr)
 		return;
-	knownSkills[newskill->name] = newskill;
+	knownSkills[newskill->long_name] = newskill;
 }
 
 void Player::RemoveSkill(Skill * sk)
 {
 	std::map<string, Skill*>::iterator iter;
 
-	iter = knownSkills.find(sk->name);
+	iter = knownSkills.find(sk->long_name);
 	if (iter != knownSkills.end() && (*iter).second->id == sk->id)
 	{
 		knownSkills.erase(iter);
@@ -228,7 +228,7 @@ void Player::RemoveSkill(string name)
 	}
 }
 
-Skill * Player::GetSkillShortName(string name)
+/*Skill * Player::GetSkillShortName(string name)
 {
 	std::map<string, Skill*>::iterator iter;
 
@@ -239,7 +239,7 @@ Skill * Player::GetSkillShortName(string name)
 		return (*iter).second;
 	}
 	return nullptr;
-}
+}*/
 
 bool Player::HasSkill(Skill * sk)
 {
@@ -253,16 +253,28 @@ bool Player::HasSkill(Skill * sk)
 	return false;
 }
 
-bool Player::HasSkillByName(string name) //Not guaranteed to be the same skill id, just the same name
+bool Player::HasSkill(std::string long_name)
 {
-	std::map<string, Skill*>::iterator iter;
+    std::map<string, Skill*>::iterator iter;
 
-	iter = knownSkills.find(name);
-	if (iter != knownSkills.end())
-	{
-		return true;
-	}
-	return false;
+    iter = knownSkills.find(long_name);
+    if (iter != knownSkills.end())
+    {
+        return true;
+    }
+    return false;
+}
+
+Skill * Player::GetSkillLongName(std::string long_name)
+{
+    std::map<string, Skill*>::iterator iter;
+
+    iter = knownSkills.find(long_name);
+    if (iter != knownSkills.end())
+    {
+        return iter->second;
+    }
+    return nullptr;
 }
 
 void Player::ResetMaxStats()

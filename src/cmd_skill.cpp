@@ -117,7 +117,7 @@ void cmd_cast(Player * ch, string argument)
     Skill * spell;
     //if(!ch->IsNPC())
     //{
-        spell = ch->GetSkillShortName(arg1);
+        spell = ch->GetSkillLongName(arg1);
     //}
     //else
     //{
@@ -227,7 +227,7 @@ void cmd_skills(Player * ch, string argument)
 	std::map<string, Skill *>::iterator iter;
     for(iter = ch->knownSkills.begin(); iter != ch->knownSkills.end(); ++iter)
     {
-		skill_string << "|G" << std::left << std::setw(20) << (*iter).second->long_name << " |MCast name:|G " << std::setw(20) << (*iter).second->name;
+        skill_string << "|G" << std::left << std::setw(20) << (*iter).second->long_name;// << " |MCast name:|G " << std::setw(20) << (*iter).second->name;
 		skill_string << " |MCast time:|G " << std::setw(5) << Utilities::dtos((*iter).second->castTime, 2);
 		skill_string << " |MCooldown:|G " << std::setw(7) << Utilities::dtos((*iter).second->cooldown, 2);
 		skill_string << " |MCost: |G" << iter->second->costDescription;

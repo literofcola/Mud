@@ -14,8 +14,8 @@ public:
     ~Skill();
 
     int id;
-    std::string name; //keyword name for cmd_cast
-    std::string long_name; //global unique name
+    std::string name; //short name for spell stacking / overwriting situations (not including rank # for ranked spells)
+    std::string long_name; //global unique name (including rank # for ranked spells)
     std::string function_name;
 	double castTime;
 	double cooldown;

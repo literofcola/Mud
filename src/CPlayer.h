@@ -5,6 +5,7 @@
 #include "CCharacter.h"
 #include "CServer.h"
 #include "mud.h"
+#include "utils.h"
 
 class Class;
 class Quest;
@@ -76,7 +77,7 @@ public:
 
 	//Skills / Spell Affects
 	double globalCooldown;
-	std::map<std::string, Skill *> knownSkills;
+	std::map<std::string, Skill *, Utilities::ci_less> knownSkills;
 
 	//Death Handling
 	int death_timer;
@@ -150,11 +151,12 @@ public:
 
 	//Skills / Spell Affects
 	bool HasSkill(Skill * sk) override;
-	bool HasSkillByName(std::string name) override;
+    bool HasSkill(std::string long_name) override;
+	Skill * GetSkillLongName(std::string long_name) override;
 	void AddSkill(Skill * newskill) override;
 	void RemoveSkill(Skill * sk) override;
 	void RemoveSkill(std::string name) override;
-	Skill * GetSkillShortName(std::string name) override;
+	//Skill * GetSkillShortName(std::string name) override;
 	void StartGlobalCooldown();
 	inline double GetGlobalCooldown() override { return globalCooldown; };
 	inline void SetGlobalCooldown(double time) override { globalCooldown = time; };

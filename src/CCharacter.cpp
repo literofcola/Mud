@@ -425,7 +425,7 @@ SpellAffect * Character::AddSpellAffect(int isDebuff, Character * caster, string
     {
         if (!Utilities::str_cmp((*iter)->name, name) && (*iter)->skill == sk)
         {
-            //found an affect to replace, or add a stack, or refresh the duration
+            //found an affect with the same name and skill to replace, or add a stack, or refresh the duration
             if (((*iter)->caster && (*iter)->caster != caster) || ((*iter)->casterName != caster->GetName()))
             {   //Caster is different, remove and replace the entire affect
                 RemoveSpellAffect(*iter);
@@ -453,6 +453,20 @@ SpellAffect * Character::AddSpellAffect(int isDebuff, Character * caster, string
                 }
                 return (*iter);
             }
+        }
+        else if (!Utilities::str_cmp((*iter)->name, name) && (*iter)->skill != sk) 
+        {
+            //found an affect with same name but different skill (eg "Chilled" from Frostbolt 1 vs "Chilled" from Frostbolt 5), remove and replace the entire affect
+            RemoveSpellAffect(*iter);
+            SpellAffect * copy = AddSpellAffect(isDebuff, caster, name, hidden, maxStacks, ticks, duration, category, sk, affect_description);
+            return copy;
+        }
+        else if (Utilities::str_cmp((*iter)->name, name) && (*iter)->skill != sk && (*iter)->skill->name == sk->name)
+        {
+            //found an affect with a different name, different skill, but the skill's short names are the same (eg "Renew 1" "Renew 8"). remove and replace
+            RemoveSpellAffect(*iter);
+            SpellAffect * copy = AddSpellAffect(isDebuff, caster, name, hidden, maxStacks, ticks, duration, category, sk, affect_description);
+            return copy;
         }
     }
 

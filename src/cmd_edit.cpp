@@ -1347,7 +1347,7 @@ void skillEditCmd_name(Player * ch, std::string argument)
 		return;
 	}
 
-    pSkill->name = Utilities::ToLower(argument);
+    pSkill->name = argument;
     pSkill->changed = true;
 	ch->Send("Name set.\r\n");
 }
