@@ -97,6 +97,11 @@ void cmd_cast(Player * ch, string argument)
     if(!ch)
         return;
 
+    if (ch->IsCrowdControlled())
+    {
+        ch->Send("You can't do that right now.\r\n");
+        return;
+    }
     if(ch->HasActiveDelay())
     {
         ch->Send("Another action is in progress!\r\n");

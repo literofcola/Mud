@@ -356,6 +356,8 @@ void NPC::Cast(std::string argument)
 	if (skillID <= 0)
 		return;
 
+    if (IsCrowdControlled())
+        return;
 	if (HasActiveDelay())
 		return;
 
