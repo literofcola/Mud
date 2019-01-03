@@ -146,6 +146,14 @@ void Lua_DefineClasses(sol::state * lua)
             "LuaAddQuery", &Player::LuaAddQuery
             );
 
+        (*lua).new_usertype<Character::Threat>("Threat",
+            "ch", &Character::Threat::ch,
+            "threat", &Character::Threat::threat,
+            "damage", &Character::Threat::damage,
+            "healing", &Character::Threat::healing,
+            "tapped", &Character::Threat::tapped //This 'ch' has a valid "tap" on us
+            );
+
 		(*lua).new_usertype<Room>("Room",
 			"characters", &Room::characters,
 			"id", &Room::id,

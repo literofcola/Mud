@@ -2030,6 +2030,20 @@ double Player::GetOffhandDamagePerSecond()
 	return dps;
 }
 
+bool Player::CanAttack(Character * victim)
+{
+    if (this == victim)
+        return false;
+
+    if ((victim->IsNPC() && victim->FlagIsSet(NPCIndex::FLAG_FRIENDLY))
+        || (!victim->IsNPC() && room->pvp == 0)
+        || (!victim->IsAlive()))
+    {
+        return false;
+    }
+    return true;
+}
+
 void Player::SetComboPoints(int howmany)
 {
 	if (howmany < 0 || howmany > maxComboPoints)

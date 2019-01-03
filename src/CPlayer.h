@@ -126,6 +126,7 @@ public:
 	void ApplyExperience(int amount);
 
 	//Combat
+    bool CanAttack(Character * victim) override;
 	void SetComboPoints(int howmany);
 	void GenerateComboPoint(Character * target);
 	int SpendComboPoints(Character * target);

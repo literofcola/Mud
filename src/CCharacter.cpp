@@ -1058,9 +1058,12 @@ void Character::EnterCombatAssist(Character * friendly)
 
 void Character::ExitCombat()
 {
-    //Check EXIT_COMBAT trigger only if actually in combat
     if (InCombat() && IsNPC())
     {
+        //NPCs get cooldowns reset when leaving combat
+        cooldowns.clear();
+
+        //Check EXIT_COMBAT trigger only if actually in combat
         Trigger * trig = nullptr;
         int ctr = 0;
         while ((trig = this->GetNPCIndex()->GetTrigger(ctr, Trigger::EXIT_COMBAT)) != nullptr)
@@ -2277,17 +2280,6 @@ std::string Character::HimHer()
 std::string Character::HisHers()
 {
 	return (GetGender() == 1 ? "his" : "hers");
-}
-
-bool Character::CanAttack(Character * victim)
-{
-	if ((victim->IsNPC() && victim->FlagIsSet(NPCIndex::FLAG_FRIENDLY))
-		|| (!victim->IsNPC() && room->pvp == 0)
-		|| (!victim->IsAlive()))
-	{
-		return false;
-	}
-	return true;
 }
 
 bool Character::CanHeal(Character * victim)

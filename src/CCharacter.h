@@ -119,7 +119,7 @@ public:
 	virtual int GetMainhandDamageRandomHit() = 0;
 	void GenerateRageOnAttack(int damage, double weapon_speed, bool mainhand, bool wascrit);
 	void GenerateRageOnTakeDamage(int damage);
-	bool CanAttack(Character * victim);
+	virtual bool CanAttack(Character * victim) = 0;
     bool CanHeal(Character * victim);
 	void EnterCombat(Character * victim);
 	void EnterCombatAssist(Character * friendly);

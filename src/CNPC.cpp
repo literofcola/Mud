@@ -431,3 +431,17 @@ void NPC::Cast(std::string argument)
 	this->delay_active = true;
 	this->delayFunction = cmd_castCallback;
 }
+
+bool NPC::CanAttack(Character * victim)
+{
+    if (this == victim)
+        return false;
+
+    if (victim->IsNPC())// && victim->FlagIsSet(NPCIndex::FLAG_FRIENDLY))
+        return false;
+
+    if(!victim->IsAlive())
+        return false;
+
+    return true;
+}
