@@ -349,10 +349,15 @@ double NPC::GetOffhandDamagePerSecond()
 
 void NPC::Cast(std::string argument)
 {
-	if (!Utilities::IsNumber(argument))
+    std::string arg1;
+    std::string arg2;
+    argument = Utilities::one_argument(argument, arg1);
+    argument = Utilities::one_argument(argument, arg2);
+
+	if (!Utilities::IsNumber(arg1))
 		return;
 
-	int skillID = Utilities::atoi(argument);
+	int skillID = Utilities::atoi(arg1);
 	if (skillID <= 0)
 		return;
 
