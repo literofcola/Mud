@@ -376,10 +376,26 @@ void NPC::Cast(std::string argument)
 	if ((cd = GetCooldownRemaining(spell)) > 0)
 		return;
 
-	Character * arg_target = GetTarget();
+	Character * arg_target = nullptr;
 
     if (spell->targetType == Skill::TARGET_SELF)
         arg_target = this;
+
+    if (!arg2.empty() && arg_target == nullptr)
+    {
+        arg_target = this->GetCharacterRoom(arg2);
+        if (arg_target == nullptr)
+        {
+            //this->Send("They aren't here.\r\n");
+            return;
+        }
+    }
+
+    if (arg_target == nullptr)
+        arg_target = this->GetTarget();
+    if (arg_target == nullptr) //If no target or argument, target self
+        arg_target = this;
+
 
 	if ((spell->targetType == Skill::TARGET_OTHER || spell->targetType == Skill::TARGET_HOSTILE)
 		&& (!arg_target || arg_target == this)) //Requires a target
