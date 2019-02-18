@@ -759,7 +759,7 @@ void Game::WorldUpdate(Server * server)
             }
 
 			//Threat management, chasing/leashing (NPC's start chasing AFTER movementspeed delay)
-			if (currChar->IsNPC() && !currNPC->GetTopThreat()) //We're a NPC in combat but have noone on our threat list. We must have killed them. Leave combat!
+			if (currChar->IsNPC() && !currNPC->GetTopThreatCh()) //We're a NPC in combat but have noone on our threat list. We must have killed them. Leave combat!
 			{
 				currNPC->ExitCombat();
 				currNPC->ClearTarget();
@@ -780,12 +780,12 @@ void Game::WorldUpdate(Server * server)
 				}
 
 			}
-            else if(currChar->IsNPC() && currNPC->GetTopThreat())
+            else if(currChar->IsNPC() && currNPC->GetTopThreatCh())
             {
                 if (currChar->IsCrowdControlled())
                 {
                     currNPC->movementQueue.clear();
-                    currChar->EnterCombat(currNPC->GetTopThreat()); //Enter Combat just so our aggro chains to anything else in the room
+                    currChar->EnterCombat(currNPC->GetTopThreatCh()); //Enter Combat just so our aggro chains to anything else in the room
                 }
 
 				if (!currNPC->movementQueue.empty()) //We have a movement pending, see if we can move...
@@ -797,15 +797,15 @@ void Game::WorldUpdate(Server * server)
 						int leashdist = Reset::RESET_LEASH_DEFAULT;
 						if (currNPC->reset && currNPC->reset->leashDistance != 0)
 							leashdist = currNPC->reset->leashDistance;
-						Exit::Direction chasedir = FindDirection(currNPC, currNPC->GetTopThreat(), leashdist);
+						Exit::Direction chasedir = FindDirection(currNPC, currNPC->GetTopThreatCh(), leashdist);
 						if (chasedir != Exit::DIR_LAST)
 						{
 							//record the path we take for backtracking
 							currNPC->leashPath.push_back(std::make_pair(currNPC->room, chasedir));
-                            currNPC->EnterCombat(currNPC->GetTopThreat()); //Enter Combat just so our aggro chains to anything else in the room
+                            currNPC->EnterCombat(currNPC->GetTopThreatCh()); //Enter Combat just so our aggro chains to anything else in the room
 							currNPC->Move(chasedir);
-							if(currNPC->GetTopThreat()->room == currNPC->room)
-                                currNPC->AutoAttack(currNPC->GetTopThreat());
+							if(currNPC->GetTopThreatCh()->room == currNPC->room)
+                                currNPC->AutoAttack(currNPC->GetTopThreatCh());
 						}
 						else
 						{
@@ -829,14 +829,14 @@ void Game::WorldUpdate(Server * server)
 						}
 					}
 				}
-                else if(currNPC->GetTopThreat()->room != currNPC->room && currNPC->movementQueue.empty() /*&& !currChar->IsCrowdControlled()*/)
+                else if(currNPC->GetTopThreatCh()->room != currNPC->room && currNPC->movementQueue.empty() /*&& !currChar->IsCrowdControlled()*/)
                 { //We need to chase threat target, and not already pending a move...
 					//Decide if we should try to chase based on how far we are from our reset
 					int leashdist = Reset::RESET_LEASH_DEFAULT;
 					if (currNPC->reset && currNPC->reset->leashDistance != 0)
 						leashdist = currNPC->reset->leashDistance;
 
-					int npcDistance = FindDistance(currNPC->leashOrigin, currNPC->GetTopThreat()->room, leashdist);
+					int npcDistance = FindDistance(currNPC->leashOrigin, currNPC->GetTopThreatCh()->room, leashdist);
 					if (npcDistance == -1) //Farther from our origin than leashdist, Leash!
 					{
 						currNPC->ExitCombat();
@@ -867,7 +867,7 @@ void Game::WorldUpdate(Server * server)
                 }
 				//Check for taunt and highest threat
 				SpellAffect * taunt = currNPC->GetFirstSpellAffectWithAura(SpellAffect::AURA_TAUNT);
-				Character * topthreat = currNPC->GetTopThreat();
+				Character * topthreat = currNPC->GetTopThreatCh();
                 //Being taunted
 				if (taunt != nullptr && taunt->caster != nullptr)
 				{
@@ -880,9 +880,9 @@ void Game::WorldUpdate(Server * server)
 					currNPC->SetTarget(taunt->caster);
 				}
                 //Aggro change without taunt
-                else if(topthreat && topthreat != currNPC->GetTarget() && (currNPC->GetThreat(currNPC->GetTarget()) + currNPC->GetThreat(currNPC->GetTarget()) * .1) < currNPC->GetThreat(topthreat))
+                else if(topthreat && topthreat != currNPC->GetTarget() && (currNPC->GetThreatValue(currNPC->GetTarget()) + currNPC->GetThreatValue(currNPC->GetTarget()) * .1) < currNPC->GetThreatValue(topthreat))
                 {
-					currNPC->SetTarget(currNPC->GetTopThreat());
+					currNPC->SetTarget(currNPC->GetTopThreatCh());
 					currNPC->GetTarget()->Send("|R" + currNPC->GetName() + " changes " + currNPC->HisHer() + " target to YOU!|X\r\n");
 					currNPC->Message("|R" + currNPC->GetName() + " changes " + currNPC->HisHer() + " target to " + currNPC->GetTarget()->GetName() + "!|X",
 						Character::MessageType::MSG_ROOM_NOTCHARVICT, currNPC->GetTarget());
@@ -890,7 +890,7 @@ void Game::WorldUpdate(Server * server)
                 //No target but have targets on threat meter (just killed top threat?), aquire new target
                 else if (topthreat && currNPC->GetTarget() == nullptr)
                 {
-                    currNPC->SetTarget(currNPC->GetTopThreat());
+                    currNPC->SetTarget(currNPC->GetTopThreatCh());
                     currNPC->GetTarget()->Send("|R" + currNPC->GetName() + " changes " + currNPC->HisHer() + " target to YOU!|X\r\n");
                     currNPC->Message("|R" + currNPC->GetName() + " changes " + currNPC->HisHer() + " target to " + currNPC->GetTarget()->GetName() + "!|X",
                         Character::MessageType::MSG_ROOM_NOTCHARVICT, currNPC->GetTarget());

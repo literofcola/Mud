@@ -132,8 +132,9 @@ public:
 	void OneHeal(Character * target, int heal);
 	bool CheckThreatCombat();
 	void UpdateThreat(Character * ch, double value, int type);
-	double GetThreat(Character * ch);
-	Character * GetTopThreat();
+	double GetThreatValue(Character * ch);
+    Threat * GetNthHighestThreatData(int n);
+	Character * GetTopThreatCh();
 	bool HasThreat(Character * ch);
 	void RemoveThreat(Character * ch, bool removeall);
 	bool HasTap(Character * target);

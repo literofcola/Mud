@@ -2036,7 +2036,24 @@ void Character::UpdateThreat(Character * ch, double value, int type)
 	threatList.push_front(tt);
 }
 
-Character * Character::GetTopThreat()
+Character::Threat * Character::GetNthHighestThreatData(int n)
+{
+    if (threatList.empty())
+        return nullptr;
+
+    int ctr = 1;
+    for (std::list<Threat>::iterator iter = threatList.begin(); iter != threatList.end(); ++iter)
+    {
+        if (ctr == n)
+        {
+            return &(*iter);
+        }
+        ++ctr;
+    }
+    return nullptr;
+}
+
+Character * Character::GetTopThreatCh()
 {
 	if (threatList.empty())
 		return nullptr;
@@ -2122,7 +2139,7 @@ bool Character::IsTapped()
     return true;
 }
 
-double Character::GetThreat(Character * ch)
+double Character::GetThreatValue(Character * ch)
 {
     std::list<Threat>::iterator iter;
     for(iter = threatList.begin(); iter != threatList.end(); ++iter)
