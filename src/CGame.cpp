@@ -741,7 +741,7 @@ void Game::WorldUpdate(Server * server)
 				currChar->AutoAttack(currChar->GetTarget());
             }
             else if (currChar->IsNPC() && !currChar->meleeActive && !currChar->IsCrowdControlled() && currChar->GetTarget() && currChar->GetTarget()->room == currChar->room)
-            {   //Allows NPC to resume attacking after crowd control expires
+            {   //Allows NPC to resume attacking after crowd control expires (or after threat based target switch?)
                 //currChar->meleeActive = true;
                 currChar->AutoAttack(currChar->GetTarget());
             }
@@ -780,12 +780,12 @@ void Game::WorldUpdate(Server * server)
 				}
 
 			}
-            else if(currChar->IsNPC() && currNPC->GetTopThreatCh())
+            else if (currChar->IsNPC() && currNPC->GetTarget())
             {
                 if (currChar->IsCrowdControlled())
                 {
                     currNPC->movementQueue.clear();
-                    currChar->EnterCombat(currNPC->GetTopThreatCh()); //Enter Combat just so our aggro chains to anything else in the room
+                    currChar->EnterCombat(currChar->GetTarget()); //Enter Combat just so our aggro chains to anything else in the room
                 }
 
 				if (!currNPC->movementQueue.empty()) //We have a movement pending, see if we can move...
@@ -793,50 +793,53 @@ void Game::WorldUpdate(Server * server)
 					if(currNPC->CanMove()) //Move! (checks movespeed auras and movement speed timestamp)
 					{
 						currNPC->movementQueue.pop_front();
-						//track target... Give up leashDistance rooms away from target... (todo, separate this from leashdist?)
-						int leashdist = Reset::RESET_LEASH_DEFAULT;
-						if (currNPC->reset && currNPC->reset->leashDistance != 0)
-							leashdist = currNPC->reset->leashDistance;
-						Exit::Direction chasedir = FindDirection(currNPC, currNPC->GetTopThreatCh(), leashdist);
-						if (chasedir != Exit::DIR_LAST)
-						{
-							//record the path we take for backtracking
-							currNPC->leashPath.push_back(std::make_pair(currNPC->room, chasedir));
-                            currNPC->EnterCombat(currNPC->GetTopThreatCh()); //Enter Combat just so our aggro chains to anything else in the room
-							currNPC->Move(chasedir);
-							if(currNPC->GetTopThreatCh()->room == currNPC->room)
-                                currNPC->AutoAttack(currNPC->GetTopThreatCh());
-						}
-						else
-						{
-							//target more than leashDistance rooms away, leash!
-							std::pair<Room *, int> path;
-							currNPC->ExitCombat();
-							currNPC->ClearTarget();
-							while (!currNPC->leashPath.empty() && currNPC->room != currNPC->leashOrigin)
-							{
-								path = currNPC->leashPath.back();
-								currNPC->leashPath.pop_back();
-								
-								//Fake enter/leave messages. We can't use ->Move() since that tests for valid exits
-								//  among other things (think leashing back through 1 way exits)
-								currNPC->Message(currNPC->GetName() + " leaves " + Exit::exitNames[Exit::exitOpposite[path.second]] + ".", Character::MSG_ROOM_NOTCHAR);
-								currNPC->ChangeRooms(path.first);
-								currNPC->Message(currNPC->GetName() + " has arrived from "
-									+ ((path.second != Exit::DIR_UP && path.second != Exit::DIR_DOWN) ? "the " : "") 
-									+ Exit::reverseExitNames[Exit::exitOpposite[path.second]] + ".", Character::MSG_ROOM_NOTCHAR);
-							}
-						}
+                        if (currNPC->GetRoom() != currNPC->GetTarget()->GetRoom())
+                        {
+                            //track target... Give up leashDistance rooms away from target... (todo, separate this from leashdist?)
+                            int leashdist = Reset::RESET_LEASH_DEFAULT;
+                            if (currNPC->reset && currNPC->reset->leashDistance != 0)
+                                leashdist = currNPC->reset->leashDistance;
+                            Exit::Direction chasedir = FindDirection(currNPC, currNPC->GetTarget(), leashdist);
+                            if (chasedir != Exit::DIR_LAST)
+                            {
+                                //record the path we take for backtracking
+                                currNPC->leashPath.push_back(std::make_pair(currNPC->room, chasedir));
+                                currNPC->EnterCombat(currNPC->GetTarget()); //Enter Combat just so our aggro chains to anything else in the room
+                                currNPC->Move(chasedir);
+                                if (currNPC->GetTarget()->room == currNPC->room)
+                                    currNPC->AutoAttack(currNPC->GetTarget());
+                            }
+                            else
+                            {
+                                //target more than leashDistance rooms away, leash!
+                                std::pair<Room *, int> path;
+                                currNPC->ExitCombat();
+                                currNPC->ClearTarget();
+                                while (!currNPC->leashPath.empty() && currNPC->room != currNPC->leashOrigin)
+                                {
+                                    path = currNPC->leashPath.back();
+                                    currNPC->leashPath.pop_back();
+
+                                    //Fake enter/leave messages. We can't use ->Move() since that tests for valid exits
+                                    //  among other things (think leashing back through 1 way exits)
+                                    currNPC->Message(currNPC->GetName() + " leaves " + Exit::exitNames[Exit::exitOpposite[path.second]] + ".", Character::MSG_ROOM_NOTCHAR);
+                                    currNPC->ChangeRooms(path.first);
+                                    currNPC->Message(currNPC->GetName() + " has arrived from "
+                                        + ((path.second != Exit::DIR_UP && path.second != Exit::DIR_DOWN) ? "the " : "")
+                                        + Exit::reverseExitNames[Exit::exitOpposite[path.second]] + ".", Character::MSG_ROOM_NOTCHAR);
+                                }
+                            }
+                        }
 					}
 				}
-                else if(currNPC->GetTopThreatCh()->room != currNPC->room && currNPC->movementQueue.empty() /*&& !currChar->IsCrowdControlled()*/)
+                else if (currNPC->GetTarget() && currNPC->GetTarget()->room != currNPC->room && currNPC->movementQueue.empty() /*&& !currChar->IsCrowdControlled()*/)
                 { //We need to chase threat target, and not already pending a move...
 					//Decide if we should try to chase based on how far we are from our reset
 					int leashdist = Reset::RESET_LEASH_DEFAULT;
 					if (currNPC->reset && currNPC->reset->leashDistance != 0)
 						leashdist = currNPC->reset->leashDistance;
 
-					int npcDistance = FindDistance(currNPC->leashOrigin, currNPC->GetTopThreatCh()->room, leashdist);
+					int npcDistance = FindDistance(currNPC->leashOrigin, currNPC->GetTarget()->room, leashdist);
 					if (npcDistance == -1) //Farther from our origin than leashdist, Leash!
 					{
 						currNPC->ExitCombat();
@@ -871,29 +874,17 @@ void Game::WorldUpdate(Server * server)
                 //Being taunted
 				if (taunt != nullptr && taunt->caster != nullptr)
 				{
-					if (currNPC->GetTarget() != taunt->caster)
-					{
-						taunt->caster->Send("|R" + currNPC->GetName() + " changes " + currNPC->HisHer() + " target to YOU!|X\r\n");
-						taunt->caster->Message("|R" + currNPC->GetName() + " changes " + currNPC->HisHer() + " target to " + taunt->caster->GetName() + "!|X",
-							Character::MessageType::MSG_ROOM_NOTCHARVICT, currNPC);
-					}
 					currNPC->SetTarget(taunt->caster);
 				}
                 //Aggro change without taunt
                 else if(topthreat && topthreat != currNPC->GetTarget() && (currNPC->GetThreatValue(currNPC->GetTarget()) + currNPC->GetThreatValue(currNPC->GetTarget()) * .1) < currNPC->GetThreatValue(topthreat))
                 {
 					currNPC->SetTarget(currNPC->GetTopThreatCh());
-					currNPC->GetTarget()->Send("|R" + currNPC->GetName() + " changes " + currNPC->HisHer() + " target to YOU!|X\r\n");
-					currNPC->Message("|R" + currNPC->GetName() + " changes " + currNPC->HisHer() + " target to " + currNPC->GetTarget()->GetName() + "!|X",
-						Character::MessageType::MSG_ROOM_NOTCHARVICT, currNPC->GetTarget());
                 }
                 //No target but have targets on threat meter (just killed top threat?), aquire new target
                 else if (topthreat && currNPC->GetTarget() == nullptr)
                 {
                     currNPC->SetTarget(currNPC->GetTopThreatCh());
-                    currNPC->GetTarget()->Send("|R" + currNPC->GetName() + " changes " + currNPC->HisHer() + " target to YOU!|X\r\n");
-                    currNPC->Message("|R" + currNPC->GetName() + " changes " + currNPC->HisHer() + " target to " + currNPC->GetTarget()->GetName() + "!|X",
-                        Character::MessageType::MSG_ROOM_NOTCHARVICT, currNPC->GetTarget());
                 }
             }
         }
@@ -2591,7 +2582,8 @@ Character * Game::LoadNPCRoom(int id, Room * toroom)
         //ch->Send("NPC " + arg2 + " does not exist.\r\n");
         return nullptr;
     }
-    Character * newChar = Game::GetGame()->NewNPC(charIndex);
+    NPC * newChar = Game::GetGame()->NewNPC(charIndex);
+    newChar->leashOrigin = toroom;
     newChar->ChangeRooms(toroom);
     return newChar;
 }

@@ -805,6 +805,12 @@ int Character::GetSmallestAuraModifier(int aura_id)
 
 void Character::EnterCombat(Character * victim)
 {
+    if (!victim)
+    {
+        LogFile::Log("error", "EnterCombat called on null victim");
+        return;
+    }
+
 	if (!IsAlive() || !victim->IsAlive())
 	{
 		LogFile::Log("error", "EnterCombat called on !IsAlive ch or vict");
@@ -2524,6 +2530,7 @@ void Character::SetTarget(Character * t)
 
     if(target == t)
         return;
+
     if(target != nullptr)
     {
         ClearTarget();
@@ -2531,12 +2538,23 @@ void Character::SetTarget(Character * t)
     t->AddSubscriber(this);
 	//cout << "SetTarget ADD" << endl;
     target = t;
+
+    if (IsNPC())
+    {
+        target->Send("|R" + GetName() + " changes " + HisHer() + " target to YOU!|X\r\n");
+        Message("|R" + GetName() + " changes " + HisHer() + " target to " + target->GetName() + "!|X",
+            Character::MessageType::MSG_ROOM_NOTCHARVICT, target);
+    }
 }
 
 void Character::ClearTarget()
 {
     if(target)
     {
+        if (IsNPC())
+        {
+            target->Send("|R" + GetName() + " is no longer targeting you.|X\r\n");
+        }
 		//if (target->GetTarget())
 		//{
 			json targettargetvitals = { { "name", "" },{ "level", 0 },{ "hppercent", 0 } };

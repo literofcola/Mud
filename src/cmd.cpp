@@ -1544,6 +1544,12 @@ void cmd_alias(Player * ch, std::string argument)
         return;
     }
 
+    if (ch->alias.size() > Player::ALIAS_MAX)
+    {
+        ch->Send("Maximum number of aliases reached.\r\n");
+        return;
+    }
+
     auto alias_iter = ch->alias.find(new_alias);
     if (alias_iter != ch->alias.end())
     {

@@ -33,6 +33,7 @@ public:
 	static const int DB_INVENTORY_INVENTORY = 1;
 	static const int DB_INVENTORY_BANK = 2;
 	static const int QUESTLOG_MAX_SIZE = 20;
+    static const int ALIAS_MAX = 100;
 
 	enum Position
 	{
