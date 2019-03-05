@@ -118,6 +118,7 @@ void Lua_DefineClasses(sol::state * lua)
             "Move", &Character::Move,
 			"GetAuraModifier", &Character::GetAuraModifier,
 			"GetTarget", &Character::GetTarget,
+            "SetTarget", &Character::SetTarget,
 			"GetRoom", &Character::GetRoom,
 			"GetRecall", &Character::GetRecall,
 			"GetMainhandWeaponSpeed", &Character::GetMainhandWeaponSpeed,
