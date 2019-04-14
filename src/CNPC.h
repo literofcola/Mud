@@ -93,6 +93,7 @@ public:
 	double GetParry() override { return 5; };
 	int GetArmor() override { return (GetNPCIndex()->armor + GetAuraModifier(SpellAffect::AURA_MODIFY_ARMOR, 1)) <= 0 ? 0 : GetNPCIndex()->armor + GetAuraModifier(SpellAffect::AURA_MODIFY_ARMOR, 1); };
 	void Cast(std::string argument) override;
+    void CastByID(int skill_id, Character * target) override;
 
     bool CanAttack(Character * victim) override;
 

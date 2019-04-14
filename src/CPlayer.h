@@ -150,8 +150,11 @@ public:
 	inline int GetRecall() override { return recall; };
 	void Stand() override;
 	void Sit() override;
+    void Look(std::string argument) override { ::cmd_look(this, argument); };
 
 	//Skills / Spell Affects
+    void Cast(std::string argument) override { ::cmd_cast(this, argument); };
+    void CastByID(int skill_id, Character * target) override { };
 	bool HasSkill(Skill * sk) override;
     bool HasSkill(std::string long_name) override;
 	Skill * GetSkillLongName(std::string long_name) override;
@@ -274,10 +277,6 @@ public:
 	inline bool IsImmortal() override { return (immlevel > 0); };
 	inline int GetImmLevel() override { return immlevel; };
 	int GetArmor() override { return (armor + GetAuraModifier(SpellAffect::AURA_MODIFY_ARMOR, 1)) <= 0 ? 0 : (armor + GetAuraModifier(SpellAffect::AURA_MODIFY_ARMOR, 1)); };
-
-	//Inheritence friendly "commands"
-	void Look(std::string argument) override { ::cmd_look(this, argument); };
-	void Cast(std::string argument) override { ::cmd_cast(this, argument); };
 
 	//Utility/Misc
 	inline bool IsNPC() override { return false; };

@@ -105,6 +105,7 @@ public:
 	bool ChangeRooms(Room * room);
 	virtual void Stand() { };
 	virtual void Sit() { };
+    virtual void Look(std::string argument) {};
 	virtual int GetRecall() { return 0; };
 
 	//Combat
@@ -150,6 +151,8 @@ public:
 	int HandleDamageAbsorb(int damage);
 
 	//Skills/Spell Affects
+    virtual void Cast(std::string argument) {};
+    virtual void CastByID(int skill_id, Character * target) {};
 	virtual bool HasSkill(Skill * sk) { return true; };
     virtual bool HasSkill(std::string long_name) { return true; };
     virtual Skill * GetSkillLongName(std::string long_name) { return nullptr; };
@@ -226,10 +229,6 @@ public:
 	void OnDeath();
 	virtual void RemoveAllLootRolls() { };
 	virtual void RemoveAllLooters() { };
-
-	//Inheritence friendly "commands"
-	virtual void Look(std::string argument) {};
-	virtual void Cast(std::string argument) {};
 
 	//Get/Set
 	int GetHealth() { return health; };

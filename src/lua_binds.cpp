@@ -130,7 +130,8 @@ void Lua_DefineClasses(sol::state * lua)
 			"GetCharacterRoom", (Character *(Character::*)(Character *)) &Character::GetCharacterRoom,
 			"GetCharacterAdjacentRoom", (Character *(Character::*)(Character *)) &Character::GetCharacterAdjacentRoom,
             "GetGroup", &Character::GetGroup,
-			"Cast", &Character::Cast,
+			"Cast", (void(Character::*)(std::string)) &Character::Cast,
+            "CastByID", (void(Character::*)(int, Character *)) &Character::CastByID,
 			"Look", &Character::Look
 			//"level", &Character::level,
 			//"flags", &Character::flags

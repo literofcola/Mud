@@ -347,6 +347,11 @@ double NPC::GetOffhandDamagePerSecond()
 	return 0;
 }
 
+void NPC::CastByID(int skill_id, Character * target)
+{
+
+}
+
 void NPC::Cast(std::string argument)
 {
     std::string arg1;
