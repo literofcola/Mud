@@ -349,7 +349,94 @@ double NPC::GetOffhandDamagePerSecond()
 
 void NPC::CastByID(int skill_id, Character * target)
 {
+    if (skill_id <= 0)
+        return;
 
+    if (IsCrowdControlled())
+        return;
+    if (HasActiveDelay())
+        return;
+
+    Skill * spell;
+    spell = Game::GetGame()->GetSkill(skill_id);
+
+    if (spell == nullptr)
+        return;
+
+    double cd;
+    if ((cd = GetCooldownRemaining(spell)) > 0)
+        return;
+
+    Character * arg_target = nullptr;
+
+    if (spell->targetType == Skill::TARGET_SELF)
+        arg_target = this;
+
+    if (target != nullptr && arg_target == nullptr)
+    {
+        arg_target = target;
+    }
+
+    if (arg_target == nullptr)
+        arg_target = this->GetTarget();
+    if (arg_target == nullptr) //If no target or argument, target self
+        arg_target = this;
+
+
+    if ((spell->targetType == Skill::TARGET_OTHER || spell->targetType == Skill::TARGET_HOSTILE)
+        && (!arg_target || arg_target == this)) //Requires a target
+    {
+        //Send("You must target someone with this skill.\r\n");
+        return;
+    }
+
+    if (spell->targetType == Skill::TARGET_HOSTILE
+        && arg_target->FlagIsSet(NPCIndex::FLAG_FRIENDLY))
+    {
+        //Send("That target is friendly.\r\n");
+        return;
+    }
+
+    if (spell->targetType == Skill::TARGET_FRIENDLY && arg_target && IsFighting(arg_target))
+    {
+        //ch->Send("You can't cast this spell on that target.\r\n");
+        return;
+    }
+
+    int lua_ret = spell->CallLuaCost(this, arg_target);
+
+    if (lua_ret == 0)
+    {
+        //not enough resources to cast, or some other restriction
+        return;
+    }
+
+    if (spell->castTime != 0) 
+    {
+        Message("|W" + GetName() + " begins to cast " + spell->name + "...|X", Character::MSG_ROOM_NOTCHAR);
+        //Send("|WYou begin to cast " + spell->long_name + "...|X\r\n");
+        //json casttime = { { "time", spell->castTime } };
+        //ch->SendGMCP("char.casttime " + casttime.dump());
+    }
+
+    //if (!Utilities::FlagIsSet(spell->flags, Skill::FLAG_NOGCD))
+    //	StartGlobalCooldown();
+
+    delay = (Game::GetGame()->currentTime + spell->castTime);
+    Character::DelayData dd;
+    dd.caster = this;
+    if (arg_target == nullptr)
+        arg_target = this;
+    dd.charTarget = arg_target;
+    if (arg_target && this != arg_target)
+    {
+        dd.charTarget->AddSubscriber(dd.caster); //if our target is gone when spell finishes, we need to know about it
+                                                 //cout << "cmd_cast ADD:" << endl;
+    }
+    dd.sk = spell;
+    this->delayData = dd;
+    this->delay_active = true;
+    this->delayFunction = cmd_castCallback;
 }
 
 void NPC::Cast(std::string argument)
