@@ -940,7 +940,7 @@ void Character::EnterCombat(Character * victim)
     if(victim->IsPlayer())
 		((Player*)(victim))->lastCombatAction = Game::currentTime;
 
-	if (IsNPC() || victim->IsNPC()) //Keep track of threat unless BOTH are players
+	//if (IsNPC() || victim->IsNPC()) //Keep track of threat unless BOTH are players
 	{
         victim->UpdateThreat(this, 0, Character::Threat::THREAT_DAMAGE); 
 		UpdateThreat(victim, 0, Character::Threat::THREAT_DAMAGE);
@@ -1053,7 +1053,7 @@ void Character::EnterCombatAssist(Character * friendly)
 	for (auto threatiter = friendly->threatList.begin(); threatiter != friendly->threatList.end(); threatiter++)
 	{
 		Threat * threat = &(*threatiter);
-		if (IsNPC() || threat->ch->IsNPC())
+		//if (IsNPC() || threat->ch->IsNPC())
 		{
 			threat->ch->UpdateThreat(this, 0, Character::Threat::THREAT_DAMAGE);
 			UpdateThreat(threat->ch, 0, Character::Threat::THREAT_DAMAGE);
@@ -1099,7 +1099,7 @@ void Character::ExitCombat()
     }
 
     combat = false;
-    meleeActive = false;
+    CancelAutoAttack();
     RemoveThreat(nullptr, true);
     movementSpeed = Character::NORMAL_MOVE_SPEED;
 	json combat = { { "combat", 0 } };
@@ -1161,8 +1161,6 @@ void Character::AutoAttack(Character * victim)
         if(victim->GetTarget() == nullptr) //Force a target on our victim
         {
             victim->SetTarget(this);
-            //Have the victim retaliate when attacked with no target set
-            victim->meleeActive = true;
         }
 
         if(victim->IsPlayer())
@@ -1244,8 +1242,6 @@ void Character::AutoAttack(Character * victim)
             if(victim->GetTarget() == nullptr) //Force a target on our victim
             {     
                 victim->SetTarget(this);
-                //Have the victim retaliate when attacked with no target set
-                victim->meleeActive = true;
             }
 			thisplayer->lastCombatAction = Game::currentTime;
             if(victim->IsPlayer())
@@ -1320,8 +1316,6 @@ void Character::AutoAttack(Character * victim)
             if(victim->target == nullptr) //Force a target on our victim
             {     
                 victim->SetTarget(this);
-                //Have the victim retaliate when attacked with no target set
-                victim->meleeActive = true;
             }
 			thisplayer->lastCombatAction = Game::currentTime;
             if(victim->IsPlayer())
@@ -1394,8 +1388,8 @@ void Character::AutoAttack(Character * victim)
 
 void Character::CancelAutoAttack()
 {
-    if(meleeActive)
-        Message(GetName() + " stops attacking.", MSG_ROOM_NOTCHAR);
+    if(meleeActive && GetTarget())
+        Message(GetName() + " stops attacking " + GetTarget()->GetName() + ".", MSG_ROOM_NOTCHAR);
     meleeActive = false;
 }
 
@@ -1488,7 +1482,8 @@ void Character::OneHit(Character * victim, int damage)
         return;
     }
 
-    if((IsNPC() || victim->IsNPC()) && victim->InCombat())
+    //if((IsNPC() || victim->IsNPC()) && victim->InCombat())
+    if(victim->InCombat())
 		//Keep track of threat unless BOTH are players or victim is (somehow, "peace", leash with dots) not in combat
     {
         victim->UpdateThreat(this, damage, Threat::Type::THREAT_DAMAGE);
@@ -1539,7 +1534,7 @@ bool Character::IsFighting(Character * target)
 {
     if(this == target)
         return false; //never fighting ourself
-    if(this->target == target && meleeActive)
+    if(GetTarget() == target && meleeActive)
         return true;
     return false;
 }
@@ -1586,7 +1581,8 @@ void Character::OnDeath()
 
 		if (threat->ch->GetTarget() && threat->ch->GetTarget() == this)
 		{
-			threat->ch->meleeActive = false;
+			//threat->ch->meleeActive = false;
+            threat->ch->CancelAutoAttack();
 		}
 		if (threat->ch->HasComboPointTarget() && threat->ch->GetComboPointTarget() == this)
 		{
@@ -2171,13 +2167,13 @@ bool Character::HasThreat(Character * ch)
     return false;
 }
 
-//Go through our threat list and see if anyone on it (NPCs) is still in combat. Used to determine player combat status
+//Go through our threat list and see if any NPCs on it are still in combat. Used to determine player combat status
 bool Character::CheckThreatCombat()
 {
 	std::list<Threat>::iterator iter;
 	for (iter = threatList.begin(); iter != threatList.end(); ++iter)
 	{
-		if ((*iter).ch->InCombat())
+		if ((*iter).ch->InCombat() && (*iter).ch->IsNPC())
 		{
 			return true;
 		}

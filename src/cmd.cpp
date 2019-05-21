@@ -259,7 +259,8 @@ void cmd_look(Player * ch, std::string argument)
 				std::string disconnected = "";
 				std::string title = "";
 				std::string corpse = "";
-				std::string targeting = ".";
+				std::string targeting = "";
+                std::string fighting = ".";
 				std::string level = "";
 				std::string aggressionColor = "|G";
                 std::string crowd_control = "";
@@ -294,16 +295,20 @@ void cmd_look(Player * ch, std::string argument)
 				if ((*i)->InCombat())
 				{
                     in_combat = "|R(X)|X ";
-                    if((*i)->GetTarget() && (*i)->GetTarget() == ch)
-                        targeting = ", targeting YOU!";
+                    if ((*i)->GetTarget() && (*i)->GetTarget() == ch)
+                    {
+                        targeting = ", targeting YOU";
+                        fighting = "!";
+                    }
                     else if ((*i)->GetTarget())
-                        targeting = ", targeting " + (*i)->GetTarget()->GetName() + ".";
-					/*
+                    {
+                        targeting = ", targeting " + (*i)->GetTarget()->GetName();
+                    }
+					
                     if ((*i)->IsFighting(ch))
-						fighting = ", fighting YOU!";
+						fighting = ", and attacking YOU!";
 					else if ((*i)->GetTarget() != nullptr && (*i)->IsFighting((*i)->GetTarget()))
-						fighting = ", fighting " + (*i)->GetTarget()->GetName() + ".";
-                    */
+						fighting = ", and attacking " + (*i)->GetTarget()->GetName() + ".";
 				}
 				aggressionColor = ch->AggressionColor((*i));
                 SpellAffect * cc = (*i)->GetFirstSpellAffectWithAura(SpellAffect::AURA_INCAPACITATE);
@@ -329,7 +334,7 @@ void cmd_look(Player * ch, std::string argument)
                     else
                         tapped += tappedBy->GetName() + ")";
 				}
-				ch->Send(disconnected + level + questicon + in_combat + stunned + aggressionColor + corpse + (*i)->GetName() + title + " is here" + targeting + crowd_control + tapped + "|X\r\n");
+				ch->Send(disconnected + level + questicon + in_combat + stunned + aggressionColor + corpse + (*i)->GetName() + title + " is here" + targeting + fighting + crowd_control + tapped + "|X\r\n");
 			}
 			//ch->Send("\r\n");	
 		}
@@ -469,7 +474,8 @@ void cmd_look(Player * ch, std::string argument)
                         std::string disconnected = "";
                         std::string title = "";
                         std::string corpse = "";
-                        std::string targeting = ".";
+                        std::string targeting = "";
+                        std::string fighting = ".";
                         std::string level = "";
                         std::string aggressionColor = "|G";
                         std::string crowd_control = "";
@@ -505,15 +511,19 @@ void cmd_look(Player * ch, std::string argument)
                         {
                             in_combat = "|R(X)|X ";
                             if ((*i)->GetTarget() && (*i)->GetTarget() == ch)
-                                targeting = ", targeting YOU!";
+                            {
+                                targeting = ", targeting YOU";
+                                fighting = "!";
+                            }
                             else if ((*i)->GetTarget())
-                                targeting = ", targeting " + (*i)->GetTarget()->GetName() + ".";
-                            /*
+                            {
+                                targeting = ", targeting " + (*i)->GetTarget()->GetName();
+                            }
+
                             if ((*i)->IsFighting(ch))
-                            fighting = ", fighting YOU!";
+                                fighting = ", and attacking YOU!";
                             else if ((*i)->GetTarget() != nullptr && (*i)->IsFighting((*i)->GetTarget()))
-                            fighting = ", fighting " + (*i)->GetTarget()->GetName() + ".";
-                            */
+                                fighting = ", and attacking " + (*i)->GetTarget()->GetName() + ".";
                         }
                         aggressionColor = ch->AggressionColor((*i));
                         SpellAffect * cc = (*i)->GetFirstSpellAffectWithAura(SpellAffect::AURA_INCAPACITATE);
@@ -539,7 +549,7 @@ void cmd_look(Player * ch, std::string argument)
                             else
                                 tapped += tappedBy->GetName() + ")";
                         }
-                        ch->Send(disconnected + level + questicon + in_combat + stunned + aggressionColor + corpse + (*i)->GetName() + title + " is here" + targeting + crowd_control + tapped + "|X\r\n");
+                        ch->Send(disconnected + level + questicon + in_combat + stunned + aggressionColor + corpse + (*i)->GetName() + title + " is here" + targeting + fighting + crowd_control + tapped + "|X\r\n");
                     }
                 }
                 return;
@@ -577,9 +587,9 @@ void cmd_target(Player * ch, std::string argument)
 {
     if(argument.empty())
 	{
+        ch->CancelAutoAttack(); //Any target change stops auto attack
 		ch->Send("Target cleared.\r\n");
 		ch->ClearTarget();
-        ch->CancelAutoAttack(); //Any target change stops auto attack
 		return;
 	}
 

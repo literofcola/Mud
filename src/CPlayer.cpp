@@ -12,6 +12,7 @@
 #include "CItem.h"
 #include "CSkill.h"
 #include "CRoom.h"
+#include "CArea.h"
 #include "CQuest.h"
 #include "CClass.h"
 #include "CLogFile.h"
@@ -2035,8 +2036,12 @@ bool Player::CanAttack(Character * victim)
     if (this == victim)
         return false;
 
+    //todo: pvp rules!
+
     if ((victim->IsNPC() && victim->FlagIsSet(NPCIndex::FLAG_FRIENDLY))
-        || (!victim->IsNPC() && room->pvp == 0)
+        || (!victim->IsNPC() && InSameGroup(victim))
+        || (!victim->IsNPC() && Game::GetGame()->GetArea(room->area)->pvp == 0)
+        //|| (!victim->IsNPC() && room->pvp == 0) //TODO
         || (!victim->IsAlive()))
     {
         return false;
