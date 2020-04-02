@@ -2,7 +2,7 @@
 
 Built with:
 
-Visual Studio 2017 Community
+Visual Studio Community
 https://www.visualstudio.com/downloads/
 
 Lua 5.3.4
@@ -20,3 +20,6 @@ https://dev.mysql.com/downloads/mysql/5.5.html?os=src&version=5.1
 
 zlib 1.2.11
 https://zlib.net/zlib1211.zip
+
+Visual Leak Detector
+https://kinddragon.github.io/vld/
