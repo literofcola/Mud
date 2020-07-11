@@ -8,7 +8,7 @@ https://www.visualstudio.com/downloads/
 Lua 5.3.4
 https://www.lua.org/ftp/lua-5.3.4.tar.gz
 
-Sol2 3.0.3 - a C++ <-> Lua API wrapper
+Sol2 v3 - a C++ <-> Lua API wrapper
 https://github.com/ThePhD/sol2
 
 MySQL++ 3.2.5
